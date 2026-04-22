@@ -89,22 +89,12 @@ export default function SharpeningForm() {
     )
   }
 
-  async function addStone(name: string) {
+  function addStone(name: string) {
     const trimmed = name.trim()
     if (!trimmed) return
     if (selectedStones.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) return
     setSelectedStones(prev => [...prev, { name: trimmed, order: prev.length + 1 }])
     setStoneInput('')
-
-    const isKnownStone = stoneSuggestions.some(s => s.toLowerCase() === trimmed.toLowerCase())
-    if (!isKnownStone) {
-      const parts = trimmed.split(' ')
-      const lastPart = parts[parts.length - 1]
-      const parsedGrit = parseInt(lastPart, 10)
-      const hasGrit = !isNaN(parsedGrit) && String(parsedGrit) === lastPart
-      const brand = hasGrit ? parts.slice(0, -1).join(' ') || trimmed : trimmed
-      await db.stones.add({ brand, grit: hasGrit ? parsedGrit : 0, type: 'water', isCustom: true })
-    }
   }
 
   function removeStone(index: number) {
@@ -125,6 +115,24 @@ export default function SharpeningForm() {
       const steelInRef = steelSuggestions.some(s => s.toLowerCase() === steel.trim().toLowerCase())
       if (!steelInRef) {
         await db.steels.add({ name: steel.trim(), isCustom: true })
+      }
+    }
+
+    if (selectedStones.length) {
+      const existingStones = await db.stones.toArray()
+      const existingKeys = new Set(existingStones.map(s => `${s.brand.toLowerCase()} ${s.grit}`))
+      for (const stone of selectedStones) {
+        const parts = stone.name.split(' ')
+        const lastPart = parts[parts.length - 1]
+        const parsedGrit = parseInt(lastPart, 10)
+        const hasGrit = !isNaN(parsedGrit) && String(parsedGrit) === lastPart
+        const brand = hasGrit ? parts.slice(0, -1).join(' ') || stone.name : stone.name
+        const grit = hasGrit ? parsedGrit : 0
+        const key = `${brand.toLowerCase()} ${grit}`
+        if (!existingKeys.has(key)) {
+          await db.stones.add({ brand, grit, type: 'water', isCustom: true })
+          existingKeys.add(key)
+        }
       }
     }
 
