@@ -10,7 +10,6 @@ type Filter = 'all' | SharpeningStatus
 const FILTERS: { value: Filter; label: string }[] = [
   { value: 'all',      label: 'Все' },
   { value: 'accepted', label: 'Принят' },
-  { value: 'inwork',   label: 'В работе' },
   { value: 'done',     label: 'Готов' },
 ]
 

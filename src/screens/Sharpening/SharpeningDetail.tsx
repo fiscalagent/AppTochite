@@ -5,6 +5,7 @@ import { db } from '../../db/db'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import { useToast } from '../../components/Toast/ToastContext'
+import { useCamera } from '../../hooks/useCamera'
 import s from './SharpeningDetail.module.css'
 
 function formatDate(date: Date | string) {
@@ -20,13 +21,27 @@ export default function SharpeningDetail() {
   const sharpeningId = Number(id)
 
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [photoModal, setPhotoModal] = useState(false)
+  const { takePhoto } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
   const client = useLiveQuery(
     () => sh ? db.clients.get(sh.clientId) : undefined,
     [sh?.clientId]
   )
-  const stones = useLiveQuery(() => db.stones.toArray(), [])
+  async function handleMarkDone() {
+    await db.sharpenings.update(sharpeningId, { status: 'done', doneAt: new Date() })
+    showToast('Статус обновлён — готово!')
+    setPhotoModal(true)
+  }
+
+  async function handleAddAfterPhoto() {
+    takePhoto(async (b64) => {
+      const current = await db.sharpenings.get(sharpeningId)
+      const existing = current?.photosAfter ?? []
+      await db.sharpenings.update(sharpeningId, { photosAfter: [...existing, b64] })
+    })
+  }
 
   async function handleDelete() {
     await db.sharpenings.delete(sharpeningId)
@@ -38,11 +53,6 @@ export default function SharpeningDetail() {
   if (sh === null) return (
     <div style={{ padding: 16, color: 'var(--text-300)' }}>Запись не найдена</div>
   )
-
-  function getStoneName(stoneId: number) {
-    const stone = stones?.find(s => s.id === stoneId)
-    return stone ? `${stone.brand} ${stone.grit}` : `Камень ${stoneId}`
-  }
 
   const sortedStones = sh.stones ? [...sh.stones].sort((a, b) => a.order - b.order) : []
 
@@ -110,9 +120,9 @@ export default function SharpeningDetail() {
               <div className={s.sectionTitle} style={{ marginBottom: 8 }}>Камни</div>
               <div className={s.stoneTags}>
                 {sortedStones.map(ss => (
-                  <div key={ss.stoneId} className={s.stoneTag}>
+                  <div key={ss.order} className={s.stoneTag}>
                     <span className={s.stoneOrder}>{ss.order}.</span>
-                    <span>{getStoneName(ss.stoneId)}</span>
+                    <span>{ss.name}</span>
                   </div>
                 ))}
               </div>
@@ -156,6 +166,12 @@ export default function SharpeningDetail() {
         </div>
       ) : null}
 
+      {sh.status === 'accepted' && (
+        <button className={s.doneBtn} onClick={handleMarkDone}>
+          ЗАТОЧИТЬ
+        </button>
+      )}
+
       {client && (
         <Link to={`/clients/${client.id}`} className={s.clientLink}>
           <span>👤</span>
@@ -175,6 +191,27 @@ export default function SharpeningDetail() {
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />
+
+      {photoModal && (
+        <div className={s.photoModalOverlay} onClick={() => setPhotoModal(false)}>
+          <div className={s.photoModalSheet} onClick={e => e.stopPropagation()}>
+            <div className={s.photoModalTitle}>Добавить фото результата?</div>
+            {sh.photosAfter && sh.photosAfter.length > 0 && (
+              <div className={s.photoScroll} style={{ marginBottom: 12 }}>
+                {sh.photosAfter.map((src, i) => (
+                  <img key={i} src={src} className={s.photoImg} alt="" />
+                ))}
+              </div>
+            )}
+            <button className={s.photoModalAddBtn} onClick={handleAddAfterPhoto}>
+              Сфотографировать
+            </button>
+            <button className={s.photoModalSkipBtn} onClick={() => setPhotoModal(false)}>
+              Пропустить
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

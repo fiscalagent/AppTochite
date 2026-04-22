@@ -150,11 +150,9 @@
 }
 
 .statusChip.accepted { color: var(--status-accepted); }
-.statusChip.inwork   { color: var(--status-inwork); }
 .statusChip.done     { color: var(--status-done); }
 
 .statusChip.activeAccepted { background: var(--status-accepted-bg); border-color: var(--status-accepted); }
-.statusChip.activeInwork   { background: var(--status-inwork-bg);   border-color: var(--status-inwork); }
 .statusChip.activeDone     { background: var(--status-done-bg);     border-color: var(--status-done); }
 
 /* Stone picker */
@@ -252,6 +250,37 @@
 .stoneOptionGrit {
   font-size: 12px;
   color: var(--text-300);
+}
+
+/* Stone autocomplete row */
+.stoneInputRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.stoneInputRow > :first-child {
+  flex: 1;
+}
+
+.stoneAddBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stoneAddBtn:disabled {
+  opacity: 0.35;
+  border-color: var(--border-200);
+  color: var(--text-400);
 }
 
 /* Client select */

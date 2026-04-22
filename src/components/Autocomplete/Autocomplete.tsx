@@ -7,9 +7,10 @@ interface Props {
   suggestions: string[]
   placeholder?: string
   autoFocus?: boolean
+  onSelect?: (value: string) => void
 }
 
-export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus }: Props) {
+export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect }: Props) {
   const [open, setOpen] = useState(false)
 
   const filtered = value.length > 0
@@ -18,6 +19,12 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
 
   const visible = open && filtered.length > 0
 
+  function handleSelect(item: string) {
+    onChange(item)
+    onSelect?.(item)
+    setOpen(false)
+  }
+
   return (
     <div className={s.wrap}>
       <input
@@ -25,6 +32,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
         onChange={e => { onChange(e.target.value); setOpen(true) }}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
+        onKeyDown={e => { if (e.key === 'Enter' && value.trim()) { onSelect?.(value); setOpen(false) } }}
         placeholder={placeholder}
         autoFocus={autoFocus}
         autoComplete="off"
@@ -35,7 +43,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
             <div
               key={item}
               className={s.item}
-              onPointerDown={e => { e.preventDefault(); onChange(item); setOpen(false) }}
+              onPointerDown={e => { e.preventDefault(); handleSelect(item) }}
             >
               {item}
             </div>

@@ -198,6 +198,18 @@
 }
 
 /* Actions */
+.doneBtn {
+  background: var(--status-done);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 1px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  text-align: center;
+}
+
 .deleteBtn {
   background: transparent;
   color: var(--danger);
@@ -205,4 +217,51 @@
   padding: var(--space-3);
   text-align: center;
   width: 100%;
+}
+
+/* Photo modal */
+.photoModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+
+.photoModalSheet {
+  background: var(--bg-200);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-6) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.photoModalTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--text-100);
+  text-align: center;
+  margin-bottom: var(--space-2);
+}
+
+.photoModalAddBtn {
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  text-align: center;
+}
+
+.photoModalSkipBtn {
+  background: transparent;
+  color: var(--text-300);
+  font-size: 15px;
+  padding: var(--space-3);
+  width: 100%;
+  text-align: center;
 }

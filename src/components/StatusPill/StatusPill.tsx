@@ -3,7 +3,6 @@ import s from './StatusPill.module.css'
 
 const LABELS: Record<SharpeningStatus, string> = {
   accepted: 'принят',
-  inwork:   'в работе',
   done:     'готов',
 }
 

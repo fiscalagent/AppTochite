@@ -10,11 +10,11 @@ export interface Client {
 }
 
 export interface SharpeningStone {
-  stoneId: number
+  name: string
   order: number
 }
 
-export type SharpeningStatus = 'accepted' | 'inwork' | 'done'
+export type SharpeningStatus = 'accepted' | 'done'
 
 export interface Sharpening {
   id?: number

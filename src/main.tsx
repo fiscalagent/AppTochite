@@ -3,9 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './styles/tokens.css'
 import './styles/reset.css'
 import App from './App'
-import { initDB } from './db/init'
+import { seedDatabase } from './db/seed'
 
-initDB()
+seedDatabase()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

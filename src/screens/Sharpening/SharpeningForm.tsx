@@ -8,7 +8,6 @@ import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import s from './SharpeningForm.module.css'
 
 const CONDITIONS = ['тупой', 'выщерблины', 'повреждение РК', 'деформация', 'ржавчина']
-const STONE_TYPE_LABELS: Record<string, string> = { water: 'Водные', oil: 'Масляные', diamond: 'Алмазные' }
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
@@ -40,14 +39,17 @@ export default function SharpeningForm() {
   // Step 2 — Заточка
   const [angle, setAngle] = useState('')
   const [selectedStones, setSelectedStones] = useState<SharpeningStone[]>([])
-  const [showStonePicker, setShowStonePicker] = useState(false)
+  const [stoneInput, setStoneInput] = useState('')
   const [comment, setComment] = useState('')
   const [price, setPrice] = useState('')
   const [status, setStatus] = useState<SharpeningStatus>('accepted')
   const [photosAfter, setPhotosAfter] = useState<string[]>([])
 
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
-  const allStones = useLiveQuery(() => db.stones.orderBy('grit').toArray(), [])
+  const stoneSuggestions = useLiveQuery(async () => {
+    const items = await db.stones.orderBy('grit').toArray()
+    return items.map(s => `${s.brand} ${s.grit}`)
+  }, []) ?? []
   const knifeSuggestions = useLiveQuery(async () => {
     const items = await db.knives.orderBy('brand').toArray()
     return [...new Set(items.map(k => k.brand))]
@@ -81,35 +83,50 @@ export default function SharpeningForm() {
     ? [...clients.filter(c => c.isSelf), ...clients.filter(c => !c.isSelf)]
     : []
 
-  const stonesByType = allStones?.reduce<Record<string, typeof allStones>>((acc, stone) => {
-    const group = acc[stone.type] ?? []
-    return { ...acc, [stone.type]: [...group, stone] }
-  }, {}) ?? {}
-
   function toggleCondition(val: string) {
     setCondition(prev =>
       prev.includes(val) ? prev.filter(c => c !== val) : [...prev, val]
     )
   }
 
-  function addStone(stoneId: number) {
-    if (selectedStones.find(s => s.stoneId === stoneId)) return
-    setSelectedStones(prev => [...prev, { stoneId, order: prev.length + 1 }])
+  async function addStone(name: string) {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    if (selectedStones.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) return
+    setSelectedStones(prev => [...prev, { name: trimmed, order: prev.length + 1 }])
+    setStoneInput('')
+
+    const isKnownStone = stoneSuggestions.some(s => s.toLowerCase() === trimmed.toLowerCase())
+    if (!isKnownStone) {
+      const parts = trimmed.split(' ')
+      const lastPart = parts[parts.length - 1]
+      const parsedGrit = parseInt(lastPart, 10)
+      const hasGrit = !isNaN(parsedGrit) && String(parsedGrit) === lastPart
+      const brand = hasGrit ? parts.slice(0, -1).join(' ') || trimmed : trimmed
+      await db.stones.add({ brand, grit: hasGrit ? parsedGrit : 0, type: 'water', isCustom: true })
+    }
   }
 
-  function removeStone(stoneId: number) {
+  function removeStone(index: number) {
     setSelectedStones(prev =>
-      prev.filter(s => s.stoneId !== stoneId).map((s, i) => ({ ...s, order: i + 1 }))
+      prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, order: i + 1 }))
     )
-  }
-
-  function getStoneLabel(stoneId: number) {
-    const stone = allStones?.find(s => s.id === stoneId)
-    return stone ? `${stone.brand} ${stone.grit}` : `Камень ${stoneId}`
   }
 
   async function handleSave() {
     if (!clientId || !knifeBrand.trim()) return
+
+    const knifeInRef = knifeSuggestions.some(k => k.toLowerCase() === knifeBrand.trim().toLowerCase())
+    if (!knifeInRef) {
+      await db.knives.add({ brand: knifeBrand.trim(), isCustom: true })
+    }
+
+    if (steel.trim()) {
+      const steelInRef = steelSuggestions.some(s => s.toLowerCase() === steel.trim().toLowerCase())
+      if (!steelInRef) {
+        await db.steels.add({ name: steel.trim(), isCustom: true })
+      }
+    }
 
     const data = {
       clientId,
@@ -296,46 +313,29 @@ export default function SharpeningForm() {
             <label className={s.label}>Камни</label>
             {selectedStones.length > 0 && (
               <div className={s.stoneTags}>
-                {selectedStones.map(ss => (
-                  <div key={ss.stoneId} className={s.stoneTag}>
+                {selectedStones.map((ss, i) => (
+                  <div key={i} className={s.stoneTag}>
                     <span className={s.stoneOrder}>{ss.order}.</span>
-                    <span>{getStoneLabel(ss.stoneId)}</span>
-                    <button className={s.stoneRemove} onClick={() => removeStone(ss.stoneId)}>×</button>
+                    <span>{ss.name}</span>
+                    <button className={s.stoneRemove} onClick={() => removeStone(i)}>×</button>
                   </div>
                 ))}
               </div>
             )}
-            <button
-              className={s.stonePickerToggle}
-              onClick={() => setShowStonePicker(v => !v)}
-            >
-              <span className={s.stonePickerIcon}>+</span>
-              Добавить камень
-            </button>
-            {showStonePicker && (
-              <div className={s.stonePicker}>
-                {Object.keys(stonesByType).length === 0 && (
-                  <div style={{ padding: '12px 16px', color: 'var(--text-300)', fontSize: 14 }}>
-                    Справочник камней пуст — добавьте камни в разделе «Справочник»
-                  </div>
-                )}
-                {Object.entries(stonesByType).map(([type, stones]) => (
-                  <div key={type} className={s.stoneGroup}>
-                    <div className={s.stoneGroupTitle}>{STONE_TYPE_LABELS[type] ?? type}</div>
-                    {stones.map(stone => (
-                      <div
-                        key={stone.id}
-                        className={s.stoneOption}
-                        onClick={() => { addStone(stone.id!); setShowStonePicker(false) }}
-                      >
-                        <span className={s.stoneOptionName}>{stone.brand}</span>
-                        <span className={s.stoneOptionGrit}>{stone.grit} grit</span>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className={s.stoneInputRow}>
+              <Autocomplete
+                value={stoneInput}
+                onChange={setStoneInput}
+                suggestions={stoneSuggestions}
+                onSelect={addStone}
+                placeholder="Naniwa 1000, Shapton 2000..."
+              />
+              <button
+                className={s.stoneAddBtn}
+                onClick={() => addStone(stoneInput)}
+                disabled={!stoneInput.trim()}
+              >+</button>
+            </div>
           </div>
 
           <div className={s.field}>
@@ -365,9 +365,9 @@ export default function SharpeningForm() {
           <div className={s.field}>
             <label className={s.label}>Статус</label>
             <div className={s.statusChips}>
-              {(['accepted', 'inwork', 'done'] as SharpeningStatus[]).map(st => {
-                const labels = { accepted: 'принят', inwork: 'в работе', done: 'готов' }
-                const activeClass = { accepted: s.activeAccepted, inwork: s.activeInwork, done: s.activeDone }
+              {(['accepted', 'done'] as SharpeningStatus[]).map(st => {
+                const labels = { accepted: 'принят', done: 'готов' }
+                const activeClass = { accepted: s.activeAccepted, done: s.activeDone }
                 return (
                   <button
                     key={st}

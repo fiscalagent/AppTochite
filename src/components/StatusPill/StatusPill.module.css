@@ -14,11 +14,6 @@
   background: var(--status-accepted-bg);
 }
 
-.inwork {
-  color: var(--status-inwork);
-  background: var(--status-inwork-bg);
-}
-
 .done {
   color: var(--status-done);
   background: var(--status-done-bg);
