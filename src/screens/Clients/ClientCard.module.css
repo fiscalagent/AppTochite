@@ -1,0 +1,165 @@
+.screen {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+}
+
+.backBtn {
+  color: var(--accent);
+  font-size: 24px;
+  line-height: 1;
+  padding: 4px;
+}
+
+.headerTitle {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--text-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editBtn {
+  color: var(--accent);
+  font-size: 14px;
+  padding: 4px 8px;
+}
+
+/* Профиль клиента */
+.profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--bg-200);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.profileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.profileName {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-100);
+}
+
+.profileMeta {
+  font-size: 13px;
+  color: var(--text-300);
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Заточки */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-300);
+}
+
+.newBtn {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sharpeningList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sharpeningRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--bg-200);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+
+.sharpeningRow:active {
+  border-color: var(--border-200);
+}
+
+.sharpeningInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.knifeName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sharpeningMeta {
+  font-size: 13px;
+  color: var(--text-300);
+  margin-top: 2px;
+}
+
+.sharpeningRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.price {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--text-200);
+}
+
+.empty {
+  text-align: center;
+  color: var(--text-300);
+  font-size: 14px;
+  padding: var(--space-8) 0;
+}
+
+.deleteBtn {
+  background: transparent;
+  color: var(--danger);
+  font-size: 15px;
+  padding: var(--space-3);
+  text-align: center;
+  width: 100%;
+  margin-top: var(--space-2);
+}

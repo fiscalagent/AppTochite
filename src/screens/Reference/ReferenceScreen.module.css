@@ -1,0 +1,211 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  padding: var(--space-4);
+  padding-top: calc(var(--space-4) + var(--space-4));
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--text-100);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-100);
+  padding: 0 var(--space-4);
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 4px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--text-300);
+  text-align: center;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Content */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Search */
+.searchWrap {
+  position: relative;
+}
+
+.searchInput {
+  padding-left: 36px !important;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-400);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* List */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item {
+  background: var(--bg-200);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.itemInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-100);
+}
+
+.itemMeta {
+  font-size: 13px;
+  color: var(--text-300);
+  margin-top: 2px;
+}
+
+.itemRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.gritBadge {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text-200);
+}
+
+.customBadge {
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+}
+
+.deleteItemBtn {
+  color: var(--text-400);
+  font-size: 18px;
+  padding: 4px;
+  line-height: 1;
+}
+
+.empty {
+  text-align: center;
+  color: var(--text-300);
+  font-size: 14px;
+  padding: var(--space-8) 0;
+}
+
+/* Add form */
+.addCard {
+  background: var(--bg-200);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.addTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-200);
+}
+
+.addRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.addRow input, .addRow select {
+  flex: 1;
+}
+
+.addBtn {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.addBtn:disabled {
+  opacity: 0.5;
+}
+
+.addToggle {
+  border: 1px dashed var(--border-200);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  color: var(--text-300);
+  font-size: 14px;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  width: 100%;
+}
+
+.addToggleIcon {
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.select {
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--text-100);
+  font-size: 15px;
+  font-family: var(--font-body);
+  appearance: none;
+}

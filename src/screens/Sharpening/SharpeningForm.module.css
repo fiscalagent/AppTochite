@@ -1,0 +1,395 @@
+.screen {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+}
+
+.backBtn {
+  color: var(--accent);
+  font-size: 24px;
+  line-height: 1;
+  padding: 4px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--text-100);
+}
+
+/* Stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepDot {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-300);
+  flex-shrink: 0;
+}
+
+.stepDot.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent-light);
+}
+
+.stepDot.done {
+  border-color: var(--status-done);
+  background: var(--status-done-bg);
+  color: var(--status-done);
+}
+
+.stepLabel {
+  font-size: 13px;
+  color: var(--text-300);
+}
+
+.stepLabel.active {
+  color: var(--text-100);
+  font-weight: 600;
+}
+
+.stepLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-100);
+  margin: 0 var(--space-1);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-300);
+}
+
+/* Condition chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  border: 1px solid var(--border-100);
+  background: var(--bg-400);
+  color: var(--text-200);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chip.selected {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
+/* Status chips */
+.statusChips {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.statusChip {
+  flex: 1;
+  border-radius: var(--radius-full);
+  padding: 8px 4px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border: 1px solid var(--border-100);
+  background: var(--bg-400);
+  color: var(--text-300);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.statusChip.accepted { color: var(--status-accepted); }
+.statusChip.inwork   { color: var(--status-inwork); }
+.statusChip.done     { color: var(--status-done); }
+
+.statusChip.activeAccepted { background: var(--status-accepted-bg); border-color: var(--status-accepted); }
+.statusChip.activeInwork   { background: var(--status-inwork-bg);   border-color: var(--status-inwork); }
+.statusChip.activeDone     { background: var(--status-done-bg);     border-color: var(--status-done); }
+
+/* Stone picker */
+.stoneTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.stoneTag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-400);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-sm);
+  padding: 3px 9px;
+  font-size: 12px;
+  color: var(--text-200);
+}
+
+.stoneOrder {
+  color: var(--text-400);
+  font-size: 10px;
+}
+
+.stoneRemove {
+  color: var(--text-400);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.stonePickerToggle {
+  border: 1px dashed var(--border-200);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  color: var(--text-300);
+  font-size: 14px;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.stonePickerIcon {
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.stonePicker {
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.stoneGroup {
+  padding: var(--space-3) var(--space-4);
+}
+
+.stoneGroupTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-300);
+  margin-bottom: var(--space-2);
+}
+
+.stoneOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-100);
+  cursor: pointer;
+}
+
+.stoneOption:last-child {
+  border-bottom: none;
+}
+
+.stoneOptionName {
+  font-size: 14px;
+  color: var(--text-100);
+}
+
+.stoneOptionGrit {
+  font-size: 12px;
+  color: var(--text-300);
+}
+
+/* Client select */
+.select {
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--text-100);
+  font-size: 15px;
+  font-family: var(--font-body);
+  width: 100%;
+  appearance: none;
+}
+
+.select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+
+.primaryBtn {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 13px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  width: 100%;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+}
+
+.secondaryBtn {
+  background: var(--bg-400);
+  color: var(--text-100);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  padding: 11px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.row .field {
+  flex: 1;
+}
+
+/* Photo */
+.photoSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+}
+
+.photoTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-200);
+}
+
+.photoHint {
+  font-size: 13px;
+  color: var(--text-300);
+}
+
+.photoThumbs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.photoThumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-200);
+  flex-shrink: 0;
+}
+
+.photoThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoRemove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.photoAddBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px dashed var(--border-200);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--text-300);
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  width: fit-content;
+}
+
+.photoAddIcon {
+  font-size: 18px;
+  color: var(--accent);
+}

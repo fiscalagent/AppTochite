@@ -1,0 +1,25 @@
+.pill {
+  display: inline-block;
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.accepted {
+  color: var(--status-accepted);
+  background: var(--status-accepted-bg);
+}
+
+.inwork {
+  color: var(--status-inwork);
+  background: var(--status-inwork-bg);
+}
+
+.done {
+  color: var(--status-done);
+  background: var(--status-done-bg);
+}

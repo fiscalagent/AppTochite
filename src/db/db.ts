@@ -1,0 +1,86 @@
+import Dexie, { type Table } from 'dexie'
+
+export interface Client {
+  id?: number
+  name: string
+  phone?: string
+  telegram?: string
+  isSelf: boolean
+  createdAt: Date
+}
+
+export interface SharpeningStone {
+  stoneId: number
+  order: number
+}
+
+export type SharpeningStatus = 'accepted' | 'inwork' | 'done'
+
+export interface Sharpening {
+  id?: number
+  clientId: number
+  knifeBrand: string
+  steel?: string
+  hrc?: number
+  knifeType?: string
+  condition?: string[]
+  receivedAt: Date
+  angle?: number
+  stones?: SharpeningStone[]
+  comment?: string
+  price?: number
+  status: SharpeningStatus
+  doneAt?: Date
+  photosBefore?: string[]
+  photosAfter?: string[]
+}
+
+export interface Stone {
+  id?: number
+  brand: string
+  grit: number
+  type: 'water' | 'oil' | 'diamond'
+  description?: string
+  isCustom: boolean
+}
+
+export interface Steel {
+  id?: number
+  name: string
+  hrc?: number
+  recommendedAngle?: number
+  description?: string
+  isCustom: boolean
+}
+
+export interface Knife {
+  id?: number
+  brand: string
+  country?: string
+  steel?: string
+  recommendedAngle?: number
+  type?: string
+  description?: string
+  isCustom: boolean
+}
+
+class AppTochiteDB extends Dexie {
+  clients!: Table<Client>
+  sharpenings!: Table<Sharpening>
+  stones!: Table<Stone>
+  steels!: Table<Steel>
+  knives!: Table<Knife>
+
+  constructor() {
+    super('AppTochiteDB')
+    this.version(1).stores({
+      clients:     '++id, name, isSelf',
+      sharpenings: '++id, clientId, status, receivedAt',
+      stones:      '++id, brand, type, isCustom',
+      steels:      '++id, name, isCustom',
+      knives:      '++id, brand, isCustom',
+    })
+  }
+}
+
+export const db = new AppTochiteDB()

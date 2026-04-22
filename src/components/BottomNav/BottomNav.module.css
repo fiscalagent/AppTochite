@@ -1,0 +1,48 @@
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: var(--bg-200);
+  border-top: 1px solid var(--border-100);
+  display: flex;
+  align-items: center;
+  z-index: 100;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  color: var(--text-300);
+  font-size: 10px;
+  font-family: var(--font-body);
+  transition: color 0.15s;
+}
+
+.tab.active {
+  color: var(--accent);
+}
+
+.tabIcon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.addBtn {
+  margin: 8px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  flex-shrink: 0;
+}

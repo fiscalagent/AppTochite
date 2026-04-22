@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Golos+Text:wght@400;600;700&display=swap');
+
+:root {
+  /* Backgrounds */
+  --bg-100: #0F0F11;
+  --bg-200: #16161A;
+  --bg-300: #1E1E24;
+  --bg-400: #27272F;
+
+  /* Borders */
+  --border-100: #2E2E38;
+  --border-200: #3D3D4A;
+
+  /* Text */
+  --text-100: #F2F2F5;
+  --text-200: #B8B8C8;
+  --text-300: #72728A;
+  --text-400: #4A4A60;
+
+  /* Accent — steel blue */
+  --accent: #4A90D9;
+  --accent-light: #6AAAE8;
+  --accent-dim: #1E3A5F;
+
+  /* Status */
+  --status-accepted: #4A90D9;
+  --status-accepted-bg: #1A2E45;
+  --status-inwork: #D9A832;
+  --status-inwork-bg: #3D2E0F;
+  --status-done: #3DB87A;
+  --status-done-bg: #0F2E1E;
+
+  /* Danger */
+  --danger: #E05555;
+  --danger-dim: #3A1515;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Fonts */
+  --font-display: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  --font-body: 'Golos Text', 'Segoe UI', sans-serif;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+}
