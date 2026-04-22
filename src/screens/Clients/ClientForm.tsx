@@ -30,13 +30,19 @@ export default function ClientForm() {
     })
   }, [id])
 
+  function normalizeTelegram(value: string): string | undefined {
+    const t = value.trim()
+    if (!t) return undefined
+    return t.startsWith('@') ? t : `@${t}`
+  }
+
   async function handleSave() {
     if (!name.trim()) return
     if (isEdit) {
       await db.clients.update(Number(id), {
         name: name.trim(),
         phone: phone.trim() || undefined,
-        telegram: telegram.trim() || undefined,
+        telegram: normalizeTelegram(telegram),
       })
       showToast('Клиент сохранён')
       navigate(`/clients/${id}`)
@@ -44,7 +50,7 @@ export default function ClientForm() {
       const newId = await db.clients.add({
         name: name.trim(),
         phone: phone.trim() || undefined,
-        telegram: telegram.trim() || undefined,
+        telegram: normalizeTelegram(telegram),
         isSelf: false,
         createdAt: new Date(),
       })

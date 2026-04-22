@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus, type SharpeningStone } from '../../db/db'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
+import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import s from './SharpeningForm.module.css'
 
 const CONDITIONS = ['тупой', 'выщерблины', 'повреждение РК', 'деформация', 'ржавчина']
@@ -30,7 +31,6 @@ export default function SharpeningForm() {
   // Step 1 — Приёмка
   const [clientId, setClientId] = useState<number | null>(prefilledClientId)
   const [knifeBrand, setKnifeBrand] = useState('')
-  const [knifeType, setKnifeType] = useState('')
   const [steel, setSteel] = useState('')
   const [hrc, setHrc] = useState('')
   const [condition, setCondition] = useState<string[]>([])
@@ -48,6 +48,14 @@ export default function SharpeningForm() {
 
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
   const allStones = useLiveQuery(() => db.stones.orderBy('grit').toArray(), [])
+  const knifeSuggestions = useLiveQuery(async () => {
+    const items = await db.knives.orderBy('brand').toArray()
+    return [...new Set(items.map(k => k.brand))]
+  }, []) ?? []
+  const steelSuggestions = useLiveQuery(async () => {
+    const items = await db.steels.orderBy('name').toArray()
+    return [...new Set(items.map(st => st.name))]
+  }, []) ?? []
 
   useEffect(() => {
     if (!id) return
@@ -55,7 +63,6 @@ export default function SharpeningForm() {
       if (!sh) return
       setClientId(sh.clientId)
       setKnifeBrand(sh.knifeBrand)
-      setKnifeType(sh.knifeType ?? '')
       setSteel(sh.steel ?? '')
       setHrc(sh.hrc != null ? String(sh.hrc) : '')
       setCondition(sh.condition ?? [])
@@ -107,7 +114,6 @@ export default function SharpeningForm() {
     const data = {
       clientId,
       knifeBrand: knifeBrand.trim(),
-      knifeType: knifeType.trim() || undefined,
       steel: steel.trim() || undefined,
       hrc: hrc ? Number(hrc) : undefined,
       condition: condition.length ? condition : undefined,
@@ -178,31 +184,23 @@ export default function SharpeningForm() {
 
           <div className={s.field}>
             <label className={s.label}>Нож / Бренд *</label>
-            <input
+            <Autocomplete
               value={knifeBrand}
-              onChange={e => setKnifeBrand(e.target.value)}
+              onChange={setKnifeBrand}
+              suggestions={knifeSuggestions}
               placeholder="Mora, Victorinox, самодел..."
               autoFocus={!prefilledClientId}
             />
           </div>
 
-          <div className={s.row}>
-            <div className={s.field}>
-              <label className={s.label}>Тип ножа</label>
-              <input
-                value={knifeType}
-                onChange={e => setKnifeType(e.target.value)}
-                placeholder="кухонный, охотничий..."
-              />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Сталь</label>
-              <input
-                value={steel}
-                onChange={e => setSteel(e.target.value)}
-                placeholder="AUS-8, D2..."
-              />
-            </div>
+          <div className={s.field}>
+            <label className={s.label}>Сталь</label>
+            <Autocomplete
+              value={steel}
+              onChange={setSteel}
+              suggestions={steelSuggestions}
+              placeholder="AUS-8, D2..."
+            />
           </div>
 
           <div className={s.row}>

@@ -22,7 +22,6 @@ export interface Sharpening {
   knifeBrand: string
   steel?: string
   hrc?: number
-  knifeType?: string
   condition?: string[]
   receivedAt: Date
   angle?: number
@@ -40,6 +39,7 @@ export interface Stone {
   brand: string
   grit: number
   type: 'water' | 'oil' | 'diamond'
+  category?: string
   description?: string
   isCustom: boolean
 }
@@ -49,6 +49,7 @@ export interface Steel {
   name: string
   hrc?: number
   recommendedAngle?: number
+  category?: string
   description?: string
   isCustom: boolean
 }
@@ -60,6 +61,7 @@ export interface Knife {
   steel?: string
   recommendedAngle?: number
   type?: string
+  category?: string
   description?: string
   isCustom: boolean
 }
@@ -79,6 +81,9 @@ class AppTochiteDB extends Dexie {
       stones:      '++id, brand, type, isCustom',
       steels:      '++id, name, isCustom',
       knives:      '++id, brand, isCustom',
+    })
+    this.version(2).stores({
+      stones: '++id, brand, grit, type, isCustom',
     })
   }
 }

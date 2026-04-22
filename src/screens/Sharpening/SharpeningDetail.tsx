@@ -75,12 +75,6 @@ export default function SharpeningDetail() {
           <span className={s.rowLabel}>Бренд</span>
           <span className={s.rowValue}>{sh.knifeBrand}</span>
         </div>
-        {sh.knifeType && (
-          <div className={s.row}>
-            <span className={s.rowLabel}>Тип</span>
-            <span className={s.rowValue}>{sh.knifeType}</span>
-          </div>
-        )}
         {sh.steel && (
           <div className={s.row}>
             <span className={s.rowLabel}>Сталь</span>

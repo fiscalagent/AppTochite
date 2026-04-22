@@ -1,0 +1,33 @@
+.wrap {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-200);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.item {
+  padding: 11px 14px;
+  font-size: 15px;
+  color: var(--text-100);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-100);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item:active {
+  background: var(--accent-dim);
+  color: var(--accent-light);
+}
