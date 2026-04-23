@@ -2,14 +2,14 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
 import Avatar from '../../components/Avatar/Avatar'
-import StatusPill from '../../components/StatusPill/StatusPill'
-import type { Client, SharpeningStatus } from '../../db/db'
+import type { Client } from '../../db/db'
 import s from './ClientList.module.css'
 
 interface ClientRow {
   client: Client
   count: number
-  lastStatus?: SharpeningStatus
+  acceptedCount: number
+  doneCount: number
 }
 
 export default function ClientList() {
@@ -25,12 +25,11 @@ export default function ClientList() {
       sorted.map(async (client) => {
         const sharpenings = await db.sharpenings
           .where('clientId').equals(client.id!)
-          .sortBy('receivedAt')
+          .toArray()
         const count = sharpenings.length
-        const lastStatus = count > 0
-          ? sharpenings[sharpenings.length - 1].status
-          : undefined
-        return { client, count, lastStatus }
+        const acceptedCount = sharpenings.filter(s => s.status === 'accepted').length
+        const doneCount = sharpenings.filter(s => s.status === 'done').length
+        return { client, count, acceptedCount, doneCount }
       })
     )
   }, [])
@@ -48,7 +47,7 @@ export default function ClientList() {
         {rows?.length === 0 && (
           <p className={s.empty}>Нет клиентов</p>
         )}
-        {rows?.map(({ client, count, lastStatus }) => (
+        {rows?.map(({ client, count, acceptedCount, doneCount }) => (
           <Link key={client.id} to={`/clients/${client.id}`} className={s.card}>
             <Avatar name={client.name} size={40} isSelf={client.isSelf} />
             <div className={s.info}>
@@ -59,7 +58,16 @@ export default function ClientList() {
             </div>
             <div className={s.right}>
               <span className={s.count}>{count}</span>
-              {lastStatus && <StatusPill status={lastStatus} />}
+              {count > 0 && (
+                <div className={s.statusCounts}>
+                  {acceptedCount > 0 && (
+                    <span className={s.statusBadgeAccepted}>{acceptedCount} принят</span>
+                  )}
+                  {doneCount > 0 && (
+                    <span className={s.statusBadgeDone}>{doneCount} готов</span>
+                  )}
+                </div>
+              )}
             </div>
           </Link>
         ))}

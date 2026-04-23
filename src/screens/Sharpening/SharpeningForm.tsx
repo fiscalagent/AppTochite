@@ -295,7 +295,7 @@ export default function SharpeningForm() {
               onClick={() => takePhoto(b64 => setPhotosBefore(prev => [...prev, b64]))}
             >
               <span className={s.photoAddIcon}>📷</span>
-              Сфотографировать
+              Добавить фото
             </button>
           </div>
 
@@ -424,7 +424,7 @@ export default function SharpeningForm() {
                 onClick={() => takePhoto(b64 => setPhotosAfter(prev => [...prev, b64]))}
               >
                 <span className={s.photoAddIcon}>📷</span>
-                Сфотографировать
+                Добавить фото
               </button>
             </div>
           )}

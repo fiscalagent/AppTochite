@@ -87,6 +87,31 @@
   line-height: 1;
 }
 
+.statusCounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.statusBadgeAccepted,
+.statusBadgeDone {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.statusBadgeAccepted {
+  background: color-mix(in srgb, var(--status-accepted) 15%, transparent);
+  color: var(--status-accepted);
+}
+
+.statusBadgeDone {
+  background: color-mix(in srgb, var(--status-done) 15%, transparent);
+  color: var(--status-done);
+}
+
 .empty {
   text-align: center;
   color: var(--text-300);

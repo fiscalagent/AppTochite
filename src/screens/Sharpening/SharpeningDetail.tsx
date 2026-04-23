@@ -248,7 +248,7 @@ export default function SharpeningDetail() {
               </div>
             )}
             <button className={s.photoModalAddBtn} onClick={handleAddAfterPhoto}>
-              Сфотографировать
+              Добавить фото
             </button>
             <button className={s.photoModalSkipBtn} onClick={() => setPhotoModal(false)}>
               {sh.photosAfter && sh.photosAfter.length > 0 ? 'Готово' : 'Пропустить'}
