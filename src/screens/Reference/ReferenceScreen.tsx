@@ -49,9 +49,7 @@ function StonesTab({ search }: { search: string }) {
             <div className={s.itemRight}>
               <span className={s.gritBadge}>{st.grit}</span>
               {st.isCustom && <span className={s.customBadge}>мой</span>}
-              {st.isCustom && (
-                <button className={s.deleteItemBtn} onClick={() => db.stones.delete(st.id!)}>×</button>
-              )}
+              <button className={s.deleteItemBtn} onClick={() => db.stones.delete(st.id!)}>×</button>
             </div>
           </div>
         ))}
@@ -125,9 +123,7 @@ function SteelsTab({ search }: { search: string }) {
             </div>
             <div className={s.itemRight}>
               {st.isCustom && <span className={s.customBadge}>моя</span>}
-              {st.isCustom && (
-                <button className={s.deleteItemBtn} onClick={() => db.steels.delete(st.id!)}>×</button>
-              )}
+              <button className={s.deleteItemBtn} onClick={() => db.steels.delete(st.id!)}>×</button>
             </div>
           </div>
         ))}
@@ -196,9 +192,7 @@ function KnivesTab({ search }: { search: string }) {
             </div>
             <div className={s.itemRight}>
               {k.isCustom && <span className={s.customBadge}>мой</span>}
-              {k.isCustom && (
-                <button className={s.deleteItemBtn} onClick={() => db.knives.delete(k.id!)}>×</button>
-              )}
+              <button className={s.deleteItemBtn} onClick={() => db.knives.delete(k.id!)}>×</button>
             </div>
           </div>
         ))}
