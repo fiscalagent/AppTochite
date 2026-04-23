@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifest: {
         name: 'AppTochite',
-        short_name: 'Точилка',
+        short_name: 'AppTochite',
         description: 'Журнал профессионального заточника',
         theme_color: '#161618',
         background_color: '#161618',
