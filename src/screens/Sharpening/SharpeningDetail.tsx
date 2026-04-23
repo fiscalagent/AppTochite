@@ -49,7 +49,12 @@ export default function SharpeningDetail() {
     const current = await db.sharpenings.get(sharpeningId)
     if (!current) return
     const updated = (current[field] ?? []).filter((_, i) => i !== index)
-    await db.sharpenings.update(sharpeningId, { [field]: updated.length ? updated : undefined })
+    const value = updated.length ? updated : undefined
+    if (field === 'photosBefore') {
+      await db.sharpenings.update(sharpeningId, { photosBefore: value })
+    } else {
+      await db.sharpenings.update(sharpeningId, { photosAfter: value })
+    }
   }
 
   async function handleDelete() {
