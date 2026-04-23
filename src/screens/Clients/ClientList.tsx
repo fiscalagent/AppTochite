@@ -50,7 +50,7 @@ export default function ClientList() {
         )}
         {rows?.map(({ client, count, lastStatus }) => (
           <Link key={client.id} to={`/clients/${client.id}`} className={s.card}>
-            <Avatar name={client.name} size={40} />
+            <Avatar name={client.name} size={40} isSelf={client.isSelf} />
             <div className={s.info}>
               <div className={s.name}>{client.name}</div>
               {client.phone && (
