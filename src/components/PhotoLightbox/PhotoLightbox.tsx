@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, TouchEvent } from 'react'
+import { useState, useRef, useEffect, type TouchEvent } from 'react'
 import s from './PhotoLightbox.module.css'
 
 interface Props {
@@ -39,7 +39,7 @@ export default function PhotoLightbox({ photos, initialIndex = 0, onClose }: Pro
     return () => window.removeEventListener('keydown', onKey)
   }, [index, photos.length, onClose])
 
-  function pinchDist(t1: Touch, t2: Touch) {
+  function pinchDist(t1: { clientX: number; clientY: number }, t2: { clientX: number; clientY: number }) {
     return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY)
   }
 
