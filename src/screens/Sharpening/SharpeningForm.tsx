@@ -196,12 +196,13 @@ export default function SharpeningForm() {
       {step === 1 && (
         <div className={s.form}>
           {!prefilledClientId && (
-            <div className={s.field}>
-              <label className={s.label}>Клиент *</label>
+            <div className={`${s.field} ${s.fieldRequired}`}>
+              <label className={s.label}>Клиент <span className={s.req}>*</span></label>
               <select
                 className={s.select}
                 value={clientId ?? ''}
                 onChange={e => setClientId(Number(e.target.value))}
+                required
               >
                 <option value="">Выбрать клиента</option>
                 {sortedClients.map(c => (
@@ -211,8 +212,8 @@ export default function SharpeningForm() {
             </div>
           )}
 
-          <div className={s.field}>
-            <label className={s.label}>Нож / Бренд *</label>
+          <div className={`${s.field} ${s.fieldRequired}`}>
+            <label className={s.label}>Нож / Бренд <span className={s.req}>*</span></label>
             <Autocomplete
               value={knifeBrand}
               onChange={setKnifeBrand}

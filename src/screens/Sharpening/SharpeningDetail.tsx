@@ -45,6 +45,13 @@ export default function SharpeningDetail() {
     })
   }
 
+  async function handleRemovePhoto(field: 'photosBefore' | 'photosAfter', index: number) {
+    const current = await db.sharpenings.get(sharpeningId)
+    if (!current) return
+    const updated = (current[field] ?? []).filter((_, i) => i !== index)
+    await db.sharpenings.update(sharpeningId, { [field]: updated.length ? updated : undefined })
+  }
+
   async function handleDelete() {
     await db.sharpenings.delete(sharpeningId)
     showToast('Заточка удалена')
@@ -150,13 +157,18 @@ export default function SharpeningDetail() {
               <div className={s.photoSectionTitle}>Фото «До»</div>
               <div className={s.photoScroll}>
                 {sh.photosBefore.map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    className={s.photoImg}
-                    alt=""
-                    onClick={() => setLightbox({ photos: sh.photosBefore!, index: i })}
-                  />
+                  <div key={i} className={s.photoWrapper}>
+                    <img
+                      src={src}
+                      className={s.photoImg}
+                      alt=""
+                      onClick={() => setLightbox({ photos: sh.photosBefore!, index: i })}
+                    />
+                    <button
+                      className={s.photoRemove}
+                      onClick={() => handleRemovePhoto('photosBefore', i)}
+                    >×</button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -166,13 +178,18 @@ export default function SharpeningDetail() {
               <div className={s.photoSectionTitle}>Фото «После»</div>
               <div className={s.photoScroll}>
                 {sh.photosAfter.map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    className={s.photoImg}
-                    alt=""
-                    onClick={() => setLightbox({ photos: sh.photosAfter!, index: i })}
-                  />
+                  <div key={i} className={s.photoWrapper}>
+                    <img
+                      src={src}
+                      className={s.photoImg}
+                      alt=""
+                      onClick={() => setLightbox({ photos: sh.photosAfter!, index: i })}
+                    />
+                    <button
+                      className={s.photoRemove}
+                      onClick={() => handleRemovePhoto('photosAfter', i)}
+                    >×</button>
+                  </div>
                 ))}
               </div>
             </div>

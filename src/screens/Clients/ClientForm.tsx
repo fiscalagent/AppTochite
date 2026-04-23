@@ -77,13 +77,14 @@ export default function ClientForm() {
       </div>
 
       <div className={s.form}>
-        <div className={s.field}>
-          <label className={s.label}>Имя *</label>
+        <div className={`${s.field} ${s.fieldRequired}`}>
+          <label className={s.label}>Имя <span className={s.req}>*</span></label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Иван Петров"
             autoFocus
+            required
           />
         </div>
         <div className={s.field}>
