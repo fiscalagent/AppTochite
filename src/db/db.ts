@@ -38,7 +38,7 @@ export interface Stone {
   id?: number
   brand: string
   grit: number
-  type: 'water' | 'oil' | 'diamond'
+  type: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir'
   category?: string
   description?: string
   isCustom: boolean

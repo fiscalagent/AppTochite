@@ -13,7 +13,13 @@ const TABS: { value: Tab; label: string }[] = [
 ]
 
 const STONE_TYPE_LABELS: Record<string, string> = {
-  water: 'водный', oil: 'масляный', diamond: 'алмазный',
+  galvanic: 'гальваника',
+  ao: 'ОА',
+  kk: 'КК',
+  diamond: 'алмаз',
+  elbor: 'эльбор',
+  natural: 'природа',
+  pritir: 'притир',
 }
 
 // ─── Stones ──────────────────────────────────────────────────────────────────
@@ -22,7 +28,7 @@ function StonesTab({ search }: { search: string }) {
   const [open, setOpen] = useState(false)
   const [brand, setBrand] = useState('')
   const [grit, setGrit] = useState('')
-  const [type, setType] = useState<Stone['type']>('water')
+  const [type, setType] = useState<Stone['type']>('ao')
 
   const stones = useLiveQuery(() => db.stones.orderBy('grit').toArray(), [])
 
@@ -68,9 +74,13 @@ function StonesTab({ search }: { search: string }) {
           <div className={s.addRow}>
             <input value={grit} onChange={e => setGrit(e.target.value)} placeholder="Грит (1000)" type="number" min={1} />
             <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'])}>
-              <option value="water">Водный</option>
-              <option value="oil">Масляный</option>
-              <option value="diamond">Алмазный</option>
+              <option value="galvanic">Гальваника</option>
+              <option value="ao">ОА</option>
+              <option value="kk">КК</option>
+              <option value="diamond">Алмаз</option>
+              <option value="elbor">Эльбор</option>
+              <option value="natural">Природа</option>
+              <option value="pritir">Притир</option>
             </select>
           </div>
           <div className={s.addRow}>

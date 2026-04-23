@@ -134,7 +134,7 @@ export default function SharpeningForm() {
         const grit = hasGrit ? parsedGrit : 0
         const key = `${brand.toLowerCase()} ${grit}`
         if (!existingKeys.has(key)) {
-          await db.stones.add({ brand, grit, type: 'water', isCustom: true })
+          await db.stones.add({ brand, grit, type: 'ao', isCustom: true })
           existingKeys.add(key)
         }
       }

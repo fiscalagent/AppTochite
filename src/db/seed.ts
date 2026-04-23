@@ -13,37 +13,37 @@ import type { Stone, Steel, Knife } from './db';
 // ─── Камни ───────────────────────────────────────────────────────────────────
 
 const STONES: Omit<Stone, 'id'>[] = [
-  // Водные
-  { brand: 'King KW-65',        grit: 1000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'King KW-65',        grit: 6000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Naniwa Chosera',    grit: 400,   type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Naniwa Chosera',    grit: 800,   type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Naniwa Chosera',    grit: 1000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Naniwa Chosera',    grit: 2000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Naniwa Chosera',    grit: 3000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Naniwa Chosera',    grit: 5000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Suehiro Cerax',     grit: 1000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Suehiro Cerax',     grit: 3000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Shapton Glass',     grit: 500,   type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Shapton Glass',     grit: 1000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Shapton Glass',     grit: 2000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Shapton Glass',     grit: 4000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Shapton Glass',     grit: 8000,  type: 'water',   category: 'water',   isCustom: false },
-  { brand: 'Shapton Glass',     grit: 16000, type: 'water',   category: 'water',   isCustom: false },
-  // Алмазные
-  { brand: 'DMT Extra Coarse',    grit: 220,  type: 'diamond', category: 'diamond', isCustom: false },
-  { brand: 'DMT Coarse',          grit: 325,  type: 'diamond', category: 'diamond', isCustom: false },
-  { brand: 'DMT Fine',            grit: 600,  type: 'diamond', category: 'diamond', isCustom: false },
-  { brand: 'DMT Extra Fine',      grit: 1200, type: 'diamond', category: 'diamond', isCustom: false },
-  { brand: 'Атома Extra Coarse',  grit: 140,  type: 'diamond', category: 'diamond', isCustom: false },
-  { brand: 'Атома Coarse',        grit: 360,  type: 'diamond', category: 'diamond', isCustom: false },
-  { brand: 'Атома Fine',          grit: 600,  type: 'diamond', category: 'diamond', isCustom: false },
-  // Масляные
-  { brand: 'Arkansas Soft',       grit: 400,  type: 'oil',     category: 'oil',     isCustom: false },
-  { brand: 'Arkansas Hard',       grit: 800,  type: 'oil',     category: 'oil',     isCustom: false },
-  { brand: 'Arkansas Black',      grit: 1200, type: 'oil',     category: 'oil',     isCustom: false },
-  { brand: 'Norton India Fine',   grit: 600,  type: 'oil',     category: 'oil',     isCustom: false },
-  { brand: 'Norton India Medium', grit: 300,  type: 'oil',     category: 'oil',     isCustom: false },
+  // ОА (оксид алюминия)
+  { brand: 'King KW-65',        grit: 1000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'King KW-65',        grit: 6000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Naniwa Chosera',    grit: 400,   type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Naniwa Chosera',    grit: 800,   type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Naniwa Chosera',    grit: 1000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Naniwa Chosera',    grit: 2000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Naniwa Chosera',    grit: 3000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Naniwa Chosera',    grit: 5000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Suehiro Cerax',     grit: 1000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Suehiro Cerax',     grit: 3000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Shapton Glass',     grit: 500,   type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Shapton Glass',     grit: 1000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Shapton Glass',     grit: 2000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Shapton Glass',     grit: 4000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Shapton Glass',     grit: 8000,  type: 'ao',      category: 'ao',      isCustom: false },
+  { brand: 'Shapton Glass',     grit: 16000, type: 'ao',      category: 'ao',      isCustom: false },
+  // Алмазные (гальваника)
+  { brand: 'DMT Extra Coarse',    grit: 220,  type: 'galvanic', category: 'galvanic', isCustom: false },
+  { brand: 'DMT Coarse',          grit: 325,  type: 'galvanic', category: 'galvanic', isCustom: false },
+  { brand: 'DMT Fine',            grit: 600,  type: 'galvanic', category: 'galvanic', isCustom: false },
+  { brand: 'DMT Extra Fine',      grit: 1200, type: 'galvanic', category: 'galvanic', isCustom: false },
+  { brand: 'Атома Extra Coarse',  grit: 140,  type: 'galvanic', category: 'galvanic', isCustom: false },
+  { brand: 'Атома Coarse',        grit: 360,  type: 'galvanic', category: 'galvanic', isCustom: false },
+  { brand: 'Атома Fine',          grit: 600,  type: 'galvanic', category: 'galvanic', isCustom: false },
+  // Природный камень
+  { brand: 'Arkansas Soft',       grit: 400,  type: 'natural',  category: 'natural',  isCustom: false },
+  { brand: 'Arkansas Hard',       grit: 800,  type: 'natural',  category: 'natural',  isCustom: false },
+  { brand: 'Arkansas Black',      grit: 1200, type: 'natural',  category: 'natural',  isCustom: false },
+  { brand: 'Norton India Fine',   grit: 600,  type: 'ao',       category: 'ao',       isCustom: false },
+  { brand: 'Norton India Medium', grit: 300,  type: 'ao',       category: 'ao',       isCustom: false },
 ];
 
 // ─── Стали ───────────────────────────────────────────────────────────────────
