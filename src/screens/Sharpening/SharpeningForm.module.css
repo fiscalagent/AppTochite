@@ -188,70 +188,6 @@
   cursor: pointer;
 }
 
-.stonePickerToggle {
-  border: 1px dashed var(--border-200);
-  border-radius: var(--radius-md);
-  padding: 10px 16px;
-  color: var(--text-300);
-  font-size: 14px;
-  font-family: var(--font-body);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-}
-
-.stonePickerIcon {
-  color: var(--accent);
-  font-size: 18px;
-  line-height: 1;
-}
-
-.stonePicker {
-  background: var(--bg-300);
-  border: 1px solid var(--border-100);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.stoneGroup {
-  padding: var(--space-3) var(--space-4);
-}
-
-.stoneGroupTitle {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: var(--text-300);
-  margin-bottom: var(--space-2);
-}
-
-.stoneOption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-100);
-  cursor: pointer;
-}
-
-.stoneOption:last-child {
-  border-bottom: none;
-}
-
-.stoneOptionName {
-  font-size: 14px;
-  color: var(--text-100);
-}
-
-.stoneOptionGrit {
-  font-size: 12px;
-  color: var(--text-300);
-}
-
 /* Stone autocomplete row */
 .stoneInputRow {
   display: flex;
@@ -385,6 +321,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  cursor: pointer;
 }
 
 .photoRemove {

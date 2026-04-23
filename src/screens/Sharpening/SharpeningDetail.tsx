@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
+import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import s from './SharpeningDetail.module.css'
@@ -22,6 +23,7 @@ export default function SharpeningDetail() {
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [photoModal, setPhotoModal] = useState(false)
+  const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const { takePhoto } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
@@ -148,7 +150,13 @@ export default function SharpeningDetail() {
               <div className={s.photoSectionTitle}>Фото «До»</div>
               <div className={s.photoScroll}>
                 {sh.photosBefore.map((src, i) => (
-                  <img key={i} src={src} className={s.photoImg} alt="" />
+                  <img
+                    key={i}
+                    src={src}
+                    className={s.photoImg}
+                    alt=""
+                    onClick={() => setLightbox({ photos: sh.photosBefore!, index: i })}
+                  />
                 ))}
               </div>
             </div>
@@ -158,7 +166,13 @@ export default function SharpeningDetail() {
               <div className={s.photoSectionTitle}>Фото «После»</div>
               <div className={s.photoScroll}>
                 {sh.photosAfter.map((src, i) => (
-                  <img key={i} src={src} className={s.photoImg} alt="" />
+                  <img
+                    key={i}
+                    src={src}
+                    className={s.photoImg}
+                    alt=""
+                    onClick={() => setLightbox({ photos: sh.photosAfter!, index: i })}
+                  />
                 ))}
               </div>
             </div>
@@ -192,6 +206,14 @@ export default function SharpeningDetail() {
         onCancel={() => setConfirmOpen(false)}
       />
 
+      {lightbox && (
+        <PhotoLightbox
+          photos={lightbox.photos}
+          initialIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
+
       {photoModal && (
         <div className={s.photoModalOverlay} onClick={() => setPhotoModal(false)}>
           <div className={s.photoModalSheet} onClick={e => e.stopPropagation()}>
@@ -207,7 +229,7 @@ export default function SharpeningDetail() {
               Сфотографировать
             </button>
             <button className={s.photoModalSkipBtn} onClick={() => setPhotoModal(false)}>
-              Пропустить
+              {sh.photosAfter && sh.photosAfter.length > 0 ? 'Готово' : 'Пропустить'}
             </button>
           </div>
         </div>

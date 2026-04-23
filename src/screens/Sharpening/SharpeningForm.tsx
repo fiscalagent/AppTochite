@@ -5,6 +5,7 @@ import { db, type SharpeningStatus, type SharpeningStone } from '../../db/db'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
+import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import s from './SharpeningForm.module.css'
 
 const CONDITIONS = ['тупой', 'выщерблины', 'повреждение РК', 'деформация', 'ржавчина']
@@ -26,6 +27,7 @@ export default function SharpeningForm() {
     : null
 
   const [step, setStep] = useState(1)
+  const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
 
   // Step 1 — Приёмка
   const [clientId, setClientId] = useState<number | null>(prefilledClientId)
@@ -43,6 +45,7 @@ export default function SharpeningForm() {
   const [comment, setComment] = useState('')
   const [price, setPrice] = useState('')
   const [status, setStatus] = useState<SharpeningStatus>('accepted')
+  const [doneAt, setDoneAt] = useState<Date | undefined>(undefined)
   const [photosAfter, setPhotosAfter] = useState<string[]>([])
 
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
@@ -75,6 +78,7 @@ export default function SharpeningForm() {
       setComment(sh.comment ?? '')
       setPrice(sh.price != null ? String(sh.price) : '')
       setStatus(sh.status)
+      setDoneAt(sh.doneAt)
       setPhotosAfter(sh.photosAfter ?? [])
     })
   }, [id])
@@ -149,7 +153,7 @@ export default function SharpeningForm() {
       comment: comment.trim() || undefined,
       price: price ? Number(price) : undefined,
       status,
-      doneAt: status === 'done' ? new Date() : undefined,
+      doneAt: status === 'done' ? (doneAt ?? new Date()) : undefined,
       photosAfter: photosAfter.length ? photosAfter : undefined,
     }
 
@@ -272,7 +276,11 @@ export default function SharpeningForm() {
               <div className={s.photoThumbs}>
                 {photosBefore.map((src, i) => (
                   <div key={i} className={s.photoThumb}>
-                    <img src={src} alt="" />
+                    <img
+                      src={src}
+                      alt=""
+                      onClick={() => setLightbox({ photos: photosBefore, index: i })}
+                    />
                     <button
                       className={s.photoRemove}
                       onClick={() => setPhotosBefore(prev => prev.filter((_, j) => j !== i))}
@@ -397,7 +405,11 @@ export default function SharpeningForm() {
                 <div className={s.photoThumbs}>
                   {photosAfter.map((src, i) => (
                     <div key={i} className={s.photoThumb}>
-                      <img src={src} alt="" />
+                      <img
+                        src={src}
+                        alt=""
+                        onClick={() => setLightbox({ photos: photosAfter, index: i })}
+                      />
                       <button
                         className={s.photoRemove}
                         onClick={() => setPhotosAfter(prev => prev.filter((_, j) => j !== i))}
@@ -425,6 +437,14 @@ export default function SharpeningForm() {
             </button>
           </div>
         </div>
+      )}
+
+      {lightbox && (
+        <PhotoLightbox
+          photos={lightbox.photos}
+          initialIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   )
