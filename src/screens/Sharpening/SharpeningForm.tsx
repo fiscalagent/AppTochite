@@ -8,7 +8,7 @@ import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import s from './SharpeningForm.module.css'
 
-const CONDITIONS = ['тупой', 'выщерблины', 'повреждение РК', 'деформация', 'ржавчина']
+const CONDITIONS = ['заточка', 'правка РК', 'ремонт']
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
@@ -256,7 +256,7 @@ export default function SharpeningForm() {
           </div>
 
           <div className={s.field}>
-            <label className={s.label}>Состояние</label>
+            <label className={s.label}>Требуется</label>
             <div className={s.chips}>
               {CONDITIONS.map(c => (
                 <button
