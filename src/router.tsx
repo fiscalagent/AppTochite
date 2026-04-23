@@ -23,4 +23,4 @@ export const router = createBrowserRouter([
       { path: '/reference/:tab',          element: <ReferenceScreen /> },
     ],
   },
-])
+], { basename: '/AppTochite' })
