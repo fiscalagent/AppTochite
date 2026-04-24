@@ -421,7 +421,7 @@ export async function seedDatabase(): Promise<void> {
   for (let v = currentVersion; v < SEED_MIGRATIONS.length; v++) {
     // Каждая миграция и обновление версии — в одной транзакции.
     // Если приложение упадёт в середине — миграция повторится при следующем запуске.
-    await db.transaction('rw', db.clients, db.stones, db.steels, db.knives, db.meta, async () => {
+    await db.transaction('rw', [db.clients, db.stones, db.steels, db.knives, db.meta], async () => {
       await SEED_MIGRATIONS[v]();
       await db.meta.put({ key: 'seedVersion', value: v + 1 });
     });
