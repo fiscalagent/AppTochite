@@ -265,6 +265,19 @@
   font-size: 18px;
 }
 
+.addTogglePrimary {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  font-family: var(--font-body);
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+}
+
 .select {
   background: var(--bg-300);
   border: 1px solid var(--border-100);

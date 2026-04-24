@@ -63,7 +63,12 @@ function StonesTab({ search }: { search: string }) {
   const [type, setType] = useState<Stone['type']>('ao')
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
-  const stones = useLiveQuery(() => db.stones.orderBy('grit').toArray(), [])
+  const stones = useLiveQuery(
+    () => db.stones.toArray().then(arr =>
+      arr.sort((a, b) => (a.grit ?? Infinity) - (b.grit ?? Infinity))
+    ),
+    []
+  )
 
   const filtered = stones?.filter(st =>
     `${st.brand} ${st.grit ?? ''}`.toLowerCase().includes(search.toLowerCase())
@@ -90,6 +95,34 @@ function StonesTab({ search }: { search: string }) {
 
   return (
     <>
+      {!open && selected.size === 0 && (
+        <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
+          + Добавить камень
+        </button>
+      )}
+      {open && (
+        <div className={s.addCard}>
+          <span className={s.addTitle}>Новый камень</span>
+          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
+          <div className={s.addRow}>
+            <input value={grit} onChange={e => setGrit(e.target.value)} placeholder="Грит (необяз.)" type="number" min={1} />
+            <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'])}>
+              <option value="galvanic">Гальваника</option>
+              <option value="ao">ОА</option>
+              <option value="kk">КК</option>
+              <option value="diamond">Алмаз</option>
+              <option value="elbor">Эльбор</option>
+              <option value="natural">Природа</option>
+              <option value="pritir">Притир</option>
+            </select>
+          </div>
+          <div className={s.addRow}>
+            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
+          </div>
+        </div>
+      )}
+
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}
         {filtered.map(st => {
@@ -119,39 +152,9 @@ function StonesTab({ search }: { search: string }) {
       {selected.size > 0 && (
         <SelectionBar
           count={selected.size}
-
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
         />
-      )}
-
-      {!open && selected.size === 0 && (
-        <button className={s.addToggle} onClick={() => setOpen(true)}>
-          <span className={s.addToggleIcon}>+</span>
-          Добавить камень
-        </button>
-      )}
-      {open && (
-        <div className={s.addCard}>
-          <span className={s.addTitle}>Новый камень</span>
-          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" />
-          <div className={s.addRow}>
-            <input value={grit} onChange={e => setGrit(e.target.value)} placeholder="Грит (1000)" type="number" min={1} />
-            <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'])}>
-              <option value="galvanic">Гальваника</option>
-              <option value="ao">ОА</option>
-              <option value="kk">КК</option>
-              <option value="diamond">Алмаз</option>
-              <option value="elbor">Эльбор</option>
-              <option value="natural">Природа</option>
-              <option value="pritir">Притир</option>
-            </select>
-          </div>
-          <div className={s.addRow}>
-            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
-          </div>
-        </div>
       )}
     </>
   )

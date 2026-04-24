@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type SharpeningStatus, type SharpeningStone } from '../../db/db'
+import { db, type SharpeningStatus, type SharpeningStone, type Stone } from '../../db/db'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
@@ -48,10 +48,17 @@ export default function SharpeningForm() {
   const [doneAt, setDoneAt] = useState<Date | undefined>(undefined)
   const [photosAfter, setPhotosAfter] = useState<string[]>([])
 
+  const [newStoneOpen, setNewStoneOpen] = useState(false)
+  const [newStoneBrand, setNewStoneBrand] = useState('')
+  const [newStoneGrit, setNewStoneGrit] = useState('')
+  const [newStoneType, setNewStoneType] = useState<Stone['type']>('ao')
+
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
   const stoneSuggestions = useLiveQuery(async () => {
-    const items = await db.stones.orderBy('grit').toArray()
-    return items.map(s => `${s.brand} ${s.grit}`)
+    const items = await db.stones.toArray().then(arr =>
+      arr.sort((a, b) => (a.grit ?? Infinity) - (b.grit ?? Infinity))
+    )
+    return items.map(st => st.grit ? `${st.brand} ${st.grit}` : st.brand)
   }, []) ?? []
   const knifeSuggestions = useLiveQuery(async () => {
     const items = await db.knives.orderBy('brand').toArray()
@@ -105,6 +112,14 @@ export default function SharpeningForm() {
     setSelectedStones(prev =>
       prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, order: i + 1 }))
     )
+  }
+
+  async function saveNewStone() {
+    if (!newStoneBrand.trim()) return
+    const grit = newStoneGrit ? Number(newStoneGrit) : undefined
+    await db.stones.add({ brand: newStoneBrand.trim(), grit, type: newStoneType, isCustom: true })
+    addStone(grit ? `${newStoneBrand.trim()} ${grit}` : newStoneBrand.trim())
+    setNewStoneBrand(''); setNewStoneGrit(''); setNewStoneType('ao'); setNewStoneOpen(false)
   }
 
   async function handleSave() {
@@ -353,6 +368,48 @@ export default function SharpeningForm() {
                 disabled={!stoneInput.trim()}
               >+</button>
             </div>
+            {!newStoneOpen && (
+              <button className={s.newStoneToggle} onClick={() => setNewStoneOpen(true)}>
+                + создать новый камень
+              </button>
+            )}
+            {newStoneOpen && (
+              <div className={s.newStoneCard}>
+                <span className={s.newStoneTitle}>Новый камень в справочник</span>
+                <input
+                  value={newStoneBrand}
+                  onChange={e => setNewStoneBrand(e.target.value)}
+                  placeholder="Бренд (Suehiro, Naniwa...)"
+                  autoFocus
+                />
+                <div className={s.newStoneRow}>
+                  <input
+                    value={newStoneGrit}
+                    onChange={e => setNewStoneGrit(e.target.value)}
+                    placeholder="Грит (необяз.)"
+                    type="number"
+                    min={1}
+                  />
+                  <select
+                    className={s.select}
+                    value={newStoneType}
+                    onChange={e => setNewStoneType(e.target.value as Stone['type'])}
+                  >
+                    <option value="galvanic">Гальваника</option>
+                    <option value="ao">ОА</option>
+                    <option value="kk">КК</option>
+                    <option value="diamond">Алмаз</option>
+                    <option value="elbor">Эльбор</option>
+                    <option value="natural">Природа</option>
+                    <option value="pritir">Притир</option>
+                  </select>
+                </div>
+                <div className={s.newStoneRow}>
+                  <button className={s.newStoneSaveBtn} onClick={saveNewStone} disabled={!newStoneBrand.trim()}>Добавить</button>
+                  <button className={s.newStoneCancelBtn} onClick={() => setNewStoneOpen(false)}>Отмена</button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={s.field}>
