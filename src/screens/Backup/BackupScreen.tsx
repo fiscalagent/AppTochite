@@ -39,6 +39,22 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function buildCSV(rows: (string | number | null | undefined)[][]): string {
+  const escape = (v: string | number | null | undefined) =>
+    `"${String(v ?? '').replace(/"/g, '""')}"`
+  // UTF-8 BOM — Excel открывает без кракозябр
+  return '﻿' + rows.map(r => r.map(escape).join(';')).join('\r\n')
+}
+
 export default function BackupScreen() {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -64,13 +80,46 @@ export default function BackupScreen() {
     }
 
     const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `apptochite-${todayStr()}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(blob, `apptochite-${todayStr()}.json`)
     showToast('Бэкап сохранён')
+  }
+
+  async function handleExportCSV() {
+    const [clients, sharpenings] = await Promise.all([
+      db.clients.toArray(),
+      db.sharpenings.orderBy('receivedAt').toArray(),
+    ])
+
+    const clientMap = new Map(clients.map(c => [c.id!, c.name]))
+
+    const headers = [
+      'Дата приёмки', 'Дата готовности', 'Клиент', 'Нож', 'Сталь', 'HRC',
+      'Тип работы', 'Угол °', 'Камни', 'Комментарий', 'Цена', 'Статус',
+    ]
+
+    const rows = sharpenings.map(sh => [
+      sh.receivedAt instanceof Date
+        ? sh.receivedAt.toLocaleDateString('ru')
+        : new Date(sh.receivedAt).toLocaleDateString('ru'),
+      sh.doneAt
+        ? (sh.doneAt instanceof Date ? sh.doneAt : new Date(sh.doneAt)).toLocaleDateString('ru')
+        : '',
+      clientMap.get(sh.clientId) ?? '',
+      sh.knifeBrand,
+      sh.steel ?? '',
+      sh.hrc ?? '',
+      sh.condition?.join(', ') ?? '',
+      sh.angle ?? '',
+      sh.stones?.map(st => st.name).join(', ') ?? '',
+      sh.comment ?? '',
+      sh.price ?? '',
+      sh.status === 'done' ? 'Готово' : 'Принят',
+    ])
+
+    const csv = buildCSV([headers, ...rows])
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    downloadBlob(blob, `apptochite-sharpenings-${todayStr()}.csv`)
+    showToast('CSV сохранён')
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -125,7 +174,17 @@ export default function BackupScreen() {
           Сохраняет всех клиентов, заточки и справочники в JSON-файл.
           Файл попадёт в папку «Загрузки». Бэкап с фотографиями может занимать несколько МБ.
         </p>
-        <button className={s.primaryBtn} onClick={handleExport}>Сохранить бэкап</button>
+        <button className={s.primaryBtn} onClick={handleExport}>Сохранить бэкап (JSON)</button>
+      </div>
+
+      <div className={s.divider} />
+
+      <div className={s.section}>
+        <p className={s.sectionTitle}>Экспорт в Excel / CSV</p>
+        <p className={s.desc}>
+          Выгружает все заточки в CSV-файл с именами клиентов. Открывается в Excel, Google Таблицах и Numbers без дополнительных настроек.
+        </p>
+        <button className={s.secondaryBtn} onClick={handleExportCSV}>Скачать CSV</button>
       </div>
 
       <div className={s.divider} />
