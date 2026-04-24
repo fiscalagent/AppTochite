@@ -38,9 +38,12 @@ export default function ClientList() {
     <div className={s.screen}>
       <div className={s.header}>
         <span className={s.title}>КЛИЕНТЫ</span>
-        <Link to="/clients/new">
-          <button className={s.addBtn}>+ Клиент</button>
-        </Link>
+        <div className={s.headerRight}>
+          <Link to="/backup" className={s.backupLink}>💾</Link>
+          <Link to="/clients/new">
+            <button className={s.addBtn}>+ Клиент</button>
+          </Link>
+        </div>
       </div>
 
       <div className={s.list}>

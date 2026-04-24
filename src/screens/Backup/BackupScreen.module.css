@@ -1,0 +1,142 @@
+.screen {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-bottom: 80px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0 var(--space-2);
+}
+
+.back {
+  font-size: 22px;
+  color: var(--text-200);
+  background: none;
+  padding: 0 var(--space-2) 0 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--text-100);
+  letter-spacing: 0.5px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-300);
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--text-200);
+  line-height: 1.55;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-100);
+  margin: 0;
+}
+
+.primaryBtn {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.secondaryBtn {
+  background: var(--bg-400);
+  color: var(--text-200);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.dangerBtn {
+  background: var(--danger);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.dangerBtn:disabled {
+  opacity: 0.5;
+}
+
+/* Preview block */
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.previewDate {
+  font-size: 13px;
+  color: var(--text-300);
+}
+
+.previewRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.previewRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-200);
+}
+
+.previewRow span:last-child {
+  font-weight: 700;
+  color: var(--text-100);
+}
+
+.warning {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: 13px;
+  color: var(--danger);
+  line-height: 1.5;
+}
+
+.previewActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
