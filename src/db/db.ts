@@ -42,7 +42,7 @@ export interface Sharpening {
 export interface Stone {
   id?: number
   brand: string
-  grit: number
+  grit?: number
   type: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir'
   category?: string
   description?: string
