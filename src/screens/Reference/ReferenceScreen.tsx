@@ -22,6 +22,37 @@ const STONE_TYPE_LABELS: Record<string, string> = {
   pritir: 'притир',
 }
 
+function SelectAllRow({
+  total,
+  selected,
+  onSelectAll,
+  onClearAll,
+}: {
+  total: number
+  selected: number
+  onSelectAll: () => void
+  onClearAll: () => void
+}) {
+  const allSelected = total > 0 && selected === total
+  const someSelected = selected > 0 && selected < total
+
+  return (
+    <div
+      className={`${s.selectAllRow} ${allSelected ? s.selectAllRowActive : ''}`}
+      onClick={allSelected ? onClearAll : onSelectAll}
+    >
+      <div className={`${s.checkbox} ${allSelected ? s.checkboxChecked : someSelected ? s.checkboxPartial : ''}`}>
+        {allSelected && <span className={s.checkmark}>✓</span>}
+        {someSelected && <span className={s.checkmark}>–</span>}
+      </div>
+      <span className={s.selectAllLabel}>
+        {allSelected ? 'Снять все' : 'Выбрать все'}
+      </span>
+      <span className={s.selectAllCount}>{total} шт.</span>
+    </div>
+  )
+}
+
 function SelectionBar({
   count,
   onCancel,
@@ -74,6 +105,8 @@ function StonesTab({ search }: { search: string }) {
     `${st.brand} ${st.grit ?? ''}`.toLowerCase().includes(search.toLowerCase())
   ) ?? []
 
+  const filteredSelectedCount = filtered.filter(st => selected.has(st.id!)).length
+
   function toggle(id: number) {
     setSelected(prev => {
       const next = new Set(prev)
@@ -125,6 +158,14 @@ function StonesTab({ search }: { search: string }) {
 
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}
+        {filtered.length > 0 && (
+          <SelectAllRow
+            total={filtered.length}
+            selected={filteredSelectedCount}
+            onSelectAll={() => setSelected(new Set(filtered.map(st => st.id!)))}
+            onClearAll={() => setSelected(new Set())}
+          />
+        )}
         {filtered.map(st => {
           const sel = selected.has(st.id!)
           return (
@@ -175,6 +216,8 @@ function SteelsTab({ search }: { search: string }) {
     st.name.toLowerCase().includes(search.toLowerCase())
   ) ?? []
 
+  const filteredSelectedCount = filtered.filter(st => selected.has(st.id!)).length
+
   function toggle(id: number) {
     setSelected(prev => {
       const next = new Set(prev)
@@ -223,6 +266,14 @@ function SteelsTab({ search }: { search: string }) {
 
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Сталей нет</p>}
+        {filtered.length > 0 && (
+          <SelectAllRow
+            total={filtered.length}
+            selected={filteredSelectedCount}
+            onSelectAll={() => setSelected(new Set(filtered.map(st => st.id!)))}
+            onClearAll={() => setSelected(new Set())}
+          />
+        )}
         {filtered.map(st => {
           const sel = selected.has(st.id!)
           return (
@@ -275,6 +326,8 @@ function KnivesTab({ search }: { search: string }) {
     `${k.brand} ${k.country ?? ''}`.toLowerCase().includes(search.toLowerCase())
   ) ?? []
 
+  const filteredSelectedCount = filtered.filter(k => selected.has(k.id!)).length
+
   function toggle(id: number) {
     setSelected(prev => {
       const next = new Set(prev)
@@ -323,6 +376,14 @@ function KnivesTab({ search }: { search: string }) {
 
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Ножей нет</p>}
+        {filtered.length > 0 && (
+          <SelectAllRow
+            total={filtered.length}
+            selected={filteredSelectedCount}
+            onSelectAll={() => setSelected(new Set(filtered.map(k => k.id!)))}
+            onClearAll={() => setSelected(new Set())}
+          />
+        )}
         {filtered.map(k => {
           const sel = selected.has(k.id!)
           return (

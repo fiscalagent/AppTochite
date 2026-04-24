@@ -113,11 +113,46 @@
   border-color: var(--accent);
 }
 
+.checkboxPartial {
+  background: var(--accent);
+  border-color: var(--accent);
+  opacity: 0.6;
+}
+
 .checkmark {
   color: #fff;
   font-size: 13px;
   font-weight: 700;
   line-height: 1;
+}
+
+.selectAllRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-200);
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectAllRowActive {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.selectAllLabel {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-200);
+}
+
+.selectAllCount {
+  font-size: 13px;
+  color: var(--text-400);
 }
 
 .itemInfo {
