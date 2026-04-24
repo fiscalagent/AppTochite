@@ -107,3 +107,6 @@ class AppTochiteDB extends Dexie {
 }
 
 export const db = new AppTochiteDB()
+
+// If schema upgrade is blocked by another tab running old code, reload to retry.
+db.on('blocked', () => { window.location.reload() })
