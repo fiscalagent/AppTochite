@@ -22,6 +22,40 @@ const STONE_TYPE_LABELS: Record<string, string> = {
   pritir: 'притир',
 }
 
+function SelectionBar({
+  count,
+  noun,
+  onCancel,
+  onDelete,
+}: {
+  count: number
+  noun: string
+  onCancel: () => void
+  onDelete: () => void
+}) {
+  const [confirm, setConfirm] = useState(false)
+
+  return (
+    <div className={s.selectionBar}>
+      {!confirm ? (
+        <>
+          <span className={s.selectionCount}>Выбрано: {count}</span>
+          <button className={s.cancelSelBtn} onClick={onCancel}>Отмена</button>
+          <button className={s.deleteSelBtn} onClick={() => setConfirm(true)}>
+            Удалить ({count})
+          </button>
+        </>
+      ) : (
+        <>
+          <span className={s.selectionCount}>Точно хотите удалить?</span>
+          <button className={s.cancelSelBtn} onClick={() => setConfirm(false)}>Нет</button>
+          <button className={s.deleteSelBtn} onClick={onDelete}>Да</button>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── Stones ──────────────────────────────────────────────────────────────────
 
 function StonesTab({ search }: { search: string }) {
@@ -29,12 +63,26 @@ function StonesTab({ search }: { search: string }) {
   const [brand, setBrand] = useState('')
   const [grit, setGrit] = useState('')
   const [type, setType] = useState<Stone['type']>('ao')
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const stones = useLiveQuery(() => db.stones.orderBy('grit').toArray(), [])
 
   const filtered = stones?.filter(st =>
     `${st.brand} ${st.grit}`.toLowerCase().includes(search.toLowerCase())
   ) ?? []
+
+  function toggle(id: number) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  async function deleteSelected() {
+    await db.stones.bulkDelete([...selected])
+    setSelected(new Set())
+  }
 
   async function add() {
     if (!brand.trim() || !grit) return
@@ -46,22 +94,40 @@ function StonesTab({ search }: { search: string }) {
     <>
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}
-        {filtered.map(st => (
-          <div key={st.id} className={s.item}>
-            <div className={s.itemInfo}>
-              <div className={s.itemName}>{st.brand}</div>
-              <div className={s.itemMeta}>{STONE_TYPE_LABELS[st.type]}</div>
+        {filtered.map(st => {
+          const sel = selected.has(st.id!)
+          return (
+            <div
+              key={st.id}
+              className={`${s.item} ${sel ? s.itemSelected : ''}`}
+              onClick={() => toggle(st.id!)}
+            >
+              <div className={`${s.checkbox} ${sel ? s.checkboxChecked : ''}`}>
+                {sel && <span className={s.checkmark}>✓</span>}
+              </div>
+              <div className={s.itemInfo}>
+                <div className={s.itemName}>{st.brand}</div>
+                <div className={s.itemMeta}>{STONE_TYPE_LABELS[st.type]}</div>
+              </div>
+              <div className={s.itemRight}>
+                <span className={s.gritBadge}>{st.grit}</span>
+                {st.isCustom && <span className={s.customBadge}>мой</span>}
+              </div>
             </div>
-            <div className={s.itemRight}>
-              <span className={s.gritBadge}>{st.grit}</span>
-              {st.isCustom && <span className={s.customBadge}>мой</span>}
-              <button className={s.deleteItemBtn} onClick={() => db.stones.delete(st.id!)}>×</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {!open && (
+      {selected.size > 0 && (
+        <SelectionBar
+          count={selected.size}
+          noun="камн."
+          onCancel={() => setSelected(new Set())}
+          onDelete={deleteSelected}
+        />
+      )}
+
+      {!open && selected.size === 0 && (
         <button className={s.addToggle} onClick={() => setOpen(true)}>
           <span className={s.addToggleIcon}>+</span>
           Добавить камень
@@ -100,12 +166,26 @@ function SteelsTab({ search }: { search: string }) {
   const [name, setName] = useState('')
   const [hrc, setHrc] = useState('')
   const [angle, setAngle] = useState('')
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), [])
 
   const filtered = steels?.filter(st =>
     st.name.toLowerCase().includes(search.toLowerCase())
   ) ?? []
+
+  function toggle(id: number) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  async function deleteSelected() {
+    await db.steels.bulkDelete([...selected])
+    setSelected(new Set())
+  }
 
   async function add() {
     if (!name.trim()) return
@@ -122,24 +202,42 @@ function SteelsTab({ search }: { search: string }) {
     <>
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Сталей нет</p>}
-        {filtered.map(st => (
-          <div key={st.id} className={s.item}>
-            <div className={s.itemInfo}>
-              <div className={s.itemName}>{st.name}</div>
-              <div className={s.itemMeta}>
-                {[st.hrc && `${st.hrc} HRC`, st.recommendedAngle && `${st.recommendedAngle}°`]
-                  .filter(Boolean).join(' · ') || 'нет данных'}
+        {filtered.map(st => {
+          const sel = selected.has(st.id!)
+          return (
+            <div
+              key={st.id}
+              className={`${s.item} ${sel ? s.itemSelected : ''}`}
+              onClick={() => toggle(st.id!)}
+            >
+              <div className={`${s.checkbox} ${sel ? s.checkboxChecked : ''}`}>
+                {sel && <span className={s.checkmark}>✓</span>}
+              </div>
+              <div className={s.itemInfo}>
+                <div className={s.itemName}>{st.name}</div>
+                <div className={s.itemMeta}>
+                  {[st.hrc && `${st.hrc} HRC`, st.recommendedAngle && `${st.recommendedAngle}°`]
+                    .filter(Boolean).join(' · ') || 'нет данных'}
+                </div>
+              </div>
+              <div className={s.itemRight}>
+                {st.isCustom && <span className={s.customBadge}>моя</span>}
               </div>
             </div>
-            <div className={s.itemRight}>
-              {st.isCustom && <span className={s.customBadge}>моя</span>}
-              <button className={s.deleteItemBtn} onClick={() => db.steels.delete(st.id!)}>×</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {!open && (
+      {selected.size > 0 && (
+        <SelectionBar
+          count={selected.size}
+          noun="стал."
+          onCancel={() => setSelected(new Set())}
+          onDelete={deleteSelected}
+        />
+      )}
+
+      {!open && selected.size === 0 && (
         <button className={s.addToggle} onClick={() => setOpen(true)}>
           <span className={s.addToggleIcon}>+</span>
           Добавить сталь
@@ -170,12 +268,26 @@ function KnivesTab({ search }: { search: string }) {
   const [brand, setBrand] = useState('')
   const [country, setCountry] = useState('')
   const [knifeSteel, setKnifeSteel] = useState('')
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const knives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
 
   const filtered = knives?.filter(k =>
     `${k.brand} ${k.country ?? ''}`.toLowerCase().includes(search.toLowerCase())
   ) ?? []
+
+  function toggle(id: number) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  async function deleteSelected() {
+    await db.knives.bulkDelete([...selected])
+    setSelected(new Set())
+  }
 
   async function add() {
     if (!brand.trim()) return
@@ -192,23 +304,41 @@ function KnivesTab({ search }: { search: string }) {
     <>
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Ножей нет</p>}
-        {filtered.map(k => (
-          <div key={k.id} className={s.item}>
-            <div className={s.itemInfo}>
-              <div className={s.itemName}>{k.brand}</div>
-              <div className={s.itemMeta}>
-                {[k.country, k.steel].filter(Boolean).join(' · ') || 'нет данных'}
+        {filtered.map(k => {
+          const sel = selected.has(k.id!)
+          return (
+            <div
+              key={k.id}
+              className={`${s.item} ${sel ? s.itemSelected : ''}`}
+              onClick={() => toggle(k.id!)}
+            >
+              <div className={`${s.checkbox} ${sel ? s.checkboxChecked : ''}`}>
+                {sel && <span className={s.checkmark}>✓</span>}
+              </div>
+              <div className={s.itemInfo}>
+                <div className={s.itemName}>{k.brand}</div>
+                <div className={s.itemMeta}>
+                  {[k.country, k.steel].filter(Boolean).join(' · ') || 'нет данных'}
+                </div>
+              </div>
+              <div className={s.itemRight}>
+                {k.isCustom && <span className={s.customBadge}>мой</span>}
               </div>
             </div>
-            <div className={s.itemRight}>
-              {k.isCustom && <span className={s.customBadge}>мой</span>}
-              <button className={s.deleteItemBtn} onClick={() => db.knives.delete(k.id!)}>×</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {!open && (
+      {selected.size > 0 && (
+        <SelectionBar
+          count={selected.size}
+          noun="ножей"
+          onCancel={() => setSelected(new Set())}
+          onDelete={deleteSelected}
+        />
+      )}
+
+      {!open && selected.size === 0 && (
         <button className={s.addToggle} onClick={() => setOpen(true)}>
           <span className={s.addToggleIcon}>+</span>
           Добавить нож

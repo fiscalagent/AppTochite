@@ -86,6 +86,38 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.itemSelected {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-200);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.checkboxChecked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.checkmark {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .itemInfo {
@@ -126,11 +158,45 @@
   padding: 2px 8px;
 }
 
-.deleteItemBtn {
-  color: var(--text-400);
-  font-size: 18px;
-  padding: 4px;
-  line-height: 1;
+/* was .deleteItemBtn — removed, replaced by multi-select */
+
+.selectionBar {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-100);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.18);
+}
+
+.selectionCount {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-100);
+}
+
+.cancelSelBtn {
+  font-size: 14px;
+  color: var(--text-300);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-300);
+  font-family: var(--font-body);
+}
+
+.deleteSelBtn {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--danger);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
 }
 
 .empty {
