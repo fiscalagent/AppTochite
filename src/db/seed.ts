@@ -1,11 +1,17 @@
 // src/db/seed.ts
 //
-// Вызывается ОДИН РАЗ при первом запуске (проверяем счётчики таблиц).
-// Заполняет:
-//   • нулевой клиент «Я»
-//   • камни (~28 позиций)
-//   • стали (~100 позиций)
-//   • ножи (~200 позиций)
+// Система версионированных seed-миграций.
+//
+// Как добавить новые данные в новой версии приложения:
+//   1. Добавь функцию-миграцию в массив SEED_MIGRATIONS (в конец).
+//   2. Миграция получает только DELTA — новые/изменённые записи, не весь справочник.
+//   3. Функция вызывается строго один раз: при первом запуске после обновления.
+//   4. seedVersion автоматически продвигается вперёд (включая skip-версии).
+//
+// Пример добавления новых камней в версии 2:
+//   SEED_MIGRATIONS.push(async () => {
+//     await db.stones.bulkAdd(NEW_STONES_V2)
+//   })
 
 import { db } from './db';
 import type { Stone, Steel, Knife } from './db';
@@ -382,36 +388,42 @@ const KNIVES: Omit<Knife, 'id'>[] = [
   { brand: 'Enlan EL01',              country: 'Китай', steel: '8Cr13MoV',    recommendedAngle: 20, type: 'Складной', category: 'chinese', isCustom: false },
 ];
 
-// ─── Основная функция ────────────────────────────────────────────────────────
+// ─── Миграции ────────────────────────────────────────────────────────────────
+//
+// Каждый элемент массива — одна версия seed-данных.
+// Индекс 0 → seedVersion 1, индекс 1 → seedVersion 2, и т.д.
+// Существующие пользователи помечаются в db.ts (version(3).upgrade) как v1,
+// поэтому первая миграция выполняется только при чистой установке.
+
+const SEED_MIGRATIONS: Array<() => Promise<void>> = [
+
+  // ── v1: начальные справочники ─────────────────────────────────────────────
+  async () => {
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() });
+    await db.stones.bulkAdd(STONES);
+    await db.steels.bulkAdd(STEELS);
+    await db.knives.bulkAdd(KNIVES);
+  },
+
+  // ── v2 и далее: добавлять сюда новые записи (только delta) ───────────────
+  // async () => {
+  //   await db.stones.bulkAdd(STONES_V2)
+  // },
+
+];
+
+// ─── Точка входа ─────────────────────────────────────────────────────────────
 
 export async function seedDatabase(): Promise<void> {
-  const [clientCount, stoneCount, steelCount, knifeCount] = await Promise.all([
-    db.clients.count(),
-    db.stones.count(),
-    db.steels.count(),
-    db.knives.count(),
-  ]);
+  const stored = await db.meta.get('seedVersion');
+  const currentVersion = (stored?.value as number) ?? 0;
 
-  // Всё в одной транзакции — либо всё, либо ничего
-  await db.transaction('rw', db.clients, db.stones, db.steels, db.knives, async () => {
-    if (clientCount === 0) {
-      await db.clients.add({
-        name: 'Я',
-        isSelf: true,
-        createdAt: new Date(),
-      });
-    }
-
-    if (stoneCount === 0) {
-      await db.stones.bulkAdd(STONES);
-    }
-
-    if (steelCount === 0) {
-      await db.steels.bulkAdd(STEELS);
-    }
-
-    if (knifeCount === 0) {
-      await db.knives.bulkAdd(KNIVES);
-    }
-  });
+  for (let v = currentVersion; v < SEED_MIGRATIONS.length; v++) {
+    // Каждая миграция и обновление версии — в одной транзакции.
+    // Если приложение упадёт в середине — миграция повторится при следующем запуске.
+    await db.transaction('rw', db.clients, db.stones, db.steels, db.knives, db.meta, async () => {
+      await SEED_MIGRATIONS[v]();
+      await db.meta.put({ key: 'seedVersion', value: v + 1 });
+    });
+  }
 }
