@@ -201,6 +201,26 @@ function SteelsTab({ search }: { search: string }) {
 
   return (
     <>
+      {!open && selected.size === 0 && (
+        <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
+          + Добавить сталь
+        </button>
+      )}
+      {open && (
+        <div className={s.addCard}>
+          <span className={s.addTitle}>Новая сталь</span>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Название (AUS-8, D2, VG-10...)" autoFocus />
+          <div className={s.addRow}>
+            <input value={hrc} onChange={e => setHrc(e.target.value)} placeholder="HRC" type="number" />
+            <input value={angle} onChange={e => setAngle(e.target.value)} placeholder="Угол °" type="number" />
+          </div>
+          <div className={s.addRow}>
+            <button className={s.addBtn} onClick={add} disabled={!name.trim()}>Добавить</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
+          </div>
+        </div>
+      )}
+
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Сталей нет</p>}
         {filtered.map(st => {
@@ -232,31 +252,9 @@ function SteelsTab({ search }: { search: string }) {
       {selected.size > 0 && (
         <SelectionBar
           count={selected.size}
-
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
         />
-      )}
-
-      {!open && selected.size === 0 && (
-        <button className={s.addToggle} onClick={() => setOpen(true)}>
-          <span className={s.addToggleIcon}>+</span>
-          Добавить сталь
-        </button>
-      )}
-      {open && (
-        <div className={s.addCard}>
-          <span className={s.addTitle}>Новая сталь</span>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Название (AUS-8, D2, VG-10...)" autoFocus />
-          <div className={s.addRow}>
-            <input value={hrc} onChange={e => setHrc(e.target.value)} placeholder="HRC" type="number" />
-            <input value={angle} onChange={e => setAngle(e.target.value)} placeholder="Угол °" type="number" />
-          </div>
-          <div className={s.addRow}>
-            <button className={s.addBtn} onClick={add} disabled={!name.trim()}>Добавить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
-          </div>
-        </div>
       )}
     </>
   )
@@ -303,6 +301,26 @@ function KnivesTab({ search }: { search: string }) {
 
   return (
     <>
+      {!open && selected.size === 0 && (
+        <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
+          + Добавить нож
+        </button>
+      )}
+      {open && (
+        <div className={s.addCard}>
+          <span className={s.addTitle}>Новый нож</span>
+          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Mora, Victorinox...)" autoFocus />
+          <div className={s.addRow}>
+            <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Страна" />
+            <input value={knifeSteel} onChange={e => setKnifeSteel(e.target.value)} placeholder="Сталь" />
+          </div>
+          <div className={s.addRow}>
+            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
+          </div>
+        </div>
+      )}
+
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Ножей нет</p>}
         {filtered.map(k => {
@@ -333,31 +351,9 @@ function KnivesTab({ search }: { search: string }) {
       {selected.size > 0 && (
         <SelectionBar
           count={selected.size}
-
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
         />
-      )}
-
-      {!open && selected.size === 0 && (
-        <button className={s.addToggle} onClick={() => setOpen(true)}>
-          <span className={s.addToggleIcon}>+</span>
-          Добавить нож
-        </button>
-      )}
-      {open && (
-        <div className={s.addCard}>
-          <span className={s.addTitle}>Новый нож</span>
-          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Mora, Victorinox...)" autoFocus />
-          <div className={s.addRow}>
-            <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Страна" />
-            <input value={knifeSteel} onChange={e => setKnifeSteel(e.target.value)} placeholder="Сталь" />
-          </div>
-          <div className={s.addRow}>
-            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
-          </div>
-        </div>
       )}
     </>
   )
