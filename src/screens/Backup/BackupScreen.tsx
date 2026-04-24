@@ -92,29 +92,37 @@ export default function BackupScreen() {
 
     const clientMap = new Map(clients.map(c => [c.id!, c.name]))
 
+    const toDate = (d: Date | string | undefined) =>
+      d ? (d instanceof Date ? d : new Date(d)).toLocaleDateString('ru') : ''
+
     const headers = [
       'Дата приёмки', 'Дата готовности', 'Клиент', 'Нож', 'Сталь', 'HRC',
-      'Тип работы', 'Угол °', 'Камни', 'Комментарий', 'Цена', 'Статус',
+      'Тип работы', 'Угол °', 'Порядок камня', 'Камень', 'Комментарий', 'Цена', 'Статус',
     ]
 
-    const rows = sharpenings.map(sh => [
-      sh.receivedAt instanceof Date
-        ? sh.receivedAt.toLocaleDateString('ru')
-        : new Date(sh.receivedAt).toLocaleDateString('ru'),
-      sh.doneAt
-        ? (sh.doneAt instanceof Date ? sh.doneAt : new Date(sh.doneAt)).toLocaleDateString('ru')
-        : '',
-      clientMap.get(sh.clientId) ?? '',
-      sh.knifeBrand,
-      sh.steel ?? '',
-      sh.hrc ?? '',
-      sh.condition?.join(', ') ?? '',
-      sh.angle ?? '',
-      sh.stones?.map(st => st.name).join(', ') ?? '',
-      sh.comment ?? '',
-      sh.price ?? '',
-      sh.status === 'done' ? 'Готово' : 'Принят',
-    ])
+    const rows: (string | number | null | undefined)[][] = []
+
+    for (const sh of sharpenings) {
+      const base = [
+        toDate(sh.receivedAt),
+        toDate(sh.doneAt),
+        clientMap.get(sh.clientId) ?? '',
+        sh.knifeBrand,
+        sh.steel ?? '',
+        sh.hrc ?? '',
+        sh.condition?.join(', ') ?? '',
+        sh.angle ?? '',
+      ]
+      const suffix = [sh.comment ?? '', sh.price ?? '', sh.status === 'done' ? 'Готово' : 'Принят']
+
+      if (sh.stones && sh.stones.length > 0) {
+        for (const st of sh.stones) {
+          rows.push([...base, st.order, st.name, ...suffix])
+        }
+      } else {
+        rows.push([...base, '', '', ...suffix])
+      }
+    }
 
     const csv = buildCSV([headers, ...rows])
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
