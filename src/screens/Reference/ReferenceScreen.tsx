@@ -24,12 +24,10 @@ const STONE_TYPE_LABELS: Record<string, string> = {
 
 function SelectionBar({
   count,
-  noun,
   onCancel,
   onDelete,
 }: {
   count: number
-  noun: string
   onCancel: () => void
   onDelete: () => void
 }) {
@@ -68,7 +66,7 @@ function StonesTab({ search }: { search: string }) {
   const stones = useLiveQuery(() => db.stones.orderBy('grit').toArray(), [])
 
   const filtered = stones?.filter(st =>
-    `${st.brand} ${st.grit}`.toLowerCase().includes(search.toLowerCase())
+    `${st.brand} ${st.grit ?? ''}`.toLowerCase().includes(search.toLowerCase())
   ) ?? []
 
   function toggle(id: number) {
@@ -85,8 +83,8 @@ function StonesTab({ search }: { search: string }) {
   }
 
   async function add() {
-    if (!brand.trim() || !grit) return
-    await db.stones.add({ brand: brand.trim(), grit: Number(grit), type, isCustom: true })
+    if (!brand.trim()) return
+    await db.stones.add({ brand: brand.trim(), grit: grit ? Number(grit) : undefined, type, isCustom: true })
     setBrand(''); setGrit(''); setOpen(false)
   }
 
@@ -110,7 +108,7 @@ function StonesTab({ search }: { search: string }) {
                 <div className={s.itemMeta}>{STONE_TYPE_LABELS[st.type]}</div>
               </div>
               <div className={s.itemRight}>
-                <span className={s.gritBadge}>{st.grit}</span>
+                {st.grit != null && <span className={s.gritBadge}>{st.grit}</span>}
                 {st.isCustom && <span className={s.customBadge}>мой</span>}
               </div>
             </div>
@@ -121,7 +119,7 @@ function StonesTab({ search }: { search: string }) {
       {selected.size > 0 && (
         <SelectionBar
           count={selected.size}
-          noun="камн."
+
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
         />
@@ -150,7 +148,7 @@ function StonesTab({ search }: { search: string }) {
             </select>
           </div>
           <div className={s.addRow}>
-            <button className={s.addBtn} onClick={add} disabled={!brand.trim() || !grit}>Добавить</button>
+            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
           </div>
         </div>
@@ -231,7 +229,7 @@ function SteelsTab({ search }: { search: string }) {
       {selected.size > 0 && (
         <SelectionBar
           count={selected.size}
-          noun="стал."
+
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
         />
@@ -332,7 +330,7 @@ function KnivesTab({ search }: { search: string }) {
       {selected.size > 0 && (
         <SelectionBar
           count={selected.size}
-          noun="ножей"
+
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
         />
