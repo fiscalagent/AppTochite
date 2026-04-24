@@ -30,12 +30,30 @@
 
 ```
 src/
-  db.ts                  # Dexie-схема и все TypeScript-типы
   router.tsx             # Все маршруты
   App.tsx / App.module.css
   main.tsx
-  reset.css
-  tokens.css             # CSS-переменные (цвета, отступы, типографика)
+
+  styles/
+    reset.css
+    tokens.css           # CSS-переменные (цвета, отступы, типографика)
+
+  db/
+    db.ts                # Dexie-схема и все TypeScript-типы
+    seed.ts              # Предзаполненные справочники (~28 камней, ~100 сталей, ~200 ножей)
+
+  components/            # Переиспользуемые UI-компоненты
+    Autocomplete/        # Автодополнение для полей ввода
+    Avatar/              # Аватар клиента (с короной для нулевого клиента)
+    BottomNav/           # Нижняя навигация
+    ConfirmModal/        # Модалка подтверждения удаления (M-1)
+    Layout/              # Обёртка экрана (шапка + контент)
+    PhotoLightbox/       # Просмотр фото на весь экран
+    StatusPill/          # Бейдж статуса заточки
+    Toast/               # Всплывающие уведомления (ToastContext)
+
+  hooks/
+    useCamera.ts         # Хук для съёмки/выбора фото
 
   screens/
     Clients/
@@ -49,20 +67,23 @@ src/
       SharpeningDetail.tsx# Z-2 — детальная запись (просмотр)
     Reference/
       ReferenceScreen.tsx # S-1/2/3 — справочники (Камни / Стали / Ножи)
-
-  seed.ts                # Предзаполненные справочники (~28 камней, ~100 сталей, ~200 ножей)
 ```
 
 ---
 
 ## База данных (Dexie)
 
-Таблицы: `clients`, `sharpenings`, `stones`, `steels`, `knives`
+Таблицы: `clients`, `sharpenings`, `stones`, `steels`, `knives`, `meta`
+
+Схема версионирована (текущая v3). Новые изменения добавлять через `this.version(N)`.
 
 **Ключевые особенности схемы:**
 - `clients.isSelf = true` — нулевой клиент «Я», создаётся при первом запуске, не удаляется
 - `sharpenings.stones` — embedded JSON (`SharpeningStone[]`), **не отдельная таблица**. При реализации фильтрации по камням потребуется fullscan — учитывать при проектировании
-- `Sharpening` — discriminated union: `doneAt` обязателен только при `status === 'done'`
+- `Sharpening.status` — только два значения: `'accepted' | 'done'`; статуса `inwork` нет
+- `Sharpening` — `doneAt` обязателен только при `status === 'done'`
+- `Stone.type` — 7 значений: `'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir'`
+- `meta` — служебная таблица (ключ-значение), сейчас хранит `seedVersion` для контроля seed-миграций
 - Фото хранятся как `base64[]` в полях `photosBefore` / `photosAfter`
 
 ---
@@ -103,7 +124,6 @@ src/
 ```css
 --accent: #4A90D9
 --status-accepted: #4A90D9   /* синий */
---status-inwork:   #D9A832   /* янтарный */
 --status-done:     #3DB87A   /* зелёный */
 --danger:          #E05555
 ```

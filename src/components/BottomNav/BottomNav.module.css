@@ -3,12 +3,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px;
+  height: 60px;
   background: var(--bg-200);
   border-top: 1px solid var(--border-100);
   display: flex;
-  align-items: center;
+  align-items: stretch;
   z-index: 100;
+  overflow: visible;
 }
 
 .tab {
@@ -17,12 +18,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   height: 100%;
-  color: var(--text-300);
+  color: var(--text-400);
   font-size: 10px;
   font-family: var(--font-body);
   transition: color 0.15s;
+  text-decoration: none;
+  padding-top: 2px;
 }
 
 .tab.active {
@@ -30,19 +33,51 @@
 }
 
 .tabIcon {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
 }
 
-.addBtn {
-  margin: 8px;
+.tabLabel {
+  line-height: 1;
+}
+
+/* FAB */
+.fabSlot {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  overflow: visible;
+}
+
+.fab {
+  position: absolute;
+  bottom: 18px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
   background: var(--accent);
   color: #fff;
-  border-radius: var(--radius-md);
-  padding: 8px 14px;
-  font-weight: 700;
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px var(--bg-200), 0 4px 20px rgba(74, 144, 217, 0.4);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.fab:active {
+  transform: scale(0.91);
+  box-shadow: 0 0 0 4px var(--bg-200), 0 2px 10px rgba(74, 144, 217, 0.25);
+}
+
+.fabLabel {
+  font-size: 10px;
   font-family: var(--font-body);
-  white-space: nowrap;
-  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
 }

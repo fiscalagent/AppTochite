@@ -8,6 +8,19 @@ import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import s from './SharpeningForm.module.css'
 
+const IconChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+)
+
+const IconCamera = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+    <circle cx="12" cy="13" r="4"/>
+  </svg>
+)
+
 const CONDITIONS = ['заточка', 'правка РК', 'ремонт']
 
 function todayStr() {
@@ -188,7 +201,7 @@ export default function SharpeningForm() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.backBtn} onClick={() => step === 2 ? setStep(1) : navigate(-1)}>‹</button>
+        <button className={s.backBtn} onClick={() => step === 2 ? setStep(1) : navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>{isEdit ? 'РЕДАКТИРОВАТЬ' : 'НОВАЯ ЗАТОЧКА'}</span>
       </div>
 
@@ -309,7 +322,7 @@ export default function SharpeningForm() {
               className={s.photoAddBtn}
               onClick={() => takePhoto(b64 => setPhotosBefore(prev => [...prev, b64]))}
             >
-              <span className={s.photoAddIcon}>📷</span>
+              <span className={s.photoAddIcon}><IconCamera /></span>
               Добавить фото
             </button>
           </div>
@@ -480,7 +493,7 @@ export default function SharpeningForm() {
                 className={s.photoAddBtn}
                 onClick={() => takePhoto(b64 => setPhotosAfter(prev => [...prev, b64]))}
               >
-                <span className={s.photoAddIcon}>📷</span>
+                <span className={s.photoAddIcon}><IconCamera /></span>
                 Добавить фото
               </button>
             </div>
