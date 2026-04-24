@@ -5,6 +5,12 @@ import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import { useToast } from '../../components/Toast/ToastContext'
 import s from './ClientForm.module.css'
 
+const IconChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+)
+
 export default function ClientForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -72,7 +78,7 @@ export default function ClientForm() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.backBtn} onClick={() => navigate(-1)}>‹</button>
+        <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>{isEdit ? 'РЕДАКТИРОВАТЬ' : 'НОВЫЙ КЛИЕНТ'}</span>
       </div>
 

@@ -7,5 +7,5 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 56px; /* высота BottomNav */
+  padding-bottom: 60px; /* высота BottomNav */
 }

@@ -8,6 +8,12 @@ import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import { useToast } from '../../components/Toast/ToastContext'
 import s from './ClientCard.module.css'
 
+const IconChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+)
+
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
@@ -39,7 +45,7 @@ export default function ClientCard() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.backBtn} onClick={() => navigate('/')}>‹</button>
+        <button className={s.backBtn} onClick={() => navigate('/')}><IconChevronLeft /></button>
         <span className={s.headerTitle}>{client.name.toUpperCase()}</span>
         {!client.isSelf && (
           <Link to={`/clients/${clientId}/edit`}>

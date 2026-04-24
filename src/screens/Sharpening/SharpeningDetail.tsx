@@ -9,6 +9,25 @@ import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import s from './SharpeningDetail.module.css'
 
+const IconChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+)
+
+const IconPerson = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+)
+
+const IconChevronRight = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+)
+
 function formatDate(date: Date | string) {
   return new Date(date).toLocaleDateString('ru-RU', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -73,7 +92,7 @@ export default function SharpeningDetail() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.backBtn} onClick={() => navigate(-1)}>‹</button>
+        <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.headerTitle}>{sh.knifeBrand.toUpperCase()}</span>
         <Link to={`/sharpenings/${sharpeningId}/edit`}>
           <button className={s.editBtn}>Изменить</button>
@@ -210,9 +229,9 @@ export default function SharpeningDetail() {
 
       {client && (
         <Link to={`/clients/${client.id}`} className={s.clientLink}>
-          <span>👤</span>
+          <span className={s.clientLinkIcon}><IconPerson /></span>
           <span>{client.name}</span>
-          <span style={{ marginLeft: 'auto', opacity: 0.5 }}>›</span>
+          <span className={s.clientLinkArrow}><IconChevronRight /></span>
         </Link>
       )}
 
