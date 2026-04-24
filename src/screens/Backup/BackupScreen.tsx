@@ -96,7 +96,7 @@ export default function BackupScreen() {
       d ? (d instanceof Date ? d : new Date(d)).toLocaleDateString('ru') : ''
 
     const headers = [
-      'Дата приёмки', 'Дата готовности', 'Клиент', 'Нож', 'Сталь', 'HRC',
+      '№ заточки', 'Дата приёмки', 'Дата готовности', 'Клиент', 'Нож', 'Сталь', 'HRC',
       'Тип работы', 'Угол °', 'Порядок камня', 'Камень', 'Комментарий', 'Цена', 'Статус',
     ]
 
@@ -104,6 +104,7 @@ export default function BackupScreen() {
 
     for (const sh of sharpenings) {
       const base = [
+        sh.id,
         toDate(sh.receivedAt),
         toDate(sh.doneAt),
         clientMap.get(sh.clientId) ?? '',
