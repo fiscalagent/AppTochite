@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppTochite — Инструкция</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11.5px;
+    color: #1a1a1a;
+    background: #fff;
+    line-height: 1.45;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 11mm 13mm 9mm;
+    background: #fff;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 9px;
+    margin-bottom: 9px;
+    border-bottom: 2.5px solid #4A90D9;
+  }
+  .header-left { display: flex; align-items: center; gap: 11px; }
+  .app-icon {
+    width: 50px; height: 50px;
+    background: #161618;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .header-title h1 { font-size: 21px; font-weight: 800; color: #4A90D9; letter-spacing: .4px; }
+  .header-title p  { font-size: 11px; color: #555; margin-top: 2px; }
+  .header-qr { text-align: center; }
+  .header-qr img { width: 70px; height: 70px; border: 1px solid #ddd; border-radius: 8px; display: block; }
+  .header-qr p { font-size: 9px; color: #888; margin-top: 3px; }
+
+  /* ─── DISCLAIMER ─── */
+  .disclaimer {
+    background: #FFF8E6;
+    border: 1.5px solid #F5A623;
+    border-radius: 7px;
+    padding: 7px 11px;
+    margin-bottom: 9px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .disclaimer-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .disclaimer > div > strong { font-size: 11px; color: #7a4e00; display: block; margin-bottom: 2px; }
+  .disclaimer p     { font-size: 10.5px; color: #7a4e00; line-height: 1.4; }
+
+  /* ─── TWO COLUMNS ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+  }
+
+  /* ─── SECTIONS ─── */
+  .section {
+    background: #f7f8fc;
+    border: 1px solid #dde0ea;
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .section + .section { margin-top: 7px; }
+  .section.blue  { border-left: 3px solid #4A90D9; border-color: #b8d5f5; }
+  .section.green { border-left: 3px solid #2a9d5c; border-color: #a8dfc0; }
+  .section.red   { border-left: 3px solid #c0392b; border-color: #f0b8b4; }
+  .section.grey  { border-left: 3px solid #999;    border-color: #dde0ea; }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section.blue  .section-title { color: #2a6db5; }
+  .section.green .section-title { color: #1e7a44; }
+  .section.red   .section-title { color: #a12820; }
+  .section.grey  .section-title { color: #666; }
+
+  .num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .section.blue  .num { background: #4A90D9; }
+  .section.green .num { background: #2a9d5c; }
+  .section.red   .num { background: #c0392b; }
+  .section.grey  .num { background: #999; }
+
+  /* ─── INSTALL VISUAL ─── */
+  .install-visual {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin: 7px 0 8px;
+  }
+  .iv-box {
+    flex: 1;
+    background: #eef4fd;
+    border: 1px solid #c5d9f7;
+    border-radius: 6px;
+    padding: 5px 4px;
+    text-align: center;
+    font-size: 9.5px;
+    line-height: 1.3;
+  }
+  .iv-box .ico { font-size: 15px; display: block; margin-bottom: 2px; }
+  .iv-arr { color: #4A90D9; font-size: 15px; flex-shrink: 0; }
+
+  /* ─── STEPS ─── */
+  .steps { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .steps li { display: flex; gap: 7px; align-items: flex-start; }
+  .sn {
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #fff;
+  }
+  .section.blue  .sn { background: #4A90D9; }
+  .section.green .sn { background: #2a9d5c; }
+  .section.red   .sn { background: #c0392b; }
+  .section.grey  .sn { background: #999; }
+
+  .st { font-size: 11px; line-height: 1.45; flex: 1; }
+  .st strong { font-weight: 700; }
+  .st em { color: #2a6db5; font-style: normal; font-weight: 600; }
+
+  .url-box {
+    display: inline-block;
+    background: #eef4fd;
+    border: 1px solid #c5d9f7;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: #1e4e8c;
+    margin: 2px 0;
+  }
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    background: #e8ecf5;
+    padding: 0 3px;
+    border-radius: 3px;
+    color: #2c3a6b;
+  }
+
+  /* ─── NOTE ─── */
+  .note {
+    background: #e8f2fc;
+    border: 1px solid #b8d5f5;
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 10px;
+    color: #1d4570;
+    line-height: 1.4;
+    margin-top: 6px;
+  }
+
+  /* ─── MOCKUPS ─── */
+  .mockup-row { display: flex; gap: 6px; margin: 7px 0 6px; }
+  .mockup {
+    flex: 1;
+    border: 1.5px solid #e4e8f0;
+    border-radius: 8px;
+    padding: 6px;
+    background: #f8f9fb;
+    text-align: center;
+  }
+  .mockup-hdr {
+    background: #161618;
+    border-radius: 5px 5px 0 0;
+    color: #fff;
+    font-size: 9px;
+    padding: 3px 5px;
+    margin: -6px -6px 5px;
+    font-weight: 600;
+  }
+  .mockup-ico   { font-size: 20px; display: block; margin: 3px 0 2px; }
+  .mockup-label { font-size: 9px; color: #555; line-height: 1.3; }
+
+  /* ─── STATUSES ─── */
+  .statuses { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+  .badge {
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .badge-blue  { background: #4A90D9; }
+  .badge-green { background: #3DB87A; }
+
+  /* ─── NAV TABS ─── */
+  .nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .nav-tab {
+    font-size: 9px; font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #e8ecf5;
+    color: #333;
+  }
+
+  /* ─── WARN ─── */
+  .warn {
+    background: #fde8e6;
+    border: 1px solid #f0b8b4;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: #a12820;
+    font-weight: 500;
+  }
+  .warn strong { font-weight: 700; }
+
+  /* ─── DIVIDER + SUB-TITLE ─── */
+  .divider { height: 1px; background: #dde0ea; margin: 6px 0; }
+  .sub-title { font-size: 10.5px; font-weight: 700; color: #333; margin: 0 0 5px; }
+
+  /* ─── FEATURES STRIP ─── */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 9px;
+  }
+  .feat {
+    border: 1.5px solid #e4e8f0;
+    border-radius: 7px;
+    padding: 6px 6px 7px;
+    text-align: center;
+    background: #f8f9fb;
+  }
+  .feat-ico  { font-size: 18px; display: block; margin-bottom: 3px; }
+  .feat-name { font-size: 10px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .feat-desc { font-size: 9px; color: #666; line-height: 1.3; }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    border-top: 1.5px solid #dde0ea;
+    padding-top: 7px;
+    margin-top: 9px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-l { font-size: 9.5px; color: #888; line-height: 1.6; }
+  .footer-l a { color: #4A90D9; text-decoration: none; }
+  .footer-r { font-size: 9.5px; color: #aaa; text-align: right; line-height: 1.6; }
+
+  /* ─── PRINT ─── */
+  @media print {
+    body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { margin: 0; padding: 9mm 12mm 8mm; width: 100%; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="app-icon">🔪</div>
+      <div class="header-title">
+        <h1>AppTochite</h1>
+        <p>Журнал профессионального заточника ножей &nbsp;·&nbsp; Альфа-версия</p>
+      </div>
+    </div>
+    <div class="header-qr">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https://fiscalagent.github.io/AppTochite/" alt="QR">
+      <p>Открыть приложение</p>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <div class="disclaimer-icon">⚠️</div>
+    <div>
+      <strong>Это бета-версия — приложение на стадии раннего тестирования</strong>
+      <p>Возможны ошибки и даже <strong>потеря данных</strong>. Делайте бэкапы регулярно! Мы благодарны за обратную связь — именно она помогает сделать продукт лучше. Спасибо за участие в тестировании!</p>
+    </div>
+  </div>
+
+  <!-- TWO COLUMNS -->
+  <div class="two-col">
+
+    <!-- ════ LEFT ════ -->
+    <div>
+
+      <!-- INSTALL -->
+      <div class="section blue">
+        <div class="section-title"><span class="num">1</span> Установка на телефон (Android, Chrome)</div>
+
+        <div class="install-visual">
+          <div class="iv-box"><span class="ico">🌐</span>Открыть Chrome</div>
+          <div class="iv-arr">›</div>
+          <div class="iv-box"><span class="ico">🔗</span>Ввести адрес</div>
+          <div class="iv-arr">›</div>
+          <div class="iv-box"><span class="ico">⋮</span>Три точки</div>
+          <div class="iv-arr">›</div>
+          <div class="iv-box"><span class="ico">📲</span>«На экран»</div>
+        </div>
+
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Откройте <strong>Google Chrome</strong> на Android-телефоне</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">В адресной строке введите адрес сайта:<br>
+              <span class="url-box">fiscalagent.github.io/AppTochite</span><br>
+              или наведите камеру на QR-код в правом верхнем углу листа
+            </span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Нажмите <strong>⋮</strong> (три точки) в правом верхнем углу браузера</span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st">Выберите <em>«Добавить на главный экран»</em> или <em>«Установить приложение»</em></span>
+          </li>
+          <li>
+            <span class="sn">5</span>
+            <span class="st">Нажмите <strong>«Установить»</strong> — значок AppTochite появится на рабочем столе</span>
+          </li>
+        </ul>
+        <div class="note">💡 Интернет нужен только при первом запуске. Потом приложение работает без сети.</div>
+      </div>
+
+      <!-- FIRST USE -->
+      <div class="section blue">
+        <div class="section-title"><span class="num">2</span> Начало работы</div>
+
+        <div class="mockup-row">
+          <div class="mockup">
+            <div class="mockup-hdr">👥 Клиенты</div>
+            <span class="mockup-ico">👤</span>
+            <div class="mockup-label">Список клиентов.<br>«Я» — всегда вверху</div>
+          </div>
+          <div class="mockup">
+            <div class="mockup-hdr">📋 История</div>
+            <span class="mockup-ico">🗓️</span>
+            <div class="mockup-label">Все заточки<br>по дате</div>
+          </div>
+          <div class="mockup">
+            <div class="mockup-hdr">📚 Справочник</div>
+            <span class="mockup-ico">🪨</span>
+            <div class="mockup-label">Камни, стали,<br>ножи</div>
+          </div>
+
+        </div>
+
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">При первом запуске уже создан клиент <strong>«Я»</strong> — ваш личный журнал для своих ножей</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Нажмите <em>«+ Клиент»</em> вверху справа, чтобы добавить первого клиента</span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Нажмите кнопку <strong>«+»</strong> (Заточка) в центре нижнего меню — откроется форма из двух шагов</span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st"><strong>Шаг 1 — Приёмка:</strong> выберите клиента, укажите нож, сталь, что требуется (заточка / правка РК / ремонт). Фото «до» — по желанию. Нажмите <em>«Далее — Заточка»</em></span>
+          </li>
+          <li>
+            <span class="sn">5</span>
+            <span class="st"><strong>Шаг 2 — Заточка:</strong> угол, камни, цена. Нажмите <em>«Создать заточку»</em></span>
+          </li>
+          <li>
+            <span class="sn">6</span>
+            <span class="st">Когда нож готов — откройте запись и нажмите <strong>«ЗАТОЧИТЬ»</strong>. Приложение предложит добавить фото «после» — можно пропустить</span>
+          </li>
+        </ul>
+        <div class="statuses">
+          <span class="badge badge-blue">● принят</span>
+          <span class="badge badge-green">● готов</span>
+        </div>
+        <div class="nav-tabs">
+          <span class="nav-tab">👥 Клиенты</span>
+          <span class="nav-tab">🕑 История</span>
+          <span class="nav-tab">📚 Справочник</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════ RIGHT ════ -->
+    <div>
+
+      <!-- DATA WARNING -->
+      <div class="warn">
+        <strong>⚠️ Данные хранятся только на вашем телефоне!</strong><br>
+        Если очистить браузер, сбросить или сломать телефон — всё пропадёт без возможности восстановления. <strong>Делайте бэкап раз в неделю.</strong>
+      </div>
+
+      <!-- BACKUP -->
+      <div class="section green">
+        <div class="section-title"><span class="num">3</span> Бэкап — как сохранить данные</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">На экране «Клиенты» нажмите значок <strong>↓</strong> (стрелка-загрузка) вверху справа</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Нажмите <strong>«Сохранить бэкап (JSON)»</strong></span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Файл <code>apptochite-2026-01-01.json</code> сохранится в папку <strong>«Загрузки»</strong> на телефоне</span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st">Перешлите файл себе в <strong>Telegram (Избранное)</strong> или сохраните в <strong>Google Диск</strong> — на случай потери телефона</span>
+          </li>
+        </ul>
+
+        <div class="divider"></div>
+        <div class="sub-title">Восстановление из бэкапа</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Откройте раздел <strong>Бэкап</strong> → нажмите <strong>«Выбрать файл…»</strong> → найдите ваш файл <code>.json</code></span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Убедитесь, что данные в превью правильные, и нажмите <strong>«Восстановить»</strong></span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- UPDATE -->
+      <div class="section grey">
+        <div class="section-title"><span class="num">4</span> Обновление</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Приложение <strong>обновляется автоматически</strong> — просто откройте его при наличии интернета. Ничего делать не нужно</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Если разработчик попросил переустановить — выполните полную очистку (см. раздел ниже)</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- REINSTALL -->
+      <div class="section red">
+        <div class="section-title"><span class="num">5</span> Полная переустановка</div>
+        <div class="warn" style="font-size:10px; padding:5px 9px; margin-bottom:6px;">
+          <strong>Сначала сделайте бэкап!</strong> После очистки данные восстановить нельзя.
+        </div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">В Chrome откройте страницу очистки:<br>
+              <span class="url-box">fiscalagent.github.io/AppTochite/cleaner.html</span>
+            </span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Нажмите <strong>«Очистить всё»</strong> — все данные приложения будут удалены</span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Зажмите иконку AppTochite на экране → выберите <strong>«Удалить»</strong></span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st">Установите приложение заново (см. раздел <strong>1</strong> слева)</span>
+          </li>
+          <li>
+            <span class="sn">5</span>
+            <span class="st">Откройте <strong>Бэкап</strong> → «Выбрать файл…» → восстановите данные из вашего <code>.json</code></span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FEATURES STRIP -->
+  <div class="features">
+    <div class="feat">
+      <span class="feat-ico">🔪</span>
+      <div class="feat-name">Журнал заточек</div>
+      <div class="feat-desc">Нож, угол, камни, фото до и после</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🪨</span>
+      <div class="feat-name">Справочники</div>
+      <div class="feat-desc">~28 камней, ~100 сталей, ~200 ножей</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">📱</span>
+      <div class="feat-name">Работа офлайн</div>
+      <div class="feat-desc">Все данные на телефоне, без интернета</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">📊</span>
+      <div class="feat-name">Экспорт в Excel</div>
+      <div class="feat-desc">Все заточки в CSV для таблиц</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">📷</span>
+      <div class="feat-name">Фотофиксация</div>
+      <div class="feat-desc">Снимки ножа до и после заточки</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🧑‍🔧</span>
+      <div class="feat-name">Режим «Для себя»</div>
+      <div class="feat-desc">Клиент «Я» — личный журнал</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🔒</span>
+      <div class="feat-name">Приватность</div>
+      <div class="feat-desc">Никаких облаков — данные только у вас</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🆓</span>
+      <div class="feat-name">Бесплатно</div>
+      <div class="feat-desc">От заточника для заточников</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-l">
+      <strong>AppTochite</strong> · Журнал профессионального заточника<br>
+      🌐 <a href="https://fiscalagent.github.io/AppTochite/">fiscalagent.github.io/AppTochite</a>
+      &nbsp;&nbsp;✈️ <a href="https://t.me/Apptochite">t.me/Apptochite</a>
+    </div>
+    <div class="footer-r">
+      Версия 0.1 Alpha · Апрель 2026<br>
+      Данные хранятся локально на устройстве
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
