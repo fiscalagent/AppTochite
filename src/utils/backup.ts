@@ -44,7 +44,7 @@ export function reviveDates(_key: string, value: unknown): unknown {
 export function isValidBackup(obj: unknown): obj is BackupFile {
   if (!obj || typeof obj !== 'object') return false
   const b = obj as Record<string, unknown>
-  if (b.version !== 1 || !b.data || typeof b.data !== 'object') return false
+  if (b.version !== 1 || !b.exportedAt || !b.data || typeof b.data !== 'object') return false
   const d = b.data as Record<string, unknown>
   return ['clients', 'sharpenings', 'stones', 'steels', 'knives'].every(
     k => Array.isArray(d[k])

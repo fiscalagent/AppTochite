@@ -27,6 +27,7 @@ export default function BackupScreen() {
 
   const [preview, setPreview] = useState<BackupFile | null>(null)
   const [restoring, setRestoring] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [compressed, setCompressed] = useState(
     localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on'
   )
@@ -41,28 +42,42 @@ export default function BackupScreen() {
   }
 
   async function handleExport() {
-    const backup = await exportBackup(db)
-    const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
-    downloadBlob(blob, `apptochite-${todayStr()}.json`)
-    await updateLastBackupAt(db)
-    showToast('Бэкап сохранён')
+    setExporting(true)
+    try {
+      const backup = await exportBackup(db)
+      const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
+      downloadBlob(blob, `apptochite-${todayStr()}.json`)
+      await updateLastBackupAt(db)
+      showToast('Бэкап сохранён')
+    } finally {
+      setExporting(false)
+    }
   }
 
   async function handleExportCSV() {
-    const [clients, sharpenings] = await Promise.all([
-      db.clients.toArray(),
-      db.sharpenings.orderBy('receivedAt').toArray(),
-    ])
-    const clientMap = new Map(clients.map(c => [c.id!, c.name]))
-    const csv = buildSharpeningCSV(sharpenings, clientMap)
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    downloadBlob(blob, `apptochite-sharpenings-${todayStr()}.csv`)
-    showToast('CSV сохранён')
+    setExporting(true)
+    try {
+      const [clients, sharpenings] = await Promise.all([
+        db.clients.toArray(),
+        db.sharpenings.orderBy('receivedAt').toArray(),
+      ])
+      const clientMap = new Map(clients.map(c => [c.id!, c.name]))
+      const csv = buildSharpeningCSV(sharpenings, clientMap)
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+      downloadBlob(blob, `apptochite-sharpenings-${todayStr()}.csv`)
+      showToast('CSV сохранён')
+    } finally {
+      setExporting(false)
+    }
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 50 * 1024 * 1024) {
+      showToast('Файл слишком большой (> 50 МБ)')
+      return
+    }
     try {
       const parsed = JSON.parse(await file.text(), reviveDates)
       if (!isValidBackup(parsed)) { showToast('Неверный формат файла'); return }
@@ -95,7 +110,12 @@ export default function BackupScreen() {
 
       <div className={s.section}>
         <p className={s.sectionTitle}>Фото</p>
-        <div className={s.toggleRow} onClick={toggleCompression}>
+        <button
+          role="switch"
+          aria-checked={compressed}
+          className={s.toggleRow}
+          onClick={toggleCompression}
+        >
           <div className={s.toggleInfo}>
             <span className={s.toggleLabel}>Сжатие новых фото</span>
             <span className={s.toggleDesc}>JPEG 65%, 1280 пкс — в 3–5 раз меньше</span>
@@ -103,7 +123,7 @@ export default function BackupScreen() {
           <div className={`${s.toggle} ${compressed ? s.toggleOn : ''}`}>
             <div className={s.toggleThumb} />
           </div>
-        </div>
+        </button>
       </div>
 
       <div className={s.divider} />
@@ -114,7 +134,9 @@ export default function BackupScreen() {
           Сохраняет всех клиентов, заточки и справочники в JSON-файл.
           Файл попадёт в папку «Загрузки». Бэкап с фотографиями может занимать несколько МБ.
         </p>
-        <button className={s.primaryBtn} onClick={handleExport}>Сохранить бэкап (JSON)</button>
+        <button className={s.primaryBtn} onClick={handleExport} disabled={exporting}>
+          {exporting ? 'Сохранение…' : 'Сохранить бэкап (JSON)'}
+        </button>
       </div>
 
       <div className={s.divider} />
@@ -124,7 +146,9 @@ export default function BackupScreen() {
         <p className={s.desc}>
           Выгружает все заточки в CSV-файл с именами клиентов. Открывается в Excel, Google Таблицах и Numbers без дополнительных настроек.
         </p>
-        <button className={s.secondaryBtn} onClick={handleExportCSV}>Скачать CSV</button>
+        <button className={s.secondaryBtn} onClick={handleExportCSV} disabled={exporting}>
+          {exporting ? 'Сохранение…' : 'Скачать CSV'}
+        </button>
       </div>
 
       <div className={s.divider} />

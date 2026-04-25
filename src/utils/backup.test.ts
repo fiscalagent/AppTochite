@@ -65,6 +65,10 @@ describe('isValidBackup', () => {
     expect(isValidBackup(bad)).toBe(false)
   })
 
+  it('отклоняет если exportedAt отсутствует', () => {
+    expect(isValidBackup({ version: 1, data: { clients: [], sharpenings: [], stones: [], steels: [], knives: [] } })).toBe(false)
+  })
+
   it('принимает бэкап без поля meta (обратная совместимость)', () => {
     const withoutMeta = {
       version: 1,
