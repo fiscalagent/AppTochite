@@ -14,6 +14,28 @@ const IconSave = () => (
   </svg>
 )
 
+const IconUser = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+)
+
+const IconPlus = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+)
+
+const IconDatabase = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+    <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+    <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+  </svg>
+)
+
 interface ClientRow {
   client: Client
   count: number
@@ -57,6 +79,8 @@ export default function ClientList() {
   const visible = trimmed
     ? (rows ?? []).filter(r => matchesQuery(r.client, trimmed))
     : (rows ?? [])
+
+  const isNewUser = !trimmed && rows !== undefined && rows.length === 1 && rows[0].client.isSelf
 
   return (
     <div className={s.screen}>
@@ -108,6 +132,27 @@ export default function ClientList() {
             </div>
           </Link>
         ))}
+
+        {isNewUser && (
+          <div className={s.onboarding}>
+            <p className={s.onboardingTitle}>С чего начать</p>
+            <ul className={s.onboardingList}>
+              <li>
+                <span className={s.onboardingIcon}><IconUser /></span>
+                <span>Раздел <strong>«Я»</strong> — личный журнал: записывайте заточки своих ножей без клиентов</span>
+              </li>
+              <li>
+                <span className={s.onboardingIcon}><IconPlus /></span>
+                <span>Нажмите <strong>«+ Клиент»</strong>, чтобы добавить первого клиента и принять нож в работу</span>
+              </li>
+              <li>
+                <span className={s.onboardingIcon}><IconDatabase /></span>
+                <Link to="/backup" className={s.onboardingLink}>Настройте бэкап</Link>
+                <span>, чтобы не потерять данные</span>
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   )

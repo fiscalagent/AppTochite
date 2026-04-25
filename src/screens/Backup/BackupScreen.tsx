@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../../db/db'
 import { useToast } from '../../components/Toast/ToastContext'
+import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
 import {
   isValidBackup,
   exportBackup,
@@ -26,6 +27,18 @@ export default function BackupScreen() {
 
   const [preview, setPreview] = useState<BackupFile | null>(null)
   const [restoring, setRestoring] = useState(false)
+  const [compressed, setCompressed] = useState(
+    localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on'
+  )
+
+  function toggleCompression() {
+    const next = !compressed
+    next
+      ? localStorage.setItem(PHOTO_COMPRESS_KEY, 'on')
+      : localStorage.removeItem(PHOTO_COMPRESS_KEY)
+    setCompressed(next)
+    showToast(next ? 'Сжатие фото включено' : 'Сжатие фото отключено')
+  }
 
   async function handleExport() {
     const backup = await exportBackup(db)
@@ -79,6 +92,21 @@ export default function BackupScreen() {
         <button className={s.back} onClick={() => navigate(-1)}>←</button>
         <span className={s.title}>БЭКАП</span>
       </div>
+
+      <div className={s.section}>
+        <p className={s.sectionTitle}>Фото</p>
+        <div className={s.toggleRow} onClick={toggleCompression}>
+          <div className={s.toggleInfo}>
+            <span className={s.toggleLabel}>Сжатие новых фото</span>
+            <span className={s.toggleDesc}>JPEG 65%, 1280 пкс — в 3–5 раз меньше</span>
+          </div>
+          <div className={`${s.toggle} ${compressed ? s.toggleOn : ''}`}>
+            <div className={s.toggleThumb} />
+          </div>
+        </div>
+      </div>
+
+      <div className={s.divider} />
 
       <div className={s.section}>
         <p className={s.sectionTitle}>Экспорт</p>

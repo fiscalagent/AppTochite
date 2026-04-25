@@ -1,5 +1,6 @@
-// Ресайзит изображение до maxWidth, возвращает base64 jpeg
-function resizeImage(file: File, maxWidth = 1200): Promise<string> {
+export const PHOTO_COMPRESS_KEY = 'photo-compression'
+
+function resizeImage(file: File, maxWidth: number, quality: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
@@ -13,7 +14,7 @@ function resizeImage(file: File, maxWidth = 1200): Promise<string> {
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(img, 0, 0, w, h)
       URL.revokeObjectURL(url)
-      resolve(canvas.toDataURL('image/jpeg', 0.82))
+      resolve(canvas.toDataURL('image/jpeg', quality))
     }
     img.onerror = reject
     img.src = url
@@ -30,11 +31,13 @@ export function useCamera() {
     input.onchange = async () => {
       const file = input.files?.[0]
       if (!file) return
+      const compressed = localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on'
+      const quality = compressed ? 0.65 : 0.82
+      const maxWidth = compressed ? 1280 : 1920
       try {
-        const base64 = await resizeImage(file)
+        const base64 = await resizeImage(file, maxWidth, quality)
         onDone(base64)
       } catch {
-        // если ресайз не удался — берём оригинал
         const reader = new FileReader()
         reader.onload = () => onDone(reader.result as string)
         reader.readAsDataURL(file)
