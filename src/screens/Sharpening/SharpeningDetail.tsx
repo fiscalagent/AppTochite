@@ -5,6 +5,7 @@ import { db } from '../../db/db'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
+import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import s from './SharpeningDetail.module.css'
@@ -42,8 +43,9 @@ export default function SharpeningDetail() {
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [photoModal, setPhotoModal] = useState(false)
+  const [photoPickerOpen, setPhotoPickerOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
-  const { takePhoto } = useCamera()
+  const { openCamera, openGallery } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
   const client = useLiveQuery(
@@ -56,14 +58,14 @@ export default function SharpeningDetail() {
     setPhotoModal(true)
   }
 
-  async function handleAddAfterPhoto() {
+  async function addAfterPhoto(pick: (cb: (b64: string) => void) => void) {
     const current = await db.sharpenings.get(sharpeningId)
     const existing = current?.photosAfter ?? []
     if (existing.length >= 5) {
       showToast('Максимум 5 фото после заточки')
       return
     }
-    takePhoto(async (b64) => {
+    pick(async (b64) => {
       await db.sharpenings.update(sharpeningId, { photosAfter: [...existing, b64] })
     })
   }
@@ -259,6 +261,14 @@ export default function SharpeningDetail() {
         />
       )}
 
+      {photoPickerOpen && (
+        <PhotoSourceSheet
+          onCamera={() => addAfterPhoto(openCamera)}
+          onGallery={() => addAfterPhoto(openGallery)}
+          onClose={() => setPhotoPickerOpen(false)}
+        />
+      )}
+
       {photoModal && (
         <div className={s.photoModalOverlay} onClick={() => setPhotoModal(false)}>
           <div className={s.photoModalSheet} onClick={e => e.stopPropagation()}>
@@ -270,7 +280,7 @@ export default function SharpeningDetail() {
                 ))}
               </div>
             )}
-            <button className={s.photoModalAddBtn} onClick={handleAddAfterPhoto}>
+            <button className={s.photoModalAddBtn} onClick={() => setPhotoPickerOpen(true)}>
               Добавить фото
             </button>
             <button className={s.photoModalSkipBtn} onClick={() => setPhotoModal(false)}>

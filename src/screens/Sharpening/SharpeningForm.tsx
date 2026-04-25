@@ -6,6 +6,7 @@ import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
+import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import s from './SharpeningForm.module.css'
 
 const IconChevronLeft = () => (
@@ -33,7 +34,7 @@ export default function SharpeningForm() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { takePhoto } = useCamera()
+  const { openCamera, openGallery } = useCamera()
   const isEdit = Boolean(id)
 
   const prefilledClientId = searchParams.get('clientId')
@@ -42,6 +43,7 @@ export default function SharpeningForm() {
 
   const [step, setStep] = useState(1)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
+  const [pickerFor, setPickerFor] = useState<'before' | 'after' | null>(null)
 
   // Step 1 — Приёмка
   const [clientId, setClientId] = useState<number | null>(prefilledClientId)
@@ -324,7 +326,7 @@ export default function SharpeningForm() {
             <button
               className={s.photoAddBtn}
               disabled={photosBefore.length >= PHOTO_LIMIT}
-              onClick={() => takePhoto(b64 => setPhotosBefore(prev => [...prev, b64]))}
+              onClick={() => setPickerFor('before')}
             >
               <span className={s.photoAddIcon}><IconCamera /></span>
               {photosBefore.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
@@ -498,7 +500,7 @@ export default function SharpeningForm() {
               <button
                 className={s.photoAddBtn}
                 disabled={photosAfter.length >= PHOTO_LIMIT}
-                onClick={() => takePhoto(b64 => setPhotosAfter(prev => [...prev, b64]))}
+                onClick={() => setPickerFor('after')}
               >
                 <span className={s.photoAddIcon}><IconCamera /></span>
                 {photosAfter.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
@@ -515,6 +517,20 @@ export default function SharpeningForm() {
             </button>
           </div>
         </div>
+      )}
+
+      {pickerFor && (
+        <PhotoSourceSheet
+          onCamera={() => {
+            if (pickerFor === 'before') openCamera(b64 => setPhotosBefore(prev => [...prev, b64]))
+            else openCamera(b64 => setPhotosAfter(prev => [...prev, b64]))
+          }}
+          onGallery={() => {
+            if (pickerFor === 'before') openGallery(b64 => setPhotosBefore(prev => [...prev, b64]))
+            else openGallery(b64 => setPhotosAfter(prev => [...prev, b64]))
+          }}
+          onClose={() => setPickerFor(null)}
+        />
       )}
 
       {lightbox && (
