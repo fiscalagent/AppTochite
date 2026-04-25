@@ -371,6 +371,11 @@
   width: fit-content;
 }
 
+.photoAddBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .photoAddIcon {
   display: flex;
   align-items: center;

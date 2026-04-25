@@ -22,6 +22,7 @@ const IconCamera = () => (
 )
 
 const CONDITIONS = ['заточка', 'правка РК', 'ремонт']
+const PHOTO_LIMIT = 5
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
@@ -300,7 +301,9 @@ export default function SharpeningForm() {
 
           {/* Фото «До» */}
           <div className={s.photoSection}>
-            <span className={s.photoTitle}>Фото «До» (необязательно)</span>
+            <span className={s.photoTitle}>
+              Фото «До»{photosBefore.length > 0 ? ` · ${photosBefore.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
+            </span>
             {photosBefore.length > 0 && (
               <div className={s.photoThumbs}>
                 {photosBefore.map((src, i) => (
@@ -320,10 +323,11 @@ export default function SharpeningForm() {
             )}
             <button
               className={s.photoAddBtn}
+              disabled={photosBefore.length >= PHOTO_LIMIT}
               onClick={() => takePhoto(b64 => setPhotosBefore(prev => [...prev, b64]))}
             >
               <span className={s.photoAddIcon}><IconCamera /></span>
-              Добавить фото
+              {photosBefore.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
             </button>
           </div>
 
@@ -471,7 +475,9 @@ export default function SharpeningForm() {
           {/* Фото «После» — только когда статус «готов» */}
           {status === 'done' && (
             <div className={s.photoSection}>
-              <span className={s.photoTitle}>Фото «После» (необязательно)</span>
+              <span className={s.photoTitle}>
+                Фото «После»{photosAfter.length > 0 ? ` · ${photosAfter.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
+              </span>
               {photosAfter.length > 0 && (
                 <div className={s.photoThumbs}>
                   {photosAfter.map((src, i) => (
@@ -491,10 +497,11 @@ export default function SharpeningForm() {
               )}
               <button
                 className={s.photoAddBtn}
+                disabled={photosAfter.length >= PHOTO_LIMIT}
                 onClick={() => takePhoto(b64 => setPhotosAfter(prev => [...prev, b64]))}
               >
                 <span className={s.photoAddIcon}><IconCamera /></span>
-                Добавить фото
+                {photosAfter.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
               </button>
             </div>
           )}

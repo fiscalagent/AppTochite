@@ -57,9 +57,13 @@ export default function SharpeningDetail() {
   }
 
   async function handleAddAfterPhoto() {
+    const current = await db.sharpenings.get(sharpeningId)
+    const existing = current?.photosAfter ?? []
+    if (existing.length >= 5) {
+      showToast('Максимум 5 фото после заточки')
+      return
+    }
     takePhoto(async (b64) => {
-      const current = await db.sharpenings.get(sharpeningId)
-      const existing = current?.photosAfter ?? []
       await db.sharpenings.update(sharpeningId, { photosAfter: [...existing, b64] })
     })
   }
