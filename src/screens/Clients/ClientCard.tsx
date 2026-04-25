@@ -59,8 +59,27 @@ export default function ClientCard() {
         <div className={s.profileInfo}>
           <div className={s.profileName}>{client.name}</div>
           <div className={s.profileMeta}>
-            {client.phone && <span>{client.phone}</span>}
-            {client.telegram && <span>{client.telegram}</span>}
+            {client.phone && (
+              <button
+                className={s.contactBtn}
+                onClick={() => {
+                  navigator.clipboard.writeText(client.phone!)
+                  showToast('Телефон скопирован в буфер')
+                }}
+              >
+                {client.phone}
+              </button>
+            )}
+            {client.telegram && (
+              <a
+                className={s.contactBtn}
+                href={`https://t.me/${client.telegram.replace(/^@/, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {client.telegram}
+              </a>
+            )}
             {!client.phone && !client.telegram && (
               <span>Нет контактов</span>
             )}

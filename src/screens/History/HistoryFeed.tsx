@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus } from '../../db/db'
@@ -12,6 +12,9 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: 'accepted', label: 'Принят' },
   { value: 'done',     label: 'Готов' },
 ]
+
+// ≈ how many rows fit the screen on first load; min 10
+const PAGE_SIZE = Math.max(10, Math.floor((window.innerHeight - 220) / 68))
 
 function monthKey(date: Date | string) {
   const d = new Date(date)
@@ -31,6 +34,8 @@ function dayLabel(date: Date | string) {
 
 export default function HistoryFeed() {
   const [filter, setFilter] = useState<Filter>('all')
+  const [query, setQuery] = useState('')
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const data = useLiveQuery(async () => {
     const sharpenings = await db.sharpenings.orderBy('receivedAt').reverse().toArray()
@@ -39,26 +44,53 @@ export default function HistoryFeed() {
     return sharpenings.map(sh => ({ sh, clientName: clientMap[sh.clientId] ?? '—' }))
   }, [])
 
-  const filtered = data?.filter(({ sh }) =>
-    filter === 'all' || sh.status === filter
-  ) ?? []
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return (data ?? []).filter(({ sh, clientName }) => {
+      if (filter !== 'all' && sh.status !== filter) return false
+      if (!q) return true
+      return (
+        sh.knifeBrand.toLowerCase().includes(q) ||
+        clientName.toLowerCase().includes(q) ||
+        (!!sh.steel && sh.steel.toLowerCase().includes(q)) ||
+        (!!sh.comment && sh.comment.toLowerCase().includes(q))
+      )
+    })
+  }, [data, filter, query])
 
-  // Group by month
-  const groups: { key: string; items: typeof filtered }[] = []
-  for (const item of filtered) {
+  // reset pagination when search or filter changes
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [filter, query])
+
+  const visible = filtered.slice(0, visibleCount)
+  const hasMore = visibleCount < filtered.length
+
+  // group visible slice by month
+  const groups: { key: string; items: typeof visible }[] = []
+  for (const item of visible) {
     const key = monthKey(item.sh.receivedAt)
     const existing = groups.find(g => g.key === key)
-    if (existing) {
-      existing.items.push(item)
-    } else {
-      groups.push({ key, items: [item] })
-    }
+    if (existing) existing.items.push(item)
+    else groups.push({ key, items: [item] })
   }
+
+  const trimmed = query.trim()
 
   return (
     <div className={s.screen}>
       <div className={s.header}>
         <span className={s.title}>ИСТОРИЯ</span>
+      </div>
+
+      <div className={s.searchWrap}>
+        <input
+          className={s.search}
+          type="search"
+          placeholder="Поиск по ножу, клиенту, стали..."
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
       </div>
 
       <div className={s.filters}>
@@ -74,9 +106,11 @@ export default function HistoryFeed() {
       </div>
 
       <div className={s.feed}>
-        {filtered.length === 0 && (
+        {data !== undefined && filtered.length === 0 && (
           <p className={s.empty}>
-            {filter === 'all' ? 'Заточек пока нет' : 'Нет заточек с таким статусом'}
+            {trimmed || filter !== 'all'
+              ? 'Ничего не найдено'
+              : 'Заточек пока нет'}
           </p>
         )}
         {groups.map(group => (
@@ -99,6 +133,15 @@ export default function HistoryFeed() {
             ))}
           </div>
         ))}
+
+        {hasMore && (
+          <button
+            className={s.loadMore}
+            onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+          >
+            Ещё {Math.min(PAGE_SIZE, filtered.length - visibleCount)} из {filtered.length - visibleCount}
+          </button>
+        )}
       </div>
     </div>
   )

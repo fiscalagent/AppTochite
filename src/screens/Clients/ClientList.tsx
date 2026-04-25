@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
@@ -20,7 +21,17 @@ interface ClientRow {
   doneCount: number
 }
 
+function matchesQuery(client: Client, q: string): boolean {
+  const low = q.toLowerCase()
+  return (
+    client.name.toLowerCase().includes(low) ||
+    (!!client.phone && client.phone.includes(low)) ||
+    (!!client.telegram && client.telegram.toLowerCase().includes(low))
+  )
+}
+
 export default function ClientList() {
+  const [query, setQuery] = useState('')
   const rows = useLiveQuery<ClientRow[]>(async () => {
     const clients = await db.clients.orderBy('name').toArray()
     // «Я» — всегда первый
@@ -42,6 +53,11 @@ export default function ClientList() {
     )
   }, [])
 
+  const trimmed = query.trim()
+  const visible = trimmed
+    ? (rows ?? []).filter(r => matchesQuery(r.client, trimmed))
+    : (rows ?? [])
+
   return (
     <div className={s.screen}>
       <div className={s.header}>
@@ -54,11 +70,21 @@ export default function ClientList() {
         </div>
       </div>
 
+      <div className={s.searchWrap}>
+        <input
+          className={s.search}
+          type="search"
+          placeholder="Поиск по имени, телефону или телеграм"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+      </div>
+
       <div className={s.list}>
-        {rows?.length === 0 && (
-          <p className={s.empty}>Нет клиентов</p>
+        {rows !== undefined && visible.length === 0 && (
+          <p className={s.empty}>{trimmed ? 'Ничего не найдено' : 'Нет клиентов'}</p>
         )}
-        {rows?.map(({ client, count, acceptedCount, doneCount }) => (
+        {visible.map(({ client, count, acceptedCount, doneCount }) => (
           <Link key={client.id} to={`/clients/${client.id}`} className={s.card}>
             <Avatar name={client.name} size={40} isSelf={client.isSelf} />
             <div className={s.info}>
