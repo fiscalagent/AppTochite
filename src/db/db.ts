@@ -71,7 +71,7 @@ export interface Knife {
   isCustom: boolean
 }
 
-class AppTochiteDB extends Dexie {
+export class AppTochiteDB extends Dexie {
   clients!: Table<Client>
   sharpenings!: Table<Sharpening>
   stones!: Table<Stone>
@@ -79,8 +79,8 @@ class AppTochiteDB extends Dexie {
   knives!: Table<Knife>
   meta!: Table<Meta>
 
-  constructor() {
-    super('AppTochiteDB')
+  constructor(name = 'AppTochiteDB') {
+    super(name)
     // v1: initial schema
     this.version(1).stores({
       clients:     '++id, name, isSelf',
