@@ -23,25 +23,25 @@
       border: 1px solid #2a2a2e;
       border-radius: 16px;
       padding: 32px 24px;
-      max-width: 360px;
+      max-width: 380px;
       width: 100%;
-      text-align: center;
     }
 
-    .icon { font-size: 48px; margin-bottom: 16px; }
+    .icon { font-size: 48px; margin-bottom: 16px; text-align: center; }
 
     h1 {
       font-size: 20px;
       font-weight: 600;
       margin-bottom: 12px;
       color: #e8e8ea;
+      text-align: center;
     }
 
     p {
       font-size: 14px;
       color: #8e8e93;
       line-height: 1.5;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
     .warning {
@@ -51,9 +51,22 @@
       padding: 12px;
       font-size: 13px;
       color: #ff6b6b;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       line-height: 1.5;
     }
+
+    .hint {
+      background: rgba(74, 144, 217, 0.1);
+      border: 1px solid rgba(74, 144, 217, 0.25);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      color: #6aaae8;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .hint b { color: #a0c8f0; }
 
     button {
       width: 100%;
@@ -64,9 +77,11 @@
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s;
+      font-family: inherit;
     }
 
-    button:active { opacity: 0.7; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    button:active:not(:disabled) { opacity: 0.7; }
 
     #btnClean {
       background: #e05555;
@@ -82,8 +97,7 @@
     .status {
       margin-top: 20px;
       font-size: 14px;
-      line-height: 1.8;
-      text-align: left;
+      line-height: 2;
       display: none;
     }
 
@@ -91,9 +105,11 @@
 
     .step { color: #8e8e93; }
     .step.done { color: #3db87a; }
-    .step.done::before { content: '✓ '; }
+    .step.done::before { content: '✓  '; }
     .step.error { color: #e05555; }
-    .step.error::before { content: '✗ '; }
+    .step.error::before { content: '✗  '; }
+    .step.skip { color: #555566; }
+    .step.skip::before { content: '–  '; }
 
     .success-msg {
       margin-top: 20px;
@@ -103,6 +119,7 @@
       border-radius: 10px;
       font-size: 14px;
       color: #3db87a;
+      line-height: 1.6;
       display: none;
     }
 
@@ -111,7 +128,7 @@
     #btnOpen {
       background: #4a90d9;
       color: #fff;
-      margin-top: 16px;
+      margin-top: 12px;
       display: none;
     }
 
@@ -122,7 +139,12 @@
   <div class="card">
     <div class="icon">🧹</div>
     <h1>Очистка приложения</h1>
-    <p>Этот инструмент полностью удаляет все данные AppTochite с устройства: базу данных, кэш и сервис-воркер.</p>
+    <p>Удаляет все данные AppTochite: базу данных, кэш, сервис-воркер и локальное хранилище.</p>
+
+    <div class="hint">
+      <b>Иконку с экрана нужно удалить вручную</b> — этого сделать программно нельзя.<br>
+      Зажмите иконку AppTochite → «Удалить» / «Uninstall».
+    </div>
 
     <div class="warning">
       Все записи о заточках и клиентах будут удалены без возможности восстановления.
@@ -133,67 +155,91 @@
 
     <div class="status" id="status">
       <div class="step" id="step-idb">База данных (IndexedDB)…</div>
+      <div class="step" id="step-storage">Локальное хранилище…</div>
       <div class="step" id="step-sw">Сервис-воркер…</div>
       <div class="step" id="step-cache">Кэш…</div>
     </div>
 
     <div class="success-msg" id="successMsg">
-      Очистка завершена. Теперь можно установить приложение заново.
+      Очистка завершена.<br><br>
+      Теперь удалите иконку с экрана (зажмите → Удалить), после чего можно устанавливать приложение заново.
     </div>
 
-    <button id="btnOpen" class="visible" onclick="window.location.href='/AppTochite/'">
+    <button id="btnOpen" onclick="window.location.href='/AppTochite/'">
       Открыть приложение
     </button>
   </div>
 
   <script>
-    function setStep(id, state) {
+    function setStep(id, state, text) {
       const el = document.getElementById(id);
       el.className = 'step ' + state;
-      if (state === 'done') el.textContent = el.textContent.replace('…', '');
+      if (text) el.textContent = text;
+    }
+
+    function deleteDB(name) {
+      return new Promise(resolve => {
+        const req = indexedDB.deleteDatabase(name);
+        req.onsuccess = resolve;
+        req.onerror = resolve;
+        req.onblocked = resolve;
+      });
     }
 
     async function clean() {
       document.getElementById('btnClean').disabled = true;
       document.getElementById('btnCancel').disabled = true;
       document.getElementById('btnOpen').classList.remove('visible');
+      document.getElementById('status').classList.add('visible');
 
-      const status = document.getElementById('status');
-      status.classList.add('visible');
-
-      // 1. IndexedDB
+      // 1. IndexedDB — все базы, не только AppTochiteDB
       try {
-        await new Promise((resolve, reject) => {
-          const req = indexedDB.deleteDatabase('AppTochiteDB');
-          req.onsuccess = resolve;
-          req.onerror = reject;
-          req.onblocked = resolve; // proceed even if blocked
-        });
-        setStep('step-idb', 'done');
+        if (indexedDB.databases) {
+          const dbs = await indexedDB.databases();
+          await Promise.all(dbs.map(db => deleteDB(db.name)));
+          setStep('step-idb', 'done', `База данных (${dbs.length > 0 ? dbs.map(d => d.name).join(', ') : 'нет'})`);
+        } else {
+          // Fallback для браузеров без indexedDB.databases()
+          await deleteDB('AppTochiteDB');
+          setStep('step-idb', 'done', 'База данных (AppTochiteDB)');
+        }
       } catch {
-        setStep('step-idb', 'error');
+        setStep('step-idb', 'error', 'База данных — ошибка');
       }
 
-      // 2. Service Workers
+      // 2. localStorage + sessionStorage
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        setStep('step-storage', 'done', 'Локальное хранилище');
+      } catch {
+        setStep('step-storage', 'skip', 'Локальное хранилище — нет доступа');
+      }
+
+      // 3. Service Workers
       try {
         if ('serviceWorker' in navigator) {
           const regs = await navigator.serviceWorker.getRegistrations();
           await Promise.all(regs.map(r => r.unregister()));
+          setStep('step-sw', 'done', `Сервис-воркер (${regs.length} сн.)`);
+        } else {
+          setStep('step-sw', 'skip', 'Сервис-воркер — не поддерживается');
         }
-        setStep('step-sw', 'done');
       } catch {
-        setStep('step-sw', 'error');
+        setStep('step-sw', 'error', 'Сервис-воркер — ошибка');
       }
 
-      // 3. Cache Storage
+      // 4. Cache Storage
       try {
         if ('caches' in window) {
           const keys = await caches.keys();
           await Promise.all(keys.map(k => caches.delete(k)));
+          setStep('step-cache', 'done', `Кэш (${keys.length > 0 ? keys.join(', ') : 'пусто'})`);
+        } else {
+          setStep('step-cache', 'skip', 'Кэш — не поддерживается');
         }
-        setStep('step-cache', 'done');
       } catch {
-        setStep('step-cache', 'error');
+        setStep('step-cache', 'error', 'Кэш — ошибка');
       }
 
       document.getElementById('successMsg').classList.add('visible');
