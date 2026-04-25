@@ -8,6 +8,8 @@ import {
   restoreBackup,
   buildSharpeningCSV,
   reviveDates,
+  downloadBlob,
+  updateLastBackupAt,
   type BackupFile,
 } from '../../utils/backup'
 import s from './BackupScreen.module.css'
@@ -16,16 +18,6 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
 
 export default function BackupScreen() {
   const navigate = useNavigate()
@@ -39,6 +31,7 @@ export default function BackupScreen() {
     const backup = await exportBackup(db)
     const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
     downloadBlob(blob, `apptochite-${todayStr()}.json`)
+    await updateLastBackupAt(db)
     showToast('Бэкап сохранён')
   }
 

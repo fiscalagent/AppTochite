@@ -1,5 +1,26 @@
 import type { AppTochiteDB, Client, Sharpening, Stone, Steel, Knife, Meta } from '../db/db'
 
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+export async function getLastBackupAt(database: AppTochiteDB): Promise<Date | null> {
+  const meta = await database.meta.get('lastBackupAt')
+  if (!meta) return null
+  return new Date(meta.value as string)
+}
+
+export async function updateLastBackupAt(database: AppTochiteDB): Promise<void> {
+  await database.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() })
+}
+
 export interface BackupFile {
   version: 1
   exportedAt: string
