@@ -1,4 +1,4 @@
-import type { SharpeningStatus } from '../../db/db'
+import type { SharpeningStatus } from '../../db/instance'
 import s from './StatusPill.module.css'
 
 const LABELS: Record<SharpeningStatus, string> = {

@@ -1,4 +1,4 @@
-import type { AppTochiteDB, Client, Sharpening, Stone, Steel, Knife, Meta } from '../db/db'
+import type { AppTochiteDB, Client, Sharpening, Stone, Steel, Knife, Meta } from '../db/instance'
 
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)

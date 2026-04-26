@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { db } from '../../db/db'
+import { db } from '../../db/instance'
 import { useToast } from '../../components/Toast/ToastContext'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
 import { useVersionCheck } from '../../hooks/useVersionCheck'

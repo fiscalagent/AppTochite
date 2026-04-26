@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../../db/db'
+import { db } from '../../db/instance'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'

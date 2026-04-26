@@ -13,8 +13,8 @@
 //     await db.stones.bulkAdd(NEW_STONES_V2)
 //   })
 
-import { db } from './db';
-import type { Stone, Steel, Knife } from './db';
+import { db } from './instance';
+import type { Stone, Steel, Knife } from './instance';
 
 // ─── Камни ───────────────────────────────────────────────────────────────────
 

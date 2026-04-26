@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../../db/db'
+import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
-import type { Client } from '../../db/db'
+import type { Client } from '../../db/instance'
 import s from './ClientList.module.css'
 
 const IconSave = () => (

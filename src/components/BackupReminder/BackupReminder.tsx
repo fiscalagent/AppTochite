@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { db } from '../../db/db'
+import { db } from '../../db/instance'
 import { exportBackup, downloadBlob, getLastBackupAt, updateLastBackupAt } from '../../utils/backup'
 import BackupReminderModal from './BackupReminderModal'
 

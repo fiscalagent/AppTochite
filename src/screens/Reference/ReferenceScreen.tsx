@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/db'
+import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import s from './ReferenceScreen.module.css'
 
 type Tab = 'stones' | 'steels' | 'knives'

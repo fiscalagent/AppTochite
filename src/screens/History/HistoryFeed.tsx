@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type SharpeningStatus } from '../../db/db'
+import { db, type SharpeningStatus } from '../../db/instance'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import s from './HistoryFeed.module.css'
 

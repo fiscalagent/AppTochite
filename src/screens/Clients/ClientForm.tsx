@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { db } from '../../db/db'
+import { db } from '../../db/instance'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import { useToast } from '../../components/Toast/ToastContext'
 import s from './ClientForm.module.css'
