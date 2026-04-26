@@ -109,7 +109,7 @@ export default function BackupScreen() {
     <div className={s.screen}>
       <div className={s.header}>
         <button className={s.back} onClick={() => navigate(-1)}>←</button>
-        <span className={s.title}>БЭКАП</span>
+        <span className={s.title}>НАСТРОЙКИ</span>
       </div>
 
       <div className={s.section}>
