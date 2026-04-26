@@ -81,7 +81,7 @@ export default function SharpeningForm() {
   const [newStoneGritUnit, setNewStoneGritUnit] = useState<GritUnit | ''>('')
   const [newStoneGrit, setNewStoneGrit] = useState('')
   const [newStoneGritMk, setNewStoneGritMk] = useState('')
-  const [newStoneType, setNewStoneType] = useState<Stone['type']>('ao')
+  const [newStoneType, setNewStoneType] = useState<Stone['type'] | ''>('')
 
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
   const stoneSuggestions = useLiveQuery(async () => {
@@ -149,12 +149,12 @@ export default function SharpeningForm() {
       grit: (newStoneGritUnit === 'fepa' || newStoneGritUnit === 'jis') && newStoneGrit ? Number(newStoneGrit) : undefined,
       gritUnit: newStoneGritUnit || undefined,
       gritMk: newStoneGritUnit === 'mk' && newStoneGritMk ? newStoneGritMk : undefined,
-      type: newStoneType,
+      type: newStoneType || undefined,
       isCustom: true,
     }
     await db.stones.add(stone)
     addStone(stoneDisplayName(stone))
-    setNewStoneBrand(''); setNewStoneGritUnit(''); setNewStoneGrit(''); setNewStoneGritMk(''); setNewStoneType('ao'); setNewStoneOpen(false)
+    setNewStoneBrand(''); setNewStoneGritUnit(''); setNewStoneGrit(''); setNewStoneGritMk(''); setNewStoneType(''); setNewStoneOpen(false)
   }
 
   async function handleSave() {
@@ -454,8 +454,9 @@ export default function SharpeningForm() {
                   <select
                     className={s.select}
                     value={newStoneType}
-                    onChange={e => setNewStoneType(e.target.value as Stone['type'])}
+                    onChange={e => setNewStoneType(e.target.value as Stone['type'] | '')}
                   >
+                    <option value="">иное</option>
                     <option value="galvanic">Гальваника</option>
                     <option value="ao">ОА</option>
                     <option value="kk">КК</option>

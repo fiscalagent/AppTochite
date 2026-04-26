@@ -53,7 +53,7 @@ export interface Stone {
   grit?: number
   gritUnit?: GritUnit
   gritMk?: string
-  type: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir'
+  type?: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir'
   category?: string
   description?: string
   isCustom: boolean

@@ -93,7 +93,7 @@ function StonesTab({ search }: { search: string }) {
   const [gritUnit, setGritUnit] = useState<GritUnit | ''>('')
   const [grit, setGrit] = useState('')
   const [gritMk, setGritMk] = useState('')
-  const [type, setType] = useState<Stone['type']>('ao')
+  const [type, setType] = useState<Stone['type'] | ''>('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const stones = useLiveQuery(
@@ -128,10 +128,10 @@ function StonesTab({ search }: { search: string }) {
       grit: (gritUnit === 'fepa' || gritUnit === 'jis') && grit ? Number(grit) : undefined,
       gritUnit: gritUnit || undefined,
       gritMk: gritUnit === 'mk' && gritMk ? gritMk : undefined,
-      type,
+      type: type || undefined,
       isCustom: true,
     })
-    setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setOpen(false)
+    setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setType(''); setOpen(false)
   }
 
   return (
@@ -172,7 +172,8 @@ function StonesTab({ search }: { search: string }) {
             </select>
           )}
           <div className={s.addRow}>
-            <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'])}>
+            <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'] | '')}>
+              <option value="">иное</option>
               <option value="galvanic">Гальваника</option>
               <option value="ao">ОА</option>
               <option value="kk">КК</option>
