@@ -213,7 +213,7 @@ function StonesTab({ search }: { search: string }) {
               </div>
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{st.brand}</div>
-                <div className={s.itemMeta}>{STONE_TYPE_LABELS[st.type]}</div>
+                <div className={s.itemMeta}>{st.type ? STONE_TYPE_LABELS[st.type] : ''}</div>
               </div>
               <div className={s.itemRight}>
                 {st.gritUnit === 'mk' && st.gritMk
