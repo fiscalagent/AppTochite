@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/fiscalagent/AppTochite/compare/v1.0.0...v1.1.0) (2026-04-26)
+
+
+### Features
+
+* баннер обнаружения WebView (Telegram in-app browser) ([7e1b887](https://github.com/fiscalagent/AppTochite/commit/7e1b88784746f012b181f46bfdb140bfb28657e7))
+
 # 1.0.0 (2026-04-26)
 
 
