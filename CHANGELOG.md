@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/fiscalagent/AppTochite/compare/v1.2.0...v1.2.1) (2026-04-26)
+
+
+### Bug Fixes
+
+* стабилизация тестов — синглтон db вынесен в instance.ts, fileParallelism отключён ([b5d2a6e](https://github.com/fiscalagent/AppTochite/commit/b5d2a6ecfeed3641b5fb82c011255f4f95627afa))
+
 # [1.2.0](https://github.com/fiscalagent/AppTochite/compare/v1.1.0...v1.2.0) (2026-04-26)
 
 
