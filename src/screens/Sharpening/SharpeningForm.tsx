@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type SharpeningStatus, type SharpeningStone, type Stone } from '../../db/db'
+import { db, type SharpeningStatus, type SharpeningStone, type Stone, type GritUnit, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/db'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
@@ -27,6 +27,18 @@ const PHOTO_LIMIT = 5
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
+}
+
+function parseStoneName(name: string): { brand: string; grit?: number; gritUnit?: GritUnit; gritMk?: string } {
+  const mkMatch = name.match(/^(.*?)\s+(\d+\/\d+)мк$/)
+  if (mkMatch) return { brand: mkMatch[1], gritUnit: 'mk', gritMk: mkMatch[2] }
+  const fepaMatch = name.match(/^(.*?)\s+(\d+)FEPA$/)
+  if (fepaMatch) return { brand: fepaMatch[1], grit: Number(fepaMatch[2]), gritUnit: 'fepa' }
+  const jisMatch = name.match(/^(.*?)\s+(\d+)JIS$/)
+  if (jisMatch) return { brand: jisMatch[1], grit: Number(jisMatch[2]), gritUnit: 'jis' }
+  const numMatch = name.match(/^(.*?)\s+(\d+)$/)
+  if (numMatch) return { brand: numMatch[1], grit: Number(numMatch[2]) }
+  return { brand: name }
 }
 
 export default function SharpeningForm() {
@@ -66,15 +78,15 @@ export default function SharpeningForm() {
 
   const [newStoneOpen, setNewStoneOpen] = useState(false)
   const [newStoneBrand, setNewStoneBrand] = useState('')
+  const [newStoneGritUnit, setNewStoneGritUnit] = useState<GritUnit | ''>('')
   const [newStoneGrit, setNewStoneGrit] = useState('')
+  const [newStoneGritMk, setNewStoneGritMk] = useState('')
   const [newStoneType, setNewStoneType] = useState<Stone['type']>('ao')
 
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
   const stoneSuggestions = useLiveQuery(async () => {
-    const items = await db.stones.toArray().then(arr =>
-      arr.sort((a, b) => (a.grit ?? Infinity) - (b.grit ?? Infinity))
-    )
-    return items.map(st => st.grit ? `${st.brand} ${st.grit}` : st.brand)
+    const items = await db.stones.toArray().then(arr => arr.sort(compareStonesForSort))
+    return items.map(st => stoneDisplayName(st))
   }, []) ?? []
   const knifeSuggestions = useLiveQuery(async () => {
     const items = await db.knives.orderBy('brand').toArray()
@@ -132,10 +144,17 @@ export default function SharpeningForm() {
 
   async function saveNewStone() {
     if (!newStoneBrand.trim()) return
-    const grit = newStoneGrit ? Number(newStoneGrit) : undefined
-    await db.stones.add({ brand: newStoneBrand.trim(), grit, type: newStoneType, isCustom: true })
-    addStone(grit ? `${newStoneBrand.trim()} ${grit}` : newStoneBrand.trim())
-    setNewStoneBrand(''); setNewStoneGrit(''); setNewStoneType('ao'); setNewStoneOpen(false)
+    const stone: Stone = {
+      brand: newStoneBrand.trim(),
+      grit: (newStoneGritUnit === 'fepa' || newStoneGritUnit === 'jis') && newStoneGrit ? Number(newStoneGrit) : undefined,
+      gritUnit: newStoneGritUnit || undefined,
+      gritMk: newStoneGritUnit === 'mk' && newStoneGritMk ? newStoneGritMk : undefined,
+      type: newStoneType,
+      isCustom: true,
+    }
+    await db.stones.add(stone)
+    addStone(stoneDisplayName(stone))
+    setNewStoneBrand(''); setNewStoneGritUnit(''); setNewStoneGrit(''); setNewStoneGritMk(''); setNewStoneType('ao'); setNewStoneOpen(false)
   }
 
   async function handleSave() {
@@ -155,17 +174,17 @@ export default function SharpeningForm() {
 
     if (selectedStones.length) {
       const existingStones = await db.stones.toArray()
-      const existingKeys = new Set(existingStones.map(s => `${s.brand.toLowerCase()} ${s.grit}`))
+      const existingKeys = new Set(existingStones.map(s => {
+        if (s.gritUnit === 'mk') return `${s.brand.toLowerCase()} mk:${s.gritMk ?? ''}`
+        return `${s.brand.toLowerCase()} ${s.grit ?? 0}`
+      }))
       for (const stone of selectedStones) {
-        const parts = stone.name.split(' ')
-        const lastPart = parts[parts.length - 1]
-        const parsedGrit = parseInt(lastPart, 10)
-        const hasGrit = !isNaN(parsedGrit) && String(parsedGrit) === lastPart
-        const brand = hasGrit ? parts.slice(0, -1).join(' ') || stone.name : stone.name
-        const grit = hasGrit ? parsedGrit : 0
-        const key = `${brand.toLowerCase()} ${grit}`
+        const parsed = parseStoneName(stone.name)
+        const key = parsed.gritUnit === 'mk'
+          ? `${parsed.brand.toLowerCase()} mk:${parsed.gritMk ?? ''}`
+          : `${parsed.brand.toLowerCase()} ${parsed.grit ?? 0}`
         if (!existingKeys.has(key)) {
-          await db.stones.add({ brand, grit, type: 'ao', isCustom: true })
+          await db.stones.add({ brand: parsed.brand, grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk, type: 'ao', isCustom: true })
           existingKeys.add(key)
         }
       }
@@ -401,14 +420,37 @@ export default function SharpeningForm() {
                   placeholder="Бренд (Suehiro, Naniwa...)"
                   autoFocus
                 />
-                <div className={s.newStoneRow}>
+                <div className={s.gritUnitRow}>
+                  {(['', 'fepa', 'jis', 'mk'] as const).map(u => (
+                    <button
+                      key={u || 'none'}
+                      className={`${s.gritUnitBtn} ${newStoneGritUnit === u ? s.gritUnitActive : ''}`}
+                      onClick={() => { setNewStoneGritUnit(u); setNewStoneGrit(''); setNewStoneGritMk('') }}
+                    >
+                      {u === '' ? 'нет' : u === 'mk' ? 'мк' : u.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+                {(newStoneGritUnit === 'fepa' || newStoneGritUnit === 'jis') && (
                   <input
                     value={newStoneGrit}
                     onChange={e => setNewStoneGrit(e.target.value)}
-                    placeholder="Грит (необяз.)"
+                    placeholder={`${newStoneGritUnit.toUpperCase()}, напр. 1000`}
                     type="number"
                     min={1}
                   />
+                )}
+                {newStoneGritUnit === 'mk' && (
+                  <select
+                    className={s.select}
+                    value={newStoneGritMk}
+                    onChange={e => setNewStoneGritMk(e.target.value)}
+                  >
+                    <option value="">Выбрать мк</option>
+                    {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
+                  </select>
+                )}
+                <div className={s.newStoneRow}>
                   <select
                     className={s.select}
                     value={newStoneType}

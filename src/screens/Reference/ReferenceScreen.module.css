@@ -183,6 +183,40 @@
   font-family: var(--font-display);
   font-size: 20px;
   color: var(--text-200);
+  white-space: nowrap;
+}
+
+.gritUnitLabel {
+  font-size: 11px;
+  color: var(--text-400);
+  font-family: var(--font-body);
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.gritUnitRow {
+  display: flex;
+  gap: 4px;
+}
+
+.gritUnitBtn {
+  flex: 1;
+  padding: 7px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-200);
+  background: var(--bg-300);
+  color: var(--text-300);
+  cursor: pointer;
+  text-align: center;
+}
+
+.gritUnitActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .customBadge {
