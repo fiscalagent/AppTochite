@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/fiscalagent/AppTochite/compare/v1.2.1...v1.3.0) (2026-04-26)
+
+
+### Features
+
+* добавить опцию «иное» в тип абразива ([ad165e3](https://github.com/fiscalagent/AppTochite/commit/ad165e34eddfbbad98f06d4f5be9353d705d8709))
+
 ## [1.2.1](https://github.com/fiscalagent/AppTochite/compare/v1.2.0...v1.2.1) (2026-04-26)
 
 
