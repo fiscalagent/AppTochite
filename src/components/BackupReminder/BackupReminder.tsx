@@ -5,6 +5,7 @@ import BackupReminderModal from './BackupReminderModal'
 
 const SNOOZE_KEY = 'backupReminderSnoozedUntil'
 const BACKUP_INTERVAL_DAYS = 7
+const GRACE_DAYS = 3
 const SHOW_DELAY_MS = 1500
 
 export default function BackupReminder() {
@@ -13,6 +14,17 @@ export default function BackupReminder() {
 
   useEffect(() => {
     const t = setTimeout(async () => {
+      // Record first launch; skip reminder until GRACE_DAYS have passed
+      const firstLaunchMeta = await db.meta.get('firstLaunchAt')
+      if (!firstLaunchMeta) {
+        await db.meta.put({ key: 'firstLaunchAt', value: new Date().toISOString() })
+        return
+      }
+      const daysSinceInstall = Math.floor(
+        (Date.now() - new Date(firstLaunchMeta.value as string).getTime()) / 86_400_000
+      )
+      if (daysSinceInstall < GRACE_DAYS) return
+
       const snooze = localStorage.getItem(SNOOZE_KEY)
       if (snooze && new Date(snooze) > new Date()) return
 
