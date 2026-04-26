@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { db } from '../../db/db'
 import { useToast } from '../../components/Toast/ToastContext'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
+import { useVersionCheck } from '../../hooks/useVersionCheck'
 import {
   isValidBackup,
   exportBackup,
@@ -24,6 +25,7 @@ export default function BackupScreen() {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { currentVersion, hasUpdate } = useVersionCheck()
 
   const [preview, setPreview] = useState<BackupFile | null>(null)
   const [restoring, setRestoring] = useState(false)
@@ -202,6 +204,21 @@ export default function BackupScreen() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className={s.divider} />
+
+      <div className={s.section}>
+        <Link to="/about" className={s.aboutRow}>
+          <div className={s.aboutLeft}>
+            <span className={s.aboutLabel}>О программе</span>
+            <span className={s.aboutVersion}>v{currentVersion}</span>
+          </div>
+          <div className={s.aboutRight}>
+            {hasUpdate && <span className={s.updateDot} />}
+            <span className={s.aboutChevron}>›</span>
+          </div>
+        </Link>
       </div>
     </div>
   )

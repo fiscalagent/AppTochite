@@ -208,3 +208,55 @@
   flex-direction: column;
   gap: var(--space-2);
 }
+
+/* About row */
+
+.aboutRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: inherit;
+}
+
+.aboutLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.aboutLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-100);
+}
+
+.aboutVersion {
+  font-size: 12px;
+  color: var(--text-400);
+}
+
+.aboutRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.updateDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-done);
+  flex-shrink: 0;
+}
+
+.aboutChevron {
+  font-size: 20px;
+  color: var(--text-400);
+  line-height: 1;
+}

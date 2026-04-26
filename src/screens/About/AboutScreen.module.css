@@ -1,0 +1,216 @@
+.screen {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-bottom: 80px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0 var(--space-2);
+}
+
+.back {
+  font-size: 22px;
+  color: var(--text-200);
+  background: none;
+  padding: 0 var(--space-2) 0 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--text-100);
+  letter-spacing: 0.5px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-300);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-100);
+  margin: 0;
+}
+
+/* Version block */
+
+.versionBlock {
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.versionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.appName {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-100);
+}
+
+.versionBadge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 99px;
+  padding: 3px 10px;
+}
+
+.appDesc {
+  font-size: 13px;
+  color: var(--text-300);
+}
+
+/* Update banner */
+
+.updateBanner {
+  background: color-mix(in srgb, var(--status-done) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-done) 30%, transparent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.updateBannerText {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.updateTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--status-done);
+}
+
+.updateVersion {
+  font-size: 13px;
+  color: var(--text-200);
+}
+
+.updateHint {
+  font-size: 13px;
+  color: var(--text-300);
+  line-height: 1.5;
+}
+
+.releaseLink {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--status-done);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+/* Check row */
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.checkMeta {
+  font-size: 12px;
+  color: var(--text-400);
+  flex: 1;
+}
+
+.checkBtn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  font-family: var(--font-body);
+  flex-shrink: 0;
+}
+
+.checkBtn:disabled {
+  opacity: 0.5;
+}
+
+/* Changelog */
+
+.changelog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.changelogEntry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.changelogHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.changelogVersion {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-100);
+}
+
+.changelogDate {
+  font-size: 12px;
+  color: var(--text-400);
+}
+
+.changelogList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.changelogList li {
+  font-size: 14px;
+  color: var(--text-200);
+  line-height: 1.5;
+  padding-left: 14px;
+  position: relative;
+}
+
+.changelogList li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--text-400);
+}

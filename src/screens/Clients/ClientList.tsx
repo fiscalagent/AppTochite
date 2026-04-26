@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/db'
 import Avatar from '../../components/Avatar/Avatar'
+import { useVersionCheck } from '../../hooks/useVersionCheck'
 import type { Client } from '../../db/db'
 import s from './ClientList.module.css'
 
@@ -54,6 +55,7 @@ function matchesQuery(client: Client, q: string): boolean {
 
 export default function ClientList() {
   const [query, setQuery] = useState('')
+  const { hasUpdate } = useVersionCheck()
   const rows = useLiveQuery<ClientRow[]>(async () => {
     const clients = await db.clients.orderBy('name').toArray()
     // «Я» — всегда первый
@@ -87,7 +89,12 @@ export default function ClientList() {
       <div className={s.header}>
         <span className={s.title}>КЛИЕНТЫ</span>
         <div className={s.headerRight}>
-          <Link to="/backup" className={s.backupLink}><IconSave /></Link>
+          <Link to="/backup" className={s.backupLink}>
+            <span className={s.iconWrap}>
+              <IconSave />
+              {hasUpdate && <span className={s.updateDot} />}
+            </span>
+          </Link>
           <Link to="/clients/new">
             <button className={s.addBtn}>+ Клиент</button>
           </Link>
