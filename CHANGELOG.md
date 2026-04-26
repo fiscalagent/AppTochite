@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/fiscalagent/AppTochite/compare/v1.3.0...v1.3.1) (2026-04-26)
+
+
+### Bug Fixes
+
+* STONE_TYPE_LABELS — обработка undefined type ([8f1d83b](https://github.com/fiscalagent/AppTochite/commit/8f1d83bd9e88695940f60806ff95409a4d44a601))
+
 # [1.3.0](https://github.com/fiscalagent/AppTochite/compare/v1.2.1...v1.3.0) (2026-04-26)
 
 

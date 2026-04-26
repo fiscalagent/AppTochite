@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.3.1',
+    date: '2026-04-26',
+    changes: [
+      'STONE_TYPE_LABELS — обработка undefined type',
+      'добавить опцию «иное» в тип абразива',
+    ],
+  },
+  {
     version: '1.3.0',
     date: '2026-04-26',
     changes: [
