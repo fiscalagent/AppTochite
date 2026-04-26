@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Stone } from '../../db/db'
+import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/db'
 import s from './ReferenceScreen.module.css'
 
 type Tab = 'stones' | 'steels' | 'knives'
@@ -90,20 +90,21 @@ function SelectionBar({
 function StonesTab({ search }: { search: string }) {
   const [open, setOpen] = useState(false)
   const [brand, setBrand] = useState('')
+  const [gritUnit, setGritUnit] = useState<GritUnit | ''>('')
   const [grit, setGrit] = useState('')
+  const [gritMk, setGritMk] = useState('')
   const [type, setType] = useState<Stone['type']>('ao')
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const stones = useLiveQuery(
-    () => db.stones.toArray().then(arr =>
-      arr.sort((a, b) => (a.grit ?? Infinity) - (b.grit ?? Infinity))
-    ),
+    () => db.stones.toArray().then(arr => arr.sort(compareStonesForSort)),
     []
   )
 
-  const filtered = stones?.filter(st =>
-    `${st.brand} ${st.grit ?? ''}`.toLowerCase().includes(search.toLowerCase())
-  ) ?? []
+  const filtered = stones?.filter(st => {
+    const name = `${st.brand} ${st.grit ?? ''} ${st.gritMk ?? ''}`.toLowerCase()
+    return name.includes(search.toLowerCase())
+  }) ?? []
 
   const filteredSelectedCount = filtered.filter(st => selected.has(st.id!)).length
 
@@ -122,8 +123,15 @@ function StonesTab({ search }: { search: string }) {
 
   async function add() {
     if (!brand.trim()) return
-    await db.stones.add({ brand: brand.trim(), grit: grit ? Number(grit) : undefined, type, isCustom: true })
-    setBrand(''); setGrit(''); setOpen(false)
+    await db.stones.add({
+      brand: brand.trim(),
+      grit: (gritUnit === 'fepa' || gritUnit === 'jis') && grit ? Number(grit) : undefined,
+      gritUnit: gritUnit || undefined,
+      gritMk: gritUnit === 'mk' && gritMk ? gritMk : undefined,
+      type,
+      isCustom: true,
+    })
+    setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setOpen(false)
   }
 
   return (
@@ -137,8 +145,33 @@ function StonesTab({ search }: { search: string }) {
         <div className={s.addCard}>
           <span className={s.addTitle}>Новый камень</span>
           <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
+          <div className={s.gritUnitRow}>
+            {(['', 'fepa', 'jis', 'mk'] as const).map(u => (
+              <button
+                key={u || 'none'}
+                className={`${s.gritUnitBtn} ${gritUnit === u ? s.gritUnitActive : ''}`}
+                onClick={() => { setGritUnit(u); setGrit(''); setGritMk('') }}
+              >
+                {u === '' ? 'нет' : u === 'mk' ? 'мк' : u.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          {(gritUnit === 'fepa' || gritUnit === 'jis') && (
+            <input
+              value={grit}
+              onChange={e => setGrit(e.target.value)}
+              placeholder={`${gritUnit.toUpperCase()}, напр. 1000`}
+              type="number"
+              min={1}
+            />
+          )}
+          {gritUnit === 'mk' && (
+            <select className={s.select} value={gritMk} onChange={e => setGritMk(e.target.value)}>
+              <option value="">Выбрать мк</option>
+              {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
+            </select>
+          )}
           <div className={s.addRow}>
-            <input value={grit} onChange={e => setGrit(e.target.value)} placeholder="Грит (необяз.)" type="number" min={1} />
             <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'])}>
               <option value="galvanic">Гальваника</option>
               <option value="ao">ОА</option>
@@ -182,7 +215,12 @@ function StonesTab({ search }: { search: string }) {
                 <div className={s.itemMeta}>{STONE_TYPE_LABELS[st.type]}</div>
               </div>
               <div className={s.itemRight}>
-                {st.grit != null && <span className={s.gritBadge}>{st.grit}</span>}
+                {st.gritUnit === 'mk' && st.gritMk
+                  ? <span className={s.gritBadge}>{st.gritMk}<span className={s.gritUnitLabel}>мк</span></span>
+                  : st.grit != null
+                    ? <span className={s.gritBadge}>{st.grit}{st.gritUnit && <span className={s.gritUnitLabel}>{st.gritUnit.toUpperCase()}</span>}</span>
+                    : null
+                }
                 {st.isCustom && <span className={s.customBadge}>мой</span>}
               </div>
             </div>

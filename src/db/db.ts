@@ -39,14 +39,44 @@ export interface Sharpening {
   photosAfter?: string[]
 }
 
+export type GritUnit = 'fepa' | 'jis' | 'mk'
+
+export const MK_VALUES = [
+  '315/250','250/200','200/160','160/125','125/100','100/80',
+  '80/63','63/50','60/40','50/40','40/28','28/20','20/14',
+  '14/10','10/7','7/5','5/3','3/2','2/1','1/0',
+]
+
 export interface Stone {
   id?: number
   brand: string
   grit?: number
+  gritUnit?: GritUnit
+  gritMk?: string
   type: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir'
   category?: string
   description?: string
   isCustom: boolean
+}
+
+export function stoneDisplayName(stone: Stone): string {
+  if (stone.gritUnit === 'mk' && stone.gritMk) return `${stone.brand} ${stone.gritMk}мк`
+  if (stone.grit != null) {
+    if (stone.gritUnit === 'fepa') return `${stone.brand} ${stone.grit}FEPA`
+    if (stone.gritUnit === 'jis') return `${stone.brand} ${stone.grit}JIS`
+    return `${stone.brand} ${stone.grit}`
+  }
+  return stone.brand
+}
+
+export function compareStonesForSort(a: Stone, b: Stone): number {
+  const isMkA = a.gritUnit === 'mk'
+  const isMkB = b.gritUnit === 'mk'
+  if (!isMkA && !isMkB) return (a.grit ?? Infinity) - (b.grit ?? Infinity)
+  if (isMkA && isMkB) {
+    return MK_VALUES.indexOf(a.gritMk ?? '') - MK_VALUES.indexOf(b.gritMk ?? '')
+  }
+  return isMkA ? 1 : -1
 }
 
 export interface Steel {
