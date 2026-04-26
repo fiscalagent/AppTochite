@@ -19,7 +19,7 @@ export default function PhotoLightbox({ photos, initialIndex = 0, onClose }: Pro
   const dragRef = useRef<{ startX: number; startY: number; tx: number; ty: number } | null>(null)
 
   useEffect(() => {
-    setScale(1)
+    setScale(1) // eslint-disable-line react-hooks/set-state-in-effect
     setTranslate({ x: 0, y: 0 })
   }, [index])
 

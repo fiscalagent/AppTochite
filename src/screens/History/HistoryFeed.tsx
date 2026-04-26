@@ -60,7 +60,7 @@ export default function HistoryFeed() {
 
   // reset pagination when search or filter changes
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE)
+    setVisibleCount(PAGE_SIZE) // eslint-disable-line react-hooks/set-state-in-effect
   }, [filter, query])
 
   const visible = filtered.slice(0, visibleCount)

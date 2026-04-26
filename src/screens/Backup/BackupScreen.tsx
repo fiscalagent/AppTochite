@@ -34,9 +34,11 @@ export default function BackupScreen() {
 
   function toggleCompression() {
     const next = !compressed
-    next
-      ? localStorage.setItem(PHOTO_COMPRESS_KEY, 'on')
-      : localStorage.removeItem(PHOTO_COMPRESS_KEY)
+    if (next) {
+      localStorage.setItem(PHOTO_COMPRESS_KEY, 'on')
+    } else {
+      localStorage.removeItem(PHOTO_COMPRESS_KEY)
+    }
     setCompressed(next)
     showToast(next ? 'Сжатие фото включено' : 'Сжатие фото отключено')
   }
