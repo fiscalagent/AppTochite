@@ -45,17 +45,34 @@ src/
   components/            # Переиспользуемые UI-компоненты
     Autocomplete/        # Автодополнение для полей ввода
     Avatar/              # Аватар клиента (с короной для нулевого клиента)
-    BottomNav/           # Нижняя навигация
+    BackupReminder/      # Напоминание о бэкапе (раз в 7 дней, не раньше 3 дней после установки)
+    BottomNav/           # Нижняя навигация + FAB
+    ClientCard/          # Переиспользуемая строка клиента (используется в C-1)
     ConfirmModal/        # Модалка подтверждения удаления (M-1)
     Layout/              # Обёртка экрана (шапка + контент)
     PhotoLightbox/       # Просмотр фото на весь экран
+    PhotoSourceSheet/    # Bottom sheet выбора источника фото (камера / галерея)
+    SharpeningRow/       # Переиспользуемая строка заточки (используется в C-2 и H-1)
     StatusPill/          # Бейдж статуса заточки
+    StorageWarning/      # Предупреждение о заполнении хранилища
     Toast/               # Всплывающие уведомления (ToastContext)
 
   hooks/
     useCamera.ts         # Хук для съёмки/выбора фото
+    useVersionCheck.ts   # Проверка обновлений через GitHub API
+
+  data/
+    changelog.ts         # Записи ченджлога для экрана «О программе»
+
+  utils/
+    backup.ts            # Утилиты экспорта/импорта JSON, построения CSV
+    backup.test.ts       # Тесты backup-утилит (Vitest)
 
   screens/
+    About/
+      AboutScreen.tsx     # A-1 — «О программе»: версия, проверка обновлений, ченджлог
+    Backup/
+      BackupScreen.tsx    # BK-1 — бэкап и восстановление данных
     Clients/
       ClientList.tsx      # C-1 — список клиентов
       ClientCard.tsx      # C-2 — карточка клиента
@@ -101,6 +118,8 @@ src/
 | `/sharpenings/:id` | Z-2 Просмотр заточки |
 | `/sharpenings/:id/edit` | Z-1 Редактирование заточки |
 | `/reference/:tab` | S-1/2/3 Справочники (tab: stones/steels/knives) |
+| `/backup` | BK-1 Бэкап и восстановление данных |
+| `/about` | A-1 «О программе» (версия, обновления, ченджлог) |
 
 ---
 

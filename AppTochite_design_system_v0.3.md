@@ -1,6 +1,6 @@
-# AppTochite — Дизайн-система v0.3
+# AppTochite — Дизайн-система v0.4
 
-**Версия:** 0.3 · Апрель 2026  
+**Версия:** 0.4 · Апрель 2026  
 **Тема:** Dark-first  
 **Платформа:** PWA · Android  
 
@@ -49,8 +49,6 @@
 |---|---|---|
 | `--status-accepted` | `#4A90D9` | Текст пилюли «принят» |
 | `--status-accepted-bg` | `#1A2E45` | Фон пилюли «принят» |
-| `--status-inwork` | `#D9A832` | Текст пилюли «в работе» |
-| `--status-inwork-bg` | `#3D2E0F` | Фон пилюли «в работе» |
 | `--status-done` | `#3DB87A` | Текст пилюли «готов» |
 | `--status-done-bg` | `#0F2E1E` | Фон пилюли «готов» |
 
@@ -102,7 +100,7 @@
 | `--radius-sm` | `6px` | Теги камней, внутренние элементы |
 | `--radius-md` | `10px` | Поля ввода, кнопки, чипы, toast |
 | `--radius-lg` | `16px` | Карточки клиентов и заточек |
-| `--radius-xl` | `24px` | Bottom sheet, крупные модальные |
+| `--radius-xl` | `24px` | Bottom sheet (`PhotoSourceSheet`), крупные модальные |
 | `--radius-full` | `9999px` | Аватары, статус-пилюли, фильтр-чипы |
 
 ---
@@ -137,7 +135,7 @@ font-weight: 600
 letter-spacing: 0.3px
 ```
 
-Состояния: **принят** (синий), **в работе** (янтарный), **готов** (зелёный).  
+Состояния: **принят** (синий), **готов** (зелёный). Статус «в работе» удалён из системы.  
 Фоновый цвет — всегда соответствующий `*-bg` токен.
 
 ---
@@ -155,7 +153,7 @@ font-weight: 700
 font-size: 35% от размера аватара
 ```
 
-Нулевой клиент «Я» — тот же компонент, без исключений.
+Нулевой клиент «Я» — тот же компонент + золотая корона (SVG) в правом нижнем углу аватара.
 
 ---
 
@@ -292,16 +290,23 @@ height: 56px
 Неактивная вкладка: `color: var(--text-300)`  
 Активная вкладка: `color: var(--accent)`, `border-bottom: 2px solid var(--accent)`
 
-Кнопка «+ Заточка»:
+### FAB — плавающая кнопка «+ Заточка»
+
+Кнопка фиксирована в правом нижнем углу поверх контента (Material Design FAB).
+
 ```
+position: fixed
+bottom: 72px          /* выше нижней навигации */
+right: 16px
 background: var(--accent)
 color: #fff
-border-radius: var(--radius-md)
-margin: 8px
-padding: 8px 14px
-font-weight: 700
-font-size: 13px
+border-radius: var(--radius-full)
+width: 56px
+height: 56px
+box-shadow: 0 4px 16px rgba(74, 144, 217, 0.4)
 ```
+
+SVG-иконка «+» внутри. При нажатии из карточки клиента (C-2) предзаполняет поле клиента в форме заточки и скрывает его.
 
 ---
 
@@ -347,8 +352,6 @@ font-size: 14px
   /* Status */
   --status-accepted: #4A90D9;
   --status-accepted-bg: #1A2E45;
-  --status-inwork: #D9A832;
-  --status-inwork-bg: #3D2E0F;
   --status-done: #3DB87A;
   --status-done-bg: #0F2E1E;
 
@@ -361,6 +364,7 @@ font-size: 14px
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --radius-full: 9999px;
 
   /* Fonts */
   --font-display: 'Bebas Neue', 'Arial Narrow', sans-serif;
@@ -391,7 +395,7 @@ font-size: 14px
 | Хранилище | Dexie.js (IndexedDB) | Клиенты, заточки, справочники, фото в base64 |
 | Офлайн | Workbox | Service Worker, кэширование, PWA manifest |
 | Камера | Web Camera API | Съёмка фото «до» и «после» |
-| Деплой | Vercel | Простой деплой React + Vite |
+| Деплой | **GitHub Pages** (CI через GitHub Actions, Node 24) | |
 
 ### Структура стилей
 
@@ -431,5 +435,15 @@ import './styles/reset.css';
 ---
 
 ## Changelog
+
+**v0.4 (апрель 2026) — актуализация по реализованным изменениям:**
+
+- Удалены токены `--status-inwork` и `--status-inwork-bg` — статус «в работе» удалён из системы
+- Добавлен токен `--radius-full: 9999px` в таблицу и CSS-блок (был в `tokens.css`, отсутствовал в документации)
+- Статус-пилюля: убран вариант «в работе», теперь только 2 состояния
+- FAB выделен в отдельный компонент: `position: fixed`, отдельно от нижней навигации
+- Аватар нулевого клиента «Я»: добавлена золотая корона (SVG)
+- Деплой: Vercel → GitHub Pages
+- Добавлено описание `PhotoSourceSheet` (bottom sheet выбора источника фото)
 
 **v0.3** — первая версия дизайн-системы. Зафиксированы цвета, типографика, токены, компоненты на основе вайрфреймов из функциональной спецификации v0.3.
