@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/fiscalagent/AppTochite/compare/v1.1.0...v1.2.0) (2026-04-26)
+
+
+### Features
+
+* иконка шестерёнки вместо скачать, заголовок «Настройки» ([f245d6c](https://github.com/fiscalagent/AppTochite/commit/f245d6ca971cb9635297246ed58bae77af7e5e23))
+
 # [1.1.0](https://github.com/fiscalagent/AppTochite/compare/v1.0.0...v1.1.0) (2026-04-26)
 
 
