@@ -94,7 +94,7 @@ function generatePNG(hue, seed) {
     pngChunk('IDAT', idat),
     pngChunk('IEND', Buffer.alloc(0)),
   ])
-  return png.toString('base64')
+  return 'data:image/png;base64,' + png.toString('base64')
 }
 
 // ─── Кэш изображений (20 вариантов × 2 типа = 40 PNG) ───────────────────────
