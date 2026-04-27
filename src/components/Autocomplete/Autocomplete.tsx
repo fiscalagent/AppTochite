@@ -14,7 +14,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   const [open, setOpen] = useState(false)
 
   const filtered = value.length > 0
-    ? suggestions.filter(item => item.toLowerCase().startsWith(value.toLowerCase())).slice(0, 8)
+    ? suggestions.filter(item => item.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
     : []
 
   const visible = open && filtered.length > 0
