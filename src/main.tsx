@@ -13,7 +13,7 @@ if ('serviceWorker' in navigator) {
   })
 }
 
-seedDatabase()
+seedDatabase().catch(err => console.error('[AppTochite] seed failed:', err))
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

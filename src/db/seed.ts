@@ -398,8 +398,9 @@ const KNIVES: Omit<Knife, 'id'>[] = [
 const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
 
   // ── v1: начальные справочники ─────────────────────────────────────────────
+  // Клиент «Я» создаётся отдельно в ensureSelfClient() до запуска миграций,
+  // чтобы он гарантированно существовал даже при сбое большой транзакции.
   async (db) => {
-    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() });
     await db.stones.bulkAdd(STONES);
     await db.steels.bulkAdd(STEELS);
     await db.knives.bulkAdd(KNIVES);
@@ -412,9 +413,21 @@ const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
 
 ];
 
+// Гарантирует существование клиента «Я» при каждом запуске приложения.
+// Выполняется вне миграционной транзакции — «Я» создаётся раньше справочников,
+// поэтому сбой большой транзакции не лишает пользователя нулевого клиента.
+async function ensureSelfClient(targetDb: AppTochiteDB): Promise<void> {
+  const hasSelf = (await targetDb.clients.filter(c => c.isSelf).count()) > 0;
+  if (!hasSelf) {
+    await targetDb.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() });
+  }
+}
+
 // ─── Точка входа ─────────────────────────────────────────────────────────────
 
 export async function seedDatabaseWith(targetDb: AppTochiteDB): Promise<void> {
+  await ensureSelfClient(targetDb);
+
   const stored = await targetDb.meta.get('seedVersion');
   const currentVersion = (stored?.value as number) ?? 0;
 
