@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
@@ -80,6 +80,106 @@ function SelectionBar({
           <button className={s.cancelSelBtn} onClick={() => setConfirm(false)}>Нет</button>
           <button className={s.deleteSelBtn} onClick={onDelete}>Да</button>
         </>
+      )}
+    </div>
+  )
+}
+
+// ─── Stone Heatmap ───────────────────────────────────────────────────────────
+
+const HEATMAP_POSITIONS = [1, 2, 3, 4, 5] as const
+const POS_LABELS: Record<number, string> = { 1: '1', 2: '2', 3: '3', 4: '4', 5: 'Фин' }
+
+function heatColor(pct: number): string {
+  if (pct <= 0) return ''
+  const stops = [
+    { t: 0,    r: 22,  g: 22,  b: 22  },
+    { t: 0.25, r: 27,  g: 135, b: 82  },
+    { t: 0.5,  r: 210, g: 175, b: 20  },
+    { t: 0.75, r: 210, g: 100, b: 15  },
+    { t: 1.0,  r: 200, g: 60,  b: 60  },
+  ]
+  let lo = stops[0], hi = stops[stops.length - 1]
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (pct >= stops[i].t && pct <= stops[i + 1].t) { lo = stops[i]; hi = stops[i + 1]; break }
+  }
+  const range = hi.t - lo.t
+  const f = range > 0 ? (pct - lo.t) / range : 0
+  const r = Math.round(lo.r + (hi.r - lo.r) * f)
+  const g = Math.round(lo.g + (hi.g - lo.g) * f)
+  const b = Math.round(lo.b + (hi.b - lo.b) * f)
+  return `rgb(${r},${g},${b})`
+}
+
+function StoneHeatmap() {
+  const [open, setOpen] = useState(true)
+  const sharpenings = useLiveQuery(() => db.sharpenings.toArray(), [])
+
+  if (!sharpenings) return null
+
+  const byPos: Record<number, Record<string, number>> = {}
+  for (const sh of sharpenings) {
+    for (const stone of sh.stones ?? []) {
+      const pos = Math.min(stone.order, 5)
+      if (!byPos[pos]) byPos[pos] = {}
+      byPos[pos][stone.name] = (byPos[pos][stone.name] ?? 0) + 1
+    }
+  }
+
+  const totals: Record<string, number> = {}
+  for (const posMap of Object.values(byPos)) {
+    for (const [name, cnt] of Object.entries(posMap)) {
+      totals[name] = (totals[name] ?? 0) + cnt
+    }
+  }
+
+  const top10 = Object.entries(totals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name]) => name)
+
+  if (top10.length === 0) return null
+
+  const posTotals: Record<number, number> = {}
+  for (const p of HEATMAP_POSITIONS) {
+    posTotals[p] = Object.values(byPos[p] ?? {}).reduce((a, b) => a + b, 0)
+  }
+
+  return (
+    <div className={s.heatmapWrap}>
+      <button className={s.heatmapToggle} onClick={() => setOpen(v => !v)}>
+        <span>Топ камней по позициям</span>
+        <span className={s.heatmapChevron}>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className={s.heatmap}>
+          <div className={s.heatmapCorner} />
+          {HEATMAP_POSITIONS.map(p => (
+            <div key={p} className={s.heatmapPosHeader}>{POS_LABELS[p]}</div>
+          ))}
+          {top10.map(name => (
+            <Fragment key={name}>
+              <div className={s.heatmapStone} title={name}>{name}</div>
+              {HEATMAP_POSITIONS.map(p => {
+                const count = byPos[p]?.[name] ?? 0
+                const total = posTotals[p] ?? 0
+                const pct = total > 0 ? count / total : 0
+                const bg = heatColor(pct)
+                return (
+                  <div
+                    key={p}
+                    className={s.heatmapCell}
+                    style={bg ? { background: bg } : undefined}
+                  >
+                    {pct >= 0.08 && (
+                      <span className={s.heatmapPct}>{Math.round(pct * 100)}%</span>
+                    )}
+                  </div>
+                )
+              })}
+            </Fragment>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -189,6 +289,8 @@ function StonesTab({ search }: { search: string }) {
           </div>
         </div>
       )}
+
+      <StoneHeatmap />
 
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}

@@ -347,6 +347,83 @@
   cursor: pointer;
 }
 
+/* Heatmap */
+.heatmapWrap {
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.heatmapToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px var(--space-4);
+  background: var(--bg-200);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-200);
+  font-family: var(--font-body);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-100);
+}
+
+.heatmapChevron {
+  color: var(--text-400);
+  font-size: 9px;
+}
+
+.heatmap {
+  background: var(--bg-100);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 3fr repeat(5, 1fr);
+  gap: 3px;
+  align-items: center;
+}
+
+.heatmapCorner {
+  /* empty top-left */
+}
+
+.heatmapPosHeader {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-300);
+  padding: 2px 0 6px;
+  font-family: var(--font-display);
+}
+
+.heatmapStone {
+  font-size: 11px;
+  color: var(--text-200);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: var(--space-2);
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.heatmapCell {
+  border-radius: 4px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-300);
+}
+
+.heatmapPct {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+
 .select {
   background: var(--bg-300);
   border: 1px solid var(--border-100);
