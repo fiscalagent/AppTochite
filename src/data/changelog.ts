@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.5.1',
+    date: '2026-04-27',
+    changes: [
+      '**autocomplete:** поиск по включению вместо префикса ([](https://github.com/fiscalagent/AppTochite/commit/960fa88cd16c516c6e8cce66570431294c6eb924))',
+      '**reference:** тепловая карта использования камней по позициям ([](https://github.com/fiscalagent/AppTochite/commit/ccee2a1d4bf13326df9455c8383f25954db35dae))',
+    ],
+  },
+  {
     version: '1.5.0',
     date: '2026-04-27',
     changes: [

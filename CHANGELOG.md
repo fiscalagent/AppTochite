@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/fiscalagent/AppTochite/compare/v1.5.0...v1.5.1) (2026-04-27)
+
+
+### fix
+
+* **autocomplete:** поиск по включению вместо префикса ([](https://github.com/fiscalagent/AppTochite/commit/960fa88cd16c516c6e8cce66570431294c6eb924))
+
 # [1.5.0](https://github.com/fiscalagent/AppTochite/compare/v1.4.1...v1.5.0) (2026-04-27)
 
 
