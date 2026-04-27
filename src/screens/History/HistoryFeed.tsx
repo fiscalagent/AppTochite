@@ -87,7 +87,7 @@ export default function HistoryFeed() {
         <input
           className={s.search}
           type="search"
-          placeholder="Поиск по ножу, клиенту, стали..."
+          placeholder="Поиск по ножу, клиенту, стали, комментарию..."
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
@@ -121,6 +121,11 @@ export default function HistoryFeed() {
                 <div className={s.info}>
                   <div className={s.knife}>{sh.knifeBrand}</div>
                   <div className={s.meta}>{clientName}</div>
+                  {trimmed && sh.comment?.toLowerCase().includes(trimmed.toLowerCase()) && (
+                    <div className={s.commentSnippet}>
+                      {sh.comment.length > 70 ? sh.comment.slice(0, 70) + '…' : sh.comment}
+                    </div>
+                  )}
                 </div>
                 <div className={s.right}>
                   {sh.price != null && (
