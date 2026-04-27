@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/fiscalagent/AppTochite/compare/v1.3.1...v1.4.0) (2026-04-27)
+
+
+### feat
+
+* поиск по комментарию — сниппет совпадения в строке истории ([](https://github.com/fiscalagent/AppTochite/commit/53f3597c820c622008cee3233c7588a32400f35d))
+
 ## [1.3.1](https://github.com/fiscalagent/AppTochite/compare/v1.3.0...v1.3.1) (2026-04-26)
 
 
