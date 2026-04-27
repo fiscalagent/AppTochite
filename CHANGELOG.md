@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/fiscalagent/AppTochite/compare/v1.4.1...v1.5.0) (2026-04-27)
+
+
+### feat
+
+* **reference:** тепловая карта использования камней по позициям ([](https://github.com/fiscalagent/AppTochite/commit/ccee2a1d4bf13326df9455c8383f25954db35dae))
+
 ## [1.4.1](https://github.com/fiscalagent/AppTochite/compare/v1.4.0...v1.4.1) (2026-04-27)
 
 
