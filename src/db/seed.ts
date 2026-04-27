@@ -14,7 +14,7 @@
 //   })
 
 import { db } from './instance';
-import type { Stone, Steel, Knife } from './instance';
+import type { AppTochiteDB, Stone, Steel, Knife } from './db';
 
 // ─── Камни ───────────────────────────────────────────────────────────────────
 
@@ -395,10 +395,10 @@ const KNIVES: Omit<Knife, 'id'>[] = [
 // Существующие пользователи помечаются в db.ts (version(3).upgrade) как v1,
 // поэтому первая миграция выполняется только при чистой установке.
 
-const SEED_MIGRATIONS: Array<() => Promise<void>> = [
+const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
 
   // ── v1: начальные справочники ─────────────────────────────────────────────
-  async () => {
+  async (db) => {
     await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() });
     await db.stones.bulkAdd(STONES);
     await db.steels.bulkAdd(STEELS);
@@ -406,7 +406,7 @@ const SEED_MIGRATIONS: Array<() => Promise<void>> = [
   },
 
   // ── v2 и далее: добавлять сюда новые записи (только delta) ───────────────
-  // async () => {
+  // async (db) => {
   //   await db.stones.bulkAdd(STONES_V2)
   // },
 
@@ -414,16 +414,20 @@ const SEED_MIGRATIONS: Array<() => Promise<void>> = [
 
 // ─── Точка входа ─────────────────────────────────────────────────────────────
 
-export async function seedDatabase(): Promise<void> {
-  const stored = await db.meta.get('seedVersion');
+export async function seedDatabaseWith(targetDb: AppTochiteDB): Promise<void> {
+  const stored = await targetDb.meta.get('seedVersion');
   const currentVersion = (stored?.value as number) ?? 0;
 
   for (let v = currentVersion; v < SEED_MIGRATIONS.length; v++) {
     // Каждая миграция и обновление версии — в одной транзакции.
     // Если приложение упадёт в середине — миграция повторится при следующем запуске.
-    await db.transaction('rw', [db.clients, db.stones, db.steels, db.knives, db.meta], async () => {
-      await SEED_MIGRATIONS[v]();
-      await db.meta.put({ key: 'seedVersion', value: v + 1 });
+    await targetDb.transaction('rw', [targetDb.clients, targetDb.stones, targetDb.steels, targetDb.knives, targetDb.meta], async () => {
+      await SEED_MIGRATIONS[v](targetDb);
+      await targetDb.meta.put({ key: 'seedVersion', value: v + 1 });
     });
   }
+}
+
+export async function seedDatabase(): Promise<void> {
+  return seedDatabaseWith(db);
 }
