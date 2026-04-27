@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.4.1',
+    date: '2026-04-27',
+    changes: [
+      '«Я» создаётся до большой транзакции — надёжный seed при сбое на устройстве ([](https://github.com/fiscalagent/AppTochite/commit/bea913f065e1ce4d7850eac3e4b0964419232063))',
+      'поиск по комментарию — сниппет совпадения в строке истории ([](https://github.com/fiscalagent/AppTochite/commit/53f3597c820c622008cee3233c7588a32400f35d))',
+    ],
+  },
+  {
     version: '1.4.0',
     date: '2026-04-27',
     changes: [

@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/fiscalagent/AppTochite/compare/v1.4.0...v1.4.1) (2026-04-27)
+
+
+### fix
+
+* «Я» создаётся до большой транзакции — надёжный seed при сбое на устройстве ([](https://github.com/fiscalagent/AppTochite/commit/bea913f065e1ce4d7850eac3e4b0964419232063))
+
 # [1.4.0](https://github.com/fiscalagent/AppTochite/compare/v1.3.1...v1.4.0) (2026-04-27)
 
 
