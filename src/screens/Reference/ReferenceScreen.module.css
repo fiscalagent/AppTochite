@@ -7,6 +7,23 @@
 .header {
   padding: var(--space-4);
   padding-top: calc(var(--space-4) + var(--space-4));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-200);
+  opacity: 0.5;
+  padding: var(--space-2);
+  cursor: pointer;
+}
+
+.iconBtn:active {
+  opacity: 0.3;
 }
 
 .title {
@@ -347,36 +364,61 @@
   cursor: pointer;
 }
 
-/* Heatmap */
-.heatmapWrap {
-  border: 1px solid var(--border-100);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+/* Heatmap overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
 }
 
-.heatmapToggle {
+.sheet {
   width: 100%;
+  background: var(--bg-100);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding-bottom: var(--space-6);
+}
+
+.sheetHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px var(--space-4);
-  background: var(--bg-200);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-200);
-  font-family: var(--font-body);
-  cursor: pointer;
+  padding: var(--space-4) var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--border-100);
+  position: sticky;
+  top: 0;
+  background: var(--bg-100);
+  z-index: 1;
 }
 
-.heatmapChevron {
-  color: var(--text-400);
-  font-size: 9px;
+.sheetTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-100);
+  font-family: var(--font-display);
+}
+
+.sheetClose {
+  color: var(--text-300);
+  font-size: 16px;
+  padding: var(--space-2);
+  cursor: pointer;
+}
+
+.heatmapEmpty {
+  text-align: center;
+  color: var(--text-300);
+  font-size: 13px;
+  padding: var(--space-8) var(--space-4);
 }
 
 .heatmap {
   background: var(--bg-100);
-  padding: 8px;
+  padding: var(--space-4) var(--space-3) var(--space-2);
   display: grid;
   grid-template-columns: 3fr repeat(5, 1fr);
   gap: 3px;

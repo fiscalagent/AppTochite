@@ -87,6 +87,20 @@ function SelectionBar({
 
 // ─── Stone Heatmap ───────────────────────────────────────────────────────────
 
+const IconHeatmap = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="6" height="6" rx="1"/>
+    <rect x="9" y="2" width="6" height="6" rx="1"/>
+    <rect x="16" y="2" width="6" height="6" rx="1"/>
+    <rect x="2" y="9" width="6" height="6" rx="1"/>
+    <rect x="9" y="9" width="6" height="6" rx="1"/>
+    <rect x="16" y="9" width="6" height="6" rx="1"/>
+    <rect x="2" y="16" width="6" height="6" rx="1"/>
+    <rect x="9" y="16" width="6" height="6" rx="1"/>
+    <rect x="16" y="16" width="6" height="6" rx="1"/>
+  </svg>
+)
+
 const HEATMAP_POSITIONS = [1, 2, 3, 4, 5] as const
 const POS_LABELS: Record<number, string> = { 1: '1', 2: '2', 3: '3', 4: '4', 5: 'Фин' }
 
@@ -112,7 +126,6 @@ function heatColor(pct: number): string {
 }
 
 function StoneHeatmap() {
-  const [open, setOpen] = useState(true)
   const sharpenings = useLiveQuery(() => db.sharpenings.toArray(), [])
 
   if (!sharpenings) return null
@@ -138,7 +151,9 @@ function StoneHeatmap() {
     .slice(0, 10)
     .map(([name]) => name)
 
-  if (top10.length === 0) return null
+  if (top10.length === 0) {
+    return <p className={s.heatmapEmpty}>Нет данных — добавьте заточки с камнями</p>
+  }
 
   const posTotals: Record<number, number> = {}
   for (const p of HEATMAP_POSITIONS) {
@@ -146,41 +161,33 @@ function StoneHeatmap() {
   }
 
   return (
-    <div className={s.heatmapWrap}>
-      <button className={s.heatmapToggle} onClick={() => setOpen(v => !v)}>
-        <span>Топ камней по позициям</span>
-        <span className={s.heatmapChevron}>{open ? '▲' : '▼'}</span>
-      </button>
-      {open && (
-        <div className={s.heatmap}>
-          <div className={s.heatmapCorner} />
-          {HEATMAP_POSITIONS.map(p => (
-            <div key={p} className={s.heatmapPosHeader}>{POS_LABELS[p]}</div>
-          ))}
-          {top10.map(name => (
-            <Fragment key={name}>
-              <div className={s.heatmapStone} title={name}>{name}</div>
-              {HEATMAP_POSITIONS.map(p => {
-                const count = byPos[p]?.[name] ?? 0
-                const total = posTotals[p] ?? 0
-                const pct = total > 0 ? count / total : 0
-                const bg = heatColor(pct)
-                return (
-                  <div
-                    key={p}
-                    className={s.heatmapCell}
-                    style={bg ? { background: bg } : undefined}
-                  >
-                    {pct >= 0.08 && (
-                      <span className={s.heatmapPct}>{Math.round(pct * 100)}%</span>
-                    )}
-                  </div>
-                )
-              })}
-            </Fragment>
-          ))}
-        </div>
-      )}
+    <div className={s.heatmap}>
+      <div className={s.heatmapCorner} />
+      {HEATMAP_POSITIONS.map(p => (
+        <div key={p} className={s.heatmapPosHeader}>{POS_LABELS[p]}</div>
+      ))}
+      {top10.map(name => (
+        <Fragment key={name}>
+          <div className={s.heatmapStone} title={name}>{name}</div>
+          {HEATMAP_POSITIONS.map(p => {
+            const count = byPos[p]?.[name] ?? 0
+            const total = posTotals[p] ?? 0
+            const pct = total > 0 ? count / total : 0
+            const bg = heatColor(pct)
+            return (
+              <div
+                key={p}
+                className={s.heatmapCell}
+                style={bg ? { background: bg } : undefined}
+              >
+                {pct >= 0.08 && (
+                  <span className={s.heatmapPct}>{Math.round(pct * 100)}%</span>
+                )}
+              </div>
+            )
+          })}
+        </Fragment>
+      ))}
     </div>
   )
 }
@@ -289,8 +296,6 @@ function StonesTab({ search }: { search: string }) {
           </div>
         </div>
       )}
-
-      <StoneHeatmap />
 
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}
@@ -568,6 +573,7 @@ export default function ReferenceScreen() {
   const navigate = useNavigate()
   const activeTab: Tab = (tab as Tab) || 'stones'
   const [search, setSearch] = useState('')
+  const [showHeatmap, setShowHeatmap] = useState(false)
 
   function goTab(t: Tab) {
     setSearch('')
@@ -578,7 +584,24 @@ export default function ReferenceScreen() {
     <div className={s.screen}>
       <div className={s.header}>
         <span className={s.title}>СПРАВОЧНИК</span>
+        {activeTab === 'stones' && (
+          <button className={s.iconBtn} onClick={() => setShowHeatmap(true)}>
+            <IconHeatmap />
+          </button>
+        )}
       </div>
+
+      {showHeatmap && (
+        <div className={s.overlay} onClick={() => setShowHeatmap(false)}>
+          <div className={s.sheet} onClick={e => e.stopPropagation()}>
+            <div className={s.sheetHeader}>
+              <span className={s.sheetTitle}>Топ камней по позициям</span>
+              <button className={s.sheetClose} onClick={() => setShowHeatmap(false)}>✕</button>
+            </div>
+            <StoneHeatmap />
+          </div>
+        </div>
+      )}
 
       <div className={s.tabs}>
         {TABS.map(t => (
