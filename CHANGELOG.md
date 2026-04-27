@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/fiscalagent/AppTochite/compare/v1.6.0...v1.6.1) (2026-04-27)
+
+
+### fix
+
+* **scripts:** добавить data:image/png;base64, префикс в генераторе фото ([](https://github.com/fiscalagent/AppTochite/commit/40d20401d0acf276f3cc6541fa701ee9055e2ca8))
+
 # [1.6.0](https://github.com/fiscalagent/AppTochite/compare/v1.5.1...v1.6.0) (2026-04-27)
 
 
