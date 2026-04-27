@@ -1,13 +1,16 @@
-// Ключевые слова технических коммитов, которые не нужны пользователю в changelog
+// Технические скоупы и ключевые слова — такие коммиты не нужны пользователю в changelog
+const TECH_SCOPES = ['scripts', 'ci', 'test', 'tests', 'build', 'deps']
+
 const TECH_KEYWORDS = [
   'тест', 'test', 'eslint', 'typescript', 'ts-error', 'ts error',
-  'peer-dep', 'legacy-peer', 'npm install', 'npm ci', 'ci/', 'worktree',
+  'peer-dep', 'legacy-peer', 'npm install', 'npm ci', 'worktree',
   'singleton', 'fileParallelism', 'instance.ts', 'singl',
-  'для ci', 'на ci', 'в ci',
+  'для ci', 'на ci', 'в ci', 'генератор', 'generator', 'base64 префикс',
 ]
 
-function isTechnical(subject) {
-  const low = (subject || '').toLowerCase()
+function isTechnical(commit) {
+  if (TECH_SCOPES.includes((commit.scope || '').toLowerCase())) return true
+  const low = (commit.subject || '').toLowerCase()
   return TECH_KEYWORDS.some(kw => low.includes(kw))
 }
 
@@ -19,7 +22,7 @@ module.exports = {
       writerOpts: {
         transform: (commit) => {
           if (!['feat', 'fix', 'perf'].includes(commit.type)) return false
-          if (isTechnical(commit.subject)) return false
+          if (isTechnical(commit)) return false
           return commit
         },
       },
