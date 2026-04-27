@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/fiscalagent/AppTochite/compare/v1.5.1...v1.6.0) (2026-04-27)
+
+
+### feat
+
+* **backup:** поднять лимит импорта с 50 до 200 МБ ([](https://github.com/fiscalagent/AppTochite/commit/6b18d7a991f3d07edc1885853580d60d31feb39a))
+
 ## [1.5.1](https://github.com/fiscalagent/AppTochite/compare/v1.5.0...v1.5.1) (2026-04-27)
 
 
