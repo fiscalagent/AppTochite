@@ -6,17 +6,11 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '1.8.0',
-    date: '2026-04-28',
-    changes: [
-      'Исправления и улучшения',
-    ],
-  },
-  {
     version: '1.7.0',
     date: '2026-04-28',
     changes: [
-      'Исправления и улучшения',
+      'справочники расширены: 890 ножей, 219 сталей, 450+ камней',
+      'добавлен тип абразива «керамика»',
     ],
   },
   {
