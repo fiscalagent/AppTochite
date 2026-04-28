@@ -464,6 +464,7 @@ export default function SharpeningForm() {
                     <option value="elbor">Эльбор</option>
                     <option value="natural">Природа</option>
                     <option value="pritir">Притир</option>
+                    <option value="ceramic">Керамика</option>
                   </select>
                 </div>
                 <div className={s.newStoneRow}>

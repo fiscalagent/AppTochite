@@ -20,6 +20,7 @@ const STONE_TYPE_LABELS: Record<string, string> = {
   elbor: 'эльбор',
   natural: 'природа',
   pritir: 'притир',
+  ceramic: 'керамика',
 }
 
 function SelectAllRow({
@@ -288,6 +289,7 @@ function StonesTab({ search }: { search: string }) {
               <option value="elbor">Эльбор</option>
               <option value="natural">Природа</option>
               <option value="pritir">Притир</option>
+              <option value="ceramic">Керамика</option>
             </select>
           </div>
           <div className={s.addRow}>
