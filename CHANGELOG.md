@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/fiscalagent/AppTochite/compare/v1.6.1...v1.7.0) (2026-04-28)
+
+
+### feat
+
+* добавить тип абразива керамика ([](https://github.com/fiscalagent/AppTochite/commit/38ba4247b81e8f1c06a2929488e8a656d67efb66))
+
 ## [1.6.1](https://github.com/fiscalagent/AppTochite/compare/v1.6.0...v1.6.1) (2026-04-27)
 
 
