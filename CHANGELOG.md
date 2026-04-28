@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/fiscalagent/AppTochite/compare/v1.7.0...v1.8.0) (2026-04-28)
+
+
+### feat
+
+* **db:** добавить v9 и v10 миграции справочников ([](https://github.com/fiscalagent/AppTochite/commit/ab1738fab1e263da5247b450bea0368a87adaa7c))
+
 # [1.7.0](https://github.com/fiscalagent/AppTochite/compare/v1.6.1...v1.7.0) (2026-04-28)
 
 
