@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { db } from '../../db/instance'
 import { useToast } from '../../components/Toast/ToastContext'
@@ -33,6 +33,15 @@ export default function BackupScreen() {
   const [compressed, setCompressed] = useState(
     localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on'
   )
+  const [storageMb, setStorageMb] = useState<number | null>(null)
+
+  useEffect(() => {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+      navigator.storage.estimate().then(({ usage }) => {
+        if (usage != null) setStorageMb(usage / (1024 * 1024))
+      })
+    }
+  }, [])
 
   function toggleCompression() {
     const next = !compressed
@@ -111,6 +120,49 @@ export default function BackupScreen() {
         <button className={s.back} onClick={() => navigate(-1)}>←</button>
         <span className={s.title}>НАСТРОЙКИ</span>
       </div>
+
+      <div className={s.section}>
+        <p className={s.sectionTitle}>База данных</p>
+        {(() => {
+          const MAX_MB = 200
+          const WARN_MB = 100
+          const fillPct = storageMb != null ? Math.min((storageMb / MAX_MB) * 100, 100) : 0
+          const fillColor =
+            storageMb == null ? 'var(--bg-400)'
+            : storageMb < WARN_MB ? 'var(--status-done)'
+            : storageMb < 160 ? '#F5A623'
+            : 'var(--danger)'
+          const hint =
+            storageMb == null ? 'Вычисляется…'
+            : storageMb < WARN_MB ? 'Размер базы в норме'
+            : storageMb < 160 ? 'База данных увеличена — включите сжатие фото'
+            : 'База почти заполнена — удалите заточки с фото'
+          return (
+            <div className={s.dbCard}>
+              <div className={s.dbHeader}>
+                <span className={s.dbLabel}>Размер хранилища</span>
+                {storageMb != null && (
+                  <span className={s.dbSize}>
+                    {storageMb < 0.1 ? '< 0.1' : storageMb.toFixed(1)} / 200 МБ
+                  </span>
+                )}
+              </div>
+              <div className={s.progressTrack}>
+                <div className={s.progressFill} style={{ width: `${fillPct}%`, background: fillColor }} />
+                <div className={s.progressMark} />
+              </div>
+              <div className={s.dbFooter}>
+                <span className={s.dbHint} style={{ color: fillColor === 'var(--bg-400)' ? 'var(--text-300)' : fillColor }}>
+                  {hint}
+                </span>
+                <span className={s.dbMarkLabel}>100 МБ</span>
+              </div>
+            </div>
+          )
+        })()}
+      </div>
+
+      <div className={s.divider} />
 
       <div className={s.section}>
         <p className={s.sectionTitle}>Фото</p>
