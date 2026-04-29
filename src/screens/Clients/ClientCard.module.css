@@ -103,6 +103,39 @@
   font-weight: 600;
 }
 
+.knifeFilters {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  scrollbar-width: none;
+  margin-top: calc(-1 * var(--space-4));
+}
+
+.knifeFilters::-webkit-scrollbar {
+  display: none;
+}
+
+.knifeChip {
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  border: 1px solid var(--border-100);
+  background: var(--bg-400);
+  color: var(--text-200);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.knifeChipActive {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
 .sharpeningList {
   display: flex;
   flex-direction: column;

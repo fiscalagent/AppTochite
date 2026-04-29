@@ -25,6 +25,7 @@ export default function ClientCard() {
   const clientId = Number(id)
 
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [knifeFilter, setKnifeFilter] = useState<string | null>(null)
 
   const client = useLiveQuery(() => db.clients.get(clientId), [clientId])
   const sharpenings = useLiveQuery(
@@ -96,11 +97,35 @@ export default function ClientCard() {
         </div>
       </div>
 
+      {(() => {
+        const knives = [...new Set((sharpenings ?? []).map(sh => sh.knifeBrand))].sort()
+        if (knives.length < 2) return null
+        return (
+          <div className={s.knifeFilters}>
+            <button
+              className={`${s.knifeChip} ${knifeFilter === null ? s.knifeChipActive : ''}`}
+              onClick={() => setKnifeFilter(null)}
+            >
+              Все
+            </button>
+            {knives.map(knife => (
+              <button
+                key={knife}
+                className={`${s.knifeChip} ${knifeFilter === knife ? s.knifeChipActive : ''}`}
+                onClick={() => setKnifeFilter(k => k === knife ? null : knife)}
+              >
+                {knife}
+              </button>
+            ))}
+          </div>
+        )
+      })()}
+
       <div className={s.sharpeningList}>
         {sharpenings?.length === 0 && (
           <p className={s.empty}>Заточек пока нет</p>
         )}
-        {sharpenings?.map(sh => (
+        {(knifeFilter ? (sharpenings ?? []).filter(sh => sh.knifeBrand === knifeFilter) : (sharpenings ?? [])).map(sh => (
           <Link key={sh.id} to={`/sharpenings/${sh.id}`} className={s.sharpeningRow}>
             <div className={s.sharpeningInfo}>
               <div className={s.knifeName}>{sh.knifeBrand}</div>

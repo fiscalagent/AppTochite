@@ -150,6 +150,14 @@
   text-overflow: ellipsis;
 }
 
+.thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .right {
   display: flex;
   flex-direction: column;

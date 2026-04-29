@@ -2,6 +2,7 @@ import { useState, Fragment } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
+import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import s from './ReferenceScreen.module.css'
 
 type Tab = 'stones' | 'steels' | 'knives'
@@ -464,11 +465,12 @@ function SteelsTab({ search }: { search: string }) {
 function KnivesTab({ search }: { search: string }) {
   const [open, setOpen] = useState(false)
   const [brand, setBrand] = useState('')
-  const [country, setCountry] = useState('')
+
   const [knifeSteel, setKnifeSteel] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const knives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
+  const steelNames = useLiveQuery(() => db.steels.orderBy('name').toArray().then(arr => arr.map(st => st.name)), []) ?? []
 
   const filtered = knives?.filter(k =>
     `${k.brand} ${k.country ?? ''}`.toLowerCase().includes(search.toLowerCase())
@@ -493,11 +495,10 @@ function KnivesTab({ search }: { search: string }) {
     if (!brand.trim()) return
     await db.knives.add({
       brand: brand.trim(),
-      country: country.trim() || undefined,
       steel: knifeSteel.trim() || undefined,
       isCustom: true,
     })
-    setBrand(''); setCountry(''); setKnifeSteel(''); setOpen(false)
+    setBrand(''); setKnifeSteel(''); setOpen(false)
   }
 
   return (
@@ -512,8 +513,12 @@ function KnivesTab({ search }: { search: string }) {
           <span className={s.addTitle}>Новый нож</span>
           <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Mora, Victorinox...)" autoFocus />
           <div className={s.addRow}>
-            <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Страна" />
-            <input value={knifeSteel} onChange={e => setKnifeSteel(e.target.value)} placeholder="Сталь" />
+            <Autocomplete
+              value={knifeSteel}
+              onChange={setKnifeSteel}
+              suggestions={steelNames}
+              placeholder="Сталь"
+            />
           </div>
           <div className={s.addRow}>
             <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>

@@ -127,6 +127,12 @@ export default function HistoryFeed() {
                     </div>
                   )}
                 </div>
+                {(() => {
+                  const thumb = sh.photosAfter?.[0] ?? sh.photosBefore?.[0]
+                  return thumb ? (
+                    <img src={thumb} className={s.thumb} alt="" />
+                  ) : null
+                })()}
                 <div className={s.right}>
                   {sh.price != null && (
                     <span className={s.price}>{sh.price} ₽</span>
