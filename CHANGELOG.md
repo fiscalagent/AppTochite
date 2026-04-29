@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/fiscalagent/AppTochite/compare/v1.8.0...v1.9.0) (2026-04-29)
+
+
+### feat
+
+* прогресс-бар размера хранилища в настройках ([](https://github.com/fiscalagent/AppTochite/commit/c3e77f759ee224ef1fdc2e441b0edfb6e58927d3))
+
 # [1.8.0](https://github.com/fiscalagent/AppTochite/compare/v1.7.0...v1.8.0) (2026-04-28)
 
 
