@@ -26,6 +26,9 @@ export default function ClientCard() {
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [knifeFilter, setKnifeFilter] = useState<string | null>(null)
+  const [page, setPage] = useState(0)
+
+  const PAGE_SIZE = 10
 
   const client = useLiveQuery(() => db.clients.get(clientId), [clientId])
   const sharpenings = useLiveQuery(
@@ -110,7 +113,7 @@ export default function ClientCard() {
           <div className={s.knifeFilters}>
             <button
               className={`${s.knifeChip} ${knifeFilter === null ? s.knifeChipActive : ''}`}
-              onClick={() => setKnifeFilter(null)}
+              onClick={() => { setKnifeFilter(null); setPage(0) }}
             >
               Все
             </button>
@@ -118,7 +121,7 @@ export default function ClientCard() {
               <button
                 key={knife}
                 className={`${s.knifeChip} ${knifeFilter === knife ? s.knifeChipActive : ''}`}
-                onClick={() => setKnifeFilter(k => k === knife ? null : knife)}
+                onClick={() => { setKnifeFilter(k => k === knife ? null : knife); setPage(0) }}
               >
                 {knife}
               </button>
@@ -127,29 +130,54 @@ export default function ClientCard() {
         )
       })()}
 
-      <div className={s.sharpeningList}>
-        {sharpenings?.length === 0 && (
-          <p className={s.empty}>Заточек пока нет</p>
-        )}
-        {(knifeFilter ? (sharpenings ?? []).filter(sh => sh.knifeBrand === knifeFilter) : (sharpenings ?? [])).map(sh => (
-          <Link key={sh.id} to={`/sharpenings/${sh.id}`} className={s.sharpeningRow}>
-            <div className={s.sharpeningInfo}>
-              <div className={s.knifeName}>{sh.knifeBrand}</div>
-              <div className={s.sharpeningMeta}>{formatDate(sh.receivedAt)}</div>
-            </div>
-            {(() => {
-              const thumb = sh.photosAfter?.[0] ?? sh.photosBefore?.[0]
-              return thumb ? <img src={thumb} className={s.thumb} alt="" loading="lazy" decoding="async" /> : null
-            })()}
-            <div className={s.sharpeningRight}>
-              {sh.price != null && (
-                <span className={s.price}>{sh.price} ₽</span>
-              )}
-              <StatusPill status={sh.status} />
-            </div>
-          </Link>
-        ))}
-      </div>
+      {(() => {
+        const filtered = knifeFilter
+          ? (sharpenings ?? []).filter(sh => sh.knifeBrand === knifeFilter)
+          : (sharpenings ?? [])
+        const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+        const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+        return (
+          <div className={s.sharpeningList}>
+            {filtered.length === 0 && (
+              <p className={s.empty}>Заточек пока нет</p>
+            )}
+            {pageItems.map(sh => (
+              <Link key={sh.id} to={`/sharpenings/${sh.id}`} className={s.sharpeningRow}>
+                <div className={s.sharpeningInfo}>
+                  <div className={s.knifeName}>{sh.knifeBrand}</div>
+                  <div className={s.sharpeningMeta}>{formatDate(sh.receivedAt)}</div>
+                </div>
+                {(() => {
+                  const thumb = sh.photosAfter?.[0] ?? sh.photosBefore?.[0]
+                  return thumb ? <img src={thumb} className={s.thumb} alt="" loading="lazy" decoding="async" /> : null
+                })()}
+                <div className={s.sharpeningRight}>
+                  {sh.price != null && (
+                    <span className={s.price}>{sh.price} ₽</span>
+                  )}
+                  <StatusPill status={sh.status} />
+                </div>
+              </Link>
+            ))}
+            {totalPages > 1 && (
+              <div className={s.pagination}>
+                <button
+                  className={s.pageBtn}
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page === 0}
+                >←</button>
+                <span className={s.pageLabel}>{page + 1} / {totalPages}</span>
+                <button
+                  className={s.pageBtn}
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= totalPages - 1}
+                >→</button>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {!client.isSelf && (
         <button className={s.deleteBtn} onClick={() => setConfirmOpen(true)}>

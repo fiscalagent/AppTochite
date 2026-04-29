@@ -208,6 +208,46 @@
   padding: var(--space-8) 0;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+}
+
+.pageBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-100);
+  background: var(--bg-400);
+  color: var(--accent);
+  font-size: 18px;
+  transition: all 0.15s;
+}
+
+.pageBtn:disabled {
+  color: var(--text-400);
+  border-color: var(--border-100);
+  background: transparent;
+}
+
+.pageBtn:not(:disabled):active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.pageLabel {
+  font-size: 14px;
+  color: var(--text-300);
+  min-width: 48px;
+  text-align: center;
+}
+
 .deleteBtn {
   background: transparent;
   color: var(--danger);
