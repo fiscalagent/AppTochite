@@ -387,6 +387,9 @@ export default function SharpeningForm() {
                   <div key={i} className={s.stoneTag}>
                     <span className={s.stoneOrder}>{ss.order}.</span>
                     <span>{ss.name}</span>
+                    {i === selectedStones.length - 1 && (
+                      <span className={s.stoneFinBadge}>FIN</span>
+                    )}
                     <button className={s.stoneRemove} onClick={() => removeStone(i)}>×</button>
                   </div>
                 ))}

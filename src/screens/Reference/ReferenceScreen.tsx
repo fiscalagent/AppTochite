@@ -134,8 +134,12 @@ function StoneHeatmap() {
 
   const byPos: Record<number, Record<string, number>> = {}
   for (const sh of sharpenings) {
-    for (const stone of sh.stones ?? []) {
-      const pos = Math.min(stone.order, 5)
+    const stones = sh.stones ?? []
+    if (stones.length === 0) continue
+    const maxOrder = Math.max(...stones.map(s => s.order))
+    for (const stone of stones) {
+      const isLast = stone.order === maxOrder
+      const pos = (isLast || stone.order >= 5) ? 5 : stone.order
       if (!byPos[pos]) byPos[pos] = {}
       byPos[pos][stone.name] = (byPos[pos][stone.name] ?? 0) + 1
     }
