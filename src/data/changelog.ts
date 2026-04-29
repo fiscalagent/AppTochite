@@ -6,6 +6,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.13.1',
+    date: '2026-04-29',
+    changes: [
+      'урезать фото до 1 в запросах списков (thumbnail) ([](https://github.com/fiscalagent/AppTochite/commit/0040561c2dfee852a8128065d6cd00c5f67a152a))',
+      'повтор заточки и thumbnail в карточке клиента ([](https://github.com/fiscalagent/AppTochite/commit/998fb63e82285f7409deb9dcfa2177e03ff0aa27))',
+      '**sharpening:** финишный камень — плашка FIN и учёт в тепловой карте ([](https://github.com/fiscalagent/AppTochite/commit/c9eb35f6c03b7033b933cb25e2d9b4457f0a74b2))',
+      '**db:** добавить камни с tsprof.ru — v11 миграция ([](https://github.com/fiscalagent/AppTochite/commit/85c9aca5b49337818e611d9afd25e07673a3efd4))',
+      'thumbnail в ленте, фильтр по ножу, автодополнение стали в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/51865d6c1a3b49c8dfffead1e3dbeeedc153008a))',
+    ],
+  },
+  {
     version: '1.13.0',
     date: '2026-04-29',
     changes: [

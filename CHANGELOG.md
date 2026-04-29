@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/fiscalagent/AppTochite/compare/v1.13.0...v1.13.1) (2026-04-29)
+
+
+### perf
+
+* урезать фото до 1 в запросах списков (thumbnail) ([](https://github.com/fiscalagent/AppTochite/commit/0040561c2dfee852a8128065d6cd00c5f67a152a))
+
 # [1.13.0](https://github.com/fiscalagent/AppTochite/compare/v1.12.0...v1.13.0) (2026-04-29)
 
 
