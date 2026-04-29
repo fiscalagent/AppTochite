@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/fiscalagent/AppTochite/compare/v1.9.0...v1.9.1) (2026-04-29)
+
+
+### fix
+
+* **db:** убрать полные дубли из справочников seed ([](https://github.com/fiscalagent/AppTochite/commit/f4ea2b64779dd3978f699ddf2daac288b2eddcc4))
+
 # [1.9.0](https://github.com/fiscalagent/AppTochite/compare/v1.8.0...v1.9.0) (2026-04-29)
 
 

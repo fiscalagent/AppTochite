@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.9.1',
+    date: '2026-04-29',
+    changes: [
+      '**db:** убрать полные дубли из справочников seed ([](https://github.com/fiscalagent/AppTochite/commit/f4ea2b64779dd3978f699ddf2daac288b2eddcc4))',
+      'прогресс-бар размера хранилища в настройках ([](https://github.com/fiscalagent/AppTochite/commit/c3e77f759ee224ef1fdc2e441b0edfb6e58927d3))',
+      '**db:** добавить v9 и v10 миграции справочников ([](https://github.com/fiscalagent/AppTochite/commit/ab1738fab1e263da5247b450bea0368a87adaa7c))',
+      'добавить тип абразива керамика ([](https://github.com/fiscalagent/AppTochite/commit/38ba4247b81e8f1c06a2929488e8a656d67efb66))',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-04-29',
     changes: [
