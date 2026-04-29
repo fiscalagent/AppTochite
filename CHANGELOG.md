@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/fiscalagent/AppTochite/compare/v1.10.0...v1.11.0) (2026-04-29)
+
+
+### feat
+
+* **db:** добавить камни с tsprof.ru — v11 миграция ([](https://github.com/fiscalagent/AppTochite/commit/85c9aca5b49337818e611d9afd25e07673a3efd4))
+
 # [1.10.0](https://github.com/fiscalagent/AppTochite/compare/v1.9.1...v1.10.0) (2026-04-29)
 
 
