@@ -29,7 +29,13 @@ export default function ClientCard() {
 
   const client = useLiveQuery(() => db.clients.get(clientId), [clientId])
   const sharpenings = useLiveQuery(
-    () => db.sharpenings.where('clientId').equals(clientId).reverse().sortBy('receivedAt'),
+    () => db.sharpenings.where('clientId').equals(clientId).reverse().sortBy('receivedAt').then(arr =>
+      arr.map(sh => ({
+        ...sh,
+        photosBefore: sh.photosBefore?.slice(0, 1),
+        photosAfter: sh.photosAfter?.slice(0, 1),
+      }))
+    ),
     [clientId]
   )
 
@@ -133,7 +139,7 @@ export default function ClientCard() {
             </div>
             {(() => {
               const thumb = sh.photosAfter?.[0] ?? sh.photosBefore?.[0]
-              return thumb ? <img src={thumb} className={s.thumb} alt="" /> : null
+              return thumb ? <img src={thumb} className={s.thumb} alt="" loading="lazy" decoding="async" /> : null
             })()}
             <div className={s.sharpeningRight}>
               {sh.price != null && (

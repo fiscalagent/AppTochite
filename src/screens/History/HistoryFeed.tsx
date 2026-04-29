@@ -41,7 +41,14 @@ export default function HistoryFeed() {
     const sharpenings = await db.sharpenings.orderBy('receivedAt').reverse().toArray()
     const clients = await db.clients.toArray()
     const clientMap = Object.fromEntries(clients.map(c => [c.id!, c.name]))
-    return sharpenings.map(sh => ({ sh, clientName: clientMap[sh.clientId] ?? '—' }))
+    return sharpenings.map(sh => ({
+      sh: {
+        ...sh,
+        photosBefore: sh.photosBefore?.slice(0, 1),
+        photosAfter: sh.photosAfter?.slice(0, 1),
+      },
+      clientName: clientMap[sh.clientId] ?? '—',
+    }))
   }, [])
 
   const filtered = useMemo(() => {
@@ -130,7 +137,7 @@ export default function HistoryFeed() {
                 {(() => {
                   const thumb = sh.photosAfter?.[0] ?? sh.photosBefore?.[0]
                   return thumb ? (
-                    <img src={thumb} className={s.thumb} alt="" />
+                    <img src={thumb} className={s.thumb} alt="" loading="lazy" decoding="async" />
                   ) : null
                 })()}
                 <div className={s.right}>
