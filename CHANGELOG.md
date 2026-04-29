@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/fiscalagent/AppTochite/compare/v1.11.0...v1.12.0) (2026-04-29)
+
+
+### feat
+
+* **sharpening:** финишный камень — плашка FIN и учёт в тепловой карте ([](https://github.com/fiscalagent/AppTochite/commit/c9eb35f6c03b7033b933cb25e2d9b4457f0a74b2))
+
 # [1.11.0](https://github.com/fiscalagent/AppTochite/compare/v1.10.0...v1.11.0) (2026-04-29)
 
 
