@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/fiscalagent/AppTochite/compare/v1.14.0...v1.15.0) (2026-04-29)
+
+
+### feat
+
+* **sharpening-detail:** подсветка фото-обложки на экране заточки ([](https://github.com/fiscalagent/AppTochite/commit/49e0187841ce5ac40ef09731ca58472313271c6a))
+
 # [1.14.0](https://github.com/fiscalagent/AppTochite/compare/v1.13.1...v1.14.0) (2026-04-29)
 
 
