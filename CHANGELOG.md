@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/fiscalagent/AppTochite/compare/v1.9.1...v1.10.0) (2026-04-29)
+
+
+### feat
+
+* thumbnail в ленте, фильтр по ножу, автодополнение стали в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/51865d6c1a3b49c8dfffead1e3dbeeedc153008a))
+
 ## [1.9.1](https://github.com/fiscalagent/AppTochite/compare/v1.9.0...v1.9.1) (2026-04-29)
 
 
