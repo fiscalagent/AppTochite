@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/fiscalagent/AppTochite/compare/v1.13.1...v1.14.0) (2026-04-29)
+
+
+### feat
+
+* **client-card:** пагинация заточек по 10 со стрелками ([](https://github.com/fiscalagent/AppTochite/commit/8adfba8880e16cb8c9780fb49a5280a05d8f4011))
+
 ## [1.13.1](https://github.com/fiscalagent/AppTochite/compare/v1.13.0...v1.13.1) (2026-04-29)
 
 
