@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Очистка AppTochite</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #161618;
+      color: #e8e8ea;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #1e1e20;
+      border: 1px solid #2a2a2e;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 380px;
+      width: 100%;
+    }
+
+    .icon { font-size: 48px; margin-bottom: 16px; text-align: center; }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #e8e8ea;
+      text-align: center;
+    }
+
+    p {
+      font-size: 14px;
+      color: #8e8e93;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .warning {
+      background: rgba(224, 85, 85, 0.12);
+      border: 1px solid rgba(224, 85, 85, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      color: #ff6b6b;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .hint {
+      background: rgba(74, 144, 217, 0.1);
+      border: 1px solid rgba(74, 144, 217, 0.25);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      color: #6aaae8;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .hint b { color: #a0c8f0; }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      font-family: inherit;
+    }
+
+    button:disabled { opacity: 0.5; cursor: default; }
+    button:active:not(:disabled) { opacity: 0.7; }
+
+    #btnClean {
+      background: #e05555;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    #btnCancel {
+      background: #2a2a2e;
+      color: #8e8e93;
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 14px;
+      line-height: 2;
+      display: none;
+    }
+
+    .status.visible { display: block; }
+
+    .step { color: #8e8e93; }
+    .step.done { color: #3db87a; }
+    .step.done::before { content: '✓  '; }
+    .step.error { color: #e05555; }
+    .step.error::before { content: '✗  '; }
+    .step.skip { color: #555566; }
+    .step.skip::before { content: '–  '; }
+
+    .success-msg {
+      margin-top: 20px;
+      padding: 14px;
+      background: rgba(61, 184, 122, 0.12);
+      border: 1px solid rgba(61, 184, 122, 0.3);
+      border-radius: 10px;
+      font-size: 14px;
+      color: #3db87a;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .success-msg.visible { display: block; }
+
+    #btnOpen {
+      background: #4a90d9;
+      color: #fff;
+      margin-top: 12px;
+      display: none;
+    }
+
+    #btnOpen.visible { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🧹</div>
+    <h1>Очистка приложения</h1>
+    <p>Удаляет все данные AppTochite: базу данных, кэш, сервис-воркер и локальное хранилище.</p>
+
+    <div class="hint">
+      <b>Иконку с экрана нужно удалить вручную</b> — этого сделать программно нельзя.<br>
+      Зажмите иконку AppTochite → «Удалить» / «Uninstall».
+    </div>
+
+    <div class="warning">
+      Все записи о заточках и клиентах будут удалены без возможности восстановления.
+    </div>
+
+    <button id="btnClean">Очистить всё</button>
+    <button id="btnCancel" onclick="history.back()">Отмена</button>
+
+    <div class="status" id="status">
+      <div class="step" id="step-idb">База данных (IndexedDB)…</div>
+      <div class="step" id="step-storage">Локальное хранилище…</div>
+      <div class="step" id="step-sw">Сервис-воркер…</div>
+      <div class="step" id="step-cache">Кэш…</div>
+    </div>
+
+    <div class="success-msg" id="successMsg">
+      Очистка завершена.<br><br>
+      Теперь удалите иконку с экрана (зажмите → Удалить), после чего можно устанавливать приложение заново.
+    </div>
+
+    <button id="btnOpen" onclick="window.location.href='/AppTochite/'">
+      Открыть приложение
+    </button>
+  </div>
+
+  <script>
+    function setStep(id, state, text) {
+      const el = document.getElementById(id);
+      el.className = 'step ' + state;
+      if (text) el.textContent = text;
+    }
+
+    function deleteDB(name) {
+      return new Promise(resolve => {
+        const req = indexedDB.deleteDatabase(name);
+        req.onsuccess = resolve;
+        req.onerror = resolve;
+        req.onblocked = resolve;
+      });
+    }
+
+    async function clean() {
+      document.getElementById('btnClean').disabled = true;
+      document.getElementById('btnCancel').disabled = true;
+      document.getElementById('btnOpen').classList.remove('visible');
+      document.getElementById('status').classList.add('visible');
+
+      // 1. IndexedDB — все базы, не только AppTochiteDB
+      try {
+        if (indexedDB.databases) {
+          const dbs = await indexedDB.databases();
+          await Promise.all(dbs.map(db => deleteDB(db.name)));
+          setStep('step-idb', 'done', `База данных (${dbs.length > 0 ? dbs.map(d => d.name).join(', ') : 'нет'})`);
+        } else {
+          // Fallback для браузеров без indexedDB.databases()
+          await deleteDB('AppTochiteDB');
+          setStep('step-idb', 'done', 'База данных (AppTochiteDB)');
+        }
+      } catch {
+        setStep('step-idb', 'error', 'База данных — ошибка');
+      }
+
+      // 2. localStorage + sessionStorage
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        setStep('step-storage', 'done', 'Локальное хранилище');
+      } catch {
+        setStep('step-storage', 'skip', 'Локальное хранилище — нет доступа');
+      }
+
+      // 3. Service Workers
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+          setStep('step-sw', 'done', `Сервис-воркер (${regs.length} сн.)`);
+        } else {
+          setStep('step-sw', 'skip', 'Сервис-воркер — не поддерживается');
+        }
+      } catch {
+        setStep('step-sw', 'error', 'Сервис-воркер — ошибка');
+      }
+
+      // 4. Cache Storage
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+          setStep('step-cache', 'done', `Кэш (${keys.length > 0 ? keys.join(', ') : 'пусто'})`);
+        } else {
+          setStep('step-cache', 'skip', 'Кэш — не поддерживается');
+        }
+      } catch {
+        setStep('step-cache', 'error', 'Кэш — ошибка');
+      }
+
+      document.getElementById('successMsg').classList.add('visible');
+      document.getElementById('btnOpen').classList.add('visible');
+    }
+
+    document.getElementById('btnClean').addEventListener('click', clean);
+  </script>
+</body>
+</html>
