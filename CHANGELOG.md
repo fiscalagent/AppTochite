@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/fiscalagent/AppTochite/compare/v1.12.0...v1.13.0) (2026-04-29)
+
+
+### feat
+
+* повтор заточки и thumbnail в карточке клиента ([](https://github.com/fiscalagent/AppTochite/commit/998fb63e82285f7409deb9dcfa2177e03ff0aa27))
+
 # [1.12.0](https://github.com/fiscalagent/AppTochite/compare/v1.11.0...v1.12.0) (2026-04-29)
 
 
