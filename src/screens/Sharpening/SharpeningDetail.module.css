@@ -251,6 +251,23 @@
   text-align: center;
 }
 
+.repeatBtn {
+  background: transparent;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--accent);
+  width: 100%;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.repeatBtn:active {
+  background: var(--accent-dim);
+}
+
 .deleteBtn {
   background: transparent;
   color: var(--danger);

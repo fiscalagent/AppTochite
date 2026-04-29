@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus, type SharpeningStone, type Stone, type GritUnit, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
 import { useToast } from '../../components/Toast/ToastContext'
@@ -45,6 +45,7 @@ export default function SharpeningForm() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { showToast } = useToast()
   const { openCamera, openGallery } = useCamera()
   const isEdit = Boolean(id)
@@ -53,25 +54,27 @@ export default function SharpeningForm() {
     ? Number(searchParams.get('clientId'))
     : null
 
+  const repeat = !isEdit ? (location.state as { repeat?: { clientId: number; knifeBrand: string; steel?: string; hrc?: number; angle?: number; stones?: SharpeningStone[]; price?: number } } | null)?.repeat : undefined
+
   const [step, setStep] = useState(1)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const [pickerFor, setPickerFor] = useState<'before' | 'after' | null>(null)
 
   // Step 1 — Приёмка
-  const [clientId, setClientId] = useState<number | null>(prefilledClientId)
-  const [knifeBrand, setKnifeBrand] = useState('')
-  const [steel, setSteel] = useState('')
-  const [hrc, setHrc] = useState('')
+  const [clientId, setClientId] = useState<number | null>(repeat?.clientId ?? prefilledClientId)
+  const [knifeBrand, setKnifeBrand] = useState(repeat?.knifeBrand ?? '')
+  const [steel, setSteel] = useState(repeat?.steel ?? '')
+  const [hrc, setHrc] = useState(repeat?.hrc != null ? String(repeat.hrc) : '')
   const [condition, setCondition] = useState<string[]>([])
   const [receivedAt, setReceivedAt] = useState(todayStr())
   const [photosBefore, setPhotosBefore] = useState<string[]>([])
 
   // Step 2 — Заточка
-  const [angle, setAngle] = useState('')
-  const [selectedStones, setSelectedStones] = useState<SharpeningStone[]>([])
+  const [angle, setAngle] = useState(repeat?.angle != null ? String(repeat.angle) : '')
+  const [selectedStones, setSelectedStones] = useState<SharpeningStone[]>(repeat?.stones ?? [])
   const [stoneInput, setStoneInput] = useState('')
   const [comment, setComment] = useState('')
-  const [price, setPrice] = useState('')
+  const [price, setPrice] = useState(repeat?.price != null ? String(repeat.price) : '')
   const [status, setStatus] = useState<SharpeningStatus>('accepted')
   const [doneAt, setDoneAt] = useState<Date | undefined>(undefined)
   const [photosAfter, setPhotosAfter] = useState<string[]>([])

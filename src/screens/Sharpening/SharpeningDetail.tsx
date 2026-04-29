@@ -241,6 +241,13 @@ export default function SharpeningDetail() {
         </Link>
       )}
 
+      <button
+        className={s.repeatBtn}
+        onClick={() => navigate('/sharpenings/new', { state: { repeat: sh } })}
+      >
+        Повторить заточку
+      </button>
+
       <button className={s.deleteBtn} onClick={() => setConfirmOpen(true)}>
         Удалить заточку
       </button>

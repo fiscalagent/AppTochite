@@ -131,6 +131,10 @@ export default function ClientCard() {
               <div className={s.knifeName}>{sh.knifeBrand}</div>
               <div className={s.sharpeningMeta}>{formatDate(sh.receivedAt)}</div>
             </div>
+            {(() => {
+              const thumb = sh.photosAfter?.[0] ?? sh.photosBefore?.[0]
+              return thumb ? <img src={thumb} className={s.thumb} alt="" /> : null
+            })()}
             <div className={s.sharpeningRight}>
               {sh.price != null && (
                 <span className={s.price}>{sh.price} ₽</span>
