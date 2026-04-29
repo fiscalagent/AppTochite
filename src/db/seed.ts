@@ -494,6 +494,7 @@ const STEELS_V2: Omit<Steel, 'id'>[] = [
   { name: 'CPM CruWear', hrc: 64, recommendedAngle: 13, category: 'powder', isCustom: false },
   { name: 'REX 45',     hrc: 63, recommendedAngle: 15, category: 'powder', isCustom: false },
   { name: 'REX 121',    hrc: 62, recommendedAngle: 15, category: 'powder', isCustom: false },
+  { name: 'K390',       hrc: 65, recommendedAngle: 15, category: 'powder', isCustom: false },
   { name: 'Niolox',     hrc: 61, recommendedAngle: 17, category: 'powder', isCustom: false },
   // Европейские
   { name: 'Sleipner',   hrc: 62, recommendedAngle: 15, category: 'european', isCustom: false, description: 'Шведская порошковая' },
@@ -504,6 +505,7 @@ const STEELS_V2: Omit<Steel, 'id'>[] = [
   { name: '30Х13',      hrc: 54, recommendedAngle: 22, category: 'russian', isCustom: false },
   { name: '65Г',        hrc: 58, recommendedAngle: 20, category: 'russian', isCustom: false, description: 'Пружинная углеродка' },
   { name: 'У12',        hrc: 62, recommendedAngle: 17, category: 'russian', isCustom: false, description: 'Углеродка, любима старыми мастерами' },
+  { name: 'ХВГ',        hrc: 60, recommendedAngle: 20, category: 'russian', isCustom: false },
   { name: 'Р18',        hrc: 64, recommendedAngle: 15, category: 'russian', isCustom: false, description: 'Быстрорез' },
 ];
 
@@ -601,6 +603,9 @@ const STEELS_V3: Omit<Steel, 'id'>[] = [
   { name: '5160', hrc: 58, recommendedAngle: 20, category: 'american', isCustom: false },
   { name: 'Spring Steel 1055', hrc: 54, recommendedAngle: 22, category: 'american', isCustom: false },
   // Ещё порошковые
+  { name: 'CPM-M4', hrc: 65, recommendedAngle: 13, category: 'powder', isCustom: false },
+  { name: 'CPM-3V', hrc: 60, recommendedAngle: 20, category: 'american', isCustom: false },
+  { name: 'CPM-4V', hrc: 63, recommendedAngle: 17, category: 'american', isCustom: false },
   { name: 'Böhler K390', hrc: 65, recommendedAngle: 12, category: 'powder', isCustom: false },
   { name: 'Böhler M390', hrc: 62, recommendedAngle: 15, category: 'powder', isCustom: false },
   { name: 'Carpenter CTS-XHP', hrc: 61, recommendedAngle: 17, category: 'powder', isCustom: false },
@@ -659,6 +664,7 @@ const KNIVES_V3: Omit<Knife, 'id'>[] = [
   // Дополнительные японские кухонные
   { brand: 'Yoshida Shiro',               country: 'Япония', steel: 'High Carbon', recommendedAngle: 15, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   { brand: 'Azumi Yuzo',                  country: 'Япония', steel: 'VG-10', recommendedAngle: 15, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
+  { brand: 'Mcusta Zanmai Damascus',      country: 'Япония', steel: 'VG-10', recommendedAngle: 15, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   // Русские дополнительно
   { brand: 'Репутация РУС',               country: 'Россия', steel: '65Х13', recommendedAngle: 22, type: 'Охотничий', category: 'russian', isCustom: false },
   { brand: 'ТОО Вороонежский',            country: 'Россия', steel: '40Х13', recommendedAngle: 22, type: 'Охотничий', category: 'russian', isCustom: false },
@@ -692,6 +698,7 @@ const STONES_V4: Omit<Stone, 'id'>[] = [
 ];
 
 const STEELS_V4: Omit<Steel, 'id'>[] = [
+  { name: '440A', hrc: 55, recommendedAngle: 20, category: 'american', isCustom: false },
   { name: '440B', hrc: 56, recommendedAngle: 20, category: 'american', isCustom: false },
   { name: 'BG-42', hrc: 59, recommendedAngle: 17, category: 'american', isCustom: false },
   { name: 'AUS-6', hrc: 56, recommendedAngle: 18, category: 'japanese', isCustom: false },
@@ -699,6 +706,8 @@ const STEELS_V4: Omit<Steel, 'id'>[] = [
   { name: '3Cr13', hrc: 54, recommendedAngle: 22, category: 'chinese', isCustom: false },
   { name: '4Cr13MoV', hrc: 56, recommendedAngle: 20, category: 'chinese', isCustom: false },
   { name: '11Cr17', hrc: 56, recommendedAngle: 20, category: 'chinese', isCustom: false },
+  { name: 'Vanadis 10', hrc: 62, recommendedAngle: 15, category: 'european', isCustom: false },
+  { name: 'ASP2023', hrc: 62, recommendedAngle: 15, category: 'european', isCustom: false },
 ];
 
 const KNIVES_V4: Omit<Knife, 'id'>[] = [
@@ -706,10 +715,16 @@ const KNIVES_V4: Omit<Knife, 'id'>[] = [
   { brand: 'Moritaka AS', country: 'Япония', steel: 'Aogami Super', recommendedAngle: 12, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   { brand: 'Sakai Ichimonji', country: 'Япония', steel: 'Aogami', recommendedAngle: 13, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   { brand: 'WMF Grand Class', country: 'Германия', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Шеф', category: 'german', isCustom: false },
+  { brand: 'Mercer Millennia', country: 'США', steel: 'X30Cr13', recommendedAngle: 20, type: 'Шеф', category: 'german', isCustom: false },
   { brand: 'Mora Companion HD', country: 'Швеция', steel: '14C28N', recommendedAngle: 20, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   { brand: 'Case Mini Trapper', country: 'США', steel: 'Tru-Sharp', recommendedAngle: 22, type: 'Складной', category: 'american', isCustom: false },
   { brand: 'ESEE 3', country: 'США', steel: '1095', recommendedAngle: 20, type: 'Охотничий', category: 'american', isCustom: false },
+  { brand: 'Benchmade Contego', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'american', isCustom: false },
+  { brand: 'CRKT Kommer', country: 'США', steel: '8Cr13MoV', recommendedAngle: 20, type: 'Складной', category: 'american', isCustom: false },
+  { brand: 'Lionsteel T.R.E.', country: 'Италия', steel: 'M390', recommendedAngle: 15, type: 'Складной', category: 'scandinavian', isCustom: false },
+  { brand: 'Соколов Д.В.', country: 'Россия', steel: 'Х12МФ', recommendedAngle: 15, type: 'Охотничий', category: 'russian', isCustom: false },
   { brand: 'Fenix Ruike', country: 'Китай', steel: 'D2', recommendedAngle: 17, type: 'Складной', category: 'chinese', isCustom: false },
+  { brand: 'Tangram Factor', country: 'Китай', steel: 'M390', recommendedAngle: 15, type: 'Складной', category: 'chinese', isCustom: false },
 ];
 
 // ─── v8: Окончательный батч (250+ ножей, заполнение сталей и камней) ────────
@@ -923,10 +938,14 @@ const STEELS_V7: Omit<Steel, 'id'>[] = [
   { name: '11Cr14Mo', hrc: 56, recommendedAngle: 20, category: 'chinese', isCustom: false },
   { name: '13Cr14', hrc: 56, recommendedAngle: 20, category: 'chinese', isCustom: false },
   // Российские углеродистые
+  { name: 'У8', hrc: 58, recommendedAngle: 15, category: 'russian', isCustom: false },
   { name: 'У8А', hrc: 59, recommendedAngle: 15, category: 'russian', isCustom: false },
   { name: 'У9', hrc: 60, recommendedAngle: 13, category: 'russian', isCustom: false },
+  { name: 'У10', hrc: 61, recommendedAngle: 12, category: 'russian', isCustom: false },
   { name: 'Х6ВФ', hrc: 62, recommendedAngle: 12, category: 'russian', isCustom: false },
+  { name: 'ХВГ', hrc: 62, recommendedAngle: 13, category: 'russian', isCustom: false },
   { name: 'Х12', hrc: 56, recommendedAngle: 18, category: 'russian', isCustom: false },
+  { name: '9ХС', hrc: 61, recommendedAngle: 12, category: 'russian', isCustom: false },
   // European carbon
   { name: 'C105W', hrc: 60, recommendedAngle: 13, category: 'european', isCustom: false },
   { name: 'C120W', hrc: 62, recommendedAngle: 12, category: 'european', isCustom: false },
@@ -973,6 +992,7 @@ const KNIVES_V7: Omit<Knife, 'id'>[] = [
   // Бразильские продолжение
   { brand: 'Tramontina Churrasco Set', country: 'Бразилия', steel: 'нержавейка', recommendedAngle: 20, type: 'Gyuto', category: 'kitchen_set', isCustom: false },
   { brand: 'Tramontina TBNOX', country: 'Бразилия', steel: 'нержавейка', recommendedAngle: 20, type: 'Gyuto', category: 'mass_market', isCustom: false },
+  { brand: 'Tramontina Century', country: 'Бразилия', steel: 'нержавейка', recommendedAngle: 20, type: 'Gyuto', category: 'mass_market', isCustom: false },
   { brand: 'Tramontina Light', country: 'Бразилия', steel: 'нержавейка', recommendedAngle: 20, type: 'Gyuto', category: 'mass_market', isCustom: false },
   // Испанские продолжение
   { brand: 'Arcos Evolution Шеф', country: 'Испания', steel: 'нержавейка', recommendedAngle: 20, type: 'Gyuto', category: 'mass_market', isCustom: false },
@@ -1060,6 +1080,7 @@ const STEELS_V6: Omit<Steel, 'id'>[] = [
   { name: '50Х14МФ', hrc: 54, recommendedAngle: 20, category: 'russian', isCustom: false },
   { name: '95Х13', hrc: 54, recommendedAngle: 20, category: 'russian', isCustom: false },
   { name: '75Х16М', hrc: 52, recommendedAngle: 22, category: 'russian', isCustom: false },
+  { name: 'Х12МФ', hrc: 58, recommendedAngle: 17, category: 'russian', isCustom: false },
   // Европейские стандартные
   { name: 'X42', hrc: 52, recommendedAngle: 22, category: 'european', isCustom: false },
   { name: 'X50Cr13', hrc: 55, recommendedAngle: 20, category: 'european', isCustom: false },
@@ -1070,12 +1091,15 @@ const STEELS_V6: Omit<Steel, 'id'>[] = [
   { name: 'SK-4', hrc: 62, recommendedAngle: 12, category: 'japanese', isCustom: false },
   { name: 'SK-3', hrc: 60, recommendedAngle: 13, category: 'japanese', isCustom: false },
   // American carbon & high-carbon
+  { name: '1075', hrc: 58, recommendedAngle: 20, category: 'american', isCustom: false },
   { name: '1095', hrc: 60, recommendedAngle: 18, category: 'american', isCustom: false },
   { name: '10V', hrc: 61, recommendedAngle: 17, category: 'american', isCustom: false },
   // CPM powder steels
+  { name: 'CPM-S90V', hrc: 62, recommendedAngle: 15, category: 'powder', isCustom: false },
   { name: 'CPM-M390', hrc: 64, recommendedAngle: 13, category: 'powder', isCustom: false },
   { name: 'CPM-Rex 45', hrc: 68, recommendedAngle: 10, category: 'powder', isCustom: false },
   { name: 'CPM-Magnacut', hrc: 64, recommendedAngle: 14, category: 'powder', isCustom: false },
+  { name: 'Elmax', hrc: 62, recommendedAngle: 15, category: 'powder', isCustom: false },
 ];
 
 const KNIVES_V6: Omit<Knife, 'id'>[] = [
@@ -1185,19 +1209,36 @@ const STONES_V5: Omit<Stone, 'id'>[] = [
 
 const STEELS_V5: Omit<Steel, 'id'>[] = [
   // Бюджетные кухонные стали
+  { name: '8Cr13MoV', hrc: 54, recommendedAngle: 20, category: 'chinese', isCustom: false },
   { name: '9Cr15CoMoV', hrc: 54, recommendedAngle: 20, category: 'chinese', isCustom: false },
   { name: '10Cr15CoMoV', hrc: 55, recommendedAngle: 20, category: 'chinese', isCustom: false },
+  { name: '8Cr14MoV', hrc: 54, recommendedAngle: 20, category: 'chinese', isCustom: false },
+  { name: '7Cr17MoV', hrc: 54, recommendedAngle: 20, category: 'chinese', isCustom: false },
+  { name: '5Cr15MoV', hrc: 52, recommendedAngle: 22, category: 'chinese', isCustom: false },
   // Российские
+  { name: '95Х18', hrc: 58, recommendedAngle: 18, category: 'russian', isCustom: false, description: 'Нержавейка' },
   { name: '100Х13М', hrc: 54, recommendedAngle: 20, category: 'russian', isCustom: false },
   { name: '110Х18М-ШД', hrc: 56, recommendedAngle: 20, category: 'russian', isCustom: false },
+  { name: '65Х13', hrc: 52, recommendedAngle: 22, category: 'russian', isCustom: false },
+  { name: '40Х13', hrc: 50, recommendedAngle: 25, category: 'russian', isCustom: false },
   { name: 'Х18', hrc: 48, recommendedAngle: 25, category: 'russian', isCustom: false },
   // Американские бюджет
+  { name: '420HC', hrc: 54, recommendedAngle: 22, category: 'american', isCustom: false },
+  { name: '440A', hrc: 55, recommendedAngle: 20, category: 'american', isCustom: false },
+  { name: '440B', hrc: 56, recommendedAngle: 20, category: 'american', isCustom: false },
+  { name: '440C', hrc: 57, recommendedAngle: 20, category: 'american', isCustom: false },
   // Европейские стандартные
   { name: 'X40Cr14', hrc: 54, recommendedAngle: 20, category: 'european', isCustom: false },
   { name: 'X50Cr15', hrc: 56, recommendedAngle: 20, category: 'european', isCustom: false },
   // Японские стандартные
+  { name: 'AUS-6', hrc: 56, recommendedAngle: 18, category: 'japanese', isCustom: false },
+  { name: 'AUS-8A', hrc: 58, recommendedAngle: 17, category: 'japanese', isCustom: false },
   // Powder/premium
+  { name: 'CPM-20CV', hrc: 62, recommendedAngle: 15, category: 'powder', isCustom: false },
+  { name: 'CPM-M4', hrc: 65, recommendedAngle: 12, category: 'powder', isCustom: false },
   { name: 'CPM-CruWear', hrc: 65, recommendedAngle: 12, category: 'powder', isCustom: false },
+  { name: 'Nitro-V', hrc: 61, recommendedAngle: 15, category: 'powder', isCustom: false },
+  { name: 'LC200N', hrc: 60, recommendedAngle: 17, category: 'powder', isCustom: false },
 ];
 
 const KNIVES_V5: Omit<Knife, 'id'>[] = [
@@ -1286,6 +1327,7 @@ const KNIVES_V5: Omit<Knife, 'id'>[] = [
   { brand: 'Victorinox Fibrox Мясной 6"', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Мясной', category: 'mass_market', isCustom: false },
   { brand: 'Tramontina Meatking', country: 'Бразилия', steel: 'нержавейка', recommendedAngle: 20, type: 'Мясной', category: 'mass_market', isCustom: false },
   // Рыбные
+  { brand: 'Victorinox Fibrox Филейный', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Филейный', category: 'mass_market', isCustom: false },
   { brand: 'Dick ErgoGrip Филейный', country: 'Германия', steel: 'X55CrMo14', recommendedAngle: 20, type: 'Филейный', category: 'mass_market', isCustom: false },
   // Сулибан
   { brand: 'Victorinox Fibrox Сулибан', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Сулибан', category: 'mass_market', isCustom: false },
@@ -1300,6 +1342,7 @@ const KNIVES_V5: Omit<Knife, 'id'>[] = [
   // Тактические USA
   { brand: 'Benchmade AFO II', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Тактический', category: 'tactical', isCustom: false },
   { brand: 'Spyderco Tactical', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Тактический', category: 'tactical', isCustom: false },
+  { brand: 'Cold Steel Voyager', country: 'США', steel: 'CPM-S35VN', recommendedAngle: 17, type: 'Тактический', category: 'tactical', isCustom: false },
   // Стамески и специализированные
   { brand: 'Victorinox Tourné', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 22, type: 'Tournée', category: 'mass_market', isCustom: false },
   { brand: 'Victorinox Бoning', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Обвалочный', category: 'mass_market', isCustom: false },
@@ -1325,23 +1368,30 @@ const STONES_V9: Omit<Stone, 'id'>[] = [
 
 const STEELS_V9: Omit<Steel, 'id'>[] = [
   // Дополнительные иностранные стали среднего уровня
+  { name: '9Cr18', hrc: 57, recommendedAngle: 18, category: 'chinese', isCustom: false },
   { name: '10Cr17MoV', hrc: 57, recommendedAngle: 18, category: 'chinese', isCustom: false },
   { name: '13Cr13', hrc: 55, recommendedAngle: 20, category: 'chinese', isCustom: false },
   { name: '15Cr13MoV', hrc: 58, recommendedAngle: 17, category: 'chinese', isCustom: false },
   // Дополнительные русские
+  { name: 'Х12', hrc: 61, recommendedAngle: 13, category: 'russian', isCustom: false },
   { name: 'Х11МФ', hrc: 60, recommendedAngle: 15, category: 'russian', isCustom: false },
+  { name: '40Х13', hrc: 57, recommendedAngle: 17, category: 'russian', isCustom: false },
   // Скандинавские варианты
   { name: 'Sandvik 12C27', hrc: 57, recommendedAngle: 17, category: 'european', isCustom: false },
   { name: '1.4125 (Böhler)', hrc: 59, recommendedAngle: 17, category: 'european', isCustom: false },
   // Порошковые варианты
+  { name: 'CPM-M390', hrc: 65, recommendedAngle: 13, category: 'powder', isCustom: false },
+  { name: 'Elmax', hrc: 63, recommendedAngle: 14, category: 'powder', isCustom: false },
   { name: 'CTS-204P', hrc: 62, recommendedAngle: 15, category: 'powder', isCustom: false },
 ];
 
 const KNIVES_V9: Omit<Knife, 'id'>[] = [
   // Бюджетные складные дополнительные
+  { brand: 'Ganzo G729', country: 'Китай', steel: '440C', recommendedAngle: 20, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Ganzo G7413', country: 'Китай', steel: '440C', recommendedAngle: 20, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Firebird F7471', country: 'Китай', steel: 'D2', recommendedAngle: 17, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Sanrenmu Land 910P', country: 'Китай', steel: '8Cr13MoV', recommendedAngle: 20, type: 'Складной', category: 'budget_pocket', isCustom: false },
+  { brand: 'Enlan EL03', country: 'Китай', steel: '8Cr13MoV', recommendedAngle: 20, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Ruike P871', country: 'Китай', steel: 'D2', recommendedAngle: 17, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Ruike P108', country: 'Китай', steel: 'D2', recommendedAngle: 17, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Tangram Knife Co. X35', country: 'Китай', steel: 'M390', recommendedAngle: 15, type: 'Складной', category: 'mid_market', isCustom: false },
@@ -1349,13 +1399,16 @@ const KNIVES_V9: Omit<Knife, 'id'>[] = [
   { brand: 'Octem Specter', country: 'Китай', steel: 'D2', recommendedAngle: 17, type: 'Складной', category: 'budget_pocket', isCustom: false },
   // Средний класс дополнительные
   { brand: 'Kershaw Link Tanto', country: 'США', steel: '14C28N', recommendedAngle: 17, type: 'Складной', category: 'mid_market', isCustom: false },
+  { brand: 'CRKT Squid', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Складной', category: 'mid_market', isCustom: false },
   { brand: 'CRKT Homefront', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Складной', category: 'mid_market', isCustom: false },
+  { brand: 'Benchmade Barrage', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'tactical', isCustom: false },
   { brand: 'Benchmade Bugout Scales', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'mid_market', isCustom: false },
   { brand: 'Spyderco Delica 4', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'mid_market', isCustom: false },
   { brand: 'Cold Steel AK-47', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Тактический', category: 'tactical', isCustom: false },
   { brand: 'Buck 110 Folding Hunter', country: 'США', steel: '420HC', recommendedAngle: 20, type: 'Охотничий', category: 'american', isCustom: false },
   // Охотничьи дополнительные
   { brand: 'Mora 2010', country: 'Швеция', steel: '12C27', recommendedAngle: 20, type: 'Охотничий', category: 'scandinavian', isCustom: false },
+  { brand: 'Fallkniven F1', country: 'Швеция', steel: 'VG10', recommendedAngle: 15, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   { brand: 'Helle Bluebird', country: 'Норвегия', steel: '420', recommendedAngle: 20, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   { brand: 'Marttiini Condor', country: 'Финляндия', steel: 'нержавейка', recommendedAngle: 20, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   // Кухонные дополнительные премиум
@@ -1436,6 +1489,9 @@ const STEELS_V10: Omit<Steel, 'id'>[] = [
   { name: '1095 High Carbon', hrc: 62, recommendedAngle: 14, category: 'american', isCustom: false },
   { name: 'O1 Tool Steel', hrc: 61, recommendedAngle: 15, category: 'american', isCustom: false },
   // Дополнительные русские
+  { name: 'Х18', hrc: 58, recommendedAngle: 17, category: 'russian', isCustom: false },
+  { name: '65Х13', hrc: 57, recommendedAngle: 17, category: 'russian', isCustom: false },
+  { name: 'У12', hrc: 60, recommendedAngle: 13, category: 'russian', isCustom: false },
 ];
 
 const KNIVES_V10: Omit<Knife, 'id'>[] = [
@@ -1446,23 +1502,30 @@ const KNIVES_V10: Omit<Knife, 'id'>[] = [
   { brand: 'Frost Cutlery Folding', country: 'Китай', steel: '440A', recommendedAngle: 20, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Ka-Bar Dozier', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Складной', category: 'budget_pocket', isCustom: false },
   { brand: 'Ka-Bar Forefinger', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Складной', category: 'budget_pocket', isCustom: false },
+  { brand: 'Kershaw Cryo', country: 'США', steel: '14C28N', recommendedAngle: 17, type: 'Складной', category: 'mid_market', isCustom: false },
+  { brand: 'Kershaw Launch', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'mid_market', isCustom: false },
   { brand: 'CRKT M16', country: 'США', steel: '420HC', recommendedAngle: 20, type: 'Тактический', category: 'tactical', isCustom: false },
   { brand: 'CRKT Minimalist', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Охотничий', category: 'american', isCustom: false },
   { brand: 'Buck 301 Stockman', country: 'США', steel: '420HC', recommendedAngle: 20, type: 'Складной', category: 'american', isCustom: false },
   { brand: 'Buck 112 Ranger Slim', country: 'США', steel: '420HC', recommendedAngle: 20, type: 'Охотничий', category: 'american', isCustom: false },
   { brand: 'Case Knife Hunter', country: 'США', steel: 'Tru-Sharp', recommendedAngle: 22, type: 'Складной', category: 'american', isCustom: false },
   { brand: 'Case Trapperlock', country: 'США', steel: 'Tru-Sharp', recommendedAngle: 22, type: 'Складной', category: 'american', isCustom: false },
+  { brand: 'Spyderco Tenacious', country: 'США', steel: '8Cr13MoV', recommendedAngle: 20, type: 'Складной', category: 'budget_pocket', isCustom: false },
+  { brand: 'Spyderco Persistence', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Складной', category: 'mid_market', isCustom: false },
   { brand: 'Spyderco Endura 4', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'mid_market', isCustom: false },
   { brand: 'Cold Steel Code 4', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Складной', category: 'mid_market', isCustom: false },
   { brand: 'Benchmade Proper', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'mid_market', isCustom: false },
+  { brand: 'Benchmade Mini Griptilian', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Складной', category: 'mid_market', isCustom: false },
   // Кухонные гурме варианты дополнительные
   { brand: 'Shun Classic Gyuto', country: 'Япония', steel: 'Cobalt Alloy', recommendedAngle: 16, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   { brand: 'Shun Premier Gyuto', country: 'Япония', steel: 'Powdered Steel', recommendedAngle: 16, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   { brand: 'Wüsthof Pro', country: 'Германия', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Шеф', category: 'german', isCustom: false },
+  { brand: 'Wüsthof Classic Ikon', country: 'Германия', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Gyuto', category: 'german', isCustom: false },
   { brand: 'Zwilling J.A. Henckels Pro', country: 'Германия', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Шеф', category: 'german', isCustom: false },
   { brand: 'MAC Chef Knife', country: 'Япония', steel: 'Stainless', recommendedAngle: 15, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   { brand: 'Miyabi 5000MCD', country: 'Япония', steel: 'VG-10', recommendedAngle: 15, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
   // Массовые кухонные расширение
+  { brand: 'Victorinox Fibrox Сантоку', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 18, type: 'Сантоку', category: 'mass_market', isCustom: false },
   { brand: 'Victorinox Fibrox Nakiri', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Нагири', category: 'mass_market', isCustom: false },
   { brand: 'Tramontina Utility 5"', country: 'Бразилия', steel: 'нержавейка', recommendedAngle: 20, type: 'Овощной', category: 'mass_market', isCustom: false },
   { brand: 'Tramontina Bread Knife', country: 'Бразилия', steel: 'нержавейка', recommendedAngle: 20, type: 'Для хлеба', category: 'mass_market', isCustom: false },
@@ -1475,6 +1538,7 @@ const KNIVES_V10: Omit<Knife, 'id'>[] = [
   { brand: 'Mora Allround', country: 'Швеция', steel: '12C27', recommendedAngle: 20, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   { brand: 'Fallkniven F1x', country: 'Швеция', steel: 'VG10', recommendedAngle: 15, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   { brand: 'Helle Sørensen', country: 'Норвегия', steel: '420', recommendedAngle: 20, type: 'Охотничий', category: 'scandinavian', isCustom: false },
+  { brand: 'Helle Temagami', country: 'Норвегия', steel: 'нержавейка', recommendedAngle: 20, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   { brand: 'Hultafors OK4', country: 'Швеция', steel: 'Carbon Steel', recommendedAngle: 15, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   { brand: 'Roselli Finland', country: 'Финляндия', steel: 'Carbon', recommendedAngle: 15, type: 'Охотничий', category: 'scandinavian', isCustom: false },
   // Специальные ножи (филе, обвал и т.д.)
@@ -1484,9 +1548,13 @@ const KNIVES_V10: Omit<Knife, 'id'>[] = [
   { brand: 'Dick Filleting Knife Flexible', country: 'Германия', steel: 'X55CrMo14', recommendedAngle: 20, type: 'Филейный', category: 'mass_market', isCustom: false },
   { brand: 'Victorinox Fibrox Serrated Bread', country: 'Швейцария', steel: 'X50CrMoV15', recommendedAngle: 20, type: 'Для хлеба', category: 'mass_market', isCustom: false },
   // Дополнительные премиум складные
+  { brand: 'Benchmade Bailout', country: 'США', steel: 'CPM-3V', recommendedAngle: 17, type: 'Тактический', category: 'tactical', isCustom: false },
+  { brand: 'Cold Steel Recon 1', country: 'США', steel: 'CPM-S35VN', recommendedAngle: 17, type: 'Тактический', category: 'tactical', isCustom: false },
+  { brand: 'Spyderco Manix 2', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Тактический', category: 'tactical', isCustom: false },
   // Многофункциональные дополнительные
   { brand: 'Leatherman Micra', country: 'США', steel: 'Martensitic', recommendedAngle: 25, type: 'Другой', category: 'multi_tool', isCustom: false },
   { brand: 'Leatherman Skeletool', country: 'США', steel: '420HC', recommendedAngle: 25, type: 'Другой', category: 'multi_tool', isCustom: false },
+  { brand: 'Leatherman Signal', country: 'США', steel: 'Stainless', recommendedAngle: 25, type: 'Другой', category: 'multi_tool', isCustom: false },
   // Бюджетные варианты дополнительно
   { brand: 'Walther Pro Knife', country: 'Германия', steel: 'нержавейка', recommendedAngle: 20, type: 'Тактический', category: 'budget_pocket', isCustom: false },
   { brand: 'Magnum Boker', country: 'Германия', steel: 'нержавейка', recommendedAngle: 20, type: 'Складной', category: 'budget_pocket', isCustom: false },
@@ -1499,6 +1567,7 @@ const KNIVES_V10: Omit<Knife, 'id'>[] = [
   { brand: 'Ontario Knife Company RAT', country: 'США', steel: 'AUS-8A', recommendedAngle: 17, type: 'Тактический', category: 'tactical', isCustom: false },
   { brand: 'Ontario Knife Utilitac', country: 'США', steel: '12C27', recommendedAngle: 17, type: 'Тактический', category: 'budget_pocket', isCustom: false },
   { brand: 'Buck 302 Cadet', country: 'США', steel: '420HC', recommendedAngle: 20, type: 'Складной', category: 'american', isCustom: false },
+  { brand: 'Benchmade North Fork', country: 'США', steel: 'CPM-S30V', recommendedAngle: 15, type: 'Охотничий', category: 'american', isCustom: false },
   // Японские варианты дополнительно
   { brand: 'Tojiro F-651', country: 'Япония', steel: 'VG-10', recommendedAngle: 15, type: 'Гилпокий', category: 'japanese_kitchen', isCustom: false },
   { brand: 'Gesshin Uraku', country: 'Япония', steel: 'Aogami Super', recommendedAngle: 12, type: 'Gyuto', category: 'japanese_kitchen', isCustom: false },
