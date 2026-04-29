@@ -1518,96 +1518,6 @@ const KNIVES_V10: Omit<Knife, 'id'>[] = [
   { brand: 'Beijing Blade', country: 'Китай', steel: 'нержавейка', recommendedAngle: 20, type: 'Шеф', category: 'mass_market', isCustom: false },
 ];
 
-// ─── v11: Камни с tsprof.ru (алмазные Alpha/ВеАл, Boride T2/CS-HD/PC, TSPROF Delta/Профиль) ──
-
-const STONES_V11: Omit<Stone, 'id'>[] = [
-  // ── TSPROF Alpha — алмазные бруски (гальваника, зернистость МК) ──────────────
-  // SD161=160/125, SD126=125/100, SD101=100/80, SD81=80/63, SD61=60/40, SD41=40/28
-  // SD29=28/20, SD21=20/14, SD15=14/10, SD11=10/7, SD8=7/5, SD6=5/3, SD4=3/2, SD3=2/1
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '160/125', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '125/100', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '100/80',  type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '80/63',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '60/40',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '40/28',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '28/20',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '20/14',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '14/10',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '10/7',    type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '7/5',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '5/3',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '3/2',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '2/1',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  // ── ВеАл — алмазные бруски (гальваника, МК) ──────────────────────────────────
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '200/160', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '160/125', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '125/100', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '100/80',  type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '80/63',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '50/40',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '40/28',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '28/20',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '20/14',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '14/10',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '10/7',    type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '7/5',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '5/3',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'ВеАл', gritUnit: 'mk', gritMk: '3/2',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  // ── TSPROF F-пластины — алмазные плёнки (гальваника, FEPA) ───────────────────
-  { brand: 'TSPROF F-plate', grit: 150,  gritUnit: 'fepa', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF F-plate', grit: 220,  gritUnit: 'fepa', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF F-plate', grit: 400,  gritUnit: 'fepa', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF F-plate', grit: 600,  gritUnit: 'fepa', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF F-plate', grit: 1000, gritUnit: 'fepa', type: 'galvanic', category: 'galvanic', isCustom: false },
-  // ── Boride T2 — оксид алюминия, керамическая связка (FEPA) ───────────────────
-  { brand: 'Boride T2', grit: 150,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'Boride T2', grit: 220,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'Boride T2', grit: 400,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'Boride T2', grit: 600,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'Boride T2', grit: 1000, gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'Boride T2', grit: 1200, gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  // ── Boride CS-HD — карбид кремния, керамическая связка (FEPA) ────────────────
-  { brand: 'Boride CS-HD', grit: 120,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride CS-HD', grit: 220,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride CS-HD', grit: 400,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride CS-HD', grit: 600,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride CS-HD', grit: 1000, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride CS-HD', grit: 1200, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  // ── Boride PC — карбид кремния, полиуретановая связка (FEPA) ─────────────────
-  { brand: 'Boride PC', grit: 150, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride PC', grit: 320, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride PC', grit: 600, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'Boride PC', grit: 900, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  // ── TSPROF Delta OA — оксид алюминия (FEPA) ──────────────────────────────────
-  { brand: 'TSPROF Delta OA', grit: 800,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'TSPROF Delta OA', grit: 1200, gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'TSPROF Delta OA', grit: 1500, gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  // ── TSPROF Delta CS — карбид кремния (FEPA) ──────────────────────────────────
-  { brand: 'TSPROF Delta CS', grit: 120,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Delta CS', grit: 220,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Delta CS', grit: 400,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Delta CS', grit: 600,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Delta CS', grit: 800,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Delta CS', grit: 1000, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Delta CS', grit: 1200, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  // ── TSPROF Профиль A — оксид алюминия (FEPA) ─────────────────────────────────
-  { brand: 'TSPROF Профиль A', grit: 120,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'TSPROF Профиль A', grit: 220,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'TSPROF Профиль A', grit: 400,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'TSPROF Профиль A', grit: 600,  gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  { brand: 'TSPROF Профиль A', grit: 1000, gritUnit: 'fepa', type: 'ao', category: 'ao', isCustom: false },
-  // ── TSPROF Профиль CS — карбид кремния (FEPA) ────────────────────────────────
-  { brand: 'TSPROF Профиль CS', grit: 120,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Профиль CS', grit: 220,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Профиль CS', grit: 400,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Профиль CS', grit: 600,  gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  { brand: 'TSPROF Профиль CS', grit: 1000, gritUnit: 'fepa', type: 'kk', category: 'kk', isCustom: false },
-  // ── Притир и доводочные стропы ────────────────────────────────────────────────
-  { brand: 'TSPROF Притир бронзовый', type: 'pritir', category: 'pritir', isCustom: false },
-  { brand: 'TSPROF Брусок дубовый', type: 'pritir', category: 'pritir', isCustom: false },
-  { brand: 'TSPROF Брусок липовый', type: 'pritir', category: 'pritir', isCustom: false },
-];
-
 const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
 
   // ── v1: начальные справочники ─────────────────────────────────────────────
@@ -1680,11 +1590,6 @@ const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
     await db.stones.bulkAdd(STONES_V10);
     await db.steels.bulkAdd(STEELS_V10);
     await db.knives.bulkAdd(KNIVES_V10);
-  },
-
-  // ── v11: камни с сайта tsprof.ru ─────────────────────────────────────────────
-  async (db) => {
-    await db.stones.bulkAdd(STONES_V11);
   },
 
 ];
