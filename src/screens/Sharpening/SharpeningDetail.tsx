@@ -95,6 +95,9 @@ export default function SharpeningDetail() {
 
   const sortedStones = sh.stones ? [...sh.stones].sort((a, b) => a.order - b.order) : []
 
+  const coverField: 'photosAfter' | 'photosBefore' | null =
+    sh.photosAfter?.length ? 'photosAfter' : sh.photosBefore?.length ? 'photosBefore' : null
+
   return (
     <div className={s.screen}>
       <div className={s.header}>
@@ -186,20 +189,24 @@ export default function SharpeningDetail() {
             <div className={s.photoSection}>
               <div className={s.photoSectionTitle}>Фото «До»</div>
               <div className={s.photoScroll}>
-                {sh.photosBefore.map((src, i) => (
-                  <div key={i} className={s.photoWrapper}>
-                    <img
-                      src={src}
-                      className={s.photoImg}
-                      alt=""
-                      onClick={() => setLightbox({ photos: sh.photosBefore!, index: i })}
-                    />
-                    <button
-                      className={s.photoRemove}
-                      onClick={() => handleRemovePhoto('photosBefore', i)}
-                    >×</button>
-                  </div>
-                ))}
+                {sh.photosBefore.map((src, i) => {
+                  const isCover = coverField === 'photosBefore' && i === 0
+                  return (
+                    <div key={i} className={s.photoWrapper}>
+                      <img
+                        src={src}
+                        className={`${s.photoImg} ${isCover ? s.photoImgCover : ''}`}
+                        alt=""
+                        onClick={() => setLightbox({ photos: sh.photosBefore!, index: i })}
+                      />
+                      {isCover && <span className={s.coverBadge}>обложка</span>}
+                      <button
+                        className={s.photoRemove}
+                        onClick={() => handleRemovePhoto('photosBefore', i)}
+                      >×</button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -207,20 +214,24 @@ export default function SharpeningDetail() {
             <div className={s.photoSection}>
               <div className={s.photoSectionTitle}>Фото «После»</div>
               <div className={s.photoScroll}>
-                {sh.photosAfter.map((src, i) => (
-                  <div key={i} className={s.photoWrapper}>
-                    <img
-                      src={src}
-                      className={s.photoImg}
-                      alt=""
-                      onClick={() => setLightbox({ photos: sh.photosAfter!, index: i })}
-                    />
-                    <button
-                      className={s.photoRemove}
-                      onClick={() => handleRemovePhoto('photosAfter', i)}
-                    >×</button>
-                  </div>
-                ))}
+                {sh.photosAfter.map((src, i) => {
+                  const isCover = coverField === 'photosAfter' && i === 0
+                  return (
+                    <div key={i} className={s.photoWrapper}>
+                      <img
+                        src={src}
+                        className={`${s.photoImg} ${isCover ? s.photoImgCover : ''}`}
+                        alt=""
+                        onClick={() => setLightbox({ photos: sh.photosAfter!, index: i })}
+                      />
+                      {isCover && <span className={s.coverBadge}>обложка</span>}
+                      <button
+                        className={s.photoRemove}
+                        onClick={() => handleRemovePhoto('photosAfter', i)}
+                      >×</button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
