@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/fiscalagent/AppTochite/compare/v1.19.0...v1.20.0) (2026-05-03)
+
+
+### feat
+
+* **sharpening:** динамический placeholder ножа из истории клиента ([](https://github.com/fiscalagent/AppTochite/commit/3f70237349a404aff815ffda61cde5d44f6af9c0))
+
 # [1.19.0](https://github.com/fiscalagent/AppTochite/compare/v1.18.0...v1.19.0) (2026-05-03)
 
 
