@@ -330,19 +330,23 @@ export default function SharpeningForm() {
             </span>
             {photosBefore.length > 0 && (
               <div className={s.photoThumbs}>
-                {photosBefore.map((src, i) => (
-                  <div key={i} className={s.photoThumb}>
-                    <img
-                      src={src}
-                      alt=""
-                      onClick={() => setLightbox({ photos: photosBefore, index: i })}
-                    />
-                    <button
-                      className={s.photoRemove}
-                      onClick={() => setPhotosBefore(prev => prev.filter((_, j) => j !== i))}
-                    >×</button>
-                  </div>
-                ))}
+                {photosBefore.map((src, i) => {
+                  const isCover = photosAfter.length === 0 && i === 0
+                  return (
+                    <div key={i} className={`${s.photoThumb} ${isCover ? s.photoThumbCover : ''}`}>
+                      <img
+                        src={src}
+                        alt=""
+                        onClick={() => setLightbox({ photos: photosBefore, index: i })}
+                      />
+                      {isCover && <span className={s.coverBadge}>обложка</span>}
+                      <button
+                        className={s.photoRemove}
+                        onClick={() => setPhotosBefore(prev => prev.filter((_, j) => j !== i))}
+                      >×</button>
+                    </div>
+                  )
+                })}
               </div>
             )}
             <button
@@ -532,19 +536,23 @@ export default function SharpeningForm() {
               </span>
               {photosAfter.length > 0 && (
                 <div className={s.photoThumbs}>
-                  {photosAfter.map((src, i) => (
-                    <div key={i} className={s.photoThumb}>
-                      <img
-                        src={src}
-                        alt=""
-                        onClick={() => setLightbox({ photos: photosAfter, index: i })}
-                      />
-                      <button
-                        className={s.photoRemove}
-                        onClick={() => setPhotosAfter(prev => prev.filter((_, j) => j !== i))}
-                      >×</button>
-                    </div>
-                  ))}
+                  {photosAfter.map((src, i) => {
+                    const isCover = i === 0
+                    return (
+                      <div key={i} className={`${s.photoThumb} ${isCover ? s.photoThumbCover : ''}`}>
+                        <img
+                          src={src}
+                          alt=""
+                          onClick={() => setLightbox({ photos: photosAfter, index: i })}
+                        />
+                        {isCover && <span className={s.coverBadge}>обложка</span>}
+                        <button
+                          className={s.photoRemove}
+                          onClick={() => setPhotosAfter(prev => prev.filter((_, j) => j !== i))}
+                        >×</button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               <button

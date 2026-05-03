@@ -360,7 +360,6 @@ function SteelsTab({ search }: { search: string }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [hrc, setHrc] = useState('')
-  const [angle, setAngle] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), [])
@@ -389,10 +388,9 @@ function SteelsTab({ search }: { search: string }) {
     await db.steels.add({
       name: name.trim(),
       hrc: hrc ? Number(hrc) : undefined,
-      recommendedAngle: angle ? Number(angle) : undefined,
       isCustom: true,
     })
-    setName(''); setHrc(''); setAngle(''); setOpen(false)
+    setName(''); setHrc(''); setOpen(false)
   }
 
   return (
@@ -408,7 +406,6 @@ function SteelsTab({ search }: { search: string }) {
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Название (AUS-8, D2, VG-10...)" autoFocus />
           <div className={s.addRow}>
             <input value={hrc} onChange={e => setHrc(e.target.value)} placeholder="HRC" type="number" />
-            <input value={angle} onChange={e => setAngle(e.target.value)} placeholder="Угол °" type="number" />
           </div>
           <div className={s.addRow}>
             <button className={s.addBtn} onClick={add} disabled={!name.trim()}>Добавить</button>
@@ -441,8 +438,7 @@ function SteelsTab({ search }: { search: string }) {
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{st.name}</div>
                 <div className={s.itemMeta}>
-                  {[st.hrc && `${st.hrc} HRC`, st.recommendedAngle && `${st.recommendedAngle}°`]
-                    .filter(Boolean).join(' · ') || 'нет данных'}
+                  {st.hrc ? `${st.hrc} HRC` : 'нет данных'}
                 </div>
               </div>
               <div className={s.itemRight}>
