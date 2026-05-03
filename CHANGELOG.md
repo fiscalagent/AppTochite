@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/fiscalagent/AppTochite/compare/v1.16.0...v1.16.1) (2026-05-03)
+
+
+### fix
+
+* **seed:** исправить тип TSPROF Alpha с galvanic на diamond ([](https://github.com/fiscalagent/AppTochite/commit/f1c58ca755dd7b60970796a5be785464f4f07c89))
+
 # [1.16.0](https://github.com/fiscalagent/AppTochite/compare/v1.15.0...v1.16.0) (2026-05-03)
 
 

@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.16.1',
+    date: '2026-05-03',
+    changes: [
+      '**seed:** исправить тип TSPROF Alpha с galvanic на diamond ([](https://github.com/fiscalagent/AppTochite/commit/f1c58ca755dd7b60970796a5be785464f4f07c89))',
+      '**reference:** убрать рекомендуемый угол из карточек сталей ([](https://github.com/fiscalagent/AppTochite/commit/919d65949b892a3751ac994951b90265155535e6))',
+      '**sharpening-detail:** подсветка фото-обложки на экране заточки ([](https://github.com/fiscalagent/AppTochite/commit/49e0187841ce5ac40ef09731ca58472313271c6a))',
+      '**client-card:** пагинация заточек по 10 со стрелками ([](https://github.com/fiscalagent/AppTochite/commit/8adfba8880e16cb8c9780fb49a5280a05d8f4011))',
+    ],
+  },
+  {
     version: '1.16.0',
     date: '2026-05-03',
     changes: [
