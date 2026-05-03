@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/fiscalagent/AppTochite/compare/v1.17.0...v1.18.0) (2026-05-03)
+
+
+### feat
+
+* **sharpening:** подсказки ножей из истории клиента по частоте ([](https://github.com/fiscalagent/AppTochite/commit/25fb9ac2a7f8ec38122f4cd6860fad05acc21073))
+
 # [1.17.0](https://github.com/fiscalagent/AppTochite/compare/v1.16.1...v1.17.0) (2026-05-03)
 
 
