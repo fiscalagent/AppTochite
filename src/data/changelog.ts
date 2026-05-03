@@ -9,17 +9,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.17.0',
     date: '2026-05-03',
     changes: [
-      'Исправления и улучшения',
-    ],
-  },
-  {
-    version: '1.16.1',
-    date: '2026-05-03',
-    changes: [
-      '**seed:** исправить тип TSPROF Alpha с galvanic на diamond ([](https://github.com/fiscalagent/AppTochite/commit/f1c58ca755dd7b60970796a5be785464f4f07c89))',
-      '**reference:** убрать рекомендуемый угол из карточек сталей ([](https://github.com/fiscalagent/AppTochite/commit/919d65949b892a3751ac994951b90265155535e6))',
-      '**sharpening-detail:** подсветка фото-обложки на экране заточки ([](https://github.com/fiscalagent/AppTochite/commit/49e0187841ce5ac40ef09731ca58472313271c6a))',
-      '**client-card:** пагинация заточек по 10 со стрелками ([](https://github.com/fiscalagent/AppTochite/commit/8adfba8880e16cb8c9780fb49a5280a05d8f4011))',
+      'в справочнике камней — поиск по типу абразива через * (например, *алмаз)',
+      'в карточке клиента заточки разбиты на страницы по 10',
+      'на экране заточки фото ножа выделено как обложка',
+      'в справочнике сталей убран рекомендуемый угол заточки',
+      'исправлен тип абразива у камня TSPROF Alpha (был «гальваника», стал «алмаз»)',
     ],
   },
   {
@@ -47,11 +41,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.13.1',
     date: '2026-04-29',
     changes: [
-      'урезать фото до 1 в запросах списков (thumbnail) ([](https://github.com/fiscalagent/AppTochite/commit/0040561c2dfee852a8128065d6cd00c5f67a152a))',
-      'повтор заточки и thumbnail в карточке клиента ([](https://github.com/fiscalagent/AppTochite/commit/998fb63e82285f7409deb9dcfa2177e03ff0aa27))',
-      '**sharpening:** финишный камень — плашка FIN и учёт в тепловой карте ([](https://github.com/fiscalagent/AppTochite/commit/c9eb35f6c03b7033b933cb25e2d9b4457f0a74b2))',
-      '**db:** добавить камни с tsprof.ru — v11 миграция ([](https://github.com/fiscalagent/AppTochite/commit/85c9aca5b49337818e611d9afd25e07673a3efd4))',
-      'thumbnail в ленте, фильтр по ножу, автодополнение стали в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/51865d6c1a3b49c8dfffead1e3dbeeedc153008a))',
+      'кнопка «Повторить заточку» в карточке клиента',
+      'добавлены камни из каталога TSPROF',
+      'ускорена загрузка карточек в списках',
     ],
   },
   {
