@@ -92,9 +92,19 @@ export default function SharpeningForm() {
     return items.map(st => stoneDisplayName(st))
   }, []) ?? []
   const knifeSuggestions = useLiveQuery(async () => {
+    if (clientId) {
+      const clientSharpenings = await db.sharpenings.where('clientId').equals(clientId).toArray()
+      if (clientSharpenings.length > 0) {
+        const freq = new Map<string, number>()
+        for (const sh of clientSharpenings) {
+          freq.set(sh.knifeBrand, (freq.get(sh.knifeBrand) ?? 0) + 1)
+        }
+        return [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([brand]) => brand)
+      }
+    }
     const items = await db.knives.orderBy('brand').toArray()
     return [...new Set(items.map(k => k.brand))]
-  }, []) ?? []
+  }, [clientId]) ?? []
   const steelSuggestions = useLiveQuery(async () => {
     const items = await db.steels.orderBy('name').toArray()
     return [...new Set(items.map(st => st.name))]
