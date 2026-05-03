@@ -70,10 +70,12 @@ function SelectionBar({
   count,
   onCancel,
   onDelete,
+  onEdit,
 }: {
   count: number
   onCancel: () => void
   onDelete: () => void
+  onEdit?: () => void
 }) {
   const [confirm, setConfirm] = useState(false)
 
@@ -83,6 +85,9 @@ function SelectionBar({
         <>
           <span className={s.selectionCount}>Выбрано: {count}</span>
           <button className={s.cancelSelBtn} onClick={onCancel}>Отмена</button>
+          {count === 1 && onEdit && (
+            <button className={s.editSelBtn} onClick={onEdit}>Изменить</button>
+          )}
           <button className={s.deleteSelBtn} onClick={() => setConfirm(true)}>
             Удалить ({count})
           </button>
@@ -219,6 +224,12 @@ function StonesTab({ search }: { search: string }) {
   const [gritMk, setGritMk] = useState('')
   const [type, setType] = useState<Stone['type'] | ''>('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editBrand, setEditBrand] = useState('')
+  const [editGritUnit, setEditGritUnit] = useState<GritUnit | ''>('')
+  const [editGrit, setEditGrit] = useState('')
+  const [editGritMk, setEditGritMk] = useState('')
+  const [editType, setEditType] = useState<Stone['type'] | ''>('')
 
   const stones = useLiveQuery(
     () => db.stones.toArray().then(arr => arr.sort(compareStonesForSort)),
@@ -253,6 +264,35 @@ function StonesTab({ search }: { search: string }) {
     setSelected(new Set())
   }
 
+  function startEdit() {
+    const id = [...selected][0]
+    const stone = stones?.find(st => st.id === id)
+    if (!stone) return
+    setEditingId(id)
+    setEditBrand(stone.brand)
+    setEditGritUnit((stone.gritUnit as GritUnit | '') ?? '')
+    setEditGrit(stone.grit != null ? String(stone.grit) : '')
+    setEditGritMk(stone.gritMk ?? '')
+    setEditType((stone.type as Stone['type'] | '') ?? '')
+    setSelected(new Set())
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+  }
+
+  async function saveEdit() {
+    if (!editBrand.trim() || editingId === null) return
+    await db.stones.update(editingId, {
+      brand: editBrand.trim(),
+      grit: (editGritUnit === 'fepa' || editGritUnit === 'jis') && editGrit ? Number(editGrit) : undefined,
+      gritUnit: editGritUnit || undefined,
+      gritMk: editGritUnit === 'mk' && editGritMk ? editGritMk : undefined,
+      type: editType || undefined,
+    })
+    setEditingId(null)
+  }
+
   async function add() {
     if (!brand.trim()) return
     await db.stones.add({
@@ -268,7 +308,7 @@ function StonesTab({ search }: { search: string }) {
 
   return (
     <>
-      {!open && selected.size === 0 && (
+      {!open && selected.size === 0 && editingId === null && (
         <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
           + Добавить камень
         </button>
@@ -323,6 +363,56 @@ function StonesTab({ search }: { search: string }) {
         </div>
       )}
 
+      {editingId !== null && (
+        <div className={s.addCard}>
+          <span className={s.addTitle}>Редактировать камень</span>
+          <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
+          <div className={s.gritUnitRow}>
+            {(['', 'fepa', 'jis', 'mk'] as const).map(u => (
+              <button
+                key={u || 'none'}
+                className={`${s.gritUnitBtn} ${editGritUnit === u ? s.gritUnitActive : ''}`}
+                onClick={() => { setEditGritUnit(u); setEditGrit(''); setEditGritMk('') }}
+              >
+                {u === '' ? 'нет' : u === 'mk' ? 'мк' : u.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          {(editGritUnit === 'fepa' || editGritUnit === 'jis') && (
+            <input
+              value={editGrit}
+              onChange={e => setEditGrit(e.target.value)}
+              placeholder={`${editGritUnit.toUpperCase()}, напр. 1000`}
+              type="number"
+              min={1}
+            />
+          )}
+          {editGritUnit === 'mk' && (
+            <select className={s.select} value={editGritMk} onChange={e => setEditGritMk(e.target.value)}>
+              <option value="">Выбрать мк</option>
+              {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
+            </select>
+          )}
+          <div className={s.addRow}>
+            <select className={s.select} value={editType} onChange={e => setEditType(e.target.value as Stone['type'] | '')}>
+              <option value="">иное</option>
+              <option value="galvanic">Гальваника</option>
+              <option value="ao">ОА</option>
+              <option value="kk">КК</option>
+              <option value="diamond">Алмаз</option>
+              <option value="elbor">Эльбор</option>
+              <option value="natural">Природа</option>
+              <option value="pritir">Притир</option>
+              <option value="ceramic">Керамика</option>
+            </select>
+          </div>
+          <div className={s.addRow}>
+            <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>Отмена</button>
+          </div>
+        </div>
+      )}
+
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}
         {filtered.length > 0 && (
@@ -367,6 +457,7 @@ function StonesTab({ search }: { search: string }) {
           count={selected.size}
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
+          onEdit={startEdit}
         />
       )}
     </>

@@ -275,6 +275,16 @@
   font-family: var(--font-body);
 }
 
+.editSelBtn {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+}
+
 .deleteSelBtn {
   font-size: 14px;
   font-weight: 600;
