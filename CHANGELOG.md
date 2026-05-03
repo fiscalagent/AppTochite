@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/fiscalagent/AppTochite/compare/v1.16.1...v1.17.0) (2026-05-03)
+
+
+### feat
+
+* **reference:** поиск камней по типу абразива через *алмаз ([](https://github.com/fiscalagent/AppTochite/commit/8a8f80f18ff3bb09e6f3e6ff074f4b86beb0aec0))
+
 ## [1.16.1](https://github.com/fiscalagent/AppTochite/compare/v1.16.0...v1.16.1) (2026-05-03)
 
 
