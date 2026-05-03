@@ -1521,23 +1521,23 @@ const KNIVES_V10: Omit<Knife, 'id'>[] = [
 // ─── v11: Камни с tsprof.ru (алмазные Alpha/ВеАл, Boride T2/CS-HD/PC, TSPROF Delta/Профиль) ──
 
 const STONES_V11: Omit<Stone, 'id'>[] = [
-  // ── TSPROF Alpha — алмазные бруски (гальваника, зернистость МК) ──────────────
+  // ── TSPROF Alpha — алмазные бруски (алмаз, зернистость МК) ──────────────────
   // SD161=160/125, SD126=125/100, SD101=100/80, SD81=80/63, SD61=60/40, SD41=40/28
   // SD29=28/20, SD21=20/14, SD15=14/10, SD11=10/7, SD8=7/5, SD6=5/3, SD4=3/2, SD3=2/1
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '160/125', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '125/100', type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '100/80',  type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '80/63',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '60/40',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '40/28',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '28/20',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '20/14',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '14/10',   type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '10/7',    type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '7/5',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '5/3',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '3/2',     type: 'galvanic', category: 'galvanic', isCustom: false },
-  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '2/1',     type: 'galvanic', category: 'galvanic', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '160/125', type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '125/100', type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '100/80',  type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '80/63',   type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '60/40',   type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '40/28',   type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '28/20',   type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '20/14',   type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '14/10',   type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '10/7',    type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '7/5',     type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '5/3',     type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '3/2',     type: 'diamond', category: 'diamond', isCustom: false },
+  { brand: 'TSPROF Alpha', gritUnit: 'mk', gritMk: '2/1',     type: 'diamond', category: 'diamond', isCustom: false },
   // ── ВеАл — алмазные бруски (гальваника, МК) ──────────────────────────────────
   { brand: 'ВеАл', gritUnit: 'mk', gritMk: '200/160', type: 'galvanic', category: 'galvanic', isCustom: false },
   { brand: 'ВеАл', gritUnit: 'mk', gritMk: '160/125', type: 'galvanic', category: 'galvanic', isCustom: false },
@@ -1685,6 +1685,16 @@ const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
   // ── v11: камни с сайта tsprof.ru ─────────────────────────────────────────────
   async (db) => {
     await db.stones.bulkAdd(STONES_V11);
+  },
+
+  // ── v12: исправить тип TSPROF Alpha с galvanic на diamond ────────────────────
+  async (db) => {
+    const alphaStones = await db.stones.where('brand').equals('TSPROF Alpha').toArray();
+    for (const stone of alphaStones) {
+      if (stone.type === 'galvanic' && stone.id != null) {
+        await db.stones.update(stone.id, { type: 'diamond', category: 'diamond' });
+      }
+    }
   },
 
 ];
