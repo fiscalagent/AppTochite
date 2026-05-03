@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/fiscalagent/AppTochite/compare/v1.18.0...v1.19.0) (2026-05-03)
+
+
+### feat
+
+* редактирование камня в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/82c18a21f915efb515fedd29d61f33bda6371d87))
+
 # [1.18.0](https://github.com/fiscalagent/AppTochite/compare/v1.17.0...v1.18.0) (2026-05-03)
 
 
