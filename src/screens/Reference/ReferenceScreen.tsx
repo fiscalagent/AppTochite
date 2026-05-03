@@ -24,6 +24,17 @@ const STONE_TYPE_LABELS: Record<string, string> = {
   ceramic: 'керамика',
 }
 
+const STONE_TYPE_BY_LABEL: Record<string, Stone['type']> = {
+  'гальваника': 'galvanic',
+  'оа':         'ao',
+  'кк':         'kk',
+  'алмаз':      'diamond',
+  'эльбор':     'elbor',
+  'природа':    'natural',
+  'притир':     'pritir',
+  'керамика':   'ceramic',
+}
+
 function SelectAllRow({
   total,
   selected,
@@ -215,6 +226,14 @@ function StonesTab({ search }: { search: string }) {
   )
 
   const filtered = stones?.filter(st => {
+    if (search.startsWith('*')) {
+      const typeQuery = search.slice(1).toLowerCase().trim()
+      if (!typeQuery) return true
+      const matchedTypes = Object.entries(STONE_TYPE_BY_LABEL)
+        .filter(([label]) => label.includes(typeQuery))
+        .map(([, t]) => t)
+      return matchedTypes.includes(st.type as Stone['type'])
+    }
     const name = `${st.brand} ${st.grit ?? ''} ${st.gritMk ?? ''}`.toLowerCase()
     return name.includes(search.toLowerCase())
   }) ?? []
@@ -629,7 +648,7 @@ export default function ReferenceScreen() {
             className={s.searchInput}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Поиск..."
+            placeholder={activeTab === 'stones' ? 'Поиск... или *алмаз по типу' : 'Поиск...'}
           />
         </div>
 
