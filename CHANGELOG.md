@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/fiscalagent/AppTochite/compare/v1.15.0...v1.16.0) (2026-05-03)
+
+
+### feat
+
+* **reference:** убрать рекомендуемый угол из карточек сталей ([](https://github.com/fiscalagent/AppTochite/commit/919d65949b892a3751ac994951b90265155535e6))
+
 # [1.15.0](https://github.com/fiscalagent/AppTochite/compare/v1.14.0...v1.15.0) (2026-04-29)
 
 
