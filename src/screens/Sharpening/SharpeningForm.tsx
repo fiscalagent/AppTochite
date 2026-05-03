@@ -281,7 +281,7 @@ export default function SharpeningForm() {
               value={knifeBrand}
               onChange={setKnifeBrand}
               suggestions={knifeSuggestions}
-              placeholder="Mora, Victorinox, самодел..."
+              placeholder={knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...'}
               autoFocus={!prefilledClientId}
             />
           </div>
