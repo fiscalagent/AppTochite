@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
-import { getGritDisplay, getGritSortValue, type GritDisplayMode } from '../../data/gritTable'
+import { getGritDisplay, getGritSortValue, GRIT_TABLE, type GritDisplayMode } from '../../data/gritTable'
 import s from './ReferenceScreen.module.css'
 
 type Tab = 'stones' | 'steels' | 'knives'
@@ -277,6 +277,22 @@ function StonesTab({ search }: { search: string }) {
     setSelected(new Set())
   }
 
+  function switchEditUnit(newUnit: GritUnit | '') {
+    if (newUnit === editGritUnit) return
+    let row = undefined as typeof GRIT_TABLE[0] | undefined
+    if (editGritUnit === 'fepa' && editGrit) row = GRIT_TABLE.find(r => r.fepa === Number(editGrit))
+    else if (editGritUnit === 'jis' && editGrit) row = GRIT_TABLE.find(r => r.jis === Number(editGrit))
+    else if (editGritUnit === 'mk' && editGritMk) row = GRIT_TABLE.find(r => r.gost === editGritMk)
+    setEditGritUnit(newUnit)
+    if (row && newUnit !== '') {
+      if (newUnit === 'fepa') { setEditGrit(String(row.fepa)); setEditGritMk('') }
+      else if (newUnit === 'jis') { setEditGrit(String(row.jis)); setEditGritMk('') }
+      else if (newUnit === 'mk') { setEditGrit(''); setEditGritMk(row.gost) }
+    } else {
+      setEditGrit(''); setEditGritMk('')
+    }
+  }
+
   function startEdit() {
     const id = [...selected][0]
     const stone = stones?.find(st => st.id === id)
@@ -385,7 +401,7 @@ function StonesTab({ search }: { search: string }) {
               <button
                 key={u || 'none'}
                 className={`${s.gritUnitBtn} ${editGritUnit === u ? s.gritUnitActive : ''}`}
-                onClick={() => { setEditGritUnit(u); setEditGrit(''); setEditGritMk('') }}
+                onClick={() => switchEditUnit(u)}
               >
                 {u === '' ? 'нет' : u === 'mk' ? 'мк' : u.toUpperCase()}
               </button>
