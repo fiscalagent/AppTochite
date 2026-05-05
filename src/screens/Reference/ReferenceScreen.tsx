@@ -489,13 +489,12 @@ function StonesTab({ search }: { search: string }) {
                   const { mainValue, mainUnit, alts } = getGritDisplay(st, displayUnit)
                   return (
                     <div className={s.gritGroup}>
+                      {alts[0] && <span className={s.gritAlts}>{alts[0]}</span>}
                       <span className={s.gritBadge}>
                         {mainValue}
                         {mainUnit && <span className={s.gritUnitLabel}>{mainUnit}</span>}
                       </span>
-                      {alts.length > 0 && (
-                        <span className={s.gritAlts}>{alts.join(' · ')}</span>
-                      )}
+                      {alts[1] && <span className={s.gritAlts}>{alts[1]}</span>}
                     </div>
                   )
                 })()}
