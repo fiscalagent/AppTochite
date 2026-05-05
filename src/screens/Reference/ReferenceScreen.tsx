@@ -129,7 +129,7 @@ function Drum({ values, selectedIdx, onSelect }: {
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const settling = useRef(false)
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     const el = ref.current
