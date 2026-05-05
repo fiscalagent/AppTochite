@@ -1,3 +1,10 @@
+## [1.25.5](https://github.com/fiscalagent/AppTochite/compare/v1.25.4...v1.25.5) (2026-05-05)
+
+
+### fix
+
+* **таблица гритностей:** добавить строку JIS 320 / FEPA 320 / ГОСТ 40/28 ([](https://github.com/fiscalagent/AppTochite/commit/e123221649cdc776b2824cf76a89c678d2b92675))
+
 ## [1.25.4](https://github.com/fiscalagent/AppTochite/compare/v1.25.3...v1.25.4) (2026-05-05)
 
 
