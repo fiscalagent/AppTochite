@@ -1,3 +1,15 @@
+# [1.25.0](https://github.com/fiscalagent/AppTochite/compare/v1.24.0...v1.25.0) (2026-05-05)
+
+
+### feat
+
+* **справочник камней:** конвертер гритностей — три барабана FEPA/JIS/мк + обновить таблицу соответствий ([](https://github.com/fiscalagent/AppTochite/commit/0abd90b47026512c28ce748af50282ae024a4233))
+
+
+### fix
+
+* **справочник камней:** убрать кнопку «нет» из выбора шкалы гритности ([](https://github.com/fiscalagent/AppTochite/commit/5c4626f15041ae0c0defcf5cb05dca40a790779e))
+
 # [1.24.0](https://github.com/fiscalagent/AppTochite/compare/v1.23.1...v1.24.0) (2026-05-05)
 
 
