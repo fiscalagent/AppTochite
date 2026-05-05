@@ -1,3 +1,11 @@
+# [1.22.0](https://github.com/fiscalagent/AppTochite/compare/v1.21.0...v1.22.0) (2026-05-05)
+
+
+### feat
+
+* селектор шкалы гритности и сортировка в справочнике камней ([](https://github.com/fiscalagent/AppTochite/commit/47da1279cb28e92718d4332bc18ae8d85b6fd3c9))
+* **справочник камней:** конвертация гритности при смене шкалы в форме редактирования ([](https://github.com/fiscalagent/AppTochite/commit/757afd3b9e3adfbc7dcc2669aeecdcfee0ba61a2))
+
 # [1.21.0](https://github.com/fiscalagent/AppTochite/compare/v1.20.0...v1.21.0) (2026-05-05)
 
 
