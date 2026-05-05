@@ -50,95 +50,111 @@ export function jisToGost(jis: number): string | undefined {
 
 export type GritDisplayMode = 'native' | 'fepa' | 'jis' | 'gost'
 
-/**
- * Возвращает главное значение гритности (value + unit раздельно) и два
- * альтернативных обозначения в других стандартах.
- *
- * mode='native' — показывать как записано у камня
- * mode='fepa'/'jis'/'gost' — перевести в нужный стандарт (если есть в таблице)
- */
-export function getGritDisplay(
-  stone: { grit?: number; gritUnit?: string; gritMk?: string },
-  mode: GritDisplayMode
-): { mainValue: string; mainUnit: string; alts: string[] } {
-  const { grit, gritUnit, gritMk } = stone
+type StoneForDisplay = {
+  grit?: number
+  gritUnit?: string
+  gritMk?: string
+  gritFepaOverride?: number
+  gritJisOverride?: number
+  gritMkOverride?: string
+}
 
+/**
+ * Разрешает значение гритности по каждой шкале с приоритетом:
+ * 1) явное поле камня (native или override)
+ * 2) таблица соответствий
+ * 3) undefined
+ */
+function resolveGrits(stone: StoneForDisplay): { fepa?: number; jis?: number; mk?: string } {
+  const { grit, gritUnit, gritMk } = stone
   let row: GritRow | undefined
   if (gritUnit === 'fepa' && grit != null) row = GRIT_TABLE.find(r => r.fepa === grit)
   else if (gritUnit === 'jis' && grit != null) row = GRIT_TABLE.find(r => r.jis === grit)
   else if (gritUnit === 'mk' && gritMk) row = GRIT_TABLE.find(r => r.gost === gritMk)
 
-  // Нативное значение
+  const fepa = gritUnit === 'fepa' ? grit : (stone.gritFepaOverride ?? row?.fepa)
+  const jis  = gritUnit === 'jis'  ? grit : (stone.gritJisOverride  ?? row?.jis)
+  const mk   = gritUnit === 'mk'   ? gritMk : (stone.gritMkOverride ?? row?.gost)
+  return { fepa, jis, mk }
+}
+
+/**
+ * Возвращает главное значение гритности (value + unit раздельно) и
+ * альтернативные обозначения в других стандартах.
+ *
+ * mode='native' — показывать как записано у камня
+ * mode='fepa'/'jis'/'gost' — перевести в нужный стандарт
+ *
+ * При наличии полей gritFepaOverride / gritJisOverride / gritMkOverride они
+ * имеют приоритет над таблицей соответствий.
+ */
+export function getGritDisplay(
+  stone: StoneForDisplay,
+  mode: GritDisplayMode
+): { mainValue: string; mainUnit: string; alts: string[] } {
+  const { grit, gritUnit, gritMk } = stone
+  const { fepa, jis, mk } = resolveGrits(stone)
+
   const nativeValue = gritUnit === 'mk' ? (gritMk ?? '') : (grit != null ? String(grit) : '')
   const nativeUnit =
     gritUnit === 'fepa' ? 'FEPA' :
     gritUnit === 'jis'  ? 'JIS'  :
     gritUnit === 'mk'   ? 'мк'   : ''
 
-  if (!row) {
-    return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
-  }
-
-  const f: [string, string] = [String(row.fepa), 'FEPA']
-  const j: [string, string] = [String(row.jis),  'JIS']
-  const g: [string, string] = [row.gost,          'мк']
-
-  const fmt = ([v, u]: [string, string]) => `${v} ${u}`
+  const fmt = (v: string, u: string) => `${v} ${u}`
+  const f = fepa != null ? fmt(String(fepa), 'FEPA') : null
+  const j = jis  != null ? fmt(String(jis),  'JIS')  : null
+  const g = mk   != null ? fmt(mk,            'мк')   : null
 
   if (mode === 'native') {
-    const alts =
-      gritUnit === 'fepa' ? [fmt(j), fmt(g)] :
-      gritUnit === 'jis'  ? [fmt(f), fmt(g)] :
-                            [fmt(f), fmt(j)]
+    const alts = [
+      gritUnit !== 'fepa' ? f : null,
+      gritUnit !== 'jis'  ? j : null,
+      gritUnit !== 'mk'   ? g : null,
+    ].filter((x): x is string => x !== null)
     return { mainValue: nativeValue, mainUnit: nativeUnit, alts }
   }
 
-  const [mv, mu] = mode === 'fepa' ? f : mode === 'jis' ? j : g
-  const alts =
-    mode === 'fepa' ? [fmt(j), fmt(g)] :
-    mode === 'jis'  ? [fmt(f), fmt(g)] :
-                      [fmt(f), fmt(j)]
-
-  return { mainValue: mv, mainUnit: mu, alts }
+  if (mode === 'fepa') {
+    if (fepa == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
+    return { mainValue: String(fepa), mainUnit: 'FEPA', alts: [j, g].filter((x): x is string => x !== null) }
+  }
+  if (mode === 'jis') {
+    if (jis == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
+    return { mainValue: String(jis), mainUnit: 'JIS', alts: [f, g].filter((x): x is string => x !== null) }
+  }
+  // mode === 'gost'
+  if (mk == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
+  return { mainValue: mk, mainUnit: 'мк', alts: [f, j].filter((x): x is string => x !== null) }
 }
 
 /**
  * Числовое значение для сортировки в выбранном режиме.
  * Меньше = грубее (для МК — средняя точка диапазона).
  * Камни без соответствия в таблице уходят в конец (Infinity).
+ * Учитывает gritFepaOverride / gritJisOverride / gritMkOverride.
  */
 export function getGritSortValue(
-  stone: { grit?: number; gritUnit?: string; gritMk?: string },
+  stone: StoneForDisplay,
   mode: GritDisplayMode
 ): number {
   const { grit, gritUnit, gritMk } = stone
-
-  let row: GritRow | undefined
-  if (gritUnit === 'fepa' && grit != null) row = GRIT_TABLE.find(r => r.fepa === grit)
-  else if (gritUnit === 'jis' && grit != null) row = GRIT_TABLE.find(r => r.jis === grit)
-  else if (gritUnit === 'mk' && gritMk) row = GRIT_TABLE.find(r => r.gost === gritMk)
+  const { fepa, jis, mk } = resolveGrits(stone)
 
   const mkToNum = (s: string) => {
     const [a, b] = s.split('/').map(Number)
     return (a + b) / 2
   }
 
-  if (mode === 'fepa') return row?.fepa ?? (gritUnit === 'fepa' && grit != null ? grit : Infinity)
-  if (mode === 'jis')  return row?.jis  ?? (gritUnit === 'jis'  && grit != null ? grit : Infinity)
-  if (mode === 'gost') {
-    const mk = row?.gost ?? (gritUnit === 'mk' ? gritMk : undefined)
-    return mk ? mkToNum(mk) : Infinity
-  }
+  if (mode === 'fepa') return fepa ?? Infinity
+  if (mode === 'jis')  return jis  ?? Infinity
+  if (mode === 'gost') return mk ? mkToNum(mk) : Infinity
   // native
   if (gritUnit === 'mk') return gritMk ? mkToNum(gritMk) : Infinity
   return grit ?? Infinity
 }
 
 /** Оставить для обратной совместимости с SharpeningForm */
-export function getAltGrits(opts: {
-  grit?: number
-  gritUnit?: string
-  gritMk?: string
-}): string[] {
+export function getAltGrits(opts: StoneForDisplay): string[] {
   return getGritDisplay(opts, 'native').alts
 }

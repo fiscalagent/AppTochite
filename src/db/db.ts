@@ -53,6 +53,12 @@ export interface Stone {
   grit?: number
   gritUnit?: GritUnit
   gritMk?: string
+  /** Явное значение FEPA, если native != 'fepa'. Перекрывает таблицу соответствий. */
+  gritFepaOverride?: number
+  /** Явное значение JIS, если native != 'jis'. Перекрывает таблицу соответствий. */
+  gritJisOverride?: number
+  /** Явное значение МК, если native != 'mk'. Перекрывает таблицу соответствий. */
+  gritMkOverride?: string
   type?: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic'
   category?: string
   description?: string

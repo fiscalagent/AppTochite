@@ -231,6 +231,9 @@ function StonesTab({ search }: { search: string }) {
   const [editGrit, setEditGrit] = useState('')
   const [editGritMk, setEditGritMk] = useState('')
   const [editType, setEditType] = useState<Stone['type'] | ''>('')
+  const [editGritFepaOvr, setEditGritFepaOvr] = useState('')
+  const [editGritJisOvr, setEditGritJisOvr] = useState('')
+  const [editGritMkOvr, setEditGritMkOvr] = useState('')
   const [displayUnit, setDisplayUnit] = useState<GritDisplayMode>('native')
 
   const stones = useLiveQuery(
@@ -291,6 +294,10 @@ function StonesTab({ search }: { search: string }) {
     } else {
       setEditGrit(''); setEditGritMk('')
     }
+    // Сбросить override-поля под новую native-единицу
+    setEditGritFepaOvr(newUnit !== 'fepa' && row ? String(row.fepa) : '')
+    setEditGritJisOvr(newUnit !== 'jis'  && row ? String(row.jis)  : '')
+    setEditGritMkOvr(newUnit !== 'mk'   && row ? row.gost          : '')
   }
 
   function startEdit() {
@@ -303,6 +310,14 @@ function StonesTab({ search }: { search: string }) {
     setEditGrit(stone.grit != null ? String(stone.grit) : '')
     setEditGritMk(stone.gritMk ?? '')
     setEditType((stone.type as Stone['type'] | '') ?? '')
+    // Заполнить override-поля: сначала смотрим явные поля камня, затем таблицу
+    let tableRow: typeof GRIT_TABLE[0] | undefined
+    if (stone.gritUnit === 'fepa' && stone.grit != null) tableRow = GRIT_TABLE.find(r => r.fepa === stone.grit)
+    else if (stone.gritUnit === 'jis' && stone.grit != null) tableRow = GRIT_TABLE.find(r => r.jis === stone.grit)
+    else if (stone.gritUnit === 'mk' && stone.gritMk) tableRow = GRIT_TABLE.find(r => r.gost === stone.gritMk)
+    setEditGritFepaOvr(stone.gritUnit !== 'fepa' ? (stone.gritFepaOverride != null ? String(stone.gritFepaOverride) : (tableRow ? String(tableRow.fepa) : '')) : '')
+    setEditGritJisOvr(stone.gritUnit !== 'jis'   ? (stone.gritJisOverride  != null ? String(stone.gritJisOverride)  : (tableRow ? String(tableRow.jis)  : '')) : '')
+    setEditGritMkOvr(stone.gritUnit !== 'mk'     ? (stone.gritMkOverride   ?? tableRow?.gost ?? '')                                                             : '')
     setSelected(new Set())
   }
 
@@ -318,6 +333,9 @@ function StonesTab({ search }: { search: string }) {
       gritUnit: editGritUnit || undefined,
       gritMk: editGritUnit === 'mk' && editGritMk ? editGritMk : undefined,
       type: editType || undefined,
+      gritFepaOverride: editGritUnit !== 'fepa' && editGritFepaOvr ? Number(editGritFepaOvr) : undefined,
+      gritJisOverride:  editGritUnit !== 'jis'  && editGritJisOvr  ? Number(editGritJisOvr)  : undefined,
+      gritMkOverride:   editGritUnit !== 'mk'   && editGritMkOvr   ? editGritMkOvr           : undefined,
     })
     setEditingId(null)
   }
@@ -435,6 +453,44 @@ function StonesTab({ search }: { search: string }) {
               <option value="ceramic">Керамика</option>
             </select>
           </div>
+          {editGritUnit !== '' && (
+            <>
+              <span className={s.addTitle}>Гритность в других шкалах</span>
+              {editGritUnit !== 'fepa' && (
+                <div className={s.editAltRow}>
+                  <span className={s.editAltLabel}>FEPA</span>
+                  <input
+                    value={editGritFepaOvr}
+                    onChange={e => setEditGritFepaOvr(e.target.value)}
+                    placeholder="авто из таблицы"
+                    type="number"
+                    min={1}
+                  />
+                </div>
+              )}
+              {editGritUnit !== 'jis' && (
+                <div className={s.editAltRow}>
+                  <span className={s.editAltLabel}>JIS</span>
+                  <input
+                    value={editGritJisOvr}
+                    onChange={e => setEditGritJisOvr(e.target.value)}
+                    placeholder="авто из таблицы"
+                    type="number"
+                    min={1}
+                  />
+                </div>
+              )}
+              {editGritUnit !== 'mk' && (
+                <div className={s.editAltRow}>
+                  <span className={s.editAltLabel}>мк</span>
+                  <select className={s.select} value={editGritMkOvr} onChange={e => setEditGritMkOvr(e.target.value)}>
+                    <option value="">авто из таблицы</option>
+                    {MK_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+              )}
+            </>
+          )}
           <div className={s.addRow}>
             <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>Отмена</button>
