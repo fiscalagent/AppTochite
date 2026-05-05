@@ -1,3 +1,10 @@
+## [1.25.6](https://github.com/fiscalagent/AppTochite/compare/v1.25.5...v1.25.6) (2026-05-05)
+
+
+### fix
+
+* **таблица гритностей:** добавить строку JIS 6000 / FEPA 1500 / ГОСТ 2/1 ([](https://github.com/fiscalagent/AppTochite/commit/a3ec539679e13bef5c9989f4f115df06baf459b5))
+
 ## [1.25.5](https://github.com/fiscalagent/AppTochite/compare/v1.25.4...v1.25.5) (2026-05-05)
 
 
