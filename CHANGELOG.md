@@ -1,3 +1,10 @@
+# [1.23.0](https://github.com/fiscalagent/AppTochite/compare/v1.22.0...v1.23.0) (2026-05-05)
+
+
+### feat
+
+* **справочник камней:** ручное переопределение гритности в других шкалах через форму Изменить ([](https://github.com/fiscalagent/AppTochite/commit/476b8e81d027da5b221e5a7cfa1ae87310e8a691))
+
 # [1.22.0](https://github.com/fiscalagent/AppTochite/compare/v1.21.0...v1.22.0) (2026-05-05)
 
 
