@@ -1,3 +1,10 @@
+## [1.26.5](https://github.com/fiscalagent/AppTochite/compare/v1.26.4...v1.26.5) (2026-05-05)
+
+
+### fix
+
+* **таблица гритностей:** исправить строку JIS 600/ГОСТ 20/14 — FEPA 600 → FEPA 400 ([](https://github.com/fiscalagent/AppTochite/commit/014f423a9b4928f42606aa8ebfc4c3e7835b46fe))
+
 ## [1.26.4](https://github.com/fiscalagent/AppTochite/compare/v1.26.3...v1.26.4) (2026-05-05)
 
 
