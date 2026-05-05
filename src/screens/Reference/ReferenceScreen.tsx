@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
-import { getAltGrits } from '../../data/gritTable'
+import { getGritDisplay, getGritSortValue, type GritDisplayMode } from '../../data/gritTable'
 import s from './ReferenceScreen.module.css'
 
 type Tab = 'stones' | 'steels' | 'knives'
@@ -231,13 +231,14 @@ function StonesTab({ search }: { search: string }) {
   const [editGrit, setEditGrit] = useState('')
   const [editGritMk, setEditGritMk] = useState('')
   const [editType, setEditType] = useState<Stone['type'] | ''>('')
+  const [displayUnit, setDisplayUnit] = useState<GritDisplayMode>('native')
 
   const stones = useLiveQuery(
     () => db.stones.toArray().then(arr => arr.sort(compareStonesForSort)),
     []
   )
 
-  const filtered = stones?.filter(st => {
+  const allFiltered = stones?.filter(st => {
     if (search.startsWith('*')) {
       const typeQuery = search.slice(1).toLowerCase().trim()
       if (!typeQuery) return true
@@ -249,6 +250,17 @@ function StonesTab({ search }: { search: string }) {
     const name = `${st.brand} ${st.grit ?? ''} ${st.gritMk ?? ''}`.toLowerCase()
     return name.includes(search.toLowerCase())
   }) ?? []
+
+  // Мои камни идут первыми, отсортированные по выбранной шкале.
+  // Стандартные камни — в подвале списка, в исходном порядке.
+  const filtered = (() => {
+    const custom   = allFiltered.filter(st => st.isCustom)
+    const standard = allFiltered.filter(st => !st.isCustom)
+    const sortedCustom = [...custom].sort((a, b) =>
+      getGritSortValue(a, displayUnit) - getGritSortValue(b, displayUnit)
+    )
+    return [...sortedCustom, ...standard]
+  })()
 
   const filteredSelectedCount = filtered.filter(st => selected.has(st.id!)).length
 
@@ -414,6 +426,23 @@ function StonesTab({ search }: { search: string }) {
         </div>
       )}
 
+      <div className={s.displayUnitRow}>
+        {([
+          ['native', 'Своя'],
+          ['fepa',   'FEPA'],
+          ['jis',    'JIS'],
+          ['gost',   'мк'],
+        ] as [GritDisplayMode, string][]).map(([unit, label]) => (
+          <button
+            key={unit}
+            className={`${s.displayUnitBtn} ${displayUnit === unit ? s.displayUnitActive : ''}`}
+            onClick={() => setDisplayUnit(unit)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className={s.list}>
         {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}
         {filtered.length > 0 && (
@@ -440,20 +469,20 @@ function StonesTab({ search }: { search: string }) {
                 <div className={s.itemMeta}>{st.type ? STONE_TYPE_LABELS[st.type] : ''}</div>
               </div>
               <div className={s.itemRight}>
-                {(st.grit != null || (st.gritUnit === 'mk' && st.gritMk)) && (
-                  <div className={s.gritGroup}>
-                    {st.gritUnit === 'mk' && st.gritMk
-                      ? <span className={s.gritBadge}>{st.gritMk}<span className={s.gritUnitLabel}>мк</span></span>
-                      : <span className={s.gritBadge}>{st.grit}{st.gritUnit && <span className={s.gritUnitLabel}>{st.gritUnit.toUpperCase()}</span>}</span>
-                    }
-                    {(() => {
-                      const alts = getAltGrits({ grit: st.grit, gritUnit: st.gritUnit, gritMk: st.gritMk })
-                      return alts.length > 0
-                        ? <span className={s.gritAlts}>{alts.join(' · ')}</span>
-                        : null
-                    })()}
-                  </div>
-                )}
+                {(st.grit != null || (st.gritUnit === 'mk' && st.gritMk)) && (() => {
+                  const { mainValue, mainUnit, alts } = getGritDisplay(st, displayUnit)
+                  return (
+                    <div className={s.gritGroup}>
+                      <span className={s.gritBadge}>
+                        {mainValue}
+                        {mainUnit && <span className={s.gritUnitLabel}>{mainUnit}</span>}
+                      </span>
+                      {alts.length > 0 && (
+                        <span className={s.gritAlts}>{alts.join(' · ')}</span>
+                      )}
+                    </div>
+                  )
+                })()}
                 {st.isCustom && <span className={s.customBadge}>мой</span>}
               </div>
             </div>

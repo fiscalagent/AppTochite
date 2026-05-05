@@ -48,29 +48,97 @@ export function jisToGost(jis: number): string | undefined {
   return GRIT_TABLE.find(r => r.jis === jis)?.gost
 }
 
+export type GritDisplayMode = 'native' | 'fepa' | 'jis' | 'gost'
+
 /**
- * Возвращает альтернативные обозначения гритности в двух других стандартах.
- * Пример: FEPA 1200 → ['6000 JIS', '5/3 мк']
- * Если соответствия нет — пустой массив.
+ * Возвращает главное значение гритности (value + unit раздельно) и два
+ * альтернативных обозначения в других стандартах.
+ *
+ * mode='native' — показывать как записано у камня
+ * mode='fepa'/'jis'/'gost' — перевести в нужный стандарт (если есть в таблице)
  */
+export function getGritDisplay(
+  stone: { grit?: number; gritUnit?: string; gritMk?: string },
+  mode: GritDisplayMode
+): { mainValue: string; mainUnit: string; alts: string[] } {
+  const { grit, gritUnit, gritMk } = stone
+
+  let row: GritRow | undefined
+  if (gritUnit === 'fepa' && grit != null) row = GRIT_TABLE.find(r => r.fepa === grit)
+  else if (gritUnit === 'jis' && grit != null) row = GRIT_TABLE.find(r => r.jis === grit)
+  else if (gritUnit === 'mk' && gritMk) row = GRIT_TABLE.find(r => r.gost === gritMk)
+
+  // Нативное значение
+  const nativeValue = gritUnit === 'mk' ? (gritMk ?? '') : (grit != null ? String(grit) : '')
+  const nativeUnit =
+    gritUnit === 'fepa' ? 'FEPA' :
+    gritUnit === 'jis'  ? 'JIS'  :
+    gritUnit === 'mk'   ? 'мк'   : ''
+
+  if (!row) {
+    return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
+  }
+
+  const f: [string, string] = [String(row.fepa), 'FEPA']
+  const j: [string, string] = [String(row.jis),  'JIS']
+  const g: [string, string] = [row.gost,          'мк']
+
+  const fmt = ([v, u]: [string, string]) => `${v} ${u}`
+
+  if (mode === 'native') {
+    const alts =
+      gritUnit === 'fepa' ? [fmt(j), fmt(g)] :
+      gritUnit === 'jis'  ? [fmt(f), fmt(g)] :
+                            [fmt(f), fmt(j)]
+    return { mainValue: nativeValue, mainUnit: nativeUnit, alts }
+  }
+
+  const [mv, mu] = mode === 'fepa' ? f : mode === 'jis' ? j : g
+  const alts =
+    mode === 'fepa' ? [fmt(j), fmt(g)] :
+    mode === 'jis'  ? [fmt(f), fmt(g)] :
+                      [fmt(f), fmt(j)]
+
+  return { mainValue: mv, mainUnit: mu, alts }
+}
+
+/**
+ * Числовое значение для сортировки в выбранном режиме.
+ * Меньше = грубее (для МК — средняя точка диапазона).
+ * Камни без соответствия в таблице уходят в конец (Infinity).
+ */
+export function getGritSortValue(
+  stone: { grit?: number; gritUnit?: string; gritMk?: string },
+  mode: GritDisplayMode
+): number {
+  const { grit, gritUnit, gritMk } = stone
+
+  let row: GritRow | undefined
+  if (gritUnit === 'fepa' && grit != null) row = GRIT_TABLE.find(r => r.fepa === grit)
+  else if (gritUnit === 'jis' && grit != null) row = GRIT_TABLE.find(r => r.jis === grit)
+  else if (gritUnit === 'mk' && gritMk) row = GRIT_TABLE.find(r => r.gost === gritMk)
+
+  const mkToNum = (s: string) => {
+    const [a, b] = s.split('/').map(Number)
+    return (a + b) / 2
+  }
+
+  if (mode === 'fepa') return row?.fepa ?? (gritUnit === 'fepa' && grit != null ? grit : Infinity)
+  if (mode === 'jis')  return row?.jis  ?? (gritUnit === 'jis'  && grit != null ? grit : Infinity)
+  if (mode === 'gost') {
+    const mk = row?.gost ?? (gritUnit === 'mk' ? gritMk : undefined)
+    return mk ? mkToNum(mk) : Infinity
+  }
+  // native
+  if (gritUnit === 'mk') return gritMk ? mkToNum(gritMk) : Infinity
+  return grit ?? Infinity
+}
+
+/** Оставить для обратной совместимости с SharpeningForm */
 export function getAltGrits(opts: {
   grit?: number
   gritUnit?: string
   gritMk?: string
 }): string[] {
-  const { grit, gritUnit, gritMk } = opts
-
-  if (gritUnit === 'fepa' && grit != null) {
-    const row = GRIT_TABLE.find(r => r.fepa === grit)
-    return row ? [`${row.jis} JIS`, `${row.gost} мк`] : []
-  }
-  if (gritUnit === 'jis' && grit != null) {
-    const row = GRIT_TABLE.find(r => r.jis === grit)
-    return row ? [`${row.fepa} FEPA`, `${row.gost} мк`] : []
-  }
-  if (gritUnit === 'mk' && gritMk) {
-    const row = GRIT_TABLE.find(r => r.gost === gritMk)
-    return row ? [`${row.fepa} FEPA`, `${row.jis} JIS`] : []
-  }
-  return []
+  return getGritDisplay(opts, 'native').alts
 }

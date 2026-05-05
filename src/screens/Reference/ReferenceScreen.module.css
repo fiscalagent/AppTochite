@@ -249,6 +249,32 @@
   background: var(--accent-dim);
 }
 
+.displayUnitRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-3);
+}
+
+.displayUnitBtn {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-100);
+  background: var(--bg-300);
+  color: var(--text-300);
+  cursor: pointer;
+  text-align: center;
+}
+
+.displayUnitActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
 .customBadge {
   font-size: 11px;
   color: var(--accent);
