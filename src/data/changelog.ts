@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.26.2',
+    date: '2026-05-05',
+    changes: [
+      '**таблица гритностей:** добавить строку JIS 2000 / FEPA 800 / ГОСТ 7/5 ([](https://github.com/fiscalagent/AppTochite/commit/7a935d4bef878f5dc985360d87e9d147fbb3507d))',
+    ],
+  },
+  {
     version: '1.26.1',
     date: '2026-05-05',
     changes: [
