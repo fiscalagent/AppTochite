@@ -1,3 +1,10 @@
+## [1.26.6](https://github.com/fiscalagent/AppTochite/compare/v1.26.5...v1.26.6) (2026-05-05)
+
+
+### fix
+
+* **таблица гритностей:** убрать дублирующуюся строку FEPA 280 / JIS 360 / 40/28 ([](https://github.com/fiscalagent/AppTochite/commit/e36e1def67707a9da31019a512d36dc2b4f4b10b))
+
 ## [1.26.5](https://github.com/fiscalagent/AppTochite/compare/v1.26.4...v1.26.5) (2026-05-05)
 
 

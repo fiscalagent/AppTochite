@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.26.6',
+    date: '2026-05-05',
+    changes: [
+      '**таблица гритностей:** убрать дублирующуюся строку FEPA 280 / JIS 360 / 40/28 ([](https://github.com/fiscalagent/AppTochite/commit/e36e1def67707a9da31019a512d36dc2b4f4b10b))',
+    ],
+  },
+  {
     version: '1.26.5',
     date: '2026-05-05',
     changes: [
