@@ -347,13 +347,13 @@ function StonesTab({ search }: { search: string }) {
           <span className={s.addTitle}>Новый камень</span>
           <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
           <div className={s.gritUnitRow}>
-            {(['', 'fepa', 'jis', 'mk'] as const).map(u => (
+            {(['fepa', 'jis', 'mk'] as const).map(u => (
               <button
-                key={u || 'none'}
+                key={u}
                 className={`${s.gritUnitBtn} ${gritUnit === u ? s.gritUnitActive : ''}`}
                 onClick={() => { setGritUnit(u); setGrit(''); setGritMk('') }}
               >
-                {u === '' ? 'нет' : u === 'mk' ? 'мк' : u.toUpperCase()}
+                {u === 'mk' ? 'мк' : u.toUpperCase()}
               </button>
             ))}
           </div>
@@ -397,13 +397,13 @@ function StonesTab({ search }: { search: string }) {
           <span className={s.addTitle}>Редактировать камень</span>
           <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
           <div className={s.gritUnitRow}>
-            {(['', 'fepa', 'jis', 'mk'] as const).map(u => (
+            {(['fepa', 'jis', 'mk'] as const).map(u => (
               <button
-                key={u || 'none'}
+                key={u}
                 className={`${s.gritUnitBtn} ${editGritUnit === u ? s.gritUnitActive : ''}`}
                 onClick={() => switchEditUnit(u)}
               >
-                {u === '' ? 'нет' : u === 'mk' ? 'мк' : u.toUpperCase()}
+                {u === 'mk' ? 'мк' : u.toUpperCase()}
               </button>
             ))}
           </div>
