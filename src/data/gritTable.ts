@@ -21,6 +21,7 @@ export const GRIT_TABLE: GritRow[] = [
   { fepa: 240,  jis: 280,   gost: '60/40',   microns: 48   },
   { fepa: 280,  jis: 360,   gost: '40/28',   microns: 35   },
   { fepa: 280,  jis: 360,   gost: '40/28',   microns: 35   },
+  { fepa: 320,  jis: 400,   gost: '40/28',   microns: 35   },
   { fepa: 360,  jis: 500,   gost: '28/20',   microns: 25   },
   { fepa: 400,  jis: 700,   gost: '20/14',   microns: 17   },
   { fepa: 600,  jis: 1000,  gost: '14/10',   microns: 11.5 },
