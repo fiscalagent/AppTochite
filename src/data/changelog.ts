@@ -16,28 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.26.6',
     date: '2026-05-05',
     changes: [
-      '**таблица гритностей:** убрать дублирующуюся строку FEPA 280 / JIS 360 / 40/28 ([](https://github.com/fiscalagent/AppTochite/commit/e36e1def67707a9da31019a512d36dc2b4f4b10b))',
-    ],
-  },
-  {
-    version: '1.26.5',
-    date: '2026-05-05',
-    changes: [
-      '**таблица гритностей:** исправить строку JIS 600/ГОСТ 20/14 — FEPA 600 → FEPA 400 ([](https://github.com/fiscalagent/AppTochite/commit/014f423a9b4928f42606aa8ebfc4c3e7835b46fe))',
-    ],
-  },
-  {
-    version: '1.26.4',
-    date: '2026-05-05',
-    changes: [
-      '**таблица гритностей:** добавить строки JIS 600/FEPA 600/ГОСТ 20/14 и JIS 800/FEPA 500/ГОСТ 14/10 ([](https://github.com/fiscalagent/AppTochite/commit/97b00d82a1791ba51224f6f179339c6f9dfd98c9))',
-    ],
-  },
-  {
-    version: '1.26.3',
-    date: '2026-05-05',
-    changes: [
-      '**таблица гритностей:** добавить строку JIS 400 / FEPA 320 / ГОСТ 40/28 ([](https://github.com/fiscalagent/AppTochite/commit/ecd83c59a797dbf21364dea6a683674d120fa90e))',
+      'таблица гритностей дополнена строками JIS 400 / 600 / 800, исправлены ошибки соответствий',
     ],
   },
   {
