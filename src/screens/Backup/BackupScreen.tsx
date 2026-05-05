@@ -108,7 +108,6 @@ export default function BackupScreen() {
       showToast('Данные восстановлены')
       navigate('/')
     } catch (err) {
-      console.error(err)
       showToast('Ошибка при восстановлении')
       setRestoring(false)
     }

@@ -50,10 +50,10 @@ describe('Первый запуск (чистая установка)', () => {
     expect(await db.knives.count()).toBeGreaterThanOrEqual(100)
   })
 
-  it('устанавливает seedVersion = 1 в meta', async () => {
+  it('устанавливает seedVersion = 12 в meta', async () => {
     await seedDatabaseWith(db)
     const meta = await db.meta.get('seedVersion')
-    expect(meta?.value).toBe(1)
+    expect(meta?.value).toBe(12)
   })
 
   it('все seed-камни не кастомные (isCustom: false)', async () => {
@@ -141,10 +141,10 @@ describe('Повторный запуск (идемпотентность)', () 
     expect(await db.knives.count()).toBe(countBefore)
   })
 
-  it('seedVersion остаётся 1 после повторного запуска', async () => {
+  it('seedVersion остаётся 12 после повторного запуска', async () => {
     await seedDatabaseWith(db)
     const meta = await db.meta.get('seedVersion')
-    expect(meta?.value).toBe(1)
+    expect(meta?.value).toBe(12)
   })
 })
 
@@ -215,10 +215,10 @@ describe('Переустановка (удаление всех данных —
     expect(await db.knives.count()).toBe(knivesAfterFirstInstall)
   })
 
-  it('после переустановки seedVersion = 1', async () => {
+  it('после переустановки seedVersion = 12', async () => {
     await seedDatabaseWith(db)
     const meta = await db.meta.get('seedVersion')
-    expect(meta?.value).toBe(1)
+    expect(meta?.value).toBe(12)
   })
 
   it('пользовательские заточки не восстанавливаются после переустановки', async () => {
@@ -263,10 +263,10 @@ describe('Неполное удаление: очищена только meta (�
     expect(stonesAfter).toBeGreaterThan(stonesBefore)
   })
 
-  it('после повторного запуска seedVersion восстанавливается в 1', async () => {
+  it('после повторного запуска seedVersion восстанавливается в 12', async () => {
     await seedDatabaseWith(db)
     const meta = await db.meta.get('seedVersion')
-    expect(meta?.value).toBe(1)
+    expect(meta?.value).toBe(12)
   })
 })
 

@@ -58,6 +58,7 @@ export default function SharpeningForm() {
   const repeat = !isEdit ? (location.state as { repeat?: { clientId: number; knifeBrand: string; steel?: string; hrc?: number; angle?: number; stones?: SharpeningStone[]; price?: number } } | null)?.repeat : undefined
 
   const [step, setStep] = useState(1)
+  const [saving, setSaving] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const [pickerFor, setPickerFor] = useState<'before' | 'after' | null>(null)
 
@@ -145,14 +146,14 @@ export default function SharpeningForm() {
   function addStone(name: string) {
     const trimmed = name.trim()
     if (!trimmed) return
-    if (selectedStones.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) return
+    if (selectedStones.find(st => st.name.toLowerCase() === trimmed.toLowerCase())) return
     setSelectedStones(prev => [...prev, { name: trimmed, order: prev.length + 1 }])
     setStoneInput('')
   }
 
   function removeStone(index: number) {
     setSelectedStones(prev =>
-      prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, order: i + 1 }))
+      prev.filter((_, i) => i !== index).map((st, i) => ({ ...st, order: i + 1 }))
     )
   }
 
@@ -172,7 +173,8 @@ export default function SharpeningForm() {
   }
 
   async function handleSave() {
-    if (!clientId || !knifeBrand.trim()) return
+    if (!clientId || !knifeBrand.trim() || saving) return
+    setSaving(true)
 
     const knifeInRef = knifeSuggestions.some(k => k.toLowerCase() === knifeBrand.trim().toLowerCase())
     if (!knifeInRef) {
@@ -180,7 +182,7 @@ export default function SharpeningForm() {
     }
 
     if (steel.trim()) {
-      const steelInRef = steelSuggestions.some(s => s.toLowerCase() === steel.trim().toLowerCase())
+      const steelInRef = steelSuggestions.some(name => name.toLowerCase() === steel.trim().toLowerCase())
       if (!steelInRef) {
         await db.steels.add({ name: steel.trim(), isCustom: true })
       }
@@ -188,9 +190,9 @@ export default function SharpeningForm() {
 
     if (selectedStones.length) {
       const existingStones = await db.stones.toArray()
-      const existingKeys = new Set(existingStones.map(s => {
-        if (s.gritUnit === 'mk') return `${s.brand.toLowerCase()} mk:${s.gritMk ?? ''}`
-        return `${s.brand.toLowerCase()} ${s.grit ?? 0}`
+      const existingKeys = new Set(existingStones.map(st => {
+        if (st.gritUnit === 'mk') return `${st.brand.toLowerCase()} mk:${st.gritMk ?? ''}`
+        return `${st.brand.toLowerCase()} ${st.grit ?? 0}`
       }))
       for (const stone of selectedStones) {
         const parsed = parseStoneName(stone.name)
@@ -221,14 +223,19 @@ export default function SharpeningForm() {
       photosAfter: photosAfter.length ? photosAfter : undefined,
     }
 
-    if (isEdit) {
-      await db.sharpenings.update(Number(id), data)
-      showToast('Заточка сохранена')
-      navigate(`/sharpenings/${id}`)
-    } else {
-      const newId = await db.sharpenings.add(data)
-      showToast('Заточка создана')
-      navigate(`/sharpenings/${newId}`)
+    try {
+      if (isEdit) {
+        await db.sharpenings.update(Number(id), data)
+        showToast('Заточка сохранена')
+        navigate(`/sharpenings/${id}`)
+      } else {
+        const newId = await db.sharpenings.add(data)
+        showToast('Заточка создана')
+        navigate(`/sharpenings/${newId}`)
+      }
+    } catch {
+      showToast('Ошибка при сохранении')
+      setSaving(false)
     }
   }
 
@@ -587,8 +594,8 @@ export default function SharpeningForm() {
           )}
 
           <div className={s.actions}>
-            <button className={s.primaryBtn} onClick={handleSave}>
-              {isEdit ? 'Сохранить' : 'Сохранить заточку'}
+            <button className={s.primaryBtn} onClick={handleSave} disabled={saving}>
+              {saving ? 'Сохранение…' : (isEdit ? 'Сохранить' : 'Сохранить заточку')}
             </button>
             <button className={s.secondaryBtn} onClick={() => setStep(1)}>
               ← Назад к приёмке

@@ -99,7 +99,7 @@ src/
 - `sharpenings.stones` — embedded JSON (`SharpeningStone[]`), **не отдельная таблица**. При реализации фильтрации по камням потребуется fullscan — учитывать при проектировании
 - `Sharpening.status` — только два значения: `'accepted' | 'done'`; статуса `inwork` нет
 - `Sharpening` — `doneAt` обязателен только при `status === 'done'`
-- `Stone.type` — 7 значений: `'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir'`
+- `Stone.type` — 8 значений: `'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic'`
 - `meta` — служебная таблица (ключ-значение), сейчас хранит `seedVersion` для контроля seed-миграций
 - Фото хранятся как `base64[]` в полях `photosBefore` / `photosAfter`
 
