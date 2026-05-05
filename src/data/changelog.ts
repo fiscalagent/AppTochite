@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.25.2',
+    date: '2026-05-05',
+    changes: [
+      '**конвертер:** заменить ReturnType<setTimeout> на number для совместимости с CI ([](https://github.com/fiscalagent/AppTochite/commit/353b5dc91c5d6ee150ef77d02a7558c8432fdc0b))',
+    ],
+  },
+  {
     version: '1.25.1',
     date: '2026-05-05',
     changes: [

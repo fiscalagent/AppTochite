@@ -1,3 +1,10 @@
+## [1.25.2](https://github.com/fiscalagent/AppTochite/compare/v1.25.1...v1.25.2) (2026-05-05)
+
+
+### fix
+
+* **конвертер:** заменить ReturnType<setTimeout> на number для совместимости с CI ([](https://github.com/fiscalagent/AppTochite/commit/353b5dc91c5d6ee150ef77d02a7558c8432fdc0b))
+
 ## [1.25.1](https://github.com/fiscalagent/AppTochite/compare/v1.25.0...v1.25.1) (2026-05-05)
 
 
