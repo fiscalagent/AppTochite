@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react'
+import { useState, useRef, useEffect, Fragment } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
@@ -100,6 +100,111 @@ function SelectionBar({
           <button className={s.deleteSelBtn} onClick={onDelete}>Да</button>
         </>
       )}
+    </div>
+  )
+}
+
+// ─── Grit Converter ──────────────────────────────────────────────────────────
+
+const IconConverter = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="4" y1="6" x2="20" y2="6"/>
+    <line x1="4" y1="12" x2="20" y2="12"/>
+    <line x1="4" y1="18" x2="20" y2="18"/>
+    <circle cx="8"  cy="6"  r="2.5" fill="var(--bg-300)" stroke="currentColor"/>
+    <circle cx="15" cy="12" r="2.5" fill="var(--bg-300)" stroke="currentColor"/>
+    <circle cx="11" cy="18" r="2.5" fill="var(--bg-300)" stroke="currentColor"/>
+  </svg>
+)
+
+const ITEM_H = 44
+const FEPA_VALUES = [...new Set(GRIT_TABLE.map(r => String(r.fepa)))]
+const JIS_VALUES  = [...new Set(GRIT_TABLE.map(r => String(r.jis)))]
+const GOST_VALUES = [...new Set(GRIT_TABLE.map(r => r.gost))]
+
+function Drum({ values, selectedIdx, onSelect }: {
+  values: string[]
+  selectedIdx: number
+  onSelect: (idx: number) => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const settling = useRef(false)
+  const timer = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const target = selectedIdx * ITEM_H
+    if (Math.abs(el.scrollTop - target) < 2) return
+    settling.current = true
+    el.scrollTo({ top: target, behavior: 'smooth' })
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => { settling.current = false }, 600)
+  }, [selectedIdx])
+
+  function handleScroll() {
+    if (settling.current) return
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => {
+      const el = ref.current
+      if (!el) return
+      const idx = Math.round(el.scrollTop / ITEM_H)
+      onSelect(Math.max(0, Math.min(values.length - 1, idx)))
+    }, 120)
+  }
+
+  return (
+    <div className={s.drumWrap}>
+      <div className={s.drumHighlight} />
+      <div ref={ref} className={s.drum} onScroll={handleScroll}>
+        <div style={{ height: 2 * ITEM_H }} />
+        {values.map((v, i) => (
+          <div key={v} className={`${s.drumItem} ${i === selectedIdx ? s.drumItemSelected : ''}`}>
+            {v}
+          </div>
+        ))}
+        <div style={{ height: 2 * ITEM_H }} />
+      </div>
+      <div className={s.drumFadeTop} />
+      <div className={s.drumFadeBot} />
+    </div>
+  )
+}
+
+function GritConverter() {
+  const [current, setCurrent] = useState(GRIT_TABLE[0])
+
+  const fepaIdx = FEPA_VALUES.indexOf(String(current.fepa))
+  const jisIdx  = JIS_VALUES.indexOf(String(current.jis))
+  const gostIdx = GOST_VALUES.indexOf(current.gost)
+
+  function onFepa(idx: number) {
+    const row = GRIT_TABLE.find(r => r.fepa === Number(FEPA_VALUES[idx]))
+    if (row) setCurrent(row)
+  }
+  function onJis(idx: number) {
+    const row = GRIT_TABLE.find(r => r.jis === Number(JIS_VALUES[idx]))
+    if (row) setCurrent(row)
+  }
+  function onGost(idx: number) {
+    const row = GRIT_TABLE.find(r => r.gost === GOST_VALUES[idx])
+    if (row) setCurrent(row)
+  }
+
+  return (
+    <div className={s.converterBody}>
+      <div className={s.drumCol}>
+        <span className={s.drumLabel}>FEPA</span>
+        <Drum values={FEPA_VALUES} selectedIdx={fepaIdx} onSelect={onFepa} />
+      </div>
+      <div className={s.drumCol}>
+        <span className={s.drumLabel}>JIS</span>
+        <Drum values={JIS_VALUES} selectedIdx={jisIdx} onSelect={onJis} />
+      </div>
+      <div className={s.drumCol}>
+        <span className={s.drumLabel}>мк</span>
+        <Drum values={GOST_VALUES} selectedIdx={gostIdx} onSelect={onGost} />
+      </div>
     </div>
   )
 }
@@ -744,6 +849,7 @@ export default function ReferenceScreen() {
   const activeTab: Tab = (tab as Tab) || 'stones'
   const [search, setSearch] = useState('')
   const [showHeatmap, setShowHeatmap] = useState(false)
+  const [showConverter, setShowConverter] = useState(false)
 
   function goTab(t: Tab) {
     setSearch('')
@@ -755,11 +861,28 @@ export default function ReferenceScreen() {
       <div className={s.header}>
         <span className={s.title}>СПРАВОЧНИК</span>
         {activeTab === 'stones' && (
-          <button className={s.iconBtn} onClick={() => setShowHeatmap(true)}>
-            <IconHeatmap />
-          </button>
+          <>
+            <button className={s.iconBtn} onClick={() => setShowConverter(true)}>
+              <IconConverter />
+            </button>
+            <button className={s.iconBtn} onClick={() => setShowHeatmap(true)}>
+              <IconHeatmap />
+            </button>
+          </>
         )}
       </div>
+
+      {showConverter && (
+        <div className={s.overlay} onClick={() => setShowConverter(false)}>
+          <div className={s.sheet} onClick={e => e.stopPropagation()}>
+            <div className={s.sheetHeader}>
+              <span className={s.sheetTitle}>Конвертер гритности</span>
+              <button className={s.sheetClose} onClick={() => setShowConverter(false)}>✕</button>
+            </div>
+            <GritConverter />
+          </div>
+        </div>
+      )}
 
       {showHeatmap && (
         <div className={s.overlay} onClick={() => setShowHeatmap(false)}>
