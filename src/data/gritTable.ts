@@ -54,17 +54,8 @@ type StoneForDisplay = {
   grit?: number
   gritUnit?: string
   gritMk?: string
-  gritFepaOverride?: number
-  gritJisOverride?: number
-  gritMkOverride?: string
 }
 
-/**
- * Разрешает значение гритности по каждой шкале с приоритетом:
- * 1) явное поле камня (native или override)
- * 2) таблица соответствий
- * 3) undefined
- */
 function resolveGrits(stone: StoneForDisplay): { fepa?: number; jis?: number; mk?: string } {
   const { grit, gritUnit, gritMk } = stone
   let row: GritRow | undefined
@@ -72,9 +63,9 @@ function resolveGrits(stone: StoneForDisplay): { fepa?: number; jis?: number; mk
   else if (gritUnit === 'jis' && grit != null) row = GRIT_TABLE.find(r => r.jis === grit)
   else if (gritUnit === 'mk' && gritMk) row = GRIT_TABLE.find(r => r.gost === gritMk)
 
-  const fepa = gritUnit === 'fepa' ? grit : (stone.gritFepaOverride ?? row?.fepa)
-  const jis  = gritUnit === 'jis'  ? grit : (stone.gritJisOverride  ?? row?.jis)
-  const mk   = gritUnit === 'mk'   ? gritMk : (stone.gritMkOverride ?? row?.gost)
+  const fepa = gritUnit === 'fepa' ? grit : row?.fepa
+  const jis  = gritUnit === 'jis'  ? grit : row?.jis
+  const mk   = gritUnit === 'mk'   ? gritMk : row?.gost
   return { fepa, jis, mk }
 }
 

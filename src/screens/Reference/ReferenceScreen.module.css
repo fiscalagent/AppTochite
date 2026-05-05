@@ -515,26 +515,6 @@
   letter-spacing: -0.2px;
 }
 
-.editAltRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.editAltRow input,
-.editAltRow select {
-  flex: 1;
-}
-
-.editAltLabel {
-  width: 36px;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: var(--font-display);
-  color: var(--text-300);
-  flex-shrink: 0;
-}
-
 .select {
   background: var(--bg-300);
   border: 1px solid var(--border-100);
