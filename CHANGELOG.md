@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/fiscalagent/AppTochite/compare/v1.25.6...v1.26.0) (2026-05-05)
+
+
+### feat
+
+* **конвертер:** добавить четвёртое колёсико µm (микроны D50 по New JIS R 6001) ([](https://github.com/fiscalagent/AppTochite/commit/1acb4455199da3d6b812c047f2fd9f37e4c3e694))
+
 ## [1.25.6](https://github.com/fiscalagent/AppTochite/compare/v1.25.5...v1.25.6) (2026-05-05)
 
 
