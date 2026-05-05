@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.25.3',
+    date: '2026-05-05',
+    changes: [
+      '**конвертер гритностей:** крупные белые заголовки шкал, мк → ГОСТ (мк) ([](https://github.com/fiscalagent/AppTochite/commit/72b511925d0e76ac2dcaccb0a2f769f00fb530be))',
+    ],
+  },
+  {
     version: '1.25.2',
     date: '2026-05-05',
     changes: [

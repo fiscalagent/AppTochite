@@ -1,3 +1,10 @@
+## [1.25.3](https://github.com/fiscalagent/AppTochite/compare/v1.25.2...v1.25.3) (2026-05-05)
+
+
+### fix
+
+* **конвертер гритностей:** крупные белые заголовки шкал, мк → ГОСТ (мк) ([](https://github.com/fiscalagent/AppTochite/commit/72b511925d0e76ac2dcaccb0a2f769f00fb530be))
+
 ## [1.25.2](https://github.com/fiscalagent/AppTochite/compare/v1.25.1...v1.25.2) (2026-05-05)
 
 
