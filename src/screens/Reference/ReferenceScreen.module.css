@@ -196,10 +196,23 @@
   flex-shrink: 0;
 }
 
+.gritGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
 .gritBadge {
   font-family: var(--font-display);
   font-size: 20px;
   color: var(--text-200);
+  white-space: nowrap;
+}
+
+.gritAlts {
+  font-size: 11px;
+  color: var(--text-400);
   white-space: nowrap;
 }
 

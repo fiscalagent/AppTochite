@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus, type SharpeningStone, type Stone, type GritUnit, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
+import { getAltGrits } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
@@ -400,16 +401,25 @@ export default function SharpeningForm() {
             <label className={s.label}>Камни</label>
             {selectedStones.length > 0 && (
               <div className={s.stoneTags}>
-                {selectedStones.map((ss, i) => (
-                  <div key={i} className={s.stoneTag}>
-                    <span className={s.stoneOrder}>{ss.order}.</span>
-                    <span>{ss.name}</span>
-                    {i === selectedStones.length - 1 && (
-                      <span className={s.stoneFinBadge}>FIN</span>
-                    )}
-                    <button className={s.stoneRemove} onClick={() => removeStone(i)}>×</button>
-                  </div>
-                ))}
+                {selectedStones.map((ss, i) => {
+                  const parsed = parseStoneName(ss.name)
+                  const alts = getAltGrits({ grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk })
+                  return (
+                    <div key={i} className={s.stoneTag}>
+                      <span className={s.stoneOrder}>{ss.order}.</span>
+                      <div className={s.stoneNameGroup}>
+                        <span>{ss.name}</span>
+                        {alts.length > 0 && (
+                          <span className={s.stoneGritAlt}>{alts.join(' · ')}</span>
+                        )}
+                      </div>
+                      {i === selectedStones.length - 1 && (
+                        <span className={s.stoneFinBadge}>FIN</span>
+                      )}
+                      <button className={s.stoneRemove} onClick={() => removeStone(i)}>×</button>
+                    </div>
+                  )
+                })}
               </div>
             )}
             <div className={s.stoneInputRow}>

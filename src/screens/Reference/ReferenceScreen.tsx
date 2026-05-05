@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
+import { getAltGrits } from '../../data/gritTable'
 import s from './ReferenceScreen.module.css'
 
 type Tab = 'stones' | 'steels' | 'knives'
@@ -439,12 +440,20 @@ function StonesTab({ search }: { search: string }) {
                 <div className={s.itemMeta}>{st.type ? STONE_TYPE_LABELS[st.type] : ''}</div>
               </div>
               <div className={s.itemRight}>
-                {st.gritUnit === 'mk' && st.gritMk
-                  ? <span className={s.gritBadge}>{st.gritMk}<span className={s.gritUnitLabel}>мк</span></span>
-                  : st.grit != null
-                    ? <span className={s.gritBadge}>{st.grit}{st.gritUnit && <span className={s.gritUnitLabel}>{st.gritUnit.toUpperCase()}</span>}</span>
-                    : null
-                }
+                {(st.grit != null || (st.gritUnit === 'mk' && st.gritMk)) && (
+                  <div className={s.gritGroup}>
+                    {st.gritUnit === 'mk' && st.gritMk
+                      ? <span className={s.gritBadge}>{st.gritMk}<span className={s.gritUnitLabel}>мк</span></span>
+                      : <span className={s.gritBadge}>{st.grit}{st.gritUnit && <span className={s.gritUnitLabel}>{st.gritUnit.toUpperCase()}</span>}</span>
+                    }
+                    {(() => {
+                      const alts = getAltGrits({ grit: st.grit, gritUnit: st.gritUnit, gritMk: st.gritMk })
+                      return alts.length > 0
+                        ? <span className={s.gritAlts}>{alts.join(' · ')}</span>
+                        : null
+                    })()}
+                  </div>
+                )}
                 {st.isCustom && <span className={s.customBadge}>мой</span>}
               </div>
             </div>
