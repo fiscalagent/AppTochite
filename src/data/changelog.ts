@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.25.1',
+    date: '2026-05-05',
+    changes: [
+      '**конвертер:** исправить ошибку типа useRef<setTimeout> в Drum ([](https://github.com/fiscalagent/AppTochite/commit/cbfad104da29d7bf0397c9f681ce556829c722b0))',
+      '**справочник камней:** конвертер гритностей — три барабана FEPA/JIS/мк + обновить таблицу соответствий ([](https://github.com/fiscalagent/AppTochite/commit/0abd90b47026512c28ce748af50282ae024a4233))',
+      '**справочник камней:** убрать кнопку «нет» из выбора шкалы гритности ([](https://github.com/fiscalagent/AppTochite/commit/5c4626f15041ae0c0defcf5cb05dca40a790779e))',
+      '**справочник камней:** показывать альтернативные гритности выше и ниже основной в списке камней ([](https://github.com/fiscalagent/AppTochite/commit/8214c8a2b6b8c07c62aa1bbd19d56582f57ad464))',
+    ],
+  },
+  {
     version: '1.25.0',
     date: '2026-05-05',
     changes: [

@@ -1,3 +1,10 @@
+## [1.25.1](https://github.com/fiscalagent/AppTochite/compare/v1.25.0...v1.25.1) (2026-05-05)
+
+
+### fix
+
+* **конвертер:** исправить ошибку типа useRef<setTimeout> в Drum ([](https://github.com/fiscalagent/AppTochite/commit/cbfad104da29d7bf0397c9f681ce556829c722b0))
+
 # [1.25.0](https://github.com/fiscalagent/AppTochite/compare/v1.24.0...v1.25.0) (2026-05-05)
 
 
