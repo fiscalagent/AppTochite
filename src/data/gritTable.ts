@@ -4,31 +4,33 @@
 export interface GritRow {
   fepa: number
   jis: number
-  gost: string  // формат МК_VALUES: 'X/Y'
+  gost: string    // формат МК_VALUES: 'X/Y'
+  microns: number // D50 среднее, New JIS R 6001 (источник: Naniwa / imcclains.com)
 }
 
 export const GRIT_TABLE: GritRow[] = [
-  { fepa: 60,   jis: 60,    gost: '315/250' },
-  { fepa: 70,   jis: 70,    gost: '250/200' },
-  { fepa: 80,   jis: 80,    gost: '200/160' },
-  { fepa: 100,  jis: 100,   gost: '160/125' },
-  { fepa: 120,  jis: 120,   gost: '125/100' },
-  { fepa: 150,  jis: 150,   gost: '100/80'  },
-  { fepa: 220,  jis: 220,   gost: '80/63'   },
-  { fepa: 230,  jis: 240,   gost: '63/50'   },
-  { fepa: 240,  jis: 280,   gost: '50/40'   },
-  { fepa: 240,  jis: 280,   gost: '60/40'   },
-  { fepa: 280,  jis: 360,   gost: '40/28'   },
-  { fepa: 360,  jis: 500,   gost: '28/20'   },
-  { fepa: 400,  jis: 700,   gost: '20/14'   },
-  { fepa: 600,  jis: 1000,  gost: '14/10'   },
-  { fepa: 600,  jis: 1200,  gost: '10/7'    },
-  { fepa: 800,  jis: 1500,  gost: '10/7'    },
-  { fepa: 1000, jis: 2500,  gost: '7/5'     },
-  { fepa: 1000, jis: 3000,  gost: '5/3'     },
-  { fepa: 1200, jis: 4000,  gost: '3/2'     },
-  { fepa: 2000, jis: 8000,  gost: '2/1'     },
-  { fepa: 3000, jis: 10000, gost: '1/0'     },
+  { fepa: 60,   jis: 60,    gost: '315/250', microns: 250  },
+  { fepa: 70,   jis: 70,    gost: '250/200', microns: 210  },
+  { fepa: 80,   jis: 80,    gost: '200/160', microns: 165  },
+  { fepa: 100,  jis: 100,   gost: '160/125', microns: 122  },
+  { fepa: 120,  jis: 120,   gost: '125/100', microns: 102  },
+  { fepa: 150,  jis: 150,   gost: '100/80',  microns: 89   },
+  { fepa: 220,  jis: 220,   gost: '80/63',   microns: 63   },
+  { fepa: 230,  jis: 240,   gost: '63/50',   microns: 57   },
+  { fepa: 240,  jis: 280,   gost: '50/40',   microns: 48   },
+  { fepa: 240,  jis: 280,   gost: '60/40',   microns: 48   },
+  { fepa: 320,  jis: 320,   gost: '40/28',   microns: 35   },
+  { fepa: 280,  jis: 360,   gost: '40/28',   microns: 35   },
+  { fepa: 360,  jis: 500,   gost: '28/20',   microns: 25   },
+  { fepa: 400,  jis: 700,   gost: '20/14',   microns: 17   },
+  { fepa: 600,  jis: 1000,  gost: '14/10',   microns: 11.5 },
+  { fepa: 600,  jis: 1200,  gost: '10/7',    microns: 9.5  },
+  { fepa: 800,  jis: 1500,  gost: '10/7',    microns: 8    },
+  { fepa: 1000, jis: 2500,  gost: '7/5',     microns: 5.5  },
+  { fepa: 1000, jis: 3000,  gost: '5/3',     microns: 4    },
+  { fepa: 1200, jis: 4000,  gost: '3/2',     microns: 3    },
+  { fepa: 2000, jis: 8000,  gost: '2/1',     microns: 1.2  },
+  { fepa: 3000, jis: 10000, gost: '1/0',     microns: 1    },
 ]
 
 /** FEPA → JIS. Возвращает undefined если нет точного соответствия. */
