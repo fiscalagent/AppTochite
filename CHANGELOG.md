@@ -1,3 +1,10 @@
+## [1.23.1](https://github.com/fiscalagent/AppTochite/compare/v1.23.0...v1.23.1) (2026-05-05)
+
+
+### fix
+
+* накопленные правки по ревью кода ([](https://github.com/fiscalagent/AppTochite/commit/1553334c8f81e6adfea30a26615695450111e929))
+
 # [1.23.0](https://github.com/fiscalagent/AppTochite/compare/v1.22.0...v1.23.0) (2026-05-05)
 
 

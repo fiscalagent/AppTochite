@@ -6,6 +6,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.23.1',
+    date: '2026-05-05',
+    changes: [
+      'накопленные правки по ревью кода ([](https://github.com/fiscalagent/AppTochite/commit/1553334c8f81e6adfea30a26615695450111e929))',
+      '**справочник камней:** ручное переопределение гритности в других шкалах через форму Изменить ([](https://github.com/fiscalagent/AppTochite/commit/476b8e81d027da5b221e5a7cfa1ae87310e8a691))',
+      'селектор шкалы гритности и сортировка в справочнике камней ([](https://github.com/fiscalagent/AppTochite/commit/47da1279cb28e92718d4332bc18ae8d85b6fd3c9))',
+      '**справочник камней:** конвертация гритности при смене шкалы в форме редактирования ([](https://github.com/fiscalagent/AppTochite/commit/757afd3b9e3adfbc7dcc2669aeecdcfee0ba61a2))',
+      'конвертер гритности FEPA/JIS/ГОСТ в справочнике и форме заточки ([](https://github.com/fiscalagent/AppTochite/commit/5ca6258f6f2ef9b8f45260a64eee653f4bf9b42d))',
+      '**sharpening:** динамический placeholder ножа из истории клиента ([](https://github.com/fiscalagent/AppTochite/commit/3f70237349a404aff815ffda61cde5d44f6af9c0))',
+      'редактирование камня в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/82c18a21f915efb515fedd29d61f33bda6371d87))',
+      '**sharpening:** подсказки ножей из истории клиента по частоте ([](https://github.com/fiscalagent/AppTochite/commit/25fb9ac2a7f8ec38122f4cd6860fad05acc21073))',
+      '**reference:** поиск камней по типу абразива через *алмаз ([](https://github.com/fiscalagent/AppTochite/commit/8a8f80f18ff3bb09e6f3e6ff074f4b86beb0aec0))',
+    ],
+  },
+  {
     version: '1.23.0',
     date: '2026-05-05',
     changes: [
