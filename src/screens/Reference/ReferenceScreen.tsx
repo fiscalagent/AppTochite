@@ -118,9 +118,10 @@ const IconConverter = () => (
 )
 
 const ITEM_H = 44
-const FEPA_VALUES = [...new Set(GRIT_TABLE.map(r => String(r.fepa)))]
-const JIS_VALUES  = [...new Set(GRIT_TABLE.map(r => String(r.jis)))]
-const GOST_VALUES = [...new Set(GRIT_TABLE.map(r => r.gost))]
+const FEPA_VALUES   = [...new Set(GRIT_TABLE.map(r => String(r.fepa)))]
+const JIS_VALUES    = [...new Set(GRIT_TABLE.map(r => String(r.jis)))]
+const GOST_VALUES   = [...new Set(GRIT_TABLE.map(r => r.gost))]
+const MICRON_VALUES = [...new Set(GRIT_TABLE.map(r => String(r.microns)))]
 
 function Drum({ values, selectedIdx, onSelect }: {
   values: string[]
@@ -174,9 +175,10 @@ function Drum({ values, selectedIdx, onSelect }: {
 function GritConverter() {
   const [current, setCurrent] = useState(GRIT_TABLE[0])
 
-  const fepaIdx = FEPA_VALUES.indexOf(String(current.fepa))
-  const jisIdx  = JIS_VALUES.indexOf(String(current.jis))
-  const gostIdx = GOST_VALUES.indexOf(current.gost)
+  const fepaIdx   = FEPA_VALUES.indexOf(String(current.fepa))
+  const jisIdx    = JIS_VALUES.indexOf(String(current.jis))
+  const gostIdx   = GOST_VALUES.indexOf(current.gost)
+  const micronIdx = MICRON_VALUES.indexOf(String(current.microns))
 
   function onFepa(idx: number) {
     const row = GRIT_TABLE.find(r => r.fepa === Number(FEPA_VALUES[idx]))
@@ -190,9 +192,17 @@ function GritConverter() {
     const row = GRIT_TABLE.find(r => r.gost === GOST_VALUES[idx])
     if (row) setCurrent(row)
   }
+  function onMicron(idx: number) {
+    const row = GRIT_TABLE.find(r => String(r.microns) === MICRON_VALUES[idx])
+    if (row) setCurrent(row)
+  }
 
   return (
     <div className={s.converterBody}>
+      <div className={s.drumCol}>
+        <span className={s.drumLabel}>µm</span>
+        <Drum values={MICRON_VALUES} selectedIdx={micronIdx} onSelect={onMicron} />
+      </div>
       <div className={s.drumCol}>
         <span className={s.drumLabel}>FEPA</span>
         <Drum values={FEPA_VALUES} selectedIdx={fepaIdx} onSelect={onFepa} />
@@ -202,7 +212,7 @@ function GritConverter() {
         <Drum values={JIS_VALUES} selectedIdx={jisIdx} onSelect={onJis} />
       </div>
       <div className={s.drumCol}>
-        <span className={s.drumLabel}>ГОСТ (мк)</span>
+        <span className={s.drumLabel}>ГОСТ</span>
         <Drum values={GOST_VALUES} selectedIdx={gostIdx} onSelect={onGost} />
       </div>
     </div>
