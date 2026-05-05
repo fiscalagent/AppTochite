@@ -1,3 +1,10 @@
+# [1.24.0](https://github.com/fiscalagent/AppTochite/compare/v1.23.1...v1.24.0) (2026-05-05)
+
+
+### feat
+
+* **справочник камней:** показывать альтернативные гритности выше и ниже основной в списке камней ([](https://github.com/fiscalagent/AppTochite/commit/8214c8a2b6b8c07c62aa1bbd19d56582f57ad464))
+
 ## [1.23.1](https://github.com/fiscalagent/AppTochite/compare/v1.23.0...v1.23.1) (2026-05-05)
 
 
