@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.26.1',
+    date: '2026-05-05',
+    changes: [
+      '**таблица гритностей:** исправить строку 40/28 — JIS 320/FEPA 320 → JIS 360/FEPA 280 ([](https://github.com/fiscalagent/AppTochite/commit/54b53c8368f05beb579957e6f44bd5def668b220))',
+      '**конвертер:** добавить четвёртое колёсико µm (микроны D50 по New JIS R 6001) ([](https://github.com/fiscalagent/AppTochite/commit/1acb4455199da3d6b812c047f2fd9f37e4c3e694))',
+    ],
+  },
+  {
     version: '1.26.0',
     date: '2026-05-05',
     changes: [
