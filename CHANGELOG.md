@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/fiscalagent/AppTochite/compare/v1.20.0...v1.21.0) (2026-05-05)
+
+
+### feat
+
+* конвертер гритности FEPA/JIS/ГОСТ в справочнике и форме заточки ([](https://github.com/fiscalagent/AppTochite/commit/5ca6258f6f2ef9b8f45260a64eee653f4bf9b42d))
+
 # [1.20.0](https://github.com/fiscalagent/AppTochite/compare/v1.19.0...v1.20.0) (2026-05-03)
 
 
