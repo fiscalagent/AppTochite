@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/fiscalagent/AppTochite/compare/v1.26.10...v1.27.0) (2026-05-06)
+
+
+### feat
+
+* **брендинг:** добавить двуцветную эмблему AppTochite на 4 основных экрана ([](https://github.com/fiscalagent/AppTochite/commit/b3548363d4a3a6f975f034c275e78b4d1333c7ea))
+
 ## [1.26.10](https://github.com/fiscalagent/AppTochite/compare/v1.26.9...v1.26.10) (2026-05-06)
 
 
