@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.26.9',
+    date: '2026-05-06',
+    changes: [
+      '**конвертер:** метки барабанов — Golos Text вместо Bebas Neue для корректного рендера кириллицы ([](https://github.com/fiscalagent/AppTochite/commit/15370f7937692358308d7f2c62d6e1f9d0e7cec8))',
+    ],
+  },
+  {
     version: '1.26.8',
     date: '2026-05-06',
     changes: [
