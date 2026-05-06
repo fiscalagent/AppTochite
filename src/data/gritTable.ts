@@ -1,41 +1,46 @@
 // Соответствие гритностей по стандартам FEPA-F, JIS, ГОСТ 9206
-// Источник: https://tsprof.ru/table.html
 
 export interface GritRow {
   fepa: number
   jis: number
   gost: string    // формат МК_VALUES: 'X/Y'
-  microns: number // D50 среднее, New JIS R 6001 (источник: Naniwa / imcclains.com)
+  microns: number // средний размер зерна (мкм)
 }
 
 export const GRIT_TABLE: GritRow[] = [
-  { fepa: 60,   jis: 60,    gost: '315/250', microns: 250  },
-  { fepa: 70,   jis: 70,    gost: '250/200', microns: 210  },
-  { fepa: 80,   jis: 80,    gost: '200/160', microns: 165  },
-  { fepa: 100,  jis: 100,   gost: '160/125', microns: 122  },
-  { fepa: 120,  jis: 120,   gost: '125/100', microns: 102  },
-  { fepa: 150,  jis: 150,   gost: '100/80',  microns: 89   },
-  { fepa: 220,  jis: 220,   gost: '80/63',   microns: 63   },
-  { fepa: 230,  jis: 240,   gost: '63/50',   microns: 57   },
-  { fepa: 240,  jis: 280,   gost: '50/40',   microns: 48   },
-  { fepa: 240,  jis: 280,   gost: '60/40',   microns: 48   },
-  { fepa: 280,  jis: 320,   gost: '50/40',   microns: 48   },
-  { fepa: 280,  jis: 360,   gost: '40/28',   microns: 35   },
-  { fepa: 320,  jis: 400,   gost: '40/28',   microns: 35   },
-  { fepa: 360,  jis: 500,   gost: '28/20',   microns: 25   },
-  { fepa: 400,  jis: 600,   gost: '20/14',   microns: 17   },
-  { fepa: 400,  jis: 700,   gost: '20/14',   microns: 17   },
-  { fepa: 500,  jis: 800,   gost: '14/10',   microns: 11.5 },
-  { fepa: 600,  jis: 1000,  gost: '14/10',   microns: 11.5 },
-  { fepa: 600,  jis: 1200,  gost: '10/7',    microns: 9.5  },
-  { fepa: 800,  jis: 1500,  gost: '10/7',    microns: 8    },
-  { fepa: 800,  jis: 2000,  gost: '7/5',     microns: 5.5  },
-  { fepa: 1000, jis: 2500,  gost: '7/5',     microns: 5.5  },
-  { fepa: 1000, jis: 3000,  gost: '5/3',     microns: 4    },
-  { fepa: 1200, jis: 4000,  gost: '3/2',     microns: 3    },
-  { fepa: 1500, jis: 6000,  gost: '2/1',     microns: 1.2  },
-  { fepa: 2000, jis: 8000,  gost: '2/1',     microns: 1.2  },
-  { fepa: 3000, jis: 10000, gost: '1/0',     microns: 1    },
+  { microns: 275,  fepa: 60,   jis: 60,    gost: '315/250' },
+  { microns: 230,  fepa: 70,   jis: 70,    gost: '250/200' },
+  { microns: 195,  fepa: 80,   jis: 80,    gost: '200/160' },
+  { microns: 165,  fepa: 90,   jis: 90,    gost: '200/160' },
+  { microns: 135,  fepa: 100,  jis: 100,   gost: '160/125' },
+  { microns: 115,  fepa: 120,  jis: 120,   gost: '125/100' },
+  { microns: 95,   fepa: 150,  jis: 150,   gost: '100/80'  },
+  { microns: 80,   fepa: 180,  jis: 180,   gost: '80/63'   },
+  { microns: 70,   fepa: 220,  jis: 220,   gost: '80/63'   },
+  { microns: 60,   fepa: 220,  jis: 240,   gost: '63/50'   },
+  { microns: 55,   fepa: 230,  jis: 240,   gost: '63/50'   },
+  { microns: 50,   fepa: 230,  jis: 280,   gost: '60/40'   },
+  { microns: 45,   fepa: 240,  jis: 280,   gost: '60/40'   },
+  { microns: 40,   fepa: 240,  jis: 320,   gost: '60/40'   },
+  { microns: 37,   fepa: 280,  jis: 320,   gost: '40/28'   },
+  { microns: 35,   fepa: 280,  jis: 360,   gost: '40/28'   },
+  { microns: 30,   fepa: 320,  jis: 400,   gost: '40/28'   },
+  { microns: 26,   fepa: 320,  jis: 500,   gost: '28/20'   },
+  { microns: 24,   fepa: 360,  jis: 500,   gost: '28/20'   },
+  { microns: 20,   fepa: 360,  jis: 600,   gost: '28/20'   },
+  { microns: 18,   fepa: 400,  jis: 700,   gost: '20/14'   },
+  { microns: 14,   fepa: 400,  jis: 800,   gost: '20/14'   },
+  { microns: 13,   fepa: 500,  jis: 800,   gost: '14/10'   },
+  { microns: 12,   fepa: 500,  jis: 1000,  gost: '14/10'   },
+  { microns: 10,   fepa: 600,  jis: 1200,  gost: '10/7'    },
+  { microns: 8,    fepa: 600,  jis: 1500,  gost: '10/7'    },
+  { microns: 7,    fepa: 800,  jis: 2000,  gost: '7/5'     },
+  { microns: 5,    fepa: 1000, jis: 2500,  gost: '5/3'     },
+  { microns: 4,    fepa: 1000, jis: 3000,  gost: '5/3'     },
+  { microns: 3,    fepa: 1200, jis: 4000,  gost: '3/2'     },
+  { microns: 2,    fepa: 1500, jis: 6000,  gost: '2/1'     },
+  { microns: 1.5,  fepa: 2000, jis: 8000,  gost: '2/1'     },
+  { microns: 1,    fepa: 3000, jis: 10000, gost: '1/0'     },
 ]
 
 /** FEPA → JIS. Возвращает undefined если нет точного соответствия. */
@@ -79,16 +84,6 @@ function resolveGrits(stone: StoneForDisplay): { fepa?: number; jis?: number; mk
   return { fepa, jis, mk }
 }
 
-/**
- * Возвращает главное значение гритности (value + unit раздельно) и
- * альтернативные обозначения в других стандартах.
- *
- * mode='native' — показывать как записано у камня
- * mode='fepa'/'jis'/'gost' — перевести в нужный стандарт
- *
- * При наличии полей gritFepaOverride / gritJisOverride / gritMkOverride они
- * имеют приоритет над таблицей соответствий.
- */
 export function getGritDisplay(
   stone: StoneForDisplay,
   mode: GritDisplayMode
@@ -129,12 +124,6 @@ export function getGritDisplay(
   return { mainValue: mk, mainUnit: 'мк', alts: [f, j].filter((x): x is string => x !== null) }
 }
 
-/**
- * Числовое значение для сортировки в выбранном режиме.
- * Меньше = грубее (для МК — средняя точка диапазона).
- * Камни без соответствия в таблице уходят в конец (Infinity).
- * Учитывает gritFepaOverride / gritJisOverride / gritMkOverride.
- */
 export function getGritSortValue(
   stone: StoneForDisplay,
   mode: GritDisplayMode
