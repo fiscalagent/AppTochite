@@ -213,7 +213,7 @@ function GritConverter() {
         <Drum values={JIS_VALUES} selectedIdx={jisIdx} onSelect={onJis} />
       </div>
       <div className={s.drumCol}>
-        <span className={s.drumLabel}>ГОСТ</span>
+        <span className={s.drumLabel}>GOST</span>
         <Drum values={GOST_VALUES} selectedIdx={gostIdx} onSelect={onGost} />
       </div>
     </div>
