@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.27.1',
+    date: '2026-05-06',
+    changes: [
+      '**конвертер:** вернуть Bebas Neue для меток барабанов, ГОСТ → GOST ([](https://github.com/fiscalagent/AppTochite/commit/bbd0614a4c416287588d2abfadb90de627d8e8ec))',
+      '**брендинг:** добавить двуцветную эмблему AppTochite на 4 основных экрана ([](https://github.com/fiscalagent/AppTochite/commit/b3548363d4a3a6f975f034c275e78b4d1333c7ea))',
+    ],
+  },
+  {
     version: '1.27.0',
     date: '2026-05-06',
     changes: [

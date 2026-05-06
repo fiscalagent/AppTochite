@@ -1,3 +1,10 @@
+## [1.27.1](https://github.com/fiscalagent/AppTochite/compare/v1.27.0...v1.27.1) (2026-05-06)
+
+
+### fix
+
+* **конвертер:** вернуть Bebas Neue для меток барабанов, ГОСТ → GOST ([](https://github.com/fiscalagent/AppTochite/commit/bbd0614a4c416287588d2abfadb90de627d8e8ec))
+
 # [1.27.0](https://github.com/fiscalagent/AppTochite/compare/v1.26.10...v1.27.0) (2026-05-06)
 
 
