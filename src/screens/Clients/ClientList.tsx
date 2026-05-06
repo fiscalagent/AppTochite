@@ -6,6 +6,7 @@ import Avatar from '../../components/Avatar/Avatar'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
 import type { Client } from '../../db/instance'
 import s from './ClientList.module.css'
+import AppLogo from '../../components/AppLogo/AppLogo'
 
 const IconSave = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -160,6 +161,7 @@ export default function ClientList() {
           </div>
         )}
       </div>
+      <AppLogo />
     </div>
   )
 }

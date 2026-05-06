@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
 import { CHANGELOG } from '../../data/changelog'
 import s from './AboutScreen.module.css'
+import AppLogo from '../../components/AppLogo/AppLogo'
 
 function isPwa(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches
@@ -93,6 +94,7 @@ export default function AboutScreen() {
           ))}
         </div>
       </div>
+      <AppLogo />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus } from '../../db/instance'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import s from './HistoryFeed.module.css'
+import AppLogo from '../../components/AppLogo/AppLogo'
 
 type Filter = 'all' | SharpeningStatus
 
@@ -161,6 +162,7 @@ export default function HistoryFeed() {
           </button>
         )}
       </div>
+      <AppLogo />
     </div>
   )
 }

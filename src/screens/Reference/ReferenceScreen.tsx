@@ -5,6 +5,7 @@ import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import { getGritDisplay, getGritSortValue, GRIT_TABLE, type GritDisplayMode } from '../../data/gritTable'
 import s from './ReferenceScreen.module.css'
+import AppLogo from '../../components/AppLogo/AppLogo'
 
 type Tab = 'stones' | 'steels' | 'knives'
 
@@ -932,6 +933,7 @@ export default function ReferenceScreen() {
         {activeTab === 'stones' && <StonesTab search={search} />}
         {activeTab === 'steels' && <SteelsTab search={search} />}
         {activeTab === 'knives' && <KnivesTab search={search} />}
+        <AppLogo />
       </div>
     </div>
   )
