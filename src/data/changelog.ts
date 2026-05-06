@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.27.2',
+    date: '2026-05-06',
+    changes: [
+      '**эмблема:** APP и TOCHITE слитно без пробела ([](https://github.com/fiscalagent/AppTochite/commit/f172f6bda288c04f2143da1a5e4b59c4b7fdecd8))',
+    ],
+  },
+  {
     version: '1.27.1',
     date: '2026-05-06',
     changes: [

@@ -1,3 +1,10 @@
+## [1.27.2](https://github.com/fiscalagent/AppTochite/compare/v1.27.1...v1.27.2) (2026-05-06)
+
+
+### fix
+
+* **эмблема:** APP и TOCHITE слитно без пробела ([](https://github.com/fiscalagent/AppTochite/commit/f172f6bda288c04f2143da1a5e4b59c4b7fdecd8))
+
 ## [1.27.1](https://github.com/fiscalagent/AppTochite/compare/v1.27.0...v1.27.1) (2026-05-06)
 
 
