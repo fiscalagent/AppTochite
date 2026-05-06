@@ -1,3 +1,10 @@
+## [1.27.3](https://github.com/fiscalagent/AppTochite/compare/v1.27.2...v1.27.3) (2026-05-06)
+
+
+### fix
+
+* **справочник:** бейдж «мой» при редактировании стандартного камня ([](https://github.com/fiscalagent/AppTochite/commit/78edf997e469bbd070edca9b54a2bd84b0674fca))
+
 ## [1.27.2](https://github.com/fiscalagent/AppTochite/compare/v1.27.1...v1.27.2) (2026-05-06)
 
 

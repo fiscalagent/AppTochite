@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.27.3',
+    date: '2026-05-06',
+    changes: [
+      '**справочник:** бейдж «мой» при редактировании стандартного камня ([](https://github.com/fiscalagent/AppTochite/commit/78edf997e469bbd070edca9b54a2bd84b0674fca))',
+    ],
+  },
+  {
     version: '1.27.2',
     date: '2026-05-06',
     changes: [
