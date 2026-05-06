@@ -434,6 +434,7 @@ function StonesTab({ search }: { search: string }) {
       gritUnit: editGritUnit || undefined,
       gritMk: editGritUnit === 'mk' && editGritMk ? editGritMk : undefined,
       type: editType || undefined,
+      isCustom: true,
     })
     setEditingId(null)
   }
