@@ -543,10 +543,11 @@
 }
 
 .drumLabel {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   color: var(--text-100);
   margin-bottom: 6px;
 }
