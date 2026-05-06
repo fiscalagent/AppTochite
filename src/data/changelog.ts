@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.26.10',
+    date: '2026-05-06',
+    changes: [
+      '**конвертер:** увеличить высоту bottom sheet с 80vh до 92vh ([](https://github.com/fiscalagent/AppTochite/commit/43ccce23ebc273c1cadc4d164127d3a620381d08))',
+    ],
+  },
+  {
     version: '1.26.9',
     date: '2026-05-06',
     changes: [

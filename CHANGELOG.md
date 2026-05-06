@@ -1,3 +1,10 @@
+## [1.26.10](https://github.com/fiscalagent/AppTochite/compare/v1.26.9...v1.26.10) (2026-05-06)
+
+
+### fix
+
+* **конвертер:** увеличить высоту bottom sheet с 80vh до 92vh ([](https://github.com/fiscalagent/AppTochite/commit/43ccce23ebc273c1cadc4d164127d3a620381d08))
+
 ## [1.26.9](https://github.com/fiscalagent/AppTochite/compare/v1.26.8...v1.26.9) (2026-05-06)
 
 
