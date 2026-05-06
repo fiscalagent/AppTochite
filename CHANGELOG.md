@@ -1,3 +1,10 @@
+## [1.26.8](https://github.com/fiscalagent/AppTochite/compare/v1.26.7...v1.26.8) (2026-05-06)
+
+
+### fix
+
+* **таблица гритностей:** полная замена таблицы — 33 строки с микронами, FEPA 90/180 добавлены ([](https://github.com/fiscalagent/AppTochite/commit/116070b362cc80a7f050e916dab52b41520bd5ac))
+
 ## [1.26.7](https://github.com/fiscalagent/AppTochite/compare/v1.26.6...v1.26.7) (2026-05-05)
 
 

@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.26.8',
+    date: '2026-05-06',
+    changes: [
+      '**таблица гритностей:** полная замена таблицы — 33 строки с микронами, FEPA 90/180 добавлены ([](https://github.com/fiscalagent/AppTochite/commit/116070b362cc80a7f050e916dab52b41520bd5ac))',
+    ],
+  },
+  {
     version: '1.26.7',
     date: '2026-05-05',
     changes: [
