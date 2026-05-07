@@ -1,3 +1,10 @@
+## [1.29.1](https://github.com/fiscalagent/AppTochite/compare/v1.29.0...v1.29.1) (2026-05-07)
+
+
+### fix
+
+* исправить регулярку в sync-version — убирать пустые ссылки ([](url)) из ченджлога ([](https://github.com/fiscalagent/AppTochite/commit/73fb67048a8ae9098f25419301362e06fefa453f))
+
 # [1.29.0](https://github.com/fiscalagent/AppTochite/compare/v1.28.0...v1.29.0) (2026-05-07)
 
 
