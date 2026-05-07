@@ -77,6 +77,34 @@ export default function AboutScreen() {
       <div className={s.divider} />
 
       <div className={s.section}>
+        <p className={s.sectionTitle}>Настройки</p>
+        <div className={s.linkList}>
+          <a
+            href="https://t.me/AppTochite"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={s.linkItem}
+          >
+            <span className={s.linkIcon}>✈️</span>
+            <span className={s.linkLabel}>Группа в Telegram AppTochite</span>
+            <span className={s.linkArrow}>›</span>
+          </a>
+          <a
+            href="https://boosty.to/potochite/donate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={s.linkItem}
+          >
+            <span className={s.linkIcon}>☕</span>
+            <span className={s.linkLabel}>Поддержать развитие</span>
+            <span className={s.linkArrow}>›</span>
+          </a>
+        </div>
+      </div>
+
+      <div className={s.divider} />
+
+      <div className={s.section}>
         <p className={s.sectionTitle}>Что нового</p>
         <div className={s.changelog}>
           {CHANGELOG.map((entry) => (
