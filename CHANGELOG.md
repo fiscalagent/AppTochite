@@ -1,3 +1,10 @@
+# [1.29.0](https://github.com/fiscalagent/AppTochite/compare/v1.28.0...v1.29.0) (2026-05-07)
+
+
+### feat
+
+* ссылки на Telegram-группу и Boosty в разделе «Настройки» ([](https://github.com/fiscalagent/AppTochite/commit/81e030ddd00a73f9cc54653fb3f731c3605e3995))
+
 # [1.28.0](https://github.com/fiscalagent/AppTochite/compare/v1.27.3...v1.28.0) (2026-05-07)
 
 
