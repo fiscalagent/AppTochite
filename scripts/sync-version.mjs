@@ -70,8 +70,8 @@ function parseChangelog(ver) {
 
     if (line.startsWith('* ') || line.startsWith('- ')) {
       let text = line.slice(2).trim()
-      // убираем ссылку на коммит: ([abc1234](url))
-      text = text.replace(/\s*\(\[[a-f0-9]+\]\([^)]+\)\)\s*$/, '').trim()
+      // убираем ссылку на коммит: ([](url)) или ([abc1234](url))
+      text = text.replace(/\s*\(\[.*?\]\([^)]*\)\)\s*$/, '').trim()
       // убираем **scope:** если есть
       text = text.replace(/^\*\*[^*]+\*\*:\s*/, '').trim()
       if (text) results.push(text)
