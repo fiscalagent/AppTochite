@@ -117,7 +117,7 @@ export default function ClientList() {
         )}
         {visible.map(({ client, count, acceptedCount, doneCount }) => (
           <Link key={client.id} to={`/clients/${client.id}`} className={s.card}>
-            <Avatar name={client.name} size={40} isSelf={client.isSelf} />
+            <Avatar name={client.name} size={40} isSelf={client.isSelf} photo={client.avatar} />
             <div className={s.info}>
               <div className={s.name}>{client.name}</div>
               {client.phone && (

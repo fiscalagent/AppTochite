@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../../db/instance'
+import Avatar from '../../components/Avatar/Avatar'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
+import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { useToast } from '../../components/Toast/ToastContext'
+import { pickAvatarFile } from '../../hooks/useCamera'
 import s from './ClientForm.module.css'
 
 const IconChevronLeft = () => (
@@ -20,9 +23,11 @@ export default function ClientForm() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [telegram, setTelegram] = useState('')
+  const [avatar, setAvatar] = useState<string | undefined>(undefined)
   const [isSelf, setIsSelf] = useState(false)
   const [loading, setLoading] = useState(isEdit)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [avatarSheetOpen, setAvatarSheetOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -31,6 +36,7 @@ export default function ClientForm() {
       setName(client.name)
       setPhone(client.phone ?? '')
       setTelegram(client.telegram ?? '')
+      setAvatar(client.avatar)
       setIsSelf(client.isSelf)
       setLoading(false)
     })
@@ -49,6 +55,7 @@ export default function ClientForm() {
         name: name.trim(),
         phone: phone.trim() || undefined,
         telegram: normalizeTelegram(telegram),
+        avatar,
       })
       showToast('Клиент сохранён')
       navigate(`/clients/${id}`)
@@ -57,6 +64,7 @@ export default function ClientForm() {
         name: name.trim(),
         phone: phone.trim() || undefined,
         telegram: normalizeTelegram(telegram),
+        avatar,
         isSelf: false,
         createdAt: new Date(),
       })
@@ -80,6 +88,18 @@ export default function ClientForm() {
       <div className={s.header}>
         <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>{isEdit ? 'РЕДАКТИРОВАТЬ' : 'НОВЫЙ КЛИЕНТ'}</span>
+      </div>
+
+      <div className={s.avatarSection}>
+        <button className={s.avatarBtn} onClick={() => setAvatarSheetOpen(true)}>
+          <Avatar name={name || '?'} size={72} photo={avatar} />
+          <span className={s.avatarHint}>{avatar ? 'Изменить фото' : 'Добавить фото'}</span>
+        </button>
+        {avatar && (
+          <button className={s.avatarRemoveBtn} onClick={() => setAvatar(undefined)}>
+            Убрать фото
+          </button>
+        )}
       </div>
 
       <div className={s.form}>
@@ -130,6 +150,14 @@ export default function ClientForm() {
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />
+
+      {avatarSheetOpen && (
+        <PhotoSourceSheet
+          onCamera={() => pickAvatarFile(true, setAvatar)}
+          onGallery={() => pickAvatarFile(false, setAvatar)}
+          onClose={() => setAvatarSheetOpen(false)}
+        />
+      )}
     </div>
   )
 }

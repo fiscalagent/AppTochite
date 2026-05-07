@@ -5,7 +5,9 @@ import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
+import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { useToast } from '../../components/Toast/ToastContext'
+import { pickAvatarFile } from '../../hooks/useCamera'
 import s from './ClientCard.module.css'
 
 const IconChevronLeft = () => (
@@ -25,6 +27,7 @@ export default function ClientCard() {
   const clientId = Number(id)
 
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [avatarSheetOpen, setAvatarSheetOpen] = useState(false)
   const [knifeFilter, setKnifeFilter] = useState<string | null>(null)
   const [page, setPage] = useState(0)
 
@@ -65,7 +68,13 @@ export default function ClientCard() {
       </div>
 
       <div className={s.profile}>
-        <Avatar name={client.name} size={48} />
+        {client.isSelf ? (
+          <button className={s.avatarBtn} onClick={() => setAvatarSheetOpen(true)}>
+            <Avatar name={client.name} size={48} isSelf photo={client.avatar} />
+          </button>
+        ) : (
+          <Avatar name={client.name} size={48} photo={client.avatar} />
+        )}
         <div className={s.profileInfo}>
           <div className={s.profileName}>{client.name}</div>
           <div className={s.profileMeta}>
@@ -192,6 +201,14 @@ export default function ClientCard() {
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />
+
+      {avatarSheetOpen && (
+        <PhotoSourceSheet
+          onCamera={() => pickAvatarFile(true, b64 => db.clients.update(clientId, { avatar: b64 }))}
+          onGallery={() => pickAvatarFile(false, b64 => db.clients.update(clientId, { avatar: b64 }))}
+          onClose={() => setAvatarSheetOpen(false)}
+        />
+      )}
     </div>
   )
 }

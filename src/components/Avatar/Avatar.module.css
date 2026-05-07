@@ -18,6 +18,13 @@
   user-select: none;
 }
 
+.photo {
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 1px solid var(--border-100);
+  display: block;
+}
+
 .crown {
   position: absolute;
   top: -5px;

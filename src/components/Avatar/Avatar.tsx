@@ -4,9 +4,10 @@ interface Props {
   name: string
   size?: number
   isSelf?: boolean
+  photo?: string
 }
 
-export default function Avatar({ name, size = 40, isSelf = false }: Props) {
+export default function Avatar({ name, size = 40, isSelf = false, photo }: Props) {
   const initials = name
     .split(' ')
     .map(w => w[0])
@@ -21,12 +22,21 @@ export default function Avatar({ name, size = 40, isSelf = false }: Props) {
       className={s.wrapper}
       style={{ width: size, height: size }}
     >
-      <div
-        className={s.avatar}
-        style={{ width: size, height: size, fontSize: size * 0.35 }}
-      >
-        {initials}
-      </div>
+      {photo ? (
+        <img
+          src={photo}
+          alt={name}
+          className={s.photo}
+          style={{ width: size, height: size }}
+        />
+      ) : (
+        <div
+          className={s.avatar}
+          style={{ width: size, height: size, fontSize: size * 0.35 }}
+        >
+          {initials}
+        </div>
+      )}
       {isSelf && (
         <svg
           className={s.crown}

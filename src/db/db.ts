@@ -10,6 +10,7 @@ export interface Client {
   name: string
   phone?: string
   telegram?: string
+  avatar?: string
   isSelf: boolean
   createdAt: Date
 }

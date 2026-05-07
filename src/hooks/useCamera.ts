@@ -1,5 +1,45 @@
 export const PHOTO_COMPRESS_KEY = 'photo-compression'
 
+export function resizeAvatar(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const size = 300
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const min = Math.min(img.width, img.height)
+      const sx = (img.width - min) / 2
+      const sy = (img.height - min) / 2
+      canvas.getContext('2d')!.drawImage(img, sx, sy, min, min, 0, 0, size, size)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.8))
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject() }
+    img.src = url
+  })
+}
+
+export function pickAvatarFile(capture: boolean, onDone: (b64: string) => void) {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  if (capture) input.setAttribute('capture', 'environment')
+  input.onchange = () => {
+    const file = input.files?.[0]
+    if (!file) return
+    resizeAvatar(file)
+      .then(onDone)
+      .catch(() => {
+        const reader = new FileReader()
+        reader.onload = () => onDone(reader.result as string)
+        reader.readAsDataURL(file)
+      })
+  }
+  input.click()
+}
+
 function resizeImage(file: File, maxWidth: number, quality: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
