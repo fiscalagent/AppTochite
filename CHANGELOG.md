@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/fiscalagent/AppTochite/compare/v1.27.3...v1.28.0) (2026-05-07)
+
+
+### feat
+
+* **клиенты:** аватарки клиентов из камеры или галереи ([](https://github.com/fiscalagent/AppTochite/commit/5b21e4ad204f0d1c5f3286d1cd63f4109cb312ed))
+
 ## [1.27.3](https://github.com/fiscalagent/AppTochite/compare/v1.27.2...v1.27.3) (2026-05-06)
 
 
