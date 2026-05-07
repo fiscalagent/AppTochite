@@ -9,92 +9,35 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.29.0',
     date: '2026-05-07',
     changes: [
-      'Исправления и улучшения',
+      'ссылки на Telegram-группу и Boosty в разделе «Настройки»',
     ],
   },
   {
     version: '1.28.0',
     date: '2026-05-07',
     changes: [
-      'Исправления и улучшения',
+      'аватарки клиентов — фото из камеры или галереи',
     ],
   },
   {
     version: '1.27.3',
     date: '2026-05-06',
     changes: [
-      '**справочник:** бейдж «мой» при редактировании стандартного камня ([](https://github.com/fiscalagent/AppTochite/commit/78edf997e469bbd070edca9b54a2bd84b0674fca))',
-    ],
-  },
-  {
-    version: '1.27.2',
-    date: '2026-05-06',
-    changes: [
-      '**эмблема:** APP и TOCHITE слитно без пробела ([](https://github.com/fiscalagent/AppTochite/commit/f172f6bda288c04f2143da1a5e4b59c4b7fdecd8))',
-    ],
-  },
-  {
-    version: '1.27.1',
-    date: '2026-05-06',
-    changes: [
-      '**конвертер:** вернуть Bebas Neue для меток барабанов, ГОСТ → GOST ([](https://github.com/fiscalagent/AppTochite/commit/bbd0614a4c416287588d2abfadb90de627d8e8ec))',
-      '**брендинг:** добавить двуцветную эмблему AppTochite на 4 основных экрана ([](https://github.com/fiscalagent/AppTochite/commit/b3548363d4a3a6f975f034c275e78b4d1333c7ea))',
+      'в справочнике камней — бейдж «Мой» при редактировании стандартного камня',
     ],
   },
   {
     version: '1.27.0',
     date: '2026-05-06',
     changes: [
-      'Исправления и улучшения',
-    ],
-  },
-  {
-    version: '1.26.10',
-    date: '2026-05-06',
-    changes: [
-      '**конвертер:** увеличить высоту bottom sheet с 80vh до 92vh ([](https://github.com/fiscalagent/AppTochite/commit/43ccce23ebc273c1cadc4d164127d3a620381d08))',
-    ],
-  },
-  {
-    version: '1.26.9',
-    date: '2026-05-06',
-    changes: [
-      '**конвертер:** метки барабанов — Golos Text вместо Bebas Neue для корректного рендера кириллицы ([](https://github.com/fiscalagent/AppTochite/commit/15370f7937692358308d7f2c62d6e1f9d0e7cec8))',
+      'добавлена двуцветная эмблема AppTochite на основных экранах',
     ],
   },
   {
     version: '1.26.8',
     date: '2026-05-06',
     changes: [
-      '**таблица гритностей:** полная замена таблицы — 33 строки с микронами, FEPA 90/180 добавлены ([](https://github.com/fiscalagent/AppTochite/commit/116070b362cc80a7f050e916dab52b41520bd5ac))',
-    ],
-  },
-  {
-    version: '1.26.7',
-    date: '2026-05-05',
-    changes: [
-      'таблица гритностей дополнена: JIS 320 / FEPA 280 / ГОСТ 50/40',
-    ],
-  },
-  {
-    version: '1.26.6',
-    date: '2026-05-05',
-    changes: [
-      'таблица гритностей дополнена строками JIS 400 / 600 / 800, исправлены ошибки соответствий',
-    ],
-  },
-  {
-    version: '1.26.2',
-    date: '2026-05-05',
-    changes: [
-      'таблица гритностей дополнена: JIS 2000 / FEPA 800 / ГОСТ 7/5',
-    ],
-  },
-  {
-    version: '1.26.1',
-    date: '2026-05-05',
-    changes: [
-      'исправлена таблица гритностей: строка FEPA 280 = JIS 360 = ГОСТ 40/28',
+      'таблица гритностей полностью обновлена: 33 строки с микронами, добавлены FEPA 90 и 180',
     ],
   },
   {
