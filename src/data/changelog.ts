@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.29.2',
+    date: '2026-05-08',
+    changes: [
+      'конвертер гритностей — адаптив на ПК, µm и скролл колёсиком',
+    ],
+  },
+  {
     version: '1.29.0',
     date: '2026-05-07',
     changes: [

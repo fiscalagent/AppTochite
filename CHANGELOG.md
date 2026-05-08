@@ -1,3 +1,10 @@
+## [1.29.2](https://github.com/fiscalagent/AppTochite/compare/v1.29.1...v1.29.2) (2026-05-08)
+
+
+### fix
+
+* конвертер гритностей — адаптив на ПК, µm и скролл колёсиком ([](https://github.com/fiscalagent/AppTochite/commit/9ba9a55598fd9ef14bab431054495e0683e99f79))
+
 ## [1.29.1](https://github.com/fiscalagent/AppTochite/compare/v1.29.0...v1.29.1) (2026-05-07)
 
 
