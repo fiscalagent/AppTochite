@@ -142,7 +142,9 @@ function Drum({ values, selectedIdx, onSelect }: {
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const target = selectedIdx * ITEM_H
+    // Центр выбранного элемента должен совпадать с центром вьюпорта.
+    // target = selectedIdx*H + topPad + H/2 - viewportH/2, topPad = 2*H → 2.5*H
+    const target = selectedIdx * ITEM_H + 2.5 * ITEM_H - el.clientHeight / 2
     if (Math.abs(el.scrollTop - target) < 2) return
     settling.current = true
     el.scrollTo({ top: target, behavior: 'smooth' })
@@ -171,7 +173,8 @@ function Drum({ values, selectedIdx, onSelect }: {
     timer.current = setTimeout(() => {
       const el = ref.current
       if (!el) return
-      const idx = Math.round(el.scrollTop / ITEM_H)
+      // Обратная формула к target выше
+      const idx = Math.round((el.scrollTop + el.clientHeight / 2 - 2.5 * ITEM_H) / ITEM_H)
       onSelect(Math.max(0, Math.min(values.length - 1, idx)))
     }, 120)
   }
