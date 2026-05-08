@@ -64,7 +64,7 @@ export function useVersionCheck() {
   useEffect(() => {
     const cached = readCache()
     if (!cached) {
-      check()
+      check() // eslint-disable-line react-hooks/set-state-in-effect
       return
     }
     const lastDate = new Date(cached.checkedAt).toDateString()

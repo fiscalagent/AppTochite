@@ -133,11 +133,11 @@ function Drum({ values, selectedIdx, onSelect }: {
   const settling = useRef(false)
   const timer = useRef<number | undefined>(undefined)
   const selectedIdxRef = useRef(selectedIdx)
-  selectedIdxRef.current = selectedIdx
+  selectedIdxRef.current = selectedIdx // eslint-disable-line react-hooks/refs
   const valuesRef = useRef(values)
-  valuesRef.current = values
+  valuesRef.current = values // eslint-disable-line react-hooks/refs
   const onSelectRef = useRef(onSelect)
-  onSelectRef.current = onSelect
+  onSelectRef.current = onSelect // eslint-disable-line react-hooks/refs
 
   useEffect(() => {
     const el = ref.current

@@ -107,7 +107,7 @@ export default function BackupScreen() {
       await restoreBackup(db, preview)
       showToast('Данные восстановлены')
       navigate('/')
-    } catch (err) {
+    } catch {
       showToast('Ошибка при восстановлении')
       setRestoring(false)
     }
