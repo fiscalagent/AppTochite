@@ -1,3 +1,10 @@
+## [1.29.4](https://github.com/fiscalagent/AppTochite/compare/v1.29.3...v1.29.4) (2026-05-08)
+
+
+### fix
+
+* конвертер — синхронизация барабанов при высоте 308px на ПК ([](https://github.com/fiscalagent/AppTochite/commit/391132c01666b865d43f6551c7e694f03ed6189a))
+
 ## [1.29.3](https://github.com/fiscalagent/AppTochite/compare/v1.29.2...v1.29.3) (2026-05-08)
 
 ## [1.29.2](https://github.com/fiscalagent/AppTochite/compare/v1.29.1...v1.29.2) (2026-05-08)
