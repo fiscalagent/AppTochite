@@ -547,7 +547,6 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   color: var(--text-100);
   margin-bottom: 6px;
 }
@@ -621,4 +620,22 @@
   background: linear-gradient(to top, var(--bg-100) 15%, transparent 100%);
   pointer-events: none;
   z-index: 2;
+}
+
+@media (min-width: 768px) {
+  .drumWrap {
+    height: 308px; /* 7 × 44px — показывает ~5 видимых строк на ПК */
+  }
+
+  .drumHighlight {
+    top: 88px; /* 2 × 44px = всегда совпадает с выбранным элементом */
+  }
+
+  .drumFadeTop {
+    height: 66px;
+  }
+
+  .drumFadeBot {
+    height: 66px;
+  }
 }

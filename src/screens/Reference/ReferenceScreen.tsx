@@ -132,6 +132,12 @@ function Drum({ values, selectedIdx, onSelect }: {
   const ref = useRef<HTMLDivElement>(null)
   const settling = useRef(false)
   const timer = useRef<number | undefined>(undefined)
+  const selectedIdxRef = useRef(selectedIdx)
+  selectedIdxRef.current = selectedIdx
+  const valuesRef = useRef(values)
+  valuesRef.current = values
+  const onSelectRef = useRef(onSelect)
+  onSelectRef.current = onSelect
 
   useEffect(() => {
     const el = ref.current
@@ -143,6 +149,21 @@ function Drum({ values, selectedIdx, onSelect }: {
     clearTimeout(timer.current)
     timer.current = setTimeout(() => { settling.current = false }, 600)
   }, [selectedIdx])
+
+  // На десктопе колёсико мыши даёт delta ~100px, scroll-snap перепрыгивает на 2+
+  // позиции. Перехватываем wheel и двигаем ровно на ±1.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault()
+      const dir = e.deltaY > 0 ? 1 : -1
+      const next = Math.max(0, Math.min(valuesRef.current.length - 1, selectedIdxRef.current + dir))
+      onSelectRef.current(next)
+    }
+    el.addEventListener('wheel', handleWheel, { passive: false })
+    return () => el.removeEventListener('wheel', handleWheel)
+  }, [])
 
   function handleScroll() {
     if (settling.current) return
