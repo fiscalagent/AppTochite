@@ -6,15 +6,6 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '1.29.1',
-    date: '2026-05-07',
-    changes: [
-      'исправить регулярку в sync-version — убирать пустые ссылки',
-      'ссылки на Telegram-группу и Boosty в разделе «Настройки»',
-      '**клиенты:** аватарки клиентов из камеры или галереи',
-    ],
-  },
-  {
     version: '1.29.0',
     date: '2026-05-07',
     changes: [
