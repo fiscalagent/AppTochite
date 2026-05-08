@@ -154,18 +154,27 @@ function Drum({ values, selectedIdx, onSelect }: {
 
   // На десктопе колёсико мыши даёт delta ~100px, scroll-snap перепрыгивает на 2+
   // позиции. Перехватываем wheel и двигаем ровно на ±1.
+  // selectedIdxRef обновляем сразу в обработчике — иначе при быстром вращении
+  // все события читают одно устаревшее значение и двигают только на 1 шаг.
   useEffect(() => {
     const el = ref.current
     if (!el) return
     function handleWheel(e: WheelEvent) {
       e.preventDefault()
       const dir = e.deltaY > 0 ? 1 : -1
-      const next = Math.max(0, Math.min(valuesRef.current.length - 1, selectedIdxRef.current + dir))
-      onSelectRef.current(next)
+      selectedIdxRef.current = Math.max(0, Math.min(valuesRef.current.length - 1, selectedIdxRef.current + dir))
+      onSelectRef.current(selectedIdxRef.current)
     }
     el.addEventListener('wheel', handleWheel, { passive: false })
     return () => el.removeEventListener('wheel', handleWheel)
   }, [])
+
+  // Пользователь коснулся барабана — снимаем флаг settling немедленно,
+  // чтобы ручной touch-скролл не игнорировался во время программной синхронизации.
+  function handlePointerDown() {
+    settling.current = false
+    clearTimeout(timer.current)
+  }
 
   function handleScroll() {
     if (settling.current) return
@@ -182,7 +191,7 @@ function Drum({ values, selectedIdx, onSelect }: {
   return (
     <div className={s.drumWrap}>
       <div className={s.drumHighlight} />
-      <div ref={ref} className={s.drum} onScroll={handleScroll}>
+      <div ref={ref} className={s.drum} onScroll={handleScroll} onPointerDown={handlePointerDown}>
         <div style={{ height: 2 * ITEM_H }} />
         {values.map((v, i) => (
           <div key={v} className={`${s.drumItem} ${i === selectedIdx ? s.drumItemSelected : ''}`}>
