@@ -1,3 +1,10 @@
+## [1.29.5](https://github.com/fiscalagent/AppTochite/compare/v1.29.4...v1.29.5) (2026-05-08)
+
+
+### fix
+
+* барабаны конвертера — быстрый wheel и touch поверх settling ([](https://github.com/fiscalagent/AppTochite/commit/0da3654a0cd395f1aaa2c0b2929af3b12e737a65))
+
 ## [1.29.4](https://github.com/fiscalagent/AppTochite/compare/v1.29.3...v1.29.4) (2026-05-08)
 
 
