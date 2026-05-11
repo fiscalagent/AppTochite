@@ -1,3 +1,10 @@
+## [1.29.6](https://github.com/fiscalagent/AppTochite/compare/v1.29.5...v1.29.6) (2026-05-11)
+
+
+### fix
+
+* двойной тап для выбора из выпадающего списка в форме заточки ([](https://github.com/fiscalagent/AppTochite/commit/36a153b9c77c5674eccbb748aebe9ebc40a21be4))
+
 ## [1.29.5](https://github.com/fiscalagent/AppTochite/compare/v1.29.4...v1.29.5) (2026-05-08)
 
 

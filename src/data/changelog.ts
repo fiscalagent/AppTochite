@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.29.6',
+    date: '2026-05-11',
+    changes: [
+      'двойной тап для выбора из выпадающего списка в форме заточки',
+    ],
+  },
+  {
     version: '1.29.5',
     date: '2026-05-08',
     changes: [
