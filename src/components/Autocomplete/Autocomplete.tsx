@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import s from './Autocomplete.module.css'
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
 
 export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect }: Props) {
   const [open, setOpen] = useState(false)
+  const lastTapRef = useRef<{ item: string; time: number } | null>(null)
 
   const filtered = value.length > 0
     ? suggestions.filter(item => item.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
@@ -23,6 +24,17 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
     onChange(item)
     onSelect?.(item)
     setOpen(false)
+  }
+
+  function handleItemPointerDown(e: React.PointerEvent, item: string) {
+    e.preventDefault()
+    const now = Date.now()
+    if (lastTapRef.current && lastTapRef.current.item === item && now - lastTapRef.current.time < 300) {
+      handleSelect(item)
+      lastTapRef.current = null
+    } else {
+      lastTapRef.current = { item, time: now }
+    }
   }
 
   return (
@@ -43,7 +55,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
             <div
               key={item}
               className={s.item}
-              onPointerDown={e => { e.preventDefault(); handleSelect(item) }}
+              onPointerDown={e => handleItemPointerDown(e, item)}
             >
               {item}
             </div>
