@@ -45,6 +45,7 @@ export default function SharpeningDetail() {
   const [photoModal, setPhotoModal] = useState(false)
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
+  const [showOpenChat, setShowOpenChat] = useState(false)
   const { openCamera, openGallery } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
@@ -79,6 +80,40 @@ export default function SharpeningDetail() {
       await db.sharpenings.update(sharpeningId, { photosBefore: value })
     } else {
       await db.sharpenings.update(sharpeningId, { photosAfter: value })
+    }
+  }
+
+  async function handleSendToClient() {
+    if (!client?.telegram || !sh) return
+
+    const date = sh.doneAt ? formatDate(sh.doneAt) : formatDate(sh.receivedAt)
+    const text = `Ваш нож заточен! ✅\nНож: ${sh.knifeBrand}\nДата: ${date}`
+    const photos = sh.photosAfter ?? []
+
+    if (!navigator.share) {
+      showToast('Сохраните фото и отправьте вручную')
+      setShowOpenChat(true)
+      return
+    }
+
+    try {
+      const shareData: ShareData = { text }
+      if (photos.length) {
+        const files = photos.map((b64, i) => {
+          const [header, data] = b64.split(',')
+          const mime = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg'
+          const bytes = atob(data)
+          const u8 = new Uint8Array(bytes.length)
+          for (let j = 0; j < bytes.length; j++) u8[j] = bytes.charCodeAt(j)
+          return new File([u8], `knife-${i + 1}.jpg`, { type: mime })
+        })
+        if (navigator.canShare?.({ files, text })) shareData.files = files
+      }
+      await navigator.share(shareData)
+      await db.sharpenings.update(sharpeningId, { sentAt: new Date() })
+      setShowOpenChat(true)
+    } catch {
+      // пользователь отменил или ошибка — молча игнорируем
     }
   }
 
@@ -250,6 +285,27 @@ export default function SharpeningDetail() {
           <span>{client.name}</span>
           <span className={s.clientLinkArrow}><IconChevronRight /></span>
         </Link>
+      )}
+
+      {client && !client.isSelf && client.telegram && (
+        <div className={s.sendBlock}>
+          <button className={s.sendBtn} onClick={handleSendToClient}>
+            Отправить клиенту
+          </button>
+          {sh.sentAt && (
+            <span className={s.sentAt}>Отправлено {formatDate(sh.sentAt)}</span>
+          )}
+          {showOpenChat && (
+            <a
+              href={`https://t.me/${client.telegram.replace('@', '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={s.openChatBtn}
+            >
+              Открыть чат с {client.name} ({client.telegram})
+            </a>
+          )}
+        </div>
       )}
 
       <button
