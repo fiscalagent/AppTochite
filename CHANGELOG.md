@@ -1,3 +1,15 @@
+# [1.30.0](https://github.com/fiscalagent/AppTochite/compare/v1.29.6...v1.30.0) (2026-05-11)
+
+
+### feat
+
+* отправка заточки клиенту в Telegram из карточки записи ([](https://github.com/fiscalagent/AppTochite/commit/2d8fd097e37eacc0593dc45649fd120ec6c1741a))
+
+
+### fix
+
+* двойной тап для выбора из выпадающего списка в форме заточки ([](https://github.com/fiscalagent/AppTochite/commit/6a36f50ab3e681fedae419e28944e0dfc066193c))
+
 ## [1.29.6](https://github.com/fiscalagent/AppTochite/compare/v1.29.5...v1.29.6) (2026-05-11)
 
 
