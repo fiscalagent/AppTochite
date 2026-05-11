@@ -50,7 +50,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
         autoComplete="off"
       />
       {visible && (
-        <div className={s.dropdown}>
+        <div className={s.dropdown} onTouchStart={e => e.preventDefault()}>
           {filtered.map(item => (
             <div
               key={item}

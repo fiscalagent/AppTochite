@@ -38,6 +38,7 @@ export interface Sharpening {
   doneAt?: Date
   photosBefore?: string[]
   photosAfter?: string[]
+  sentAt?: Date
 }
 
 export type GritUnit = 'fepa' | 'jis' | 'mk'
