@@ -1,3 +1,10 @@
+## [1.31.2](https://github.com/fiscalagent/AppTochite/compare/v1.31.1...v1.31.2) (2026-05-12)
+
+
+### fix
+
+* фото-отчёт — финишный камень не обрезается, корректный isFinish ([](https://github.com/fiscalagent/AppTochite/commit/806778dbfcc23f59e6a6e8007886d926635c47bf))
+
 ## [1.31.1](https://github.com/fiscalagent/AppTochite/compare/v1.31.0...v1.31.1) (2026-05-12)
 
 
