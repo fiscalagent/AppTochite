@@ -305,53 +305,6 @@
   background: var(--accent-dim);
 }
 
-.sendBlock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.sendBtn {
-  background: var(--accent);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  width: 100%;
-  text-align: center;
-  transition: opacity 0.15s;
-}
-
-.sendBtn:active {
-  opacity: 0.8;
-}
-
-.sentAt {
-  font-size: 12px;
-  color: var(--text-400);
-  text-align: center;
-}
-
-.openChatBtn {
-  display: block;
-  background: var(--bg-200);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  width: 100%;
-  text-align: center;
-  text-decoration: none;
-  transition: background 0.15s;
-}
-
-.openChatBtn:active {
-  background: var(--accent-dim);
-}
-
 .deleteBtn {
   background: transparent;
   color: var(--danger);
