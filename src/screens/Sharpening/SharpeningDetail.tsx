@@ -8,6 +8,7 @@ import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
+import PhotoReportSheet from '../../components/PhotoReport/PhotoReportSheet'
 import s from './SharpeningDetail.module.css'
 
 const IconChevronLeft = () => (
@@ -46,6 +47,7 @@ export default function SharpeningDetail() {
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const [showOpenChat, setShowOpenChat] = useState(false)
+  const [photoReportOpen, setPhotoReportOpen] = useState(false)
   const { openCamera, openGallery } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
@@ -273,6 +275,12 @@ export default function SharpeningDetail() {
         </div>
       ) : null}
 
+      {sh.photosAfter && sh.photosAfter.length > 0 && (
+        <button className={s.reportBtn} onClick={() => setPhotoReportOpen(true)}>
+          Создать фото-отчёт
+        </button>
+      )}
+
       {sh.status === 'accepted' && (
         <button className={s.doneBtn} onClick={handleMarkDone}>
           ЗАТОЧИТЬ
@@ -340,6 +348,14 @@ export default function SharpeningDetail() {
           onCamera={() => addAfterPhoto(openCamera)}
           onGallery={() => addAfterPhoto(openGallery)}
           onClose={() => setPhotoPickerOpen(false)}
+        />
+      )}
+
+      {photoReportOpen && sh.photosAfter && (
+        <PhotoReportSheet
+          photos={sh.photosAfter}
+          sharpening={sh}
+          onClose={() => setPhotoReportOpen(false)}
         />
       )}
 
