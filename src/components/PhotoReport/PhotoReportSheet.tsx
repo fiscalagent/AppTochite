@@ -20,78 +20,92 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(img, 0, 0)
 
-      const pad = w * 0.045
+      const pad = Math.round(w * 0.045)
       const fontSize = Math.round(w * 0.042)
-      const lineH = fontSize * 1.5
+      const lineH = Math.round(fontSize * 1.55)
 
       const stones = sh.stones ? [...sh.stones].sort((a, b) => a.order - b.order) : []
+      const finishStone = stones.length ? stones[stones.length - 1] : null
 
-      // Wrap stones into lines by measuring text width
-      const maxW = w - pad * 2
-      const arrowText = ' → '
-      ctx.font = `${fontSize}px system-ui, sans-serif`
-
-      const stoneLines: (typeof stones)[] = [[]]
-      let lineWidth = 0
-      for (let i = 0; i < stones.length; i++) {
-        const sep = i === 0 ? '' : arrowText
-        const stW = ctx.measureText(sep + stones[i].name).width
-        if (lineWidth + stW > maxW && stoneLines[stoneLines.length - 1].length > 0) {
-          stoneLines.push([])
-          lineWidth = 0
-        }
-        stoneLines[stoneLines.length - 1].push(stones[i])
-        lineWidth += stW
-      }
-
+      // --- TOP: нож, сталь, HRC ---
       const knifeInfo = [sh.knifeBrand, sh.steel, sh.hrc ? `${sh.hrc} HRC` : null]
         .filter(Boolean).join(' · ')
 
-      const textLines = stones.length + 1 // stones lines + knife line
-      const gradH = Math.max(h * 0.38, lineH * (textLines + 1) * 1.6)
-
-      // Gradient
-      const grad = ctx.createLinearGradient(0, h - gradH, 0, h)
-      grad.addColorStop(0, 'rgba(0,0,0,0)')
-      grad.addColorStop(1, 'rgba(0,0,0,0.82)')
-      ctx.fillStyle = grad
-      ctx.fillRect(0, h - gradH, w, gradH)
+      const topGradH = Math.round(h * 0.22)
+      const topGrad = ctx.createLinearGradient(0, 0, 0, topGradH)
+      topGrad.addColorStop(0, 'rgba(0,0,0,0.72)')
+      topGrad.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = topGrad
+      ctx.fillRect(0, 0, w, topGradH)
 
       ctx.textAlign = 'left'
-      ctx.textBaseline = 'alphabetic'
+      ctx.textBaseline = 'top'
+      ctx.font = `bold ${Math.round(fontSize * 1.08)}px system-ui, sans-serif`
+      ctx.fillStyle = '#ffffff'
+      ctx.fillText(knifeInfo, pad, pad)
 
-      let y = h - Math.round(h * 0.045)
-
-      // Stones — render last line at bottom, first line uppermost
+      // --- BOTTOM: камни ---
       if (stones.length) {
-        const finishStone = stones[stones.length - 1]
+        ctx.textBaseline = 'alphabetic'
 
-        for (let li = stoneLines.length - 1; li >= 0; li--) {
-          const line = stoneLines[li]
+        const prefix = 'Камни: '
+        const arrowText = ' → '
+        ctx.font = `${fontSize}px system-ui, sans-serif`
+        const prefixW = ctx.measureText(prefix).width
+        const arrowW = ctx.measureText(arrowText).width
+        const maxW = w - pad * 2
+
+        // Wrap: первая строка учитывает ширину префикса "Камни: "
+        const lines: (typeof stones)[] = [[]]
+        let lineUsed = prefixW
+
+        for (const st of stones) {
+          const currentLine = lines[lines.length - 1]
+          const isFirstOnLine = currentLine.length === 0
+          const needed = (isFirstOnLine ? 0 : arrowW) + ctx.measureText(st.name).width
+
+          if (!isFirstOnLine && lineUsed + needed > maxW) {
+            lines.push([st])
+            lineUsed = ctx.measureText(st.name).width
+          } else {
+            currentLine.push(st)
+            lineUsed += needed
+          }
+        }
+
+        // Нижний градиент — высота под количество строк
+        const botGradH = Math.max(Math.round(h * 0.28), (lines.length + 1) * lineH * 1.8)
+        const botGrad = ctx.createLinearGradient(0, h - botGradH, 0, h)
+        botGrad.addColorStop(0, 'rgba(0,0,0,0)')
+        botGrad.addColorStop(1, 'rgba(0,0,0,0.82)')
+        ctx.fillStyle = botGrad
+        ctx.fillRect(0, h - botGradH, w, botGradH)
+
+        // Рендер строк снизу вверх (последняя строка = самая нижняя)
+        let y = h - pad
+
+        for (let li = lines.length - 1; li >= 0; li--) {
+          const line = lines[li]
           let x = pad
 
-          // "Камни: " prefix on first line only
+          // Префикс только на первой строке
           if (li === 0) {
             ctx.font = `${fontSize}px system-ui, sans-serif`
             ctx.fillStyle = 'rgba(255,255,255,0.55)'
-            const prefix = 'Камни: '
             ctx.fillText(prefix, x, y)
-            x += ctx.measureText(prefix).width
+            x += prefixW
           }
 
           for (let i = 0; i < line.length; i++) {
             const st = line[i]
-            const isFirst = li === 0 && i === 0
             const isFinish = st === finishStone
 
-            if (!isFirst) {
+            // Стрелка только между камнями внутри одной строки
+            if (i > 0) {
               ctx.font = `${fontSize}px system-ui, sans-serif`
               ctx.fillStyle = 'rgba(255,255,255,0.45)'
               ctx.fillText(arrowText, x, y)
-              x += ctx.measureText(arrowText).width
-            } else if (li !== 0) {
-              // continuation line — indent to align
-              x = pad
+              x += arrowW
             }
 
             ctx.fillStyle = isFinish ? '#4A90D9' : 'rgba(255,255,255,0.88)'
@@ -105,11 +119,6 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
           y -= lineH
         }
       }
-
-      // Knife line
-      ctx.font = `bold ${Math.round(fontSize * 1.08)}px system-ui, sans-serif`
-      ctx.fillStyle = '#ffffff'
-      ctx.fillText(knifeInfo, pad, y)
 
       resolve()
     }
