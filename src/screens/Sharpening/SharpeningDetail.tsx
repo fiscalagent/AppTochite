@@ -36,6 +36,41 @@ function formatDate(date: Date | string) {
   })
 }
 
+function PhotoSection({
+  photos, field, title, isCoverSection, onLightbox, onRemove, styles,
+}: {
+  photos: string[]
+  field: 'photosBefore' | 'photosAfter'
+  title: string
+  isCoverSection: boolean
+  onLightbox: (index: number) => void
+  onRemove: (index: number) => void
+  styles: Record<string, string>
+}) {
+  return (
+    <div className={styles.photoSection}>
+      <div className={styles.photoSectionTitle}>{title}</div>
+      <div className={styles.photoScroll}>
+        {photos.map((src, i) => {
+          const isCover = isCoverSection && i === 0
+          return (
+            <div key={i} className={styles.photoWrapper}>
+              <img
+                src={src}
+                className={`${styles.photoImg} ${isCover ? styles.photoImgCover : ''}`}
+                alt=""
+                onClick={() => onLightbox(i)}
+              />
+              {isCover && <span className={styles.coverBadge}>обложка</span>}
+              <button className={styles.photoRemove} onClick={() => onRemove(i)}>×</button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function SharpeningDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -60,9 +95,8 @@ export default function SharpeningDetail() {
     setPhotoModal(true)
   }
 
-  async function addAfterPhoto(pick: (cb: (b64: string) => void) => void) {
-    const current = await db.sharpenings.get(sharpeningId)
-    const existing = current?.photosAfter ?? []
+  function addAfterPhoto(pick: (cb: (b64: string) => void) => void) {
+    const existing = sh.photosAfter ?? []
     if (existing.length >= 5) {
       showToast('Максимум 5 фото после заточки')
       return
@@ -73,15 +107,8 @@ export default function SharpeningDetail() {
   }
 
   async function handleRemovePhoto(field: 'photosBefore' | 'photosAfter', index: number) {
-    const current = await db.sharpenings.get(sharpeningId)
-    if (!current) return
-    const updated = (current[field] ?? []).filter((_, i) => i !== index)
-    const value = updated.length ? updated : undefined
-    if (field === 'photosBefore') {
-      await db.sharpenings.update(sharpeningId, { photosBefore: value })
-    } else {
-      await db.sharpenings.update(sharpeningId, { photosAfter: value })
-    }
+    const updated = (sh[field] ?? []).filter((_, i) => i !== index)
+    await db.sharpenings.update(sharpeningId, { [field]: updated.length ? updated : undefined })
   }
 
   async function handleDelete() {
@@ -184,58 +211,29 @@ export default function SharpeningDetail() {
         </div>
       )}
 
-      {/* Фото */}
       {(sh.photosBefore?.length || sh.photosAfter?.length) ? (
         <div className={s.card}>
           {sh.photosBefore && sh.photosBefore.length > 0 && (
-            <div className={s.photoSection}>
-              <div className={s.photoSectionTitle}>Фото «До»</div>
-              <div className={s.photoScroll}>
-                {sh.photosBefore.map((src, i) => {
-                  const isCover = coverField === 'photosBefore' && i === 0
-                  return (
-                    <div key={i} className={s.photoWrapper}>
-                      <img
-                        src={src}
-                        className={`${s.photoImg} ${isCover ? s.photoImgCover : ''}`}
-                        alt=""
-                        onClick={() => setLightbox({ photos: sh.photosBefore!, index: i })}
-                      />
-                      {isCover && <span className={s.coverBadge}>обложка</span>}
-                      <button
-                        className={s.photoRemove}
-                        onClick={() => handleRemovePhoto('photosBefore', i)}
-                      >×</button>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+            <PhotoSection
+              photos={sh.photosBefore}
+              field="photosBefore"
+              title="Фото «До»"
+              isCoverSection={coverField === 'photosBefore'}
+              onLightbox={i => setLightbox({ photos: sh.photosBefore!, index: i })}
+              onRemove={i => handleRemovePhoto('photosBefore', i)}
+              styles={s}
+            />
           )}
           {sh.photosAfter && sh.photosAfter.length > 0 && (
-            <div className={s.photoSection}>
-              <div className={s.photoSectionTitle}>Фото «После»</div>
-              <div className={s.photoScroll}>
-                {sh.photosAfter.map((src, i) => {
-                  const isCover = coverField === 'photosAfter' && i === 0
-                  return (
-                    <div key={i} className={s.photoWrapper}>
-                      <img
-                        src={src}
-                        className={`${s.photoImg} ${isCover ? s.photoImgCover : ''}`}
-                        alt=""
-                        onClick={() => setLightbox({ photos: sh.photosAfter!, index: i })}
-                      />
-                      {isCover && <span className={s.coverBadge}>обложка</span>}
-                      <button
-                        className={s.photoRemove}
-                        onClick={() => handleRemovePhoto('photosAfter', i)}
-                      >×</button>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+            <PhotoSection
+              photos={sh.photosAfter}
+              field="photosAfter"
+              title="Фото «После»"
+              isCoverSection={coverField === 'photosAfter'}
+              onLightbox={i => setLightbox({ photos: sh.photosAfter!, index: i })}
+              onRemove={i => handleRemovePhoto('photosAfter', i)}
+              styles={s}
+            />
           )}
         </div>
       ) : null}
