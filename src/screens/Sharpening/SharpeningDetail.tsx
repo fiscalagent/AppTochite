@@ -37,7 +37,7 @@ function formatDate(date: Date | string) {
 }
 
 function PhotoSection({
-  photos, field, title, isCoverSection, onLightbox, onRemove, styles,
+  photos, field: _field, title, isCoverSection, onLightbox, onRemove, styles,
 }: {
   photos: string[]
   field: 'photosBefore' | 'photosAfter'
@@ -96,7 +96,7 @@ export default function SharpeningDetail() {
   }
 
   function addAfterPhoto(pick: (cb: (b64: string) => void) => void) {
-    const existing = sh.photosAfter ?? []
+    const existing = sh?.photosAfter ?? []
     if (existing.length >= 5) {
       showToast('Максимум 5 фото после заточки')
       return
@@ -107,8 +107,13 @@ export default function SharpeningDetail() {
   }
 
   async function handleRemovePhoto(field: 'photosBefore' | 'photosAfter', index: number) {
-    const updated = (sh[field] ?? []).filter((_, i) => i !== index)
-    await db.sharpenings.update(sharpeningId, { [field]: updated.length ? updated : undefined })
+    const updated = (sh?.[field] ?? []).filter((_, i) => i !== index)
+    const value = updated.length ? updated : undefined
+    if (field === 'photosBefore') {
+      await db.sharpenings.update(sharpeningId, { photosBefore: value })
+    } else {
+      await db.sharpenings.update(sharpeningId, { photosAfter: value })
+    }
   }
 
   async function handleDelete() {
