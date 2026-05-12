@@ -1,3 +1,10 @@
+## [1.32.1](https://github.com/fiscalagent/AppTochite/compare/v1.32.0...v1.32.1) (2026-05-12)
+
+
+### fix
+
+* превью фото-отчёта обрезало нижний блок камней на портретных фото ([](https://github.com/fiscalagent/AppTochite/commit/2b94ebb645902278eb3536184ff87c7e78d8c047))
+
 # [1.32.0](https://github.com/fiscalagent/AppTochite/compare/v1.31.2...v1.32.0) (2026-05-12)
 
 

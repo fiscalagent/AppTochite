@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.32.1',
+    date: '2026-05-12',
+    changes: [
+      'превью фото-отчёта обрезало нижний блок камней на портретных фото',
+      'удалена кнопка отправки заточки клиенту в Telegram',
+    ],
+  },
+  {
     version: '1.32.0',
     date: '2026-05-12',
     changes: [
