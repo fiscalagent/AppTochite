@@ -1,3 +1,10 @@
+## [1.31.1](https://github.com/fiscalagent/AppTochite/compare/v1.31.0...v1.31.1) (2026-05-12)
+
+
+### fix
+
+* фото-отчёт — нож наверху, корректный перенос камней ([](https://github.com/fiscalagent/AppTochite/commit/22da14a637e5a6490ddd90b8e3066d3569f0edd9))
+
 # [1.31.0](https://github.com/fiscalagent/AppTochite/compare/v1.30.0...v1.31.0) (2026-05-12)
 
 
