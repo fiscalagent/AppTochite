@@ -25,7 +25,6 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       const lineH = Math.round(fontSize * 1.55)
 
       const stones = sh.stones ? [...sh.stones].sort((a, b) => a.order - b.order) : []
-      const finishStone = stones.length ? stones[stones.length - 1] : null
 
       // --- TOP: нож, сталь, HRC ---
       const knifeInfo = [sh.knifeBrand, sh.steel, sh.hrc ? `${sh.hrc} HRC` : null]
