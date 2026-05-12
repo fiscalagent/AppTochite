@@ -1,2 +1,2 @@
 # AppTochite
-Created manually. TBC
+t.me/AppTochite
