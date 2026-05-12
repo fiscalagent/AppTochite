@@ -1,6 +1,6 @@
 # AppTochite — Технический стек
 
-**Версия:** 0.3 · Апрель 2026  
+**Версия:** 0.4 · Май 2026  
 **Тип:** PWA · Mobile-first · Android (90%)
 
 ---
@@ -17,7 +17,7 @@
 | Хранилище | Dexie.js (IndexedDB) | 3+ |
 | Офлайн / SW | Workbox (`vite-plugin-pwa`) | 0.17+ |
 | Камера | Web Camera API | нативный браузерный API |
-| Деплой | Vercel | — |
+| Деплой | GitHub Pages (CI через GitHub Actions, Node 24) | — |
 
 ---
 
@@ -40,31 +40,50 @@ IndexedDB API низкоуровневый и многословный. Dexie д
 apptochite/
 ├── public/
 │   ├── manifest.json
+│   ├── guide.html            ← печатная инструкция для пользователей
+│   ├── cleaner.html          ← страница сброса данных (только dev)
 │   └── icons/
 ├── src/
-│   ├── main.tsx                  ← глобальный импорт токенов
+│   ├── main.tsx
+│   ├── version.ts            ← APP_VERSION — единый источник версии
 │   ├── styles/
-│   │   ├── tokens.css            ← все CSS custom properties
+│   │   ├── tokens.css        ← все CSS custom properties
 │   │   └── reset.css
 │   ├── db/
-│   │   ├── db.ts                 ← Dexie схема и инстанс
-│   │   └── types.ts              ← TypeScript типы сущностей
-│   ├── components/               ← переиспользуемые компоненты
-│   │   ├── StatusPill/
-│   │   │   ├── StatusPill.tsx
-│   │   │   └── StatusPill.module.css
+│   │   ├── db.ts             ← Dexie-схема, TypeScript-типы, утилиты
+│   │   ├── instance.ts       ← экземпляр AppTochiteDB
+│   │   └── seed.ts           ← предзаполненные справочники
+│   ├── data/
+│   │   └── changelog.ts      ← записи ченджлога для экрана «О программе»
+│   ├── components/
+│   │   ├── Autocomplete/
 │   │   ├── Avatar/
+│   │   ├── BackupReminder/
+│   │   ├── BottomNav/
 │   │   ├── ClientCard/
+│   │   ├── ConfirmModal/
+│   │   ├── Layout/
+│   │   ├── PhotoLightbox/
+│   │   ├── PhotoReport/      ← canvas-отчёт заточки + шаринг
+│   │   ├── PhotoSourceSheet/
 │   │   ├── SharpeningRow/
-│   │   └── BottomNav/
-│   ├── screens/                  ← экраны из спецификации
-│   │   ├── Clients/              ← C-1, C-2, C-3
-│   │   ├── History/              ← H-1
-│   │   ├── Sharpening/           ← Z-1, Z-2
-│   │   └── Reference/            ← S-1..S-4
-│   ├── modals/                   ← M-1..M-4
-│   ├── hooks/                    ← useCamera, useClients, ...
-│   └── router.tsx
+│   │   ├── StatusPill/
+│   │   ├── StorageWarning/
+│   │   └── Toast/
+│   ├── screens/
+│   │   ├── About/            ← A-1
+│   │   ├── Backup/           ← BK-1
+│   │   ├── Clients/          ← C-1, C-2, C-3
+│   │   ├── History/          ← H-1
+│   │   ├── Reference/        ← S-1/2/3
+│   │   └── Sharpening/       ← Z-1, Z-2
+│   ├── hooks/
+│   │   ├── useCamera.ts
+│   │   └── useVersionCheck.ts
+│   └── utils/
+│       ├── backup.ts
+│       └── backup.test.ts
+├── docs/                     ← документация проекта
 ├── vite.config.ts
 ├── tsconfig.json
 └── package.json
@@ -72,141 +91,101 @@ apptochite/
 
 ---
 
-## Схема БД (Dexie)
+## Схема БД (Dexie, текущая версия v3)
 
 ```ts
 // src/db/db.ts
-import Dexie, { Table } from 'dexie';
 
 export interface Client {
-  id?: number;
-  name: string;
-  phone?: string;
-  telegram?: string;
-  isMe: boolean; // нулевой клиент «Я»
-  createdAt: Date;
+  id?: number
+  name: string
+  phone?: string
+  telegram?: string
+  avatar?: string       // base64, фото из камеры/галереи
+  isSelf: boolean       // нулевой клиент «Я»
+  createdAt: Date
+}
+
+export type SharpeningStatus = 'accepted' | 'done'
+
+export interface SharpeningStone {
+  name: string
+  order: number         // порядок в последовательности; последний = финишный (FIN)
 }
 
 export interface Sharpening {
-  id?: number;
-  clientId: number;
-  knifeBrand: string;
-  steel?: string;
-  hrc?: number;
-  knifeType?: string;
-  condition?: string[];       // мультивыбор
-  receivedAt: Date;
-  angle?: number;
-  stones?: SharpeningStone[];
-  comment?: string;
-  price?: number;
-  status: 'accepted' | 'inwork' | 'done';
-  doneAt?: Date;
-  photoBefore?: string;       // base64
-  photoAfter?: string;        // base64
+  id?: number
+  clientId: number
+  knifeBrand: string
+  steel?: string
+  hrc?: number
+  condition?: string[]  // тип работы: заточка / правка РК / ремонт
+  receivedAt: Date
+  angle?: number
+  stones?: SharpeningStone[]  // embedded JSON, не отдельная таблица
+  comment?: string
+  price?: number
+  status: SharpeningStatus
+  doneAt?: Date
+  photosBefore?: string[]     // base64[], до 5 фото
+  photosAfter?: string[]      // base64[], до 5 фото
 }
 
-export interface SharpeningStone {
-  stoneId: number;
-  order: number;
-}
+export type GritUnit = 'fepa' | 'jis' | 'mk'
 
 export interface Stone {
-  id?: number;
-  brand: string;
-  grit: number;
-  type: 'water' | 'oil' | 'diamond';
-  description?: string;
-  isCustom: boolean;
+  id?: number
+  brand: string
+  grit?: number
+  gritUnit?: GritUnit   // единица зернистости
+  gritMk?: string       // значение для мкм (формат '315/250')
+  type?: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic'
+  category?: string
+  description?: string
+  isCustom: boolean
 }
 
 export interface Steel {
-  id?: number;
-  name: string;
-  hrc?: number;
-  recommendedAngle?: number;
-  description?: string;
-  isCustom: boolean;
+  id?: number
+  name: string
+  hrc?: number
+  recommendedAngle?: number
+  category?: string
+  description?: string
+  isCustom: boolean
 }
 
 export interface Knife {
-  id?: number;
-  brand: string;
-  country?: string;
-  steel?: string;
-  recommendedAngle?: number;
-  type?: string;
-  description?: string;
-  isCustom: boolean;
+  id?: number
+  brand: string
+  country?: string
+  steel?: string
+  recommendedAngle?: number
+  type?: string
+  category?: string
+  description?: string
+  isCustom: boolean
 }
 
-class AppTochiteDB extends Dexie {
-  clients!: Table<Client>;
-  sharpenings!: Table<Sharpening>;
-  stones!: Table<Stone>;
-  steels!: Table<Steel>;
-  knives!: Table<Knife>;
-
-  constructor() {
-    super('AppTochiteDB');
-    this.version(1).stores({
-      clients:     '++id, name, isMe',
-      sharpenings: '++id, clientId, status, receivedAt',
-      stones:      '++id, brand, type, isCustom',
-      steels:      '++id, name, isCustom',
-      knives:      '++id, brand, isCustom',
-    });
-  }
+export interface Meta {
+  key: string
+  value: number | string | boolean
 }
 
-export const db = new AppTochiteDB();
-```
-
----
-
-## PWA конфиг (vite.config.ts)
-
-```ts
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
-
-export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: {
-        name: 'AppTochite',
-        short_name: 'Заточка',
-        description: 'Журнал заточника',
-        theme_color: '#0F0F11',
-        background_color: '#0F0F11',
-        display: 'standalone',
-        orientation: 'portrait',
-        lang: 'ru',
-        icons: [
-          { src: '/icons/192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/512.png', sizes: '512x512', type: 'image/png' },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: { cacheName: 'google-fonts', expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 } },
-          },
-        ],
-      },
-    }),
-  ],
-});
+// Версии схемы:
+// v1 — initial: clients, sharpenings, stones, steels, knives
+// v2 — grit index on stones
+// v3 — meta table (seedVersion)
 ```
 
 ---
 
 ## Changelog
 
-**v0.3** — первая версия. Стек зафиксирован: React + Vite + TypeScript + CSS Modules + Dexie.js + Workbox. Tailwind исключён в пользу CSS Modules для совместимости с дизайн-системой на CSS custom properties.
+**v0.4 (май 2026)** — обновление по итогам v1.15–v1.32:
+- Деплой: Vercel → GitHub Pages
+- Схема БД: добавлены `Client.avatar`, `Stone.gritUnit`, `Stone.gritMk`; убраны устаревшие поля (`isMe`, `photoBefore`/`photoAfter` → массивы, `Sharpening.sentAt`)
+- Добавлен компонент `PhotoReport/`
+- Структура: `src/db/instance.ts` выделен из `db.ts`
+
+**v0.3 (апрель 2026)** — первая версия. Стек зафиксирован: React + Vite + TypeScript + CSS Modules + Dexie.js + Workbox. Tailwind исключён в пользу CSS Modules для совместимости с дизайн-системой на CSS custom properties.
