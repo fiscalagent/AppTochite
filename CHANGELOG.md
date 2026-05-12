@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/fiscalagent/AppTochite/compare/v1.31.2...v1.32.0) (2026-05-12)
+
+
+### feat
+
+* удалена кнопка отправки заточки клиенту в Telegram ([](https://github.com/fiscalagent/AppTochite/commit/7642f5ed39ced397cfb283133e7f6299b71e5647))
+
 ## [1.31.2](https://github.com/fiscalagent/AppTochite/compare/v1.31.1...v1.31.2) (2026-05-12)
 
 
