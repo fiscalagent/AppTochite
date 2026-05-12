@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.32.2',
+    date: '2026-05-12',
+    changes: [
+      'исправить TS-ошибки в SharpeningDetail — падение деплоя #129-131 ([](https://github.com/fiscalagent/AppTochite/commit/b441dfc48f6a89d864b1dd246821950937d3170b)), closes [#129-131](https://github.com/fiscalagent/AppTochite/issues/129-131)',
+    ],
+  },
+  {
     version: '1.32.1',
     date: '2026-05-12',
     changes: [

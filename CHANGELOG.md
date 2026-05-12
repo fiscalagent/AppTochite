@@ -1,3 +1,10 @@
+## [1.32.2](https://github.com/fiscalagent/AppTochite/compare/v1.32.1...v1.32.2) (2026-05-12)
+
+
+### fix
+
+* исправить TS-ошибки в SharpeningDetail — падение деплоя #129-131 ([](https://github.com/fiscalagent/AppTochite/commit/b441dfc48f6a89d864b1dd246821950937d3170b)), closes [#129-131](https://github.com/fiscalagent/AppTochite/issues/129-131)
+
 ## [1.32.1](https://github.com/fiscalagent/AppTochite/compare/v1.32.0...v1.32.1) (2026-05-12)
 
 
