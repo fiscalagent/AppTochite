@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/fiscalagent/AppTochite/compare/v1.30.0...v1.31.0) (2026-05-12)
+
+
+### feat
+
+* фото-отчёт заточки с подписями камней и стали ([](https://github.com/fiscalagent/AppTochite/commit/1174eb19bb9e9c06bf30b2f3d9a2a86f398b5e57))
+
 # [1.30.0](https://github.com/fiscalagent/AppTochite/compare/v1.29.6...v1.30.0) (2026-05-11)
 
 
