@@ -48,25 +48,33 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       if (stones.length) {
         ctx.textBaseline = 'alphabetic'
 
+        const maxOrder = Math.max(...stones.map(s => s.order))
         const prefix = 'Камни: '
         const arrowText = ' → '
-        ctx.font = `${fontSize}px system-ui, sans-serif`
-        const prefixW = ctx.measureText(prefix).width
-        const arrowW = ctx.measureText(arrowText).width
+        const normalFont = `${fontSize}px system-ui, sans-serif`
+        const boldFont = `bold ${fontSize}px system-ui, sans-serif`
         const maxW = w - pad * 2
 
-        // Wrap: первая строка учитывает ширину префикса "Камни: "
+        ctx.font = normalFont
+        const prefixW = ctx.measureText(prefix).width
+        const arrowW = ctx.measureText(arrowText).width
+
+        // Wrap: первая строка учитывает ширину префикса.
+        // Финишный камень измеряем жирным — он рендерится жирным.
         const lines: (typeof stones)[] = [[]]
         let lineUsed = prefixW
 
         for (const st of stones) {
+          const isFinish = st.order === maxOrder
+          ctx.font = isFinish ? boldFont : normalFont
+          const stW = ctx.measureText(st.name).width
           const currentLine = lines[lines.length - 1]
           const isFirstOnLine = currentLine.length === 0
-          const needed = (isFirstOnLine ? 0 : arrowW) + ctx.measureText(st.name).width
+          const needed = (isFirstOnLine ? 0 : arrowW) + stW
 
           if (!isFirstOnLine && lineUsed + needed > maxW) {
             lines.push([st])
-            lineUsed = ctx.measureText(st.name).width
+            lineUsed = stW
           } else {
             currentLine.push(st)
             lineUsed += needed
@@ -81,16 +89,15 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
         ctx.fillStyle = botGrad
         ctx.fillRect(0, h - botGradH, w, botGradH)
 
-        // Рендер строк снизу вверх (последняя строка = самая нижняя)
-        let y = h - pad
-
-        for (let li = lines.length - 1; li >= 0; li--) {
+        // Позиции строк: lines[0] — выше всех, lines[last] — у нижнего края
+        const baseY = h - pad
+        for (let li = 0; li < lines.length; li++) {
+          const y = baseY - (lines.length - 1 - li) * lineH
           const line = lines[li]
           let x = pad
 
-          // Префикс только на первой строке
           if (li === 0) {
-            ctx.font = `${fontSize}px system-ui, sans-serif`
+            ctx.font = normalFont
             ctx.fillStyle = 'rgba(255,255,255,0.55)'
             ctx.fillText(prefix, x, y)
             x += prefixW
@@ -98,25 +105,20 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
 
           for (let i = 0; i < line.length; i++) {
             const st = line[i]
-            const isFinish = st === finishStone
+            const isFinish = st.order === maxOrder
 
-            // Стрелка только между камнями внутри одной строки
             if (i > 0) {
-              ctx.font = `${fontSize}px system-ui, sans-serif`
+              ctx.font = normalFont
               ctx.fillStyle = 'rgba(255,255,255,0.45)'
               ctx.fillText(arrowText, x, y)
               x += arrowW
             }
 
+            ctx.font = isFinish ? boldFont : normalFont
             ctx.fillStyle = isFinish ? '#4A90D9' : 'rgba(255,255,255,0.88)'
-            ctx.font = isFinish
-              ? `bold ${fontSize}px system-ui, sans-serif`
-              : `${fontSize}px system-ui, sans-serif`
             ctx.fillText(st.name, x, y)
             x += ctx.measureText(st.name).width
           }
-
-          y -= lineH
         }
       }
 
