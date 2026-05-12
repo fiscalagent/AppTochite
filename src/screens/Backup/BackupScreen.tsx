@@ -1,5 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+
+const IconChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+)
+
+const IconChevronRight = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+)
 import { db } from '../../db/instance'
 import { useToast } from '../../components/Toast/ToastContext'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
@@ -116,7 +128,7 @@ export default function BackupScreen() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.back} onClick={() => navigate(-1)}>←</button>
+        <button className={s.back} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>НАСТРОЙКИ</span>
       </div>
 
@@ -267,7 +279,7 @@ export default function BackupScreen() {
           </div>
           <div className={s.aboutRight}>
             {hasUpdate && <span className={s.updateDot} />}
-            <span className={s.aboutChevron}>›</span>
+            <span className={s.aboutChevron}><IconChevronRight /></span>
           </div>
         </Link>
       </div>

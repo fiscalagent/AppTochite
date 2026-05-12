@@ -4,6 +4,18 @@ import { CHANGELOG } from '../../data/changelog'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
+const IconChevronLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 18 9 12 15 6"/>
+  </svg>
+)
+
+const IconChevronRight = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+)
+
 function isPwa(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches
 }
@@ -24,7 +36,7 @@ export default function AboutScreen() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.back} onClick={() => navigate(-1)}>←</button>
+        <button className={s.back} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>О ПРОГРАММЕ</span>
       </div>
 
@@ -87,7 +99,7 @@ export default function AboutScreen() {
           >
             <span className={s.linkIcon}>✈️</span>
             <span className={s.linkLabel}>Группа в Telegram AppTochite</span>
-            <span className={s.linkArrow}>›</span>
+            <span className={s.linkArrow}><IconChevronRight /></span>
           </a>
           <a
             href="https://boosty.to/potochite/donate"
@@ -97,7 +109,7 @@ export default function AboutScreen() {
           >
             <span className={s.linkIcon}>☕</span>
             <span className={s.linkLabel}>Поддержать развитие</span>
-            <span className={s.linkArrow}>›</span>
+            <span className={s.linkArrow}><IconChevronRight /></span>
           </a>
         </div>
       </div>

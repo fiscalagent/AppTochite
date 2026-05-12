@@ -16,6 +16,12 @@ const IconChevronLeft = () => (
   </svg>
 )
 
+const IconChevronRight = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+)
+
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
@@ -175,13 +181,13 @@ export default function ClientCard() {
                   className={s.pageBtn}
                   onClick={() => setPage(p => p - 1)}
                   disabled={page === 0}
-                >←</button>
+                ><IconChevronLeft /></button>
                 <span className={s.pageLabel}>{page + 1} / {totalPages}</span>
                 <button
                   className={s.pageBtn}
                   onClick={() => setPage(p => p + 1)}
                   disabled={page >= totalPages - 1}
-                >→</button>
+                ><IconChevronRight /></button>
               </div>
             )}
           </div>

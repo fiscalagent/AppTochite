@@ -166,7 +166,7 @@ export default function SharpeningDetail() {
           <>
             <div className={s.divider} />
             <div>
-              <div className={s.sectionTitle} style={{ marginBottom: 8 }}>Состояние</div>
+              <div className={s.sectionTitle}>Состояние</div>
               <div className={s.chips}>
                 {sh.condition.map(c => (
                   <span key={c} className={s.chip}>{c}</span>
@@ -188,7 +188,7 @@ export default function SharpeningDetail() {
           )}
           {sortedStones.length > 0 && (
             <div>
-              <div className={s.sectionTitle} style={{ marginBottom: 8 }}>Камни</div>
+              <div className={s.sectionTitle}>Камни</div>
               <div className={s.stoneTags}>
                 {sortedStones.map(ss => (
                   <div key={ss.order} className={s.stoneTag}>
@@ -205,7 +205,7 @@ export default function SharpeningDetail() {
               <div className={s.row}>
                 <span className={s.rowLabel}>Комментарий</span>
               </div>
-              <span className={s.rowValue} style={{ textAlign: 'left' }}>{sh.comment}</span>
+              <span className={`${s.rowValue} ${s.rowValueLeft}`}>{sh.comment}</span>
             </>
           )}
         </div>

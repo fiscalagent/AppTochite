@@ -7,6 +7,12 @@ import { getGritDisplay, getGritSortValue, GRIT_TABLE, type GritDisplayMode } fr
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
+const IconCheck = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+
 type Tab = 'stones' | 'steels' | 'knives'
 
 const TABS: { value: Tab; label: string }[] = [
@@ -57,7 +63,7 @@ function SelectAllRow({
       onClick={allSelected ? onClearAll : onSelectAll}
     >
       <div className={`${s.checkbox} ${allSelected ? s.checkboxChecked : someSelected ? s.checkboxPartial : ''}`}>
-        {allSelected && <span className={s.checkmark}>✓</span>}
+        {allSelected && <span className={s.checkmark}><IconCheck /></span>}
         {someSelected && <span className={s.checkmark}>–</span>}
       </div>
       <span className={s.selectAllLabel}>
@@ -628,7 +634,7 @@ function StonesTab({ search }: { search: string }) {
               onClick={() => toggle(st.id!)}
             >
               <div className={`${s.checkbox} ${sel ? s.checkboxChecked : ''}`}>
-                {sel && <span className={s.checkmark}>✓</span>}
+                {sel && <span className={s.checkmark}><IconCheck /></span>}
               </div>
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{st.brand}</div>
@@ -746,7 +752,7 @@ function SteelsTab({ search }: { search: string }) {
               onClick={() => toggle(st.id!)}
             >
               <div className={`${s.checkbox} ${sel ? s.checkboxChecked : ''}`}>
-                {sel && <span className={s.checkmark}>✓</span>}
+                {sel && <span className={s.checkmark}><IconCheck /></span>}
               </div>
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{st.name}</div>
@@ -859,7 +865,7 @@ function KnivesTab({ search }: { search: string }) {
               onClick={() => toggle(k.id!)}
             >
               <div className={`${s.checkbox} ${sel ? s.checkboxChecked : ''}`}>
-                {sel && <span className={s.checkmark}>✓</span>}
+                {sel && <span className={s.checkmark}><IconCheck /></span>}
               </div>
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{k.brand}</div>

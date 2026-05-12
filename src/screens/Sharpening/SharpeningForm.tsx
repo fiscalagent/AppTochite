@@ -23,6 +23,12 @@ const IconCamera = () => (
   </svg>
 )
 
+const IconCheck = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+
 const CONDITIONS = ['заточка', 'правка РК', 'ремонт']
 const PHOTO_LIMIT = 5
 
@@ -252,7 +258,7 @@ export default function SharpeningForm() {
       <div className={s.stepper}>
         <div className={s.stepItem}>
           <div className={`${s.stepDot} ${step >= 1 ? (step > 1 ? s.done : s.active) : ''}`}>
-            {step > 1 ? '✓' : '1'}
+            {step > 1 ? <IconCheck /> : '1'}
           </div>
           <span className={`${s.stepLabel} ${step === 1 ? s.active : ''}`}>Приёмка</span>
         </div>
