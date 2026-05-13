@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.34.2',
+    date: '2026-05-13',
+    changes: [
+      'камни оборачиваются в пределах тёмного угла, правое выравнивание для правого тёмного угла',
+    ],
+  },
+  {
     version: '1.34.1',
     date: '2026-05-13',
     changes: [

@@ -1,3 +1,10 @@
+## [1.34.2](https://github.com/fiscalagent/AppTochite/compare/v1.34.1...v1.34.2) (2026-05-13)
+
+
+### fix
+
+* камни оборачиваются в пределах тёмного угла, правое выравнивание для правого тёмного угла ([](https://github.com/fiscalagent/AppTochite/commit/6b227c379cd16666f3e646e34333e4dba59dbb66))
+
 ## [1.34.1](https://github.com/fiscalagent/AppTochite/compare/v1.34.0...v1.34.1) (2026-05-13)
 
 
