@@ -1,3 +1,10 @@
+# [1.35.0](https://github.com/fiscalagent/AppTochite/compare/v1.34.4...v1.35.0) (2026-05-13)
+
+
+### feat
+
+* автобэкап в папку через File System Access API ([](https://github.com/fiscalagent/AppTochite/commit/2f67b3b1c350edb2e116f7133218d088746607e2))
+
 ## [1.34.4](https://github.com/fiscalagent/AppTochite/compare/v1.34.3...v1.34.4) (2026-05-13)
 
 
