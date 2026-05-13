@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.36.1',
+    date: '2026-05-13',
+    changes: [
+      'исправлены ошибки сборки в AutoBackupContext',
+      'кнопка «Включить автобэкап» прямо в напоминалке о бэкапе',
+      'автобэкап в папку через File System Access API',
+    ],
+  },
+  {
     version: '1.36.0',
     date: '2026-05-13',
     changes: [
