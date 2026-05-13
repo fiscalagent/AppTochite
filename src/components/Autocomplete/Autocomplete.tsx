@@ -12,7 +12,7 @@ interface Props {
 
 export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect }: Props) {
   const [open, setOpen] = useState(false)
-  const lastTapRef = useRef<{ item: string; time: number } | null>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const filtered = value.length > 0
     ? suggestions.filter(item => item.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
@@ -24,17 +24,6 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
     onChange(item)
     onSelect?.(item)
     setOpen(false)
-  }
-
-  function handleItemPointerDown(e: React.PointerEvent, item: string) {
-    e.preventDefault()
-    const now = Date.now()
-    if (lastTapRef.current && lastTapRef.current.item === item && now - lastTapRef.current.time < 300) {
-      handleSelect(item)
-      lastTapRef.current = null
-    } else {
-      lastTapRef.current = { item, time: now }
-    }
   }
 
   return (
@@ -50,12 +39,19 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
         autoComplete="off"
       />
       {visible && (
-        <div className={s.dropdown} onTouchStart={e => e.preventDefault()}>
+        <div className={s.dropdown}>
           {filtered.map(item => (
             <div
               key={item}
               className={s.item}
-              onPointerDown={e => handleItemPointerDown(e, item)}
+              onPointerDown={e => { e.preventDefault(); touchStartRef.current = { x: e.clientX, y: e.clientY } }}
+              onPointerUp={e => {
+                if (!touchStartRef.current) return
+                const dx = Math.abs(e.clientX - touchStartRef.current.x)
+                const dy = Math.abs(e.clientY - touchStartRef.current.y)
+                if (dx < 8 && dy < 8) handleSelect(item)
+                touchStartRef.current = null
+              }}
             >
               {item}
             </div>
