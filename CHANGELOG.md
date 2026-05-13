@@ -1,3 +1,10 @@
+## [1.34.3](https://github.com/fiscalagent/AppTochite/compare/v1.34.2...v1.34.3) (2026-05-13)
+
+
+### fix
+
+* ширина названия ножа вычисляется по реальной ширине текста угла ([](https://github.com/fiscalagent/AppTochite/commit/aaca63773aa13c8af3879ca704c4bdbcc3471e2c))
+
 ## [1.34.2](https://github.com/fiscalagent/AppTochite/compare/v1.34.1...v1.34.2) (2026-05-13)
 
 

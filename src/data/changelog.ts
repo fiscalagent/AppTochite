@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.34.3',
+    date: '2026-05-13',
+    changes: [
+      'ширина названия ножа вычисляется по реальной ширине текста угла',
+    ],
+  },
+  {
     version: '1.34.2',
     date: '2026-05-13',
     changes: [
