@@ -89,11 +89,17 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       ctx.fillStyle = topGrad
       ctx.fillRect(0, 0, w, topGradH)
 
-      // --- Нож ---
+      // --- Нож + угол (верх) ---
       ctx.textBaseline = 'top'
       ctx.font = font
+
+      // Измеряем угол первым, чтобы гарантированно оставить под него место
+      const angleLabel = sh.angle != null ? `∠ ${sh.angle}°` : ''
+      const angleW = angleLabel ? ctx.measureText(angleLabel).width : 0
+      const angleGap = angleW > 0 ? Math.round(w * 0.03) : 0
+      const knifeMaxW = w - pad * 2 - angleW - angleGap
+
       ctx.fillStyle = 'rgba(255,255,255,0.80)'
-      const knifeMaxW = Math.round(w * 0.55) - pad
       if (knifeOnLeft) {
         ctx.textAlign = 'left'
         ctx.fillText(knifeInfo, pad, pad, knifeMaxW)
@@ -102,15 +108,14 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
         ctx.fillText(knifeInfo, w - pad, pad, knifeMaxW)
       }
 
-      // --- Угол заточки (противоположный верхний угол) ---
-      if (sh.angle != null) {
+      if (angleLabel) {
         ctx.fillStyle = 'rgba(255,255,255,0.70)'
         if (knifeOnLeft) {
           ctx.textAlign = 'right'
-          ctx.fillText(`∠ ${sh.angle}°`, w - pad, pad)
+          ctx.fillText(angleLabel, w - pad, pad)
         } else {
           ctx.textAlign = 'left'
-          ctx.fillText(`∠ ${sh.angle}°`, pad, pad)
+          ctx.fillText(angleLabel, pad, pad)
         }
       }
 
