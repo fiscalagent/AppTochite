@@ -1,3 +1,10 @@
+## [1.34.1](https://github.com/fiscalagent/AppTochite/compare/v1.34.0...v1.34.1) (2026-05-13)
+
+
+### fix
+
+* градиент фото-отчёта затемняет оба верхних угла по более светлому ([](https://github.com/fiscalagent/AppTochite/commit/5339cdff30c9ac4e93398362ce8678ba0487a778))
+
 # [1.34.0](https://github.com/fiscalagent/AppTochite/compare/v1.33.0...v1.34.0) (2026-05-13)
 
 
