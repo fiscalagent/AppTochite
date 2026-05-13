@@ -1,3 +1,10 @@
+# [1.34.0](https://github.com/fiscalagent/AppTochite/compare/v1.33.0...v1.34.0) (2026-05-13)
+
+
+### feat
+
+* адаптивное размещение текста и тонкий шрифт в фото-отчёте ([](https://github.com/fiscalagent/AppTochite/commit/c5bff2e3c58473eefaa949484ce2dc0ce03d09bf))
+
 # [1.33.0](https://github.com/fiscalagent/AppTochite/compare/v1.32.2...v1.33.0) (2026-05-13)
 
 
