@@ -8,6 +8,26 @@ interface Props {
   onClose: () => void
 }
 
+function sampleRegion(ctx: CanvasRenderingContext2D, x: number, y: number, rw: number, rh: number) {
+  const data = ctx.getImageData(Math.round(x), Math.round(y), Math.round(rw), Math.round(rh)).data
+  let sum = 0
+  const n = data.length / 4
+  for (let i = 0; i < data.length; i += 4) {
+    sum += data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114
+  }
+  const mean = sum / n
+  let vSum = 0
+  for (let i = 0; i < data.length; i += 4) {
+    const l = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114
+    vSum += (l - mean) ** 2
+  }
+  return { brightness: mean, std: Math.sqrt(vSum / n) }
+}
+
+function cornerScore(s: { brightness: number; std: number }) {
+  return s.brightness * 0.65 + s.std * 0.35
+}
+
 function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): Promise<void> {
   return new Promise(resolve => {
     const img = new Image()
@@ -21,60 +41,84 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       ctx.drawImage(img, 0, 0)
 
       const pad = Math.round(w * 0.045)
-      const fontSize = Math.round(w * 0.042)
+      const fontSize = Math.round(w * 0.034)
       const lineH = Math.round(fontSize * 1.55)
+      const font = `300 ${fontSize}px system-ui, sans-serif`
 
       const stones = sh.stones ? [...sh.stones].sort((a, b) => a.order - b.order) : []
 
-      // --- TOP: нож, сталь, HRC ---
+      // --- Анализ верхних углов ---
+      const rw = Math.round(w * 0.5)
+      const rh = Math.round(h * 0.20)
+      const topLeft = sampleRegion(ctx, 0, 0, rw, rh)
+      const topRight = sampleRegion(ctx, w - rw, 0, rw, rh)
+      const knifeOnLeft = cornerScore(topLeft) <= cornerScore(topRight)
+
+      // Адаптивная непрозрачность верхнего градиента
+      const topBrightness = knifeOnLeft ? topLeft.brightness : topRight.brightness
+      const topOpacity = 0.45 + (topBrightness / 255) * 0.40
+
+      // Адаптивная непрозрачность нижнего градиента
+      const botLeft = sampleRegion(ctx, 0, h - rh, rw, rh)
+      const botRight = sampleRegion(ctx, w - rw, h - rh, rw, rh)
+      const botBrightness = (botLeft.brightness + botRight.brightness) / 2
+      const botOpacity = 0.50 + (botBrightness / 255) * 0.35
+
       const knifeInfo = [sh.knifeBrand, sh.steel, sh.hrc ? `${sh.hrc} HRC` : null]
         .filter(Boolean).join(' · ')
 
+      // --- Верхний градиент ---
       const topGradH = Math.round(h * 0.22)
       const topGrad = ctx.createLinearGradient(0, 0, 0, topGradH)
-      topGrad.addColorStop(0, 'rgba(0,0,0,0.72)')
+      topGrad.addColorStop(0, `rgba(0,0,0,${topOpacity.toFixed(2)})`)
       topGrad.addColorStop(1, 'rgba(0,0,0,0)')
       ctx.fillStyle = topGrad
       ctx.fillRect(0, 0, w, topGradH)
 
-      ctx.textAlign = 'left'
+      // --- Нож ---
       ctx.textBaseline = 'top'
-      ctx.font = `bold ${Math.round(fontSize * 1.08)}px system-ui, sans-serif`
-      ctx.fillStyle = '#ffffff'
-      ctx.fillText(knifeInfo, pad, pad)
-
-      // --- TOP RIGHT: угол заточки ---
-      if (sh.angle != null) {
-        ctx.font = `${Math.round(fontSize * 1.08)}px system-ui, sans-serif`
-        ctx.textAlign = 'right'
-        ctx.fillStyle = 'rgba(255,255,255,0.85)'
-        ctx.fillText(`∠ ${sh.angle}°`, w - pad, pad)
+      ctx.font = font
+      ctx.fillStyle = 'rgba(255,255,255,0.80)'
+      const knifeMaxW = w * 0.55 - pad
+      if (knifeOnLeft) {
         ctx.textAlign = 'left'
+        ctx.fillText(knifeInfo, pad, pad, knifeMaxW)
+      } else {
+        ctx.textAlign = 'right'
+        ctx.fillText(knifeInfo, w - pad, pad, knifeMaxW)
       }
 
-      // --- BOTTOM: камни ---
+      // --- Угол заточки (противоположный угол) ---
+      if (sh.angle != null) {
+        ctx.fillStyle = 'rgba(255,255,255,0.70)'
+        if (knifeOnLeft) {
+          ctx.textAlign = 'right'
+          ctx.fillText(`∠ ${sh.angle}°`, w - pad, pad)
+        } else {
+          ctx.textAlign = 'left'
+          ctx.fillText(`∠ ${sh.angle}°`, pad, pad)
+        }
+      }
+
+      ctx.textAlign = 'left'
+
+      // --- Камни ---
       if (stones.length) {
         ctx.textBaseline = 'alphabetic'
 
-        const maxOrder = Math.max(...stones.map(s => s.order))
+        const maxOrder = Math.max(...stones.map(st => st.order))
         const prefix = 'Камни: '
         const arrowText = ' → '
-        const normalFont = `${fontSize}px system-ui, sans-serif`
-        const boldFont = `bold ${fontSize}px system-ui, sans-serif`
         const maxW = w - pad * 2
 
-        ctx.font = normalFont
+        ctx.font = font
         const prefixW = ctx.measureText(prefix).width
         const arrowW = ctx.measureText(arrowText).width
 
-        // Wrap: первая строка учитывает ширину префикса.
-        // Финишный камень измеряем жирным — он рендерится жирным.
         const lines: (typeof stones)[] = [[]]
         let lineUsed = prefixW
 
         for (const st of stones) {
-          const isFinish = st.order === maxOrder
-          ctx.font = isFinish ? boldFont : normalFont
           const stW = ctx.measureText(st.name).width
           const currentLine = lines[lines.length - 1]
           const isFirstOnLine = currentLine.length === 0
@@ -89,15 +133,13 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
           }
         }
 
-        // Нижний градиент — высота под количество строк
         const botGradH = Math.max(Math.round(h * 0.28), (lines.length + 1) * lineH * 1.8)
         const botGrad = ctx.createLinearGradient(0, h - botGradH, 0, h)
         botGrad.addColorStop(0, 'rgba(0,0,0,0)')
-        botGrad.addColorStop(1, 'rgba(0,0,0,0.82)')
+        botGrad.addColorStop(1, `rgba(0,0,0,${botOpacity.toFixed(2)})`)
         ctx.fillStyle = botGrad
         ctx.fillRect(0, h - botGradH, w, botGradH)
 
-        // Позиции строк: lines[0] — выше всех, lines[last] — у нижнего края
         const baseY = h - pad
         for (let li = 0; li < lines.length; li++) {
           const y = baseY - (lines.length - 1 - li) * lineH
@@ -105,8 +147,8 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
           let x = pad
 
           if (li === 0) {
-            ctx.font = normalFont
-            ctx.fillStyle = 'rgba(255,255,255,0.55)'
+            ctx.font = font
+            ctx.fillStyle = 'rgba(255,255,255,0.45)'
             ctx.fillText(prefix, x, y)
             x += prefixW
           }
@@ -116,14 +158,14 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
             const isFinish = st.order === maxOrder
 
             if (i > 0) {
-              ctx.font = normalFont
-              ctx.fillStyle = 'rgba(255,255,255,0.45)'
+              ctx.font = font
+              ctx.fillStyle = 'rgba(255,255,255,0.40)'
               ctx.fillText(arrowText, x, y)
               x += arrowW
             }
 
-            ctx.font = isFinish ? boldFont : normalFont
-            ctx.fillStyle = isFinish ? '#4A90D9' : 'rgba(255,255,255,0.88)'
+            ctx.font = font
+            ctx.fillStyle = isFinish ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.75)'
             ctx.fillText(st.name, x, y)
             x += ctx.measureText(st.name).width
           }
@@ -159,7 +201,6 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] })
       } else {
-        // Fallback: download
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
