@@ -54,8 +54,8 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       const topRight = sampleRegion(ctx, w - rw, 0, rw, rh)
       const knifeOnLeft = cornerScore(topLeft) <= cornerScore(topRight)
 
-      // Адаптивная непрозрачность верхнего градиента
-      const topBrightness = knifeOnLeft ? topLeft.brightness : topRight.brightness
+      // Адаптивная непрозрачность верхнего градиента — по более светлому из двух углов
+      const topBrightness = Math.max(topLeft.brightness, topRight.brightness)
       const topOpacity = 0.45 + (topBrightness / 255) * 0.40
 
       // Адаптивная непрозрачность нижнего градиента
