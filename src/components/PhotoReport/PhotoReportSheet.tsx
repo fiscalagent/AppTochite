@@ -24,8 +24,8 @@ function sampleRegion(ctx: CanvasRenderingContext2D, x: number, y: number, rw: n
   return { brightness: mean, std: Math.sqrt(vSum / n) }
 }
 
-function cornerScore(s: { brightness: number; std: number }) {
-  return s.brightness * 0.65 + s.std * 0.35
+function cornerScore(r: { brightness: number; std: number }) {
+  return r.brightness * 0.65 + r.std * 0.35
 }
 
 function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): Promise<void> {
@@ -47,21 +47,35 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
 
       const stones = sh.stones ? [...sh.stones].sort((a, b) => a.order - b.order) : []
 
-      // --- Анализ верхних углов ---
+      // --- Анализ четырёх углов ---
       const rw = Math.round(w * 0.5)
       const rh = Math.round(h * 0.20)
-      const topLeft = sampleRegion(ctx, 0, 0, rw, rh)
-      const topRight = sampleRegion(ctx, w - rw, 0, rw, rh)
+      const topLeft  = sampleRegion(ctx, 0,     0,     rw, rh)
+      const topRight = sampleRegion(ctx, w - rw, 0,     rw, rh)
+      const botLeft  = sampleRegion(ctx, 0,     h - rh, rw, rh)
+      const botRight = sampleRegion(ctx, w - rw, h - rh, rw, rh)
+
+      // Выбор стороны для ножа (верх)
       const knifeOnLeft = cornerScore(topLeft) <= cornerScore(topRight)
 
-      // Адаптивная непрозрачность верхнего градиента — по более светлому из двух углов
-      const topBrightness = Math.max(topLeft.brightness, topRight.brightness)
-      const topOpacity = 0.45 + (topBrightness / 255) * 0.40
+      // Выбор стороны для камней (низ): если разница мала — полная ширина
+      const botScoreL = cornerScore(botLeft)
+      const botScoreR = cornerScore(botRight)
+      const botDiff = Math.abs(botScoreL - botScoreR)
+      const stonesFullWidth = botDiff < 30
+      const stonesOnLeft = stonesFullWidth || botScoreL <= botScoreR
 
-      // Адаптивная непрозрачность нижнего градиента
-      const botLeft = sampleRegion(ctx, 0, h - rh, rw, rh)
-      const botRight = sampleRegion(ctx, w - rw, h - rh, rw, rh)
-      const botBrightness = (botLeft.brightness + botRight.brightness) / 2
+      // Максимальная ширина текстового блока камней
+      const stoneMaxW = stonesFullWidth
+        ? w - pad * 2
+        : Math.round(w * 0.60) - pad * 2
+
+      // Адаптивная непрозрачность градиентов
+      const topOpacity = 0.45 + (Math.max(topLeft.brightness, topRight.brightness) / 255) * 0.40
+
+      const botBrightness = stonesFullWidth
+        ? (botLeft.brightness + botRight.brightness) / 2
+        : stonesOnLeft ? botLeft.brightness : botRight.brightness
       const botOpacity = 0.50 + (botBrightness / 255) * 0.35
 
       const knifeInfo = [sh.knifeBrand, sh.steel, sh.hrc ? `${sh.hrc} HRC` : null]
@@ -79,7 +93,7 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       ctx.textBaseline = 'top'
       ctx.font = font
       ctx.fillStyle = 'rgba(255,255,255,0.80)'
-      const knifeMaxW = w * 0.55 - pad
+      const knifeMaxW = Math.round(w * 0.55) - pad
       if (knifeOnLeft) {
         ctx.textAlign = 'left'
         ctx.fillText(knifeInfo, pad, pad, knifeMaxW)
@@ -88,7 +102,7 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
         ctx.fillText(knifeInfo, w - pad, pad, knifeMaxW)
       }
 
-      // --- Угол заточки (противоположный угол) ---
+      // --- Угол заточки (противоположный верхний угол) ---
       if (sh.angle != null) {
         ctx.fillStyle = 'rgba(255,255,255,0.70)'
         if (knifeOnLeft) {
@@ -105,16 +119,15 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       // --- Камни ---
       if (stones.length) {
         ctx.textBaseline = 'alphabetic'
+        ctx.font = font
 
         const maxOrder = Math.max(...stones.map(st => st.order))
         const prefix = 'Камни: '
         const arrowText = ' → '
-        const maxW = w - pad * 2
-
-        ctx.font = font
         const prefixW = ctx.measureText(prefix).width
-        const arrowW = ctx.measureText(arrowText).width
+        const arrowW   = ctx.measureText(arrowText).width
 
+        // Перенос в пределах тёмной зоны
         const lines: (typeof stones)[] = [[]]
         let lineUsed = prefixW
 
@@ -123,8 +136,7 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
           const currentLine = lines[lines.length - 1]
           const isFirstOnLine = currentLine.length === 0
           const needed = (isFirstOnLine ? 0 : arrowW) + stW
-
-          if (!isFirstOnLine && lineUsed + needed > maxW) {
+          if (!isFirstOnLine && lineUsed + needed > stoneMaxW) {
             lines.push([st])
             lineUsed = stW
           } else {
@@ -133,6 +145,7 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
           }
         }
 
+        // Нижний градиент
         const botGradH = Math.max(Math.round(h * 0.28), (lines.length + 1) * lineH * 1.8)
         const botGrad = ctx.createLinearGradient(0, h - botGradH, 0, h)
         botGrad.addColorStop(0, 'rgba(0,0,0,0)')
@@ -140,34 +153,56 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
         ctx.fillStyle = botGrad
         ctx.fillRect(0, h - botGradH, w, botGradH)
 
+        // Рендер камней
         const baseY = h - pad
+
         for (let li = 0; li < lines.length; li++) {
           const y = baseY - (lines.length - 1 - li) * lineH
           const line = lines[li]
-          let x = pad
 
-          if (li === 0) {
-            ctx.font = font
-            ctx.fillStyle = 'rgba(255,255,255,0.45)'
-            ctx.fillText(prefix, x, y)
-            x += prefixW
-          }
-
-          for (let i = 0; i < line.length; i++) {
-            const st = line[i]
-            const isFinish = st.order === maxOrder
-
-            if (i > 0) {
-              ctx.font = font
-              ctx.fillStyle = 'rgba(255,255,255,0.40)'
-              ctx.fillText(arrowText, x, y)
-              x += arrowW
+          if (stonesOnLeft) {
+            // Левое выравнивание
+            let x = pad
+            if (li === 0) {
+              ctx.fillStyle = 'rgba(255,255,255,0.45)'
+              ctx.fillText(prefix, x, y)
+              x += prefixW
             }
-
-            ctx.font = font
-            ctx.fillStyle = isFinish ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.75)'
-            ctx.fillText(st.name, x, y)
-            x += ctx.measureText(st.name).width
+            for (let i = 0; i < line.length; i++) {
+              const st = line[i]
+              if (i > 0) {
+                ctx.fillStyle = 'rgba(255,255,255,0.40)'
+                ctx.fillText(arrowText, x, y)
+                x += arrowW
+              }
+              ctx.fillStyle = st.order === maxOrder ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.75)'
+              ctx.fillText(st.name, x, y)
+              x += ctx.measureText(st.name).width
+            }
+          } else {
+            // Правое выравнивание: предварительно считаем ширину строки
+            let lineW = li === 0 ? prefixW : 0
+            for (let i = 0; i < line.length; i++) {
+              if (i > 0) lineW += arrowW
+              lineW += ctx.measureText(line[i].name).width
+            }
+            let x = w - pad - lineW
+            if (li === 0) {
+              ctx.fillStyle = 'rgba(255,255,255,0.45)'
+              ctx.fillText(prefix, x, y)
+              x += prefixW
+            }
+            for (let i = 0; i < line.length; i++) {
+              const st = line[i]
+              if (i > 0) {
+                ctx.fillStyle = 'rgba(255,255,255,0.40)'
+                ctx.fillText(arrowText, x, y)
+                x += arrowW
+              }
+              ctx.fillStyle = st.order === maxOrder ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.75)'
+              ctx.fillText(st.name, x, y)
+              x += ctx.measureText(st.name).width
+            }
           }
         }
       }
