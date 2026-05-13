@@ -1,3 +1,10 @@
+# [1.33.0](https://github.com/fiscalagent/AppTochite/compare/v1.32.2...v1.33.0) (2026-05-13)
+
+
+### feat
+
+* угол заточки в верхнем правом углу фото-отчёта ([](https://github.com/fiscalagent/AppTochite/commit/ede21b54e4126dc2a15dba15586290fbcc634b9d))
+
 ## [1.32.2](https://github.com/fiscalagent/AppTochite/compare/v1.32.1...v1.32.2) (2026-05-12)
 
 
