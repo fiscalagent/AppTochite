@@ -12,7 +12,8 @@ const SHOW_DELAY_MS = 1500
 export default function BackupReminder() {
   const [open, setOpen] = useState(false)
   const [daysSince, setDaysSince] = useState<number | null>(null)
-  const { isEnabled: autoBackupEnabled } = useAutoBackup()
+  const { isEnabled: autoBackupEnabled, enable: enableAutoBackup } = useAutoBackup()
+  const supportsAutoBackup = 'showDirectoryPicker' in window
 
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -64,12 +65,18 @@ export default function BackupReminder() {
     setOpen(false)
   }
 
+  async function handleAutoBackup() {
+    await enableAutoBackup()
+    setOpen(false)
+  }
+
   return (
     <BackupReminderModal
       isOpen={open}
       daysSinceBackup={daysSince}
       onConfirm={handleConfirm}
       onSnooze={handleSnooze}
+      onAutoBackup={supportsAutoBackup ? handleAutoBackup : undefined}
     />
   )
 }

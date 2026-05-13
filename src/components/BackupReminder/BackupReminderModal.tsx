@@ -7,12 +7,16 @@ interface Props {
   daysSinceBackup: number | null
   onConfirm: () => Promise<void>
   onSnooze: () => void
+  onAutoBackup?: () => Promise<void>
 }
 
-export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm, onSnooze }: Props) {
+export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm, onSnooze, onAutoBackup }: Props) {
   const [saving, setSaving] = useState(false)
+  const [enablingAuto, setEnablingAuto] = useState(false)
 
   if (!isOpen) return null
+
+  const busy = saving || enablingAuto
 
   const subtitle = daysSinceBackup === null
     ? 'Вы ещё ни разу не делали бэкап'
@@ -20,11 +24,13 @@ export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm
 
   async function handleConfirm() {
     setSaving(true)
-    try {
-      await onConfirm()
-    } finally {
-      setSaving(false)
-    }
+    try { await onConfirm() } finally { setSaving(false) }
+  }
+
+  async function handleAutoBackup() {
+    if (!onAutoBackup) return
+    setEnablingAuto(true)
+    try { await onAutoBackup() } catch { /* user cancelled picker */ } finally { setEnablingAuto(false) }
   }
 
   return createPortal(
@@ -43,10 +49,15 @@ export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm
           Сохраните бэкап, чтобы не потерять историю заточек.
         </p>
         <div className={s.actions}>
-          <button className={s.primaryBtn} onClick={handleConfirm} disabled={saving}>
+          <button className={s.primaryBtn} onClick={handleConfirm} disabled={busy}>
             {saving ? 'Сохранение…' : 'Сделать бэкап'}
           </button>
-          <button className={s.snoozeBtn} onClick={onSnooze} disabled={saving}>Напомнить завтра</button>
+          {onAutoBackup && (
+            <button className={s.autoBtn} onClick={handleAutoBackup} disabled={busy}>
+              {enablingAuto ? 'Выбор папки…' : 'Включить автобэкап'}
+            </button>
+          )}
+          <button className={s.snoozeBtn} onClick={onSnooze} disabled={busy}>Напомнить завтра</button>
         </div>
       </div>
     </div>,
