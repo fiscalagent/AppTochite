@@ -7,6 +7,7 @@ import {
   performAutoBackup,
   updateLastBackupAt,
 } from '../utils/backup'
+import { pickDirectory, queryDirectoryPermission } from '../utils/fileSystemAccess'
 
 interface AutoBackupContextValue {
   isEnabled: boolean
@@ -45,8 +46,7 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
       if (document.visibilityState !== 'hidden') return
       const h = handleRef.current
       if (!h) return
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const perm = await (h as any).queryPermission({ mode: 'readwrite' })
+      const perm = await queryDirectoryPermission(h)
       if (perm !== 'granted') {
         setPermissionLost(true)
         return
@@ -64,8 +64,7 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   async function enable() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const h = await (window as any).showDirectoryPicker({ mode: 'readwrite' })
+    const h = await pickDirectory()
     await saveDirectoryHandle(db, h)
     handleRef.current = h
     setHandle(h)

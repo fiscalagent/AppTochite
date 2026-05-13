@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { db } from '../../db/instance'
 import { exportBackup, downloadBlob, getLastBackupAt, updateLastBackupAt } from '../../utils/backup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
+import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import BackupReminderModal from './BackupReminderModal'
 
 const SNOOZE_KEY = 'backupReminderSnoozedUntil'
@@ -13,7 +14,7 @@ export default function BackupReminder() {
   const [open, setOpen] = useState(false)
   const [daysSince, setDaysSince] = useState<number | null>(null)
   const { isEnabled: autoBackupEnabled, enable: enableAutoBackup } = useAutoBackup()
-  const supportsAutoBackup = 'showDirectoryPicker' in window
+  const supportsAutoBackup = supportsFileSystemAccess()
 
   useEffect(() => {
     const t = setTimeout(async () => {

@@ -27,6 +27,7 @@ import {
   type BackupFile,
 } from '../../utils/backup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
+import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -49,7 +50,7 @@ export default function BackupScreen() {
   const [storageMb, setStorageMb] = useState<number | null>(null)
   const { isEnabled: autoBackupEnabled, folderName, permissionLost, enable: enableAutoBackup, disable: disableAutoBackup } = useAutoBackup()
   const [autoBackupLoading, setAutoBackupLoading] = useState(false)
-  const supportsAutoBackup = 'showDirectoryPicker' in window
+  const supportsAutoBackup = supportsFileSystemAccess()
 
   useEffect(() => {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
