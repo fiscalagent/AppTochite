@@ -1,3 +1,10 @@
+# [1.36.0](https://github.com/fiscalagent/AppTochite/compare/v1.35.0...v1.36.0) (2026-05-13)
+
+
+### feat
+
+* кнопка «Включить автобэкап» прямо в напоминалке о бэкапе ([](https://github.com/fiscalagent/AppTochite/commit/94282fca19147a7b94fd0a475329c7e10320d3c8))
+
 # [1.35.0](https://github.com/fiscalagent/AppTochite/compare/v1.34.4...v1.35.0) (2026-05-13)
 
 
