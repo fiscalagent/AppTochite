@@ -5,6 +5,12 @@ export interface Meta {
   value: number | string | boolean
 }
 
+export interface Setting {
+  key: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any
+}
+
 export interface Client {
   id?: number
   name: string
@@ -109,6 +115,7 @@ export class AppTochiteDB extends Dexie {
   steels!: Table<Steel>
   knives!: Table<Knife>
   meta!: Table<Meta>
+  settings!: Table<Setting>
 
   constructor(name = 'AppTochiteDB') {
     super(name)
@@ -132,6 +139,19 @@ export class AppTochiteDB extends Dexie {
       const stoneCount = await tx.table('stones').count()
       if (stoneCount > 0) {
         await tx.table('meta').put({ key: 'seedVersion', value: 1 })
+      }
+    })
+    // v4: settings table for device-specific state (not included in backups/restore).
+    // Migrates firstLaunchAt and lastBackupAt out of meta so restore never resets them.
+    this.version(4).stores({
+      settings: 'key',
+    }).upgrade(async tx => {
+      for (const key of ['firstLaunchAt', 'lastBackupAt']) {
+        const entry = await tx.table('meta').get(key)
+        if (entry) {
+          await tx.table('settings').put(entry)
+          await tx.table('meta').delete(key)
+        }
       }
     })
   }

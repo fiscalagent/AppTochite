@@ -335,3 +335,52 @@
   align-items: center;
   color: var(--text-400);
 }
+
+/* Auto-backup section */
+
+.autoBackupRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.autoBackupFolder {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.autoBackupBadge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--status-done);
+  background: color-mix(in srgb, var(--status-done) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-done) 30%, transparent);
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+}
+
+.autoBackupWarn {
+  font-size: 13px;
+  color: var(--danger);
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.autoBackupActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

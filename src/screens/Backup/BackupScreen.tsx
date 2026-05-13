@@ -26,6 +26,7 @@ import {
   updateLastBackupAt,
   type BackupFile,
 } from '../../utils/backup'
+import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -46,6 +47,9 @@ export default function BackupScreen() {
     localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on'
   )
   const [storageMb, setStorageMb] = useState<number | null>(null)
+  const { isEnabled: autoBackupEnabled, folderName, permissionLost, enable: enableAutoBackup, disable: disableAutoBackup } = useAutoBackup()
+  const [autoBackupLoading, setAutoBackupLoading] = useState(false)
+  const supportsAutoBackup = 'showDirectoryPicker' in window
 
   useEffect(() => {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
@@ -194,6 +198,48 @@ export default function BackupScreen() {
       </div>
 
       <div className={s.divider} />
+
+      {supportsAutoBackup && (
+        <>
+          <div className={s.section}>
+            <p className={s.sectionTitle}>Автобэкап</p>
+            {autoBackupEnabled ? (
+              <>
+                <div className={s.autoBackupRow}>
+                  <span className={s.autoBackupFolder}>{folderName}</span>
+                  <span className={s.autoBackupBadge}>Активен</span>
+                </div>
+                {permissionLost && (
+                  <p className={s.autoBackupWarn}>Нет доступа к папке. Нажмите «Переподключить», чтобы выбрать папку заново.</p>
+                )}
+                <div className={s.autoBackupActions}>
+                  {permissionLost && (
+                    <button className={s.primaryBtn} disabled={autoBackupLoading} onClick={async () => {
+                      setAutoBackupLoading(true)
+                      try { await enableAutoBackup() } catch { /* user cancelled */ } finally { setAutoBackupLoading(false) }
+                    }}>
+                      {autoBackupLoading ? 'Подключение…' : 'Переподключить папку'}
+                    </button>
+                  )}
+                  <button className={s.secondaryBtn} onClick={disableAutoBackup}>Отключить автобэкап</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className={s.desc}>Приложение будет автоматически сохранять бэкап в выбранную папку каждый раз, когда вы сворачиваете приложение. Один раз выбрали — и забыли.</p>
+                <button className={s.primaryBtn} disabled={autoBackupLoading} onClick={async () => {
+                  setAutoBackupLoading(true)
+                  try { await enableAutoBackup(); showToast('Автобэкап включён') } catch { /* user cancelled */ } finally { setAutoBackupLoading(false) }
+                }}>
+                  {autoBackupLoading ? 'Выбор папки…' : 'Включить автобэкап'}
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className={s.divider} />
+        </>
+      )}
 
       <div className={s.section}>
         <p className={s.sectionTitle}>Экспорт</p>

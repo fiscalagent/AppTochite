@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../db/instance'
 import { exportBackup, downloadBlob, getLastBackupAt, updateLastBackupAt } from '../../utils/backup'
+import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import BackupReminderModal from './BackupReminderModal'
 
 const SNOOZE_KEY = 'backupReminderSnoozedUntil'
@@ -11,17 +12,20 @@ const SHOW_DELAY_MS = 1500
 export default function BackupReminder() {
   const [open, setOpen] = useState(false)
   const [daysSince, setDaysSince] = useState<number | null>(null)
+  const { isEnabled: autoBackupEnabled } = useAutoBackup()
 
   useEffect(() => {
     const t = setTimeout(async () => {
+      if (autoBackupEnabled) return
+
       // Record first launch; skip reminder until GRACE_DAYS have passed
-      const firstLaunchMeta = await db.meta.get('firstLaunchAt')
-      if (!firstLaunchMeta) {
-        await db.meta.put({ key: 'firstLaunchAt', value: new Date().toISOString() })
+      const firstLaunchEntry = await db.settings.get('firstLaunchAt')
+      if (!firstLaunchEntry) {
+        await db.settings.put({ key: 'firstLaunchAt', value: new Date().toISOString() })
         return
       }
       const daysSinceInstall = Math.floor(
-        (Date.now() - new Date(firstLaunchMeta.value as string).getTime()) / 86_400_000
+        (Date.now() - new Date(firstLaunchEntry.value as string).getTime()) / 86_400_000
       )
       if (daysSinceInstall < GRACE_DAYS) return
 
@@ -42,7 +46,7 @@ export default function BackupReminder() {
     }, SHOW_DELAY_MS)
 
     return () => clearTimeout(t)
-  }, [])
+  }, [autoBackupEnabled])
 
   async function handleConfirm() {
     const backup = await exportBackup(db)

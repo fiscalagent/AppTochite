@@ -12,13 +12,36 @@ export function downloadBlob(blob: Blob, filename: string) {
 }
 
 export async function getLastBackupAt(database: AppTochiteDB): Promise<Date | null> {
-  const meta = await database.meta.get('lastBackupAt')
-  if (!meta) return null
-  return new Date(meta.value as string)
+  const entry = await database.settings.get('lastBackupAt')
+  if (!entry) return null
+  return new Date(entry.value as string)
 }
 
 export async function updateLastBackupAt(database: AppTochiteDB): Promise<void> {
-  await database.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() })
+  await database.settings.put({ key: 'lastBackupAt', value: new Date().toISOString() })
+}
+
+export async function getDirectoryHandle(database: AppTochiteDB): Promise<FileSystemDirectoryHandle | null> {
+  const entry = await database.settings.get('directoryHandle')
+  return (entry?.value as FileSystemDirectoryHandle) ?? null
+}
+
+export async function saveDirectoryHandle(database: AppTochiteDB, handle: FileSystemDirectoryHandle): Promise<void> {
+  await database.settings.put({ key: 'directoryHandle', value: handle })
+}
+
+export async function clearDirectoryHandle(database: AppTochiteDB): Promise<void> {
+  await database.settings.delete('directoryHandle')
+}
+
+export async function performAutoBackup(database: AppTochiteDB, handle: FileSystemDirectoryHandle): Promise<void> {
+  const backup = await exportBackup(database)
+  const json = JSON.stringify(backup)
+  const fileHandle = await handle.getFileHandle('apptochite-auto.json', { create: true })
+  const writable = await fileHandle.createWritable()
+  await writable.write(json)
+  await writable.close()
+  await updateLastBackupAt(database)
 }
 
 export interface BackupFile {
