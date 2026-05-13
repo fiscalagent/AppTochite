@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.36.2',
+    date: '2026-05-13',
+    changes: [
+      'типы File System Access API через отдельный .ts файл с декларациями',
+    ],
+  },
+  {
     version: '1.36.1',
     date: '2026-05-13',
     changes: [

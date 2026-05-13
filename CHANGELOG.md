@@ -1,3 +1,10 @@
+## [1.36.2](https://github.com/fiscalagent/AppTochite/compare/v1.36.1...v1.36.2) (2026-05-13)
+
+
+### fix
+
+* типы File System Access API через отдельный .ts файл с декларациями ([](https://github.com/fiscalagent/AppTochite/commit/a9c44d4bd350d756ee6560e61f32bcc1de88084c))
+
 ## [1.36.1](https://github.com/fiscalagent/AppTochite/compare/v1.36.0...v1.36.1) (2026-05-13)
 
 
