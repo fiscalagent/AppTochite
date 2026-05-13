@@ -43,6 +43,15 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
       ctx.fillStyle = '#ffffff'
       ctx.fillText(knifeInfo, pad, pad)
 
+      // --- TOP RIGHT: угол заточки ---
+      if (sh.angle != null) {
+        ctx.font = `${Math.round(fontSize * 1.08)}px system-ui, sans-serif`
+        ctx.textAlign = 'right'
+        ctx.fillStyle = 'rgba(255,255,255,0.85)'
+        ctx.fillText(`∠ ${sh.angle}°`, w - pad, pad)
+        ctx.textAlign = 'left'
+      }
+
       // --- BOTTOM: камни ---
       if (stones.length) {
         ctx.textBaseline = 'alphabetic'
