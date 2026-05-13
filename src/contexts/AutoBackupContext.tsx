@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { db } from '../db/db'
+import { db } from '../db/instance'
 import {
   getDirectoryHandle,
   saveDirectoryHandle,
@@ -45,7 +45,8 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
       if (document.visibilityState !== 'hidden') return
       const h = handleRef.current
       if (!h) return
-      const perm = await h.queryPermission({ mode: 'readwrite' })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const perm = await (h as any).queryPermission({ mode: 'readwrite' })
       if (perm !== 'granted') {
         setPermissionLost(true)
         return
@@ -63,7 +64,8 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   async function enable() {
-    const h = await window.showDirectoryPicker({ mode: 'readwrite' })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const h = await (window as any).showDirectoryPicker({ mode: 'readwrite' })
     await saveDirectoryHandle(db, h)
     handleRef.current = h
     setHandle(h)
