@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.34.4',
+    date: '2026-05-13',
+    changes: [
+      'одиночный тап без ложного выбора при скролле списка ножей, сталей и камней',
+    ],
+  },
+  {
     version: '1.34.3',
     date: '2026-05-13',
     changes: [

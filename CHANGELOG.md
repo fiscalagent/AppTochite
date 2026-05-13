@@ -1,3 +1,10 @@
+## [1.34.4](https://github.com/fiscalagent/AppTochite/compare/v1.34.3...v1.34.4) (2026-05-13)
+
+
+### fix
+
+* одиночный тап без ложного выбора при скролле списка ножей, сталей и камней ([](https://github.com/fiscalagent/AppTochite/commit/aa0d579e2511593d29aa9082baf34f83dc35d9b0))
+
 ## [1.34.3](https://github.com/fiscalagent/AppTochite/compare/v1.34.2...v1.34.3) (2026-05-13)
 
 
