@@ -358,8 +358,8 @@ function StoneHeatmap() {
                 className={s.heatmapCell}
                 style={bg ? { background: bg } : undefined}
               >
-                {pct >= 0.08 && (
-                  <span className={s.heatmapPct}>{Math.round(pct * 100)}%</span>
+                {count > 0 && (
+                  <span className={s.heatmapPct}>{count}</span>
                 )}
               </div>
             )
@@ -474,6 +474,7 @@ function StonesTab({ search }: { search: string }) {
       gritMk: editGritUnit === 'mk' && editGritMk ? editGritMk : undefined,
       type: editType || undefined,
       isCustom: true,
+      updatedAt: new Date(),
     })
     setEditingId(null)
   }
@@ -487,6 +488,7 @@ function StonesTab({ search }: { search: string }) {
       gritMk: gritUnit === 'mk' && gritMk ? gritMk : undefined,
       type: type || undefined,
       isCustom: true,
+      updatedAt: new Date(),
     })
     setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setType(''); setOpen(false)
   }
@@ -708,6 +710,7 @@ function SteelsTab({ search }: { search: string }) {
       name: name.trim(),
       hrc: hrc ? Number(hrc) : undefined,
       isCustom: true,
+      updatedAt: new Date(),
     })
     setName(''); setHrc(''); setOpen(false)
   }
@@ -816,6 +819,7 @@ function KnivesTab({ search }: { search: string }) {
       brand: brand.trim(),
       steel: knifeSteel.trim() || undefined,
       isCustom: true,
+      updatedAt: new Date(),
     })
     setBrand(''); setKnifeSteel(''); setOpen(false)
   }
