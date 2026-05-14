@@ -1,3 +1,10 @@
+# [1.39.0](https://github.com/fiscalagent/AppTochite/compare/v1.38.0...v1.39.0) (2026-05-14)
+
+
+### feat
+
+* **seed:** заменить справочник камней на 101 камень из таблицы (хэш-подход) ([](https://github.com/fiscalagent/AppTochite/commit/a05d4a083c76a8c215051b8e3adb4b40140c71cd))
+
 # [1.38.0](https://github.com/fiscalagent/AppTochite/compare/v1.37.1...v1.38.0) (2026-05-14)
 
 
