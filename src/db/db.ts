@@ -19,6 +19,7 @@ export interface Client {
   avatar?: string
   isSelf: boolean
   createdAt: Date
+  updatedAt?: Date
 }
 
 export interface SharpeningStone {
@@ -44,6 +45,7 @@ export interface Sharpening {
   doneAt?: Date
   photosBefore?: string[]
   photosAfter?: string[]
+  updatedAt?: Date
 }
 
 export type GritUnit = 'fepa' | 'jis' | 'mk'
@@ -64,6 +66,7 @@ export interface Stone {
   category?: string
   description?: string
   isCustom: boolean
+  updatedAt?: Date
 }
 
 export function stoneDisplayName(stone: Stone): string {
@@ -94,6 +97,7 @@ export interface Steel {
   category?: string
   description?: string
   isCustom: boolean
+  updatedAt?: Date
 }
 
 export interface Knife {
@@ -106,6 +110,7 @@ export interface Knife {
   category?: string
   description?: string
   isCustom: boolean
+  updatedAt?: Date
 }
 
 export class AppTochiteDB extends Dexie {
@@ -152,6 +157,21 @@ export class AppTochiteDB extends Dexie {
           await tx.table('settings').put(entry)
           await tx.table('meta').delete(key)
         }
+      }
+    })
+    // v5: updatedAt for merge-based restore (last-write-wins per record).
+    // Existing records get a best-effort timestamp from existing date fields.
+    this.version(5).stores({}).upgrade(async tx => {
+      await tx.table('clients').toCollection().modify((c: Client) => {
+        if (!c.updatedAt) c.updatedAt = c.createdAt ?? new Date(0)
+      })
+      await tx.table('sharpenings').toCollection().modify((s: Sharpening) => {
+        if (!s.updatedAt) s.updatedAt = s.doneAt ?? s.receivedAt ?? new Date(0)
+      })
+      for (const table of ['stones', 'steels', 'knives']) {
+        await tx.table(table).toCollection().modify((item: Stone | Steel | Knife) => {
+          if (!item.updatedAt) item.updatedAt = new Date(0)
+        })
       }
     })
   }
