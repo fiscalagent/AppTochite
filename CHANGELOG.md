@@ -1,3 +1,10 @@
+## [1.36.5](https://github.com/fiscalagent/AppTochite/compare/v1.36.4...v1.36.5) (2026-05-14)
+
+
+### fix
+
+* имя заказчика — вынесено под название ножа на экране Z-2 ([](https://github.com/fiscalagent/AppTochite/commit/cfdae025a44173b209f70032d8fda44fac249986))
+
 ## [1.36.4](https://github.com/fiscalagent/AppTochite/compare/v1.36.3...v1.36.4) (2026-05-14)
 
 
