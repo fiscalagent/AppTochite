@@ -1,3 +1,10 @@
+## [1.37.1](https://github.com/fiscalagent/AppTochite/compare/v1.37.0...v1.37.1) (2026-05-14)
+
+
+### fix
+
+* updatedAt в типах Stone, Steel, Knife + миграция v5 ([](https://github.com/fiscalagent/AppTochite/commit/70ee2d2ef6aeea8c49fd3dfad1caecae0529c060))
+
 # [1.37.0](https://github.com/fiscalagent/AppTochite/compare/v1.36.5...v1.37.0) (2026-05-14)
 
 

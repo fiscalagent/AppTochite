@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.37.1',
+    date: '2026-05-14',
+    changes: [
+      'updatedAt в типах Stone, Steel, Knife + миграция v5',
+      'поделиться фото до/после с вотермарком @AppTochite',
+    ],
+  },
+  {
     version: '1.37.0',
     date: '2026-05-14',
     changes: [
