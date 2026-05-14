@@ -1,3 +1,10 @@
+# [1.38.0](https://github.com/fiscalagent/AppTochite/compare/v1.37.1...v1.38.0) (2026-05-14)
+
+
+### feat
+
+* поле СОЖ (вода/масло) для камней + поиск *вода/*масло ([](https://github.com/fiscalagent/AppTochite/commit/f2ae56526a1479ec370867615ee031dad327e70e))
+
 ## [1.37.1](https://github.com/fiscalagent/AppTochite/compare/v1.37.0...v1.37.1) (2026-05-14)
 
 
