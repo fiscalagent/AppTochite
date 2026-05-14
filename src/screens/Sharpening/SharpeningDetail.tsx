@@ -155,6 +155,14 @@ export default function SharpeningDetail() {
         )}
       </div>
 
+      {client && !client.isSelf && (
+        <Link to={`/clients/${client.id}`} className={s.clientLink}>
+          <span className={s.clientLinkIcon}><IconPerson /></span>
+          <span>{client.name}</span>
+          <span className={s.clientLinkArrow}><IconChevronRight /></span>
+        </Link>
+      )}
+
       <div className={s.card}>
         <div className={s.sectionTitle}>Нож</div>
         <div className={s.row}>
@@ -253,14 +261,6 @@ export default function SharpeningDetail() {
         <button className={s.doneBtn} onClick={handleMarkDone}>
           ЗАТОЧИТЬ
         </button>
-      )}
-
-      {client && (
-        <Link to={`/clients/${client.id}`} className={s.clientLink}>
-          <span className={s.clientLinkIcon}><IconPerson /></span>
-          <span>{client.name}</span>
-          <span className={s.clientLinkArrow}><IconChevronRight /></span>
-        </Link>
       )}
 
       <button
