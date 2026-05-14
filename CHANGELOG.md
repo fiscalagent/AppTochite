@@ -1,3 +1,10 @@
+# [1.37.0](https://github.com/fiscalagent/AppTochite/compare/v1.36.5...v1.37.0) (2026-05-14)
+
+
+### feat
+
+* поделиться фото до/после с вотермарком @AppTochite ([](https://github.com/fiscalagent/AppTochite/commit/0ce76aa551b1c07c93cd90bcbe17715259512c4a))
+
 ## [1.36.5](https://github.com/fiscalagent/AppTochite/compare/v1.36.4...v1.36.5) (2026-05-14)
 
 
