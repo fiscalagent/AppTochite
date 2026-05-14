@@ -1699,13 +1699,160 @@ const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
 
 ];
 
+// ─── Каталог камней (хэш-подход) ─────────────────────────────────────────────
+//
+// Чтобы обновить справочник камней:
+//   1. Отредактируй STONES_CATALOG ниже.
+//   2. Задеплой. При первом запуске приложение сравнит хэш и заменит isCustom=false камни.
+//   Никаких v13, v14... — только правка этого массива.
+
+const STONES_CATALOG: Omit<Stone, 'id'>[] = [
+  // ── GRINDERMAN OA — ОА, вода, FEPA ───────────────────────────────────────
+  { brand: 'GRINDERMAN OA', grit: 120,  gritUnit: 'fepa', type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN OA', grit: 220,  gritUnit: 'fepa', type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN OA', grit: 400,  gritUnit: 'fepa', type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN OA', grit: 600,  gritUnit: 'fepa', type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN OA', grit: 800,  gritUnit: 'fepa', type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN OA', grit: 1000, gritUnit: 'fepa', type: 'ao', coolant: 'water', isCustom: false },
+  // ── GRINDERMAN KK — КК, вода, FEPA ───────────────────────────────────────
+  { brand: 'GRINDERMAN KK', grit: 120,  gritUnit: 'fepa', type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN KK', grit: 220,  gritUnit: 'fepa', type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN KK', grit: 400,  gritUnit: 'fepa', type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN KK', grit: 600,  gritUnit: 'fepa', type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN KK', grit: 800,  gritUnit: 'fepa', type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'GRINDERMAN KK', grit: 1000, gritUnit: 'fepa', type: 'kk', coolant: 'water', isCustom: false },
+  // ── GRINDERMAN Oil OA — ОА, масло, JIS ───────────────────────────────────
+  { brand: 'GRINDERMAN Oil OA', grit: 120,  gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil OA', grit: 240,  gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil OA', grit: 600,  gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil OA', grit: 1200, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil OA', grit: 2000, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil OA', grit: 2500, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil OA', grit: 4000, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil OA', grit: 6000, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  // ── GRINDERMAN Oil KK — КК, масло, JIS ───────────────────────────────────
+  { brand: 'GRINDERMAN Oil KK', grit: 120,   gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 240,   gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 600,   gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 1200,  gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 2000,  gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 2500,  gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 4000,  gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 6000,  gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN Oil KK', grit: 10000, gritUnit: 'jis', type: 'kk', coolant: 'oil', isCustom: false },
+  // ── GRINDERMAN CLR Oil OA — ОА, масло, JIS ───────────────────────────────
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 120,  gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 240,  gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 600,  gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 1200, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 2000, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 2500, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 4000, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'GRINDERMAN CLR Oil OA', grit: 6000, gritUnit: 'jis', type: 'ao', coolant: 'oil', isCustom: false },
+  // ── IndiaKeller KK — КК, вода+масло, FEPA ────────────────────────────────
+  { brand: 'IndiaKeller KK', grit: 180,  gritUnit: 'fepa', type: 'kk', coolant: 'both', isCustom: false },
+  { brand: 'IndiaKeller KK', grit: 320,  gritUnit: 'fepa', type: 'kk', coolant: 'both', isCustom: false },
+  { brand: 'IndiaKeller KK', grit: 400,  gritUnit: 'fepa', type: 'kk', coolant: 'both', isCustom: false },
+  { brand: 'IndiaKeller KK', grit: 600,  gritUnit: 'fepa', type: 'kk', coolant: 'both', isCustom: false },
+  { brand: 'IndiaKeller KK', grit: 800,  gritUnit: 'fepa', type: 'kk', coolant: 'both', isCustom: false },
+  { brand: 'IndiaKeller KK', grit: 1000, gritUnit: 'fepa', type: 'kk', coolant: 'both', isCustom: false },
+  // ── AK (АнигиляторКастрюль) OA — ОА, вода+масло, FEPA ───────────────────
+  { brand: 'AK (АнигиляторКастрюль) OA', grit: 180,  gritUnit: 'fepa', type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'AK (АнигиляторКастрюль) OA', grit: 320,  gritUnit: 'fepa', type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'AK (АнигиляторКастрюль) OA', grit: 400,  gritUnit: 'fepa', type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'AK (АнигиляторКастрюль) OA', grit: 600,  gritUnit: 'fepa', type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'AK (АнигиляторКастрюль) OA', grit: 800,  gritUnit: 'fepa', type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'AK (АнигиляторКастрюль) OA', grit: 1000, gritUnit: 'fepa', type: 'ao', coolant: 'both', isCustom: false },
+  // ── Boride T2 — ОА, масло, FEPA ──────────────────────────────────────────
+  { brand: 'Boride T2', grit: 150,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', grit: 220,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', grit: 320,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', grit: 400,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', grit: 600,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', grit: 800,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', grit: 1000, gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', grit: 1200, gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  // ── Boride PC — ОА, масло, FEPA ──────────────────────────────────────────
+  { brand: 'Boride PC', grit: 150,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', grit: 220,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', grit: 320,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', grit: 400,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', grit: 600,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', grit: 900,  gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', grit: 1200, gritUnit: 'fepa', type: 'ao', coolant: 'oil', isCustom: false },
+  // ── Norton India — природа, масло ─────────────────────────────────────────
+  { brand: 'Norton India Coarse', type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Norton India Medium', type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Norton India Fine',   type: 'natural', coolant: 'oil', isCustom: false },
+  // ── Природные камни — масло ───────────────────────────────────────────────
+  { brand: 'Queer Creek',   type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Hindostan',     type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Washita',       type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Arkansas Soft', type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Numata',        type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Omura',         type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Amakusa',       type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Туффит',        type: 'natural', coolant: 'oil', isCustom: false },
+  // ── Венёв B2-01 Алмаз 25% — алмаз, вода, мк ─────────────────────────────
+  { brand: 'Венёв Двусторонний B2-01 Алмаз 25%', gritUnit: 'mk', gritMk: '200/160', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний B2-01 Алмаз 25%', gritUnit: 'mk', gritMk: '160/125', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний B2-01 Алмаз 25%', gritUnit: 'mk', gritMk: '100/80',  type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний B2-01 Алмаз 25%', gritUnit: 'mk', gritMk: '50/40',   type: 'diamond', coolant: 'water', isCustom: false },
+  // ── Венёв OSB Алмаз 25% — алмаз, вода, мк ───────────────────────────────
+  { brand: 'Венёв Двусторонний OSB Алмаз 25%', gritUnit: 'mk', gritMk: '20/14', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний OSB Алмаз 25%', gritUnit: 'mk', gritMk: '14/10', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний OSB Алмаз 25%', gritUnit: 'mk', gritMk: '7/5',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний OSB Алмаз 25%', gritUnit: 'mk', gritMk: '5/3',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний OSB Алмаз 25%', gritUnit: 'mk', gritMk: '3/2',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв Двусторонний OSB Алмаз 25%', gritUnit: 'mk', gritMk: '1/0',   type: 'diamond', coolant: 'water', isCustom: false },
+  // ── Венёв MS-1 Алмаз 100% — алмаз, вода, мк ─────────────────────────────
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '250/200', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '200/160', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '160/125', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '125/100', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '100/80',  type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '80/63',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '63/50',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '50/40',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '40/28',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '28/20',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '20/14',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '14/10',   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '10/7',    type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MS-1 Алмаз 100%', gritUnit: 'mk', gritMk: '7/5',     type: 'diamond', coolant: 'water', isCustom: false },
+  // ── Венёв MB-1 Алмаз 100% — алмаз, вода, мк ─────────────────────────────
+  { brand: 'Венёв MB-1 Алмаз 100%', gritUnit: 'mk', gritMk: '5/3', type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Венёв MB-1 Алмаз 100%', gritUnit: 'mk', gritMk: '3/2', type: 'diamond', coolant: 'water', isCustom: false },
+]
+
+function catalogHash(items: Omit<Stone, 'id'>[]): string {
+  const str = JSON.stringify(items)
+  let h = 0
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(31, h) + str.charCodeAt(i) | 0
+  }
+  return (h >>> 0).toString(36)
+}
+
+async function syncStonesCatalog(targetDb: AppTochiteDB): Promise<void> {
+  const hash = catalogHash(STONES_CATALOG)
+  const stored = await targetDb.meta.get('stonesCatalogHash')
+  if (stored?.value === hash) return
+  await targetDb.transaction('rw', [targetDb.stones, targetDb.meta], async () => {
+    await targetDb.stones.filter(s => !s.isCustom).delete()
+    await targetDb.stones.bulkAdd(STONES_CATALOG.map(s => ({ ...s, updatedAt: new Date(0) })))
+    await targetDb.meta.put({ key: 'stonesCatalogHash', value: hash })
+  })
+}
+
 // Гарантирует существование клиента «Я» при каждом запуске приложения.
 // Выполняется вне миграционной транзакции — «Я» создаётся раньше справочников,
 // поэтому сбой большой транзакции не лишает пользователя нулевого клиента.
 async function ensureSelfClient(targetDb: AppTochiteDB): Promise<void> {
   const hasSelf = (await targetDb.clients.filter(c => c.isSelf).count()) > 0;
   if (!hasSelf) {
-    await targetDb.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() });
+    const now = new Date();
+    await targetDb.clients.add({ name: 'Я', isSelf: true, createdAt: now, updatedAt: now });
   }
 }
 
@@ -1725,6 +1872,8 @@ export async function seedDatabaseWith(targetDb: AppTochiteDB): Promise<void> {
       await targetDb.meta.put({ key: 'seedVersion', value: v + 1 });
     });
   }
+
+  await syncStonesCatalog(targetDb);
 }
 
 export async function seedDatabase(): Promise<void> {
