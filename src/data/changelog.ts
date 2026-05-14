@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.36.3',
+    date: '2026-05-14',
+    changes: [
+      '**reference:** тепловая карта — показываем число использований вместо %',
+    ],
+  },
+  {
     version: '1.36.2',
     date: '2026-05-13',
     changes: [

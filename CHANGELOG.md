@@ -1,3 +1,10 @@
+## [1.36.3](https://github.com/fiscalagent/AppTochite/compare/v1.36.2...v1.36.3) (2026-05-14)
+
+
+### fix
+
+* **reference:** тепловая карта — показываем число использований вместо % ([](https://github.com/fiscalagent/AppTochite/commit/34bd8e31fb9eebfd841e79ea7e3098ee2419738e))
+
 ## [1.36.2](https://github.com/fiscalagent/AppTochite/compare/v1.36.1...v1.36.2) (2026-05-13)
 
 
