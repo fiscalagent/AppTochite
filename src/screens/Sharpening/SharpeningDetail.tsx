@@ -9,6 +9,7 @@ import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import PhotoReportSheet from '../../components/PhotoReport/PhotoReportSheet'
+import PhotoShareSheet, { type SharePhoto } from '../../components/PhotoShare/PhotoShareSheet'
 import s from './SharpeningDetail.module.css'
 
 const IconChevronLeft = () => (
@@ -82,6 +83,7 @@ export default function SharpeningDetail() {
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const [photoReportOpen, setPhotoReportOpen] = useState(false)
+  const [photoShareOpen, setPhotoShareOpen] = useState(false)
   const { openCamera, openGallery } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
@@ -251,6 +253,12 @@ export default function SharpeningDetail() {
         </div>
       ) : null}
 
+      {(sh.photosBefore?.length || sh.photosAfter?.length) ? (
+        <button className={s.reportBtn} onClick={() => setPhotoShareOpen(true)}>
+          Поделиться фото
+        </button>
+      ) : null}
+
       {sh.photosAfter && sh.photosAfter.length > 0 && (
         <button className={s.reportBtn} onClick={() => setPhotoReportOpen(true)}>
           Создать фото-отчёт
@@ -305,6 +313,19 @@ export default function SharpeningDetail() {
           onClose={() => setPhotoReportOpen(false)}
         />
       )}
+
+      {photoShareOpen && (() => {
+        const sharePhotos: SharePhoto[] = [
+          ...(sh.photosBefore ?? []).map(b64 => ({ b64, label: 'До' })),
+          ...(sh.photosAfter ?? []).map(b64 => ({ b64, label: 'После' })),
+        ]
+        return (
+          <PhotoShareSheet
+            photos={sharePhotos}
+            onClose={() => setPhotoShareOpen(false)}
+          />
+        )
+      })()}
 
       {photoModal && (
         <div className={s.photoModalOverlay} onClick={() => setPhotoModal(false)}>
