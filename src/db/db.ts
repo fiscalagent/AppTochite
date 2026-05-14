@@ -56,6 +56,8 @@ export const MK_VALUES = [
   '14/10','10/7','7/5','5/3','3/2','2/1','1/0',
 ]
 
+export type StoneCoolant = 'water' | 'oil' | 'both'
+
 export interface Stone {
   id?: number
   brand: string
@@ -63,6 +65,7 @@ export interface Stone {
   gritUnit?: GritUnit
   gritMk?: string
   type?: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic'
+  coolant?: StoneCoolant
   category?: string
   description?: string
   isCustom: boolean

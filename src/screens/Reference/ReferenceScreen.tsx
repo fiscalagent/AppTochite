@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, Fragment } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Stone, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
+import { db, type Stone, type StoneCoolant, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import { getGritDisplay, getGritSortValue, GRIT_TABLE, type GritDisplayMode } from '../../data/gritTable'
 import s from './ReferenceScreen.module.css'
@@ -41,6 +41,12 @@ const STONE_TYPE_BY_LABEL: Record<string, Stone['type']> = {
   'природа':    'natural',
   'притир':     'pritir',
   'керамика':   'ceramic',
+}
+
+const COOLANT_LABELS: Record<string, string> = {
+  water: 'вода',
+  oil:   'масло',
+  both:  'вода+масло',
 }
 
 function SelectAllRow({
@@ -115,12 +121,10 @@ function SelectionBar({
 
 const IconConverter = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="4" y1="6" x2="20" y2="6"/>
-    <line x1="4" y1="12" x2="20" y2="12"/>
-    <line x1="4" y1="18" x2="20" y2="18"/>
-    <circle cx="8"  cy="6"  r="2.5" fill="var(--bg-300)" stroke="currentColor"/>
-    <circle cx="15" cy="12" r="2.5" fill="var(--bg-300)" stroke="currentColor"/>
-    <circle cx="11" cy="18" r="2.5" fill="var(--bg-300)" stroke="currentColor"/>
+    <path d="M17 2l4 4-4 4"/>
+    <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+    <path d="M7 22l-4-4 4-4"/>
+    <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
   </svg>
 )
 
@@ -374,6 +378,7 @@ function StonesTab({ search }: { search: string }) {
   const [grit, setGrit] = useState('')
   const [gritMk, setGritMk] = useState('')
   const [type, setType] = useState<Stone['type'] | ''>('')
+  const [coolant, setCoolant] = useState<StoneCoolant | ''>('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editBrand, setEditBrand] = useState('')
@@ -381,6 +386,7 @@ function StonesTab({ search }: { search: string }) {
   const [editGrit, setEditGrit] = useState('')
   const [editGritMk, setEditGritMk] = useState('')
   const [editType, setEditType] = useState<Stone['type'] | ''>('')
+  const [editCoolant, setEditCoolant] = useState<StoneCoolant | ''>('')
   const [displayUnit, setDisplayUnit] = useState<GritDisplayMode>('native')
 
   const stones = useLiveQuery(
@@ -390,12 +396,15 @@ function StonesTab({ search }: { search: string }) {
 
   const allFiltered = stones?.filter(st => {
     if (search.startsWith('*')) {
-      const typeQuery = search.slice(1).toLowerCase().trim()
-      if (!typeQuery) return true
+      const q = search.slice(1).toLowerCase().trim()
+      if (!q) return true
       const matchedTypes = Object.entries(STONE_TYPE_BY_LABEL)
-        .filter(([label]) => label.includes(typeQuery))
+        .filter(([label]) => label.includes(q))
         .map(([, t]) => t)
-      return matchedTypes.includes(st.type as Stone['type'])
+      if (matchedTypes.length > 0) return matchedTypes.includes(st.type as Stone['type'])
+      if ('вода'.includes(q)) return st.coolant === 'water' || st.coolant === 'both'
+      if ('масло'.includes(q)) return st.coolant === 'oil' || st.coolant === 'both'
+      return false
     }
     const name = `${st.brand} ${st.grit ?? ''} ${st.gritMk ?? ''}`.toLowerCase()
     return name.includes(search.toLowerCase())
@@ -453,6 +462,7 @@ function StonesTab({ search }: { search: string }) {
     setEditGrit(stone.grit != null ? String(stone.grit) : '')
     setEditGritMk(stone.gritMk ?? '')
     setEditType((stone.type as Stone['type'] | '') ?? '')
+    setEditCoolant((stone.coolant as StoneCoolant | '') ?? '')
     setSelected(new Set())
   }
 
@@ -468,6 +478,7 @@ function StonesTab({ search }: { search: string }) {
       gritUnit: editGritUnit || undefined,
       gritMk: editGritUnit === 'mk' && editGritMk ? editGritMk : undefined,
       type: editType || undefined,
+      coolant: editCoolant || undefined,
       isCustom: true,
       updatedAt: new Date(),
     })
@@ -482,10 +493,11 @@ function StonesTab({ search }: { search: string }) {
       gritUnit: gritUnit || undefined,
       gritMk: gritUnit === 'mk' && gritMk ? gritMk : undefined,
       type: type || undefined,
+      coolant: coolant || undefined,
       isCustom: true,
       updatedAt: new Date(),
     })
-    setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setType(''); setOpen(false)
+    setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setType(''); setCoolant(''); setOpen(false)
   }
 
   return (
@@ -537,6 +549,12 @@ function StonesTab({ search }: { search: string }) {
               <option value="pritir">Притир</option>
               <option value="ceramic">Керамика</option>
             </select>
+            <select className={s.select} value={coolant} onChange={e => setCoolant(e.target.value as StoneCoolant | '')}>
+              <option value="">СОЖ</option>
+              <option value="water">Вода</option>
+              <option value="oil">Масло</option>
+              <option value="both">Вода+масло</option>
+            </select>
           </div>
           <div className={s.addRow}>
             <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
@@ -587,6 +605,12 @@ function StonesTab({ search }: { search: string }) {
               <option value="pritir">Притир</option>
               <option value="ceramic">Керамика</option>
             </select>
+            <select className={s.select} value={editCoolant} onChange={e => setEditCoolant(e.target.value as StoneCoolant | '')}>
+              <option value="">СОЖ</option>
+              <option value="water">Вода</option>
+              <option value="oil">Масло</option>
+              <option value="both">Вода+масло</option>
+            </select>
           </div>
           <div className={s.addRow}>
             <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
@@ -635,7 +659,9 @@ function StonesTab({ search }: { search: string }) {
               </div>
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{st.brand}</div>
-                <div className={s.itemMeta}>{st.type ? STONE_TYPE_LABELS[st.type] : ''}</div>
+                <div className={s.itemMeta}>
+                  {[st.type ? STONE_TYPE_LABELS[st.type] : '', st.coolant ? COOLANT_LABELS[st.coolant] : ''].filter(Boolean).join(' · ')}
+                </div>
               </div>
               <div className={s.itemRight}>
                 {(st.grit != null || (st.gritUnit === 'mk' && st.gritMk)) && (() => {
