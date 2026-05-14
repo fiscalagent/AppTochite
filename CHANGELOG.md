@@ -1,3 +1,10 @@
+## [1.36.4](https://github.com/fiscalagent/AppTochite/compare/v1.36.3...v1.36.4) (2026-05-14)
+
+
+### fix
+
+* **reference:** иконка тепловой карты — график вместо сетки ([](https://github.com/fiscalagent/AppTochite/commit/cb28eb2979f55dfd87534b906d675c15f8944e58))
+
 ## [1.36.3](https://github.com/fiscalagent/AppTochite/compare/v1.36.2...v1.36.3) (2026-05-14)
 
 
