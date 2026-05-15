@@ -1,3 +1,10 @@
+# [1.43.0](https://github.com/fiscalagent/AppTochite/compare/v1.42.0...v1.43.0) (2026-05-15)
+
+
+### feat
+
+* мульти-токенный поиск в автодополнении — GRIN 120 находит Grinderman OA CLR 120 ([](https://github.com/fiscalagent/AppTochite/commit/5b726e38e3dc1a59758af18ee3273c9e59c9a2c8))
+
 # [1.42.0](https://github.com/fiscalagent/AppTochite/compare/v1.41.0...v1.42.0) (2026-05-15)
 
 
