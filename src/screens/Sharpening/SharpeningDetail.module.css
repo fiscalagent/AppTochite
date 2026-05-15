@@ -364,3 +364,29 @@
   width: 100%;
   text-align: center;
 }
+
+.handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-200);
+  border-radius: var(--radius-full);
+  align-self: center;
+  margin-bottom: var(--space-2);
+}
+
+.shareOption {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-4);
+  font-size: 16px;
+  color: var(--text-100);
+  background: var(--bg-300);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  transition: opacity 0.15s;
+}
+
+.shareOptionDisabled {
+  opacity: 0.35;
+}

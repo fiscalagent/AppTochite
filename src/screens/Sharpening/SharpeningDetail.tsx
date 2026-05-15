@@ -84,6 +84,7 @@ export default function SharpeningDetail() {
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const [photoReportOpen, setPhotoReportOpen] = useState(false)
   const [photoShareOpen, setPhotoShareOpen] = useState(false)
+  const [shareMenuOpen, setShareMenuOpen] = useState(false)
   const { openCamera, openGallery } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
@@ -254,16 +255,10 @@ export default function SharpeningDetail() {
       ) : null}
 
       {(sh.photosBefore?.length || sh.photosAfter?.length) ? (
-        <button className={s.reportBtn} onClick={() => setPhotoShareOpen(true)}>
+        <button className={s.reportBtn} onClick={() => setShareMenuOpen(true)}>
           Поделиться фото
         </button>
       ) : null}
-
-      {sh.photosAfter && sh.photosAfter.length > 0 && (
-        <button className={s.reportBtn} onClick={() => setPhotoReportOpen(true)}>
-          Создать фото-отчёт
-        </button>
-      )}
 
       {sh.status === 'accepted' && (
         <button className={s.doneBtn} onClick={handleMarkDone}>
@@ -304,6 +299,30 @@ export default function SharpeningDetail() {
           onGallery={() => addAfterPhoto(openGallery)}
           onClose={() => setPhotoPickerOpen(false)}
         />
+      )}
+
+      {shareMenuOpen && (
+        <div className={s.photoModalOverlay} onClick={() => setShareMenuOpen(false)}>
+          <div className={s.photoModalSheet} onClick={e => e.stopPropagation()}>
+            <div className={s.handle} />
+            <button
+              className={s.shareOption}
+              onClick={() => { setShareMenuOpen(false); setPhotoShareOpen(true) }}
+            >
+              Отправить фотографии
+            </button>
+            <button
+              className={`${s.shareOption} ${!sh.photosAfter?.length ? s.shareOptionDisabled : ''}`}
+              disabled={!sh.photosAfter?.length}
+              onClick={() => { setShareMenuOpen(false); setPhotoReportOpen(true) }}
+            >
+              Фотоотчёт
+            </button>
+            <button className={s.photoModalSkipBtn} onClick={() => setShareMenuOpen(false)}>
+              Отмена
+            </button>
+          </div>
+        </div>
       )}
 
       {photoReportOpen && sh.photosAfter && (
