@@ -17,7 +17,16 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   const filtered = value.length > 0
     ? suggestions.filter(item => {
         const lower = item.toLowerCase()
-        return value.toLowerCase().split(/\s+/).filter(Boolean).every(tok => lower.includes(tok))
+        const tokens = value.toLowerCase().split(/\s+/).filter(Boolean)
+        const endsWithSpace = value.endsWith(' ')
+        return tokens.every((tok, i) => {
+          const isLastAndComplete = i === tokens.length - 1 && endsWithSpace
+          if (isLastAndComplete) {
+            const escaped = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            return new RegExp(`\\b${escaped}\\b`).test(lower)
+          }
+          return lower.includes(tok)
+        })
       }).slice(0, 8)
     : []
 
