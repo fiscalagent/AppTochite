@@ -96,6 +96,64 @@ export async function exportBackup(database: AppTochiteDB): Promise<BackupFile> 
   }
 }
 
+export interface MergeStats {
+  added: number
+  updated: number
+  skipped: number
+}
+
+function newerInFile<T extends { id?: number; updatedAt?: Date }>(device: T, file: T): boolean {
+  const fileTs = file.updatedAt ? new Date(file.updatedAt).getTime() : 0
+  const deviceTs = device.updatedAt ? new Date(device.updatedAt).getTime() : 0
+  return fileTs > deviceTs
+}
+
+export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): Promise<MergeStats> {
+  const stats: MergeStats = { added: 0, updated: 0, skipped: 0 }
+
+  await database.transaction(
+    'rw',
+    [database.clients, database.sharpenings, database.stones, database.steels, database.knives, database.meta],
+    async () => {
+      const tables = [
+        { table: database.clients,     records: backup.data.clients },
+        { table: database.sharpenings, records: backup.data.sharpenings },
+        { table: database.stones,      records: backup.data.stones },
+        { table: database.steels,      records: backup.data.steels },
+        { table: database.knives,      records: backup.data.knives },
+      ] as const
+
+      for (const { table, records } of tables) {
+        for (const fileRecord of records) {
+          if (!fileRecord.id) continue
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const deviceRecord = await (table as any).get(fileRecord.id)
+          if (!deviceRecord) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (table as any).put(fileRecord)
+            stats.added++
+          } else if (newerInFile(deviceRecord, fileRecord)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (table as any).put(fileRecord)
+            stats.updated++
+          } else {
+            stats.skipped++
+          }
+        }
+      }
+
+      if (backup.data.meta) {
+        for (const entry of backup.data.meta) {
+          const existing = await database.meta.get(entry.key)
+          if (!existing) await database.meta.put(entry)
+        }
+      }
+    }
+  )
+
+  return stats
+}
+
 export async function restoreBackup(database: AppTochiteDB, backup: BackupFile): Promise<void> {
   await database.transaction(
     'rw',

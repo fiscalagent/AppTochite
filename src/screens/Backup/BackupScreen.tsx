@@ -20,11 +20,13 @@ import {
   isValidBackup,
   exportBackup,
   restoreBackup,
+  mergeBackup,
   buildSharpeningCSV,
   reviveDates,
   downloadBlob,
   updateLastBackupAt,
   type BackupFile,
+  type MergeStats,
 } from '../../utils/backup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
@@ -43,6 +45,8 @@ export default function BackupScreen() {
 
   const [preview, setPreview] = useState<BackupFile | null>(null)
   const [restoring, setRestoring] = useState(false)
+  const [merging, setMerging] = useState(false)
+  const [mergeStats, setMergeStats] = useState<MergeStats | null>(null)
   const [exporting, setExporting] = useState(false)
   const [compressed, setCompressed] = useState(
     localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on'
@@ -127,6 +131,20 @@ export default function BackupScreen() {
     } catch {
       showToast('Ошибка при восстановлении')
       setRestoring(false)
+    }
+  }
+
+  async function handleMerge() {
+    if (!preview) return
+    setMerging(true)
+    try {
+      const stats = await mergeBackup(db, preview)
+      setMergeStats(stats)
+      setPreview(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch {
+      showToast('Ошибка при объединении')
+      setMerging(false)
     }
   }
 
@@ -270,10 +288,22 @@ export default function BackupScreen() {
       <div className={s.section}>
         <p className={s.sectionTitle}>Восстановление</p>
         <p className={s.desc}>
-          Выберите ранее сохранённый файл бэкапа. Все текущие данные будут заменены данными из файла.
+          Выберите ранее сохранённый файл бэкапа.
         </p>
 
-        {!preview ? (
+        {mergeStats ? (
+          <div className={s.preview}>
+            <p className={s.previewDate}>Объединение завершено</p>
+            <div className={s.previewRows}>
+              <div className={s.previewRow}><span>Добавлено новых</span><span>{mergeStats.added}</span></div>
+              <div className={s.previewRow}><span>Обновлено (файл новее)</span><span>{mergeStats.updated}</span></div>
+              <div className={s.previewRow}><span>Оставлено без изменений</span><span>{mergeStats.skipped}</span></div>
+            </div>
+            <div className={s.previewActions}>
+              <button className={s.secondaryBtn} onClick={() => setMergeStats(null)}>Закрыть</button>
+            </div>
+          </div>
+        ) : !preview ? (
           <>
             <button className={s.secondaryBtn} onClick={() => fileInputRef.current?.click()}>
               Выбрать файл…
@@ -299,11 +329,17 @@ export default function BackupScreen() {
               <div className={s.previewRow}><span>Ножи</span><span>{preview.data.knives.length}</span></div>
             </div>
             <div className={s.warning}>
-              Все текущие данные будут удалены и заменены данными из файла.
+              <strong>Объединить</strong> — добавит новые записи из файла и обновит те, что новее в файле. Данные на устройстве не исчезнут.
+            </div>
+            <div className={s.warningDanger}>
+              <strong>Заменить всё</strong> — удалит все текущие данные и заменит данными из файла.
             </div>
             <div className={s.previewActions}>
-              <button className={s.dangerBtn} onClick={handleRestore} disabled={restoring}>
-                {restoring ? 'Восстановление…' : 'Восстановить'}
+              <button className={s.primaryBtn} onClick={handleMerge} disabled={merging || restoring}>
+                {merging ? 'Объединение…' : 'Объединить'}
+              </button>
+              <button className={s.dangerBtn} onClick={handleRestore} disabled={restoring || merging}>
+                {restoring ? 'Восстановление…' : 'Заменить всё'}
               </button>
               <button className={s.secondaryBtn} onClick={() => {
                 setPreview(null)

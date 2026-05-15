@@ -172,6 +172,7 @@ export default function SharpeningForm() {
       gritMk: newStoneGritUnit === 'mk' && newStoneGritMk ? newStoneGritMk : undefined,
       type: newStoneType || undefined,
       isCustom: true,
+      updatedAt: new Date(),
     }
     await db.stones.add(stone)
     addStone(stoneDisplayName(stone))
@@ -182,15 +183,17 @@ export default function SharpeningForm() {
     if (!clientId || !knifeBrand.trim() || saving) return
     setSaving(true)
 
+    const now = new Date()
+
     const knifeInRef = knifeSuggestions.some(k => k.toLowerCase() === knifeBrand.trim().toLowerCase())
     if (!knifeInRef) {
-      await db.knives.add({ brand: knifeBrand.trim(), isCustom: true })
+      await db.knives.add({ brand: knifeBrand.trim(), isCustom: true, updatedAt: now })
     }
 
     if (steel.trim()) {
       const steelInRef = steelSuggestions.some(name => name.toLowerCase() === steel.trim().toLowerCase())
       if (!steelInRef) {
-        await db.steels.add({ name: steel.trim(), isCustom: true })
+        await db.steels.add({ name: steel.trim(), isCustom: true, updatedAt: now })
       }
     }
 
@@ -206,7 +209,7 @@ export default function SharpeningForm() {
           ? `${parsed.brand.toLowerCase()} mk:${parsed.gritMk ?? ''}`
           : `${parsed.brand.toLowerCase()} ${parsed.grit ?? 0}`
         if (!existingKeys.has(key)) {
-          await db.stones.add({ brand: parsed.brand, grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk, type: 'ao', isCustom: true })
+          await db.stones.add({ brand: parsed.brand, grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk, type: 'ao', isCustom: true, updatedAt: now })
           existingKeys.add(key)
         }
       }
@@ -227,13 +230,14 @@ export default function SharpeningForm() {
       status,
       doneAt: status === 'done' ? (doneAt ?? new Date()) : undefined,
       photosAfter: photosAfter.length ? photosAfter : undefined,
+      updatedAt: new Date(),
     }
 
     try {
       if (isEdit) {
         await db.sharpenings.update(Number(id), data)
         showToast('Заточка сохранена')
-        navigate(`/sharpenings/${id}`)
+        navigate('/', { replace: true })
       } else {
         const newId = await db.sharpenings.add(data)
         showToast('Заточка создана')
@@ -499,7 +503,7 @@ export default function SharpeningForm() {
                     value={newStoneType}
                     onChange={e => setNewStoneType(e.target.value as Stone['type'] | '')}
                   >
-                    <option value="">иное</option>
+                    <option value="" disabled>выберите тип абразива</option>
                     <option value="galvanic">Гальваника</option>
                     <option value="ao">ОА</option>
                     <option value="kk">КК</option>
@@ -508,6 +512,7 @@ export default function SharpeningForm() {
                     <option value="natural">Природа</option>
                     <option value="pritir">Притир</option>
                     <option value="ceramic">Керамика</option>
+                    <option value="other">Другой тип абразива</option>
                   </select>
                 </div>
                 <div className={s.newStoneRow}>

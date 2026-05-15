@@ -56,17 +56,20 @@ export default function ClientForm() {
         phone: phone.trim() || undefined,
         telegram: normalizeTelegram(telegram),
         avatar,
+        updatedAt: new Date(),
       })
       showToast('Клиент сохранён')
       navigate(`/clients/${id}`)
     } else {
+      const now = new Date()
       const newId = await db.clients.add({
         name: name.trim(),
         phone: phone.trim() || undefined,
         telegram: normalizeTelegram(telegram),
         avatar,
         isSelf: false,
-        createdAt: new Date(),
+        createdAt: now,
+        updatedAt: now,
       })
       showToast('Клиент добавлен')
       navigate(`/clients/${newId}`)

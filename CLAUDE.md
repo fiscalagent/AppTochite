@@ -103,6 +103,7 @@ src/
 - `Stone.type` — 8 значений: `'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic'`
 - `meta` — служебная таблица (ключ-значение), сейчас хранит `seedVersion` для контроля seed-миграций
 - Фото хранятся как `base64[]` в полях `photosBefore` / `photosAfter`
+- `updatedAt?: Date` — есть у всех сущностей (`Client`, `Sharpening`, `Stone`, `Steel`, `Knife`). Проставляется при каждом create/update. Используется в `mergeBackup` для last-write-wins разрешения конфликтов. Существующие записи получили значение при миграции v5 (best-effort: clients ← createdAt, sharpenings ← doneAt ?? receivedAt, справочники ← epoch)
 
 ---
 

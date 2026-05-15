@@ -30,6 +30,7 @@ const STONE_TYPE_LABELS: Record<string, string> = {
   natural: 'природа',
   pritir: 'притир',
   ceramic: 'керамика',
+  other: 'другой тип',
 }
 
 const STONE_TYPE_BY_LABEL: Record<string, Stone['type']> = {
@@ -539,7 +540,7 @@ function StonesTab({ search }: { search: string }) {
           )}
           <div className={s.addRow}>
             <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'] | '')}>
-              <option value="">иное</option>
+              <option value="" disabled>выберите тип абразива</option>
               <option value="galvanic">Гальваника</option>
               <option value="ao">ОА</option>
               <option value="kk">КК</option>
@@ -548,6 +549,7 @@ function StonesTab({ search }: { search: string }) {
               <option value="natural">Природа</option>
               <option value="pritir">Притир</option>
               <option value="ceramic">Керамика</option>
+              <option value="other">Другой тип абразива</option>
             </select>
             <select className={s.select} value={coolant} onChange={e => setCoolant(e.target.value as StoneCoolant | '')}>
               <option value="">СОЖ</option>
@@ -595,7 +597,7 @@ function StonesTab({ search }: { search: string }) {
           )}
           <div className={s.addRow}>
             <select className={s.select} value={editType} onChange={e => setEditType(e.target.value as Stone['type'] | '')}>
-              <option value="">иное</option>
+              <option value="" disabled>выберите тип абразива</option>
               <option value="galvanic">Гальваника</option>
               <option value="ao">ОА</option>
               <option value="kk">КК</option>
@@ -604,6 +606,7 @@ function StonesTab({ search }: { search: string }) {
               <option value="natural">Природа</option>
               <option value="pritir">Притир</option>
               <option value="ceramic">Керамика</option>
+              <option value="other">Другой тип абразива</option>
             </select>
             <select className={s.select} value={editCoolant} onChange={e => setEditCoolant(e.target.value as StoneCoolant | '')}>
               <option value="">СОЖ</option>
