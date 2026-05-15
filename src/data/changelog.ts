@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.43.3',
+    date: '2026-05-15',
+    changes: [
+      'точный поиск последнего токена по пробелу — 120 пробел не находит 1200',
+    ],
+  },
+  {
     version: '1.43.2',
     date: '2026-05-15',
     changes: [

@@ -1,3 +1,10 @@
+## [1.43.3](https://github.com/fiscalagent/AppTochite/compare/v1.43.2...v1.43.3) (2026-05-15)
+
+
+### fix
+
+* точный поиск последнего токена по пробелу — 120 пробел не находит 1200 ([](https://github.com/fiscalagent/AppTochite/commit/1eb6f4c6efed902d9e4487c4f0119c115ad723c9))
+
 ## [1.43.2](https://github.com/fiscalagent/AppTochite/compare/v1.43.1...v1.43.2) (2026-05-15)
 
 
