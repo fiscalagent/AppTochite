@@ -15,7 +15,10 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   const filtered = value.length > 0
-    ? suggestions.filter(item => item.toLowerCase().includes(value.toLowerCase())).slice(0, 8)
+    ? suggestions.filter(item => {
+        const lower = item.toLowerCase()
+        return value.toLowerCase().split(/\s+/).filter(Boolean).every(tok => lower.includes(tok))
+      }).slice(0, 8)
     : []
 
   const visible = open && filtered.length > 0
