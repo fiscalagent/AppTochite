@@ -1,3 +1,10 @@
+# [1.40.0](https://github.com/fiscalagent/AppTochite/compare/v1.39.1...v1.40.0) (2026-05-15)
+
+
+### feat
+
+* объединить кнопки шаринга в одну с bottom sheet выбора ([](https://github.com/fiscalagent/AppTochite/commit/f2871b84c15e65d3c77c2eb2ca26befa7ac92714))
+
 ## [1.39.1](https://github.com/fiscalagent/AppTochite/compare/v1.39.0...v1.39.1) (2026-05-15)
 
 
