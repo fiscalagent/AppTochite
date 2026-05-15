@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { db } from '../../db/db'
+import { db } from '../../db/instance'
 import s from './OnboardingSheet.module.css'
 
 export default function OnboardingSheet() {

@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
 import { CHANGELOG } from '../../data/changelog'
+import { isAnalyticsEnabled, setAnalyticsEnabled } from '../../services/analytics'
+import { db } from '../../db/instance'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -23,6 +26,9 @@ function isPwa(): boolean {
 export default function AboutScreen() {
   const navigate = useNavigate()
   const { currentVersion, latestVersion, releaseUrl, hasUpdate, checking, checkNow, lastChecked } = useVersionCheck()
+
+  const analyticsOptOut = useLiveQuery(() => db.settings.get('analyticsOptOut'), [])
+  const analyticsOn = !analyticsOptOut?.value
 
   const checkedStr = lastChecked
     ? new Date(lastChecked).toLocaleString('ru', {
@@ -119,6 +125,20 @@ export default function AboutScreen() {
             <span className={s.linkLabel}>Поддержать развитие</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </a>
+          <div className={s.toggleItem}>
+            <div className={s.toggleLabel}>
+              <div className={s.toggleLabelTitle}>Анонимная статистика</div>
+              <div className={s.toggleLabelDesc}>Камни и ножи без личных данных — помогает улучшить справочник</div>
+            </div>
+            <label className={s.toggle}>
+              <input
+                type="checkbox"
+                checked={analyticsOn}
+                onChange={e => setAnalyticsEnabled(e.target.checked)}
+              />
+              <span className={s.toggleSlider} />
+            </label>
+          </div>
         </div>
       </div>
 

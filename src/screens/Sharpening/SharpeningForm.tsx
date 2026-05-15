@@ -8,6 +8,7 @@ import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
+import { trackSharpening } from '../../services/analytics'
 import s from './SharpeningForm.module.css'
 
 const IconChevronLeft = () => (
@@ -236,10 +237,12 @@ export default function SharpeningForm() {
     try {
       if (isEdit) {
         await db.sharpenings.update(Number(id), data)
+        trackSharpening(data)
         showToast('Заточка сохранена')
         navigate('/', { replace: true })
       } else {
         const newId = await db.sharpenings.add(data)
+        trackSharpening(data)
         showToast('Заточка создана')
         navigate(`/sharpenings/${newId}`)
       }

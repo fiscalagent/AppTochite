@@ -10,6 +10,7 @@ import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import PhotoReportSheet from '../../components/PhotoReport/PhotoReportSheet'
 import PhotoShareSheet, { type SharePhoto } from '../../components/PhotoShare/PhotoShareSheet'
+import { trackSharpening } from '../../services/analytics'
 import s from './SharpeningDetail.module.css'
 
 const IconChevronLeft = () => (
@@ -93,7 +94,9 @@ export default function SharpeningDetail() {
     [sh?.clientId]
   )
   async function handleMarkDone() {
-    await db.sharpenings.update(sharpeningId, { status: 'done', doneAt: new Date() })
+    const doneAt = new Date()
+    await db.sharpenings.update(sharpeningId, { status: 'done', doneAt })
+    if (sh) trackSharpening({ ...sh, status: 'done', doneAt })
     showToast('Статус обновлён — готово!')
     setPhotoModal(true)
   }
