@@ -1,3 +1,10 @@
+## [1.43.5](https://github.com/fiscalagent/AppTochite/compare/v1.43.4...v1.43.5) (2026-05-15)
+
+
+### fix
+
+* пробел между гритностью и единицей измерения (1000 FEPA, 2000 JIS) ([](https://github.com/fiscalagent/AppTochite/commit/e6478967f095f7b35885c57d8009718eb13b82ab))
+
 ## [1.43.4](https://github.com/fiscalagent/AppTochite/compare/v1.43.3...v1.43.4) (2026-05-15)
 
 ## [1.43.3](https://github.com/fiscalagent/AppTochite/compare/v1.43.2...v1.43.3) (2026-05-15)

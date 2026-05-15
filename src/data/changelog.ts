@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.43.5',
+    date: '2026-05-15',
+    changes: [
+      'пробел между гритностью и единицей измерения (1000 FEPA, 2000 JIS)',
+    ],
+  },
+  {
     version: '1.43.4',
     date: '2026-05-15',
     changes: [
