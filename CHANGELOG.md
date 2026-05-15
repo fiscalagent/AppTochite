@@ -1,3 +1,10 @@
+# [1.44.0](https://github.com/fiscalagent/AppTochite/compare/v1.43.5...v1.44.0) (2026-05-15)
+
+
+### feat
+
+* блюр фона под модалками + fuzzy-подсказки при добавлении камня ([](https://github.com/fiscalagent/AppTochite/commit/f24bada55ee9c59c5584c9eac3a6a3350dbec815))
+
 ## [1.43.5](https://github.com/fiscalagent/AppTochite/compare/v1.43.4...v1.43.5) (2026-05-15)
 
 
