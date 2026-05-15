@@ -413,11 +413,52 @@
   cursor: pointer;
 }
 
+/* Fuzzy suggestions */
+.fuzzySuggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fuzzyLabel {
+  font-size: 11px;
+  color: var(--text-400);
+  font-weight: 500;
+}
+
+.fuzzyChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fuzzyChip {
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--text-200);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.fuzzyChip:active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
 /* Heatmap overlay */
 .overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
   align-items: flex-end;

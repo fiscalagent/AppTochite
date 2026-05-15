@@ -370,6 +370,28 @@ function StoneHeatmap() {
   )
 }
 
+// ─── Fuzzy match ─────────────────────────────────────────────────────────────
+
+function fuzzyScore(query: string, target: string): number {
+  const q = query.toLowerCase()
+  const t = target.toLowerCase()
+  if (t === q) return 1000
+  if (t.startsWith(q)) return 500 + q.length
+  if (t.includes(q)) return 200 + q.length
+  // subsequence with consecutive-run bonus
+  let qi = 0, score = 0, consecutive = 0
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) {
+      score += 1 + consecutive * 2
+      consecutive++
+      qi++
+    } else {
+      consecutive = 0
+    }
+  }
+  return qi === q.length ? score : 0
+}
+
 // ─── Stones ──────────────────────────────────────────────────────────────────
 
 function StonesTab({ search }: { search: string }) {
@@ -501,6 +523,16 @@ function StonesTab({ search }: { search: string }) {
     setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setType(''); setCoolant(''); setOpen(false)
   }
 
+  const allBrands = [...new Set(stones?.map(st => st.brand) ?? [])]
+  const addBrandSuggestions = brand.trim().length >= 2
+    ? allBrands
+        .map(b => ({ b, score: fuzzyScore(brand.trim(), b) }))
+        .filter(x => x.score > 0 && x.b.toLowerCase() !== brand.trim().toLowerCase())
+        .sort((a, b2) => b2.score - a.score)
+        .slice(0, 5)
+        .map(x => x.b)
+    : []
+
   return (
     <>
       {!open && selected.size === 0 && editingId === null && (
@@ -512,6 +544,16 @@ function StonesTab({ search }: { search: string }) {
         <div className={s.addCard}>
           <span className={s.addTitle}>Новый камень</span>
           <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
+          {addBrandSuggestions.length > 0 && (
+            <div className={s.fuzzySuggestions}>
+              <span className={s.fuzzyLabel}>Похожее в словаре:</span>
+              <div className={s.fuzzyChips}>
+                {addBrandSuggestions.map(b => (
+                  <button key={b} className={s.fuzzyChip} onClick={() => setBrand(b)}>{b}</button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className={s.gritUnitRow}>
             {(['fepa', 'jis', 'mk'] as const).map(u => (
               <button
