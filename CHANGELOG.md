@@ -1,3 +1,10 @@
+# [1.41.0](https://github.com/fiscalagent/AppTochite/compare/v1.40.0...v1.41.0) (2026-05-15)
+
+
+### feat
+
+* слияние бэкапов, тип камня «другой», updatedAt везде ([](https://github.com/fiscalagent/AppTochite/commit/645b85beeed34c3da101bc1d95f8a1823a655ff1))
+
 # [1.40.0](https://github.com/fiscalagent/AppTochite/compare/v1.39.1...v1.40.0) (2026-05-15)
 
 
