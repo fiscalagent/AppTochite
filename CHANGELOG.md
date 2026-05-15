@@ -1,3 +1,10 @@
+## [1.43.1](https://github.com/fiscalagent/AppTochite/compare/v1.43.0...v1.43.1) (2026-05-15)
+
+
+### fix
+
+* правильный импорт db в OnboardingSheet, аналитика в форме и детали заточки, тогл opt-out в «О программе» ([](https://github.com/fiscalagent/AppTochite/commit/a626cde0624a80794aa693cacae5e2d03ef47ce4))
+
 # [1.43.0](https://github.com/fiscalagent/AppTochite/compare/v1.42.0...v1.43.0) (2026-05-15)
 
 

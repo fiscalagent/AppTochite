@@ -6,6 +6,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.43.1',
+    date: '2026-05-15',
+    changes: [
+      'правильный импорт db в OnboardingSheet, аналитика в форме и детали заточки, тогл opt-out в «О программе»',
+      'мульти-токенный поиск в автодополнении — GRIN 120 находит Grinderman OA CLR 120',
+      'онбординг — welcome sheet при первом запуске и ссылка на инструкцию в «О программе»',
+      'слияние бэкапов, тип камня «другой», updatedAt везде',
+      'объединить кнопки шаринга в одну с bottom sheet выбора',
+    ],
+  },
+  {
     version: '1.43.0',
     date: '2026-05-15',
     changes: [
