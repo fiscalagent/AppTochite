@@ -1,3 +1,10 @@
+## [1.44.1](https://github.com/fiscalagent/AppTochite/compare/v1.44.0...v1.44.1) (2026-05-15)
+
+
+### fix
+
+* выравнивание пунктов в секции Настройки в «О программе» ([](https://github.com/fiscalagent/AppTochite/commit/c9f945cf19bc920beff42602189daeeb57d5fa6a))
+
 # [1.44.0](https://github.com/fiscalagent/AppTochite/compare/v1.43.5...v1.44.0) (2026-05-15)
 
 

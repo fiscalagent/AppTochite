@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.44.1',
+    date: '2026-05-15',
+    changes: [
+      'выравнивание пунктов в секции Настройки в «О программе»',
+      'блюр фона под модалками + fuzzy-подсказки при добавлении камня',
+    ],
+  },
+  {
     version: '1.44.0',
     date: '2026-05-15',
     changes: [
