@@ -179,6 +179,9 @@
   text-decoration: none;
   color: var(--text-100);
   font-size: 15px;
+  font-family: var(--font-body);
+  text-align: left;
+  width: 100%;
   border-bottom: 1px solid var(--border-100);
 }
 
