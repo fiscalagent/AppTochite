@@ -1,3 +1,10 @@
+## [1.39.1](https://github.com/fiscalagent/AppTochite/compare/v1.39.0...v1.39.1) (2026-05-15)
+
+
+### fix
+
+* **reference:** тепловая карта — шире колонка камня, адаптивный шрифт ([](https://github.com/fiscalagent/AppTochite/commit/78ca7b9f31890edc616dcf5e7d973e81fbcfc1f6))
+
 # [1.39.0](https://github.com/fiscalagent/AppTochite/compare/v1.38.0...v1.39.0) (2026-05-14)
 
 

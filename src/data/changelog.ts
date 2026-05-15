@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.39.1',
+    date: '2026-05-15',
+    changes: [
+      '**reference:** тепловая карта — шире колонка камня, адаптивный шрифт',
+      '**seed:** заменить справочник камней на 101 камень из таблицы (хэш-подход)',
+      'поле СОЖ (вода/масло) для камней + поиск *вода/*масло',
+    ],
+  },
+  {
     version: '1.39.0',
     date: '2026-05-14',
     changes: [
