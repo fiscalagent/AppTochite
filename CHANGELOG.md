@@ -1,3 +1,10 @@
+## [1.43.2](https://github.com/fiscalagent/AppTochite/compare/v1.43.1...v1.43.2) (2026-05-15)
+
+
+### fix
+
+* добавить analytics.ts в git, убрать неиспользуемый импорт isAnalyticsEnabled ([](https://github.com/fiscalagent/AppTochite/commit/aa7cb14c6f3836c50429885079cb2355a4111f9b))
+
 ## [1.43.1](https://github.com/fiscalagent/AppTochite/compare/v1.43.0...v1.43.1) (2026-05-15)
 
 

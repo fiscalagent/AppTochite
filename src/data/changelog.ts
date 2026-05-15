@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.43.2',
+    date: '2026-05-15',
+    changes: [
+      'добавить analytics.ts в git, убрать неиспользуемый импорт isAnalyticsEnabled',
+    ],
+  },
+  {
     version: '1.43.1',
     date: '2026-05-15',
     changes: [
