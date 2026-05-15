@@ -5,6 +5,7 @@ import { AutoBackupProvider } from './contexts/AutoBackupContext'
 import BackupReminder from './components/BackupReminder/BackupReminder'
 import StorageWarning from './components/StorageWarning/StorageWarning'
 import BrowserWarning from './components/BrowserWarning/BrowserWarning'
+import OnboardingSheet from './components/OnboardingSheet/OnboardingSheet'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <RouterProvider router={router} />
         <BackupReminder />
         <StorageWarning />
+        <OnboardingSheet />
       </AutoBackupProvider>
     </ToastProvider>
   )

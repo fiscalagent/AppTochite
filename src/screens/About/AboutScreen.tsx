@@ -91,6 +91,14 @@ export default function AboutScreen() {
       <div className={s.section}>
         <p className={s.sectionTitle}>Настройки</p>
         <div className={s.linkList}>
+          <button
+            className={s.linkItem}
+            onClick={() => window.open('/AppTochite/guide.html', '_blank')}
+          >
+            <span className={s.linkIcon}>📖</span>
+            <span className={s.linkLabel}>Инструкция</span>
+            <span className={s.linkArrow}><IconChevronRight /></span>
+          </button>
           <a
             href="https://t.me/AppTochite"
             target="_blank"
