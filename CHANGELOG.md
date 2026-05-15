@@ -1,3 +1,10 @@
+# [1.42.0](https://github.com/fiscalagent/AppTochite/compare/v1.41.0...v1.42.0) (2026-05-15)
+
+
+### feat
+
+* онбординг — welcome sheet при первом запуске и ссылка на инструкцию в «О программе» ([](https://github.com/fiscalagent/AppTochite/commit/ddb5e87dbf58387178ba5ba8f583c5f93d20790c))
+
 # [1.41.0](https://github.com/fiscalagent/AppTochite/compare/v1.40.0...v1.41.0) (2026-05-15)
 
 
