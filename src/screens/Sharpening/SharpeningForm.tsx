@@ -40,9 +40,9 @@ function todayStr() {
 function parseStoneName(name: string): { brand: string; grit?: number; gritUnit?: GritUnit; gritMk?: string } {
   const mkMatch = name.match(/^(.*?)\s+(\d+\/\d+)мк$/)
   if (mkMatch) return { brand: mkMatch[1], gritUnit: 'mk', gritMk: mkMatch[2] }
-  const fepaMatch = name.match(/^(.*?)\s+(\d+)FEPA$/)
+  const fepaMatch = name.match(/^(.*?)\s+(\d+)\s+FEPA$/)
   if (fepaMatch) return { brand: fepaMatch[1], grit: Number(fepaMatch[2]), gritUnit: 'fepa' }
-  const jisMatch = name.match(/^(.*?)\s+(\d+)JIS$/)
+  const jisMatch = name.match(/^(.*?)\s+(\d+)\s+JIS$/)
   if (jisMatch) return { brand: jisMatch[1], grit: Number(jisMatch[2]), gritUnit: 'jis' }
   const numMatch = name.match(/^(.*?)\s+(\d+)$/)
   if (numMatch) return { brand: numMatch[1], grit: Number(numMatch[2]) }

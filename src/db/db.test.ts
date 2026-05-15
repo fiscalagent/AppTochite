@@ -379,11 +379,11 @@ describe('stoneDisplayName', () => {
   })
 
   it('бренд + гритность JIS', () => {
-    expect(stoneDisplayName(s({ brand: 'Shapton Glass', type: 'ao', grit: 2000, gritUnit: 'jis' }))).toBe('Shapton Glass 2000JIS')
+    expect(stoneDisplayName(s({ brand: 'Shapton Glass', type: 'ao', grit: 2000, gritUnit: 'jis' }))).toBe('Shapton Glass 2000 JIS')
   })
 
   it('бренд + гритность FEPA', () => {
-    expect(stoneDisplayName(s({ brand: 'DMT Fine', type: 'galvanic', grit: 600, gritUnit: 'fepa' }))).toBe('DMT Fine 600FEPA')
+    expect(stoneDisplayName(s({ brand: 'DMT Fine', type: 'galvanic', grit: 600, gritUnit: 'fepa' }))).toBe('DMT Fine 600 FEPA')
   })
 
   it('бренд + гритность МК', () => {

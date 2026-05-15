@@ -75,8 +75,8 @@ export interface Stone {
 export function stoneDisplayName(stone: Stone): string {
   if (stone.gritUnit === 'mk' && stone.gritMk) return `${stone.brand} ${stone.gritMk}мк`
   if (stone.grit != null) {
-    if (stone.gritUnit === 'fepa') return `${stone.brand} ${stone.grit}FEPA`
-    if (stone.gritUnit === 'jis') return `${stone.brand} ${stone.grit}JIS`
+    if (stone.gritUnit === 'fepa') return `${stone.brand} ${stone.grit} FEPA`
+    if (stone.gritUnit === 'jis') return `${stone.brand} ${stone.grit} JIS`
     return `${stone.brand} ${stone.grit}`
   }
   return stone.brand
