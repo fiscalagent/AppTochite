@@ -414,6 +414,12 @@ function StonesTab({ search }: { search: string }) {
   const [editCoolant, setEditCoolant] = useState<StoneCoolant | ''>('')
   const [displayUnit, setDisplayUnit] = useState<GritDisplayMode>('native')
 
+  useEffect(() => {
+    if (!open && editingId === null) return
+    startBlur()
+    return stopBlur
+  }, [open, editingId])
+
   const stones = useLiveQuery(
     () => db.stones.toArray().then(arr => arr.sort(compareStonesForSort)),
     []
@@ -542,8 +548,10 @@ function StonesTab({ search }: { search: string }) {
           + Добавить камень
         </button>
       )}
-      {open && (
-        <div className={s.addCard}>
+      {open && createPortal(
+        <div className={s.overlay} onClick={() => setOpen(false)}>
+        <div className={s.sheet} onClick={e => e.stopPropagation()}>
+          <div className={s.addCard}>
           <span className={s.addTitle}>Новый камень</span>
           <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
           {addBrandSuggestions.length > 0 && (
@@ -606,10 +614,15 @@ function StonesTab({ search }: { search: string }) {
             <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
           </div>
+          </div>
         </div>
+        </div>,
+        document.body
       )}
 
-      {editingId !== null && (
+      {editingId !== null && createPortal(
+        <div className={s.overlay} onClick={cancelEdit}>
+        <div className={s.sheet} onClick={e => e.stopPropagation()}>
         <div className={s.addCard}>
           <span className={s.addTitle}>Редактировать камень</span>
           <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
@@ -663,7 +676,10 @@ function StonesTab({ search }: { search: string }) {
             <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>Отмена</button>
           </div>
+          </div>
         </div>
+        </div>,
+        document.body
       )}
 
       <div className={s.displayUnitRow}>
