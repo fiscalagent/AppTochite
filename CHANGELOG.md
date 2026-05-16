@@ -1,3 +1,15 @@
+# [1.45.0](https://github.com/fiscalagent/AppTochite/compare/v1.44.1...v1.45.0) (2026-05-16)
+
+
+### feat
+
+* офлайн-буфер аналитики — события сохраняются в очередь и отправляются при восстановлении сети ([](https://github.com/fiscalagent/AppTochite/commit/77317c8692b4810c57bac218ec68e7b2d4f6a72f))
+
+
+### fix
+
+* добавить -webkit-backdrop-filter для блюра на Android ([](https://github.com/fiscalagent/AppTochite/commit/5ee30a3b525ef0ecc556b9877a5302e363d3ad6e))
+
 ## [1.44.1](https://github.com/fiscalagent/AppTochite/compare/v1.44.0...v1.44.1) (2026-05-15)
 
 
