@@ -1,3 +1,10 @@
+## [1.45.2](https://github.com/fiscalagent/AppTochite/compare/v1.45.1...v1.45.2) (2026-05-16)
+
+
+### fix
+
+* блюр фона при добавлении/редактировании камня — форма через портал с оверлеем ([](https://github.com/fiscalagent/AppTochite/commit/3b826b77ce63a045573af13d340b4c5c3f7c390b))
+
 ## [1.45.1](https://github.com/fiscalagent/AppTochite/compare/v1.45.0...v1.45.1) (2026-05-16)
 
 
