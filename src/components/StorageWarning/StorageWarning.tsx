@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
 import { useToast } from '../Toast/ToastContext'
+import { startBlur, stopBlur } from '../../utils/modalBlur'
 import s from './StorageWarning.module.css'
 
 const DISMISS_KEY = 'storage-warn-dismissed'
@@ -18,6 +20,12 @@ export default function StorageWarning() {
   const [visible, setVisible] = useState(false)
   const [usage, setUsage] = useState(0)
   const [quota, setQuota] = useState(1)
+
+  useEffect(() => {
+    if (!visible) return
+    startBlur()
+    return stopBlur
+  }, [visible])
 
   useEffect(() => {
     if (localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on') return
@@ -49,7 +57,7 @@ export default function StorageWarning() {
 
   const pct = Math.min(100, Math.round((usage / quota) * 100))
 
-  return (
+  return createPortal(
     <div className={s.overlay} onClick={handleDismiss}>
       <div className={s.sheet} onClick={e => e.stopPropagation()}>
         <div className={s.title}>Хранилище заполняется</div>
@@ -75,6 +83,7 @@ export default function StorageWarning() {
           Напомнить через неделю
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

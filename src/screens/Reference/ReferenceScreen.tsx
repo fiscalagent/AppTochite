@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, Fragment } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type StoneCoolant, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import { getGritDisplay, getGritSortValue, GRIT_TABLE, type GritDisplayMode } from '../../data/gritTable'
+import { startBlur, stopBlur } from '../../utils/modalBlur'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -972,6 +974,12 @@ export default function ReferenceScreen() {
   const [showHeatmap, setShowHeatmap] = useState(false)
   const [showConverter, setShowConverter] = useState(false)
 
+  useEffect(() => {
+    if (!showConverter && !showHeatmap) return
+    startBlur()
+    return stopBlur
+  }, [showConverter, showHeatmap])
+
   function goTab(t: Tab) {
     setSearch('')
     navigate(`/reference/${t}`, { replace: true })
@@ -993,7 +1001,7 @@ export default function ReferenceScreen() {
         )}
       </div>
 
-      {showConverter && (
+      {showConverter && createPortal(
         <div className={s.overlay} onClick={() => setShowConverter(false)}>
           <div className={s.sheet} onClick={e => e.stopPropagation()}>
             <div className={s.sheetHeader}>
@@ -1002,10 +1010,11 @@ export default function ReferenceScreen() {
             </div>
             <GritConverter />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {showHeatmap && (
+      {showHeatmap && createPortal(
         <div className={s.overlay} onClick={() => setShowHeatmap(false)}>
           <div className={s.sheet} onClick={e => e.stopPropagation()}>
             <div className={s.sheetHeader}>
@@ -1014,7 +1023,8 @@ export default function ReferenceScreen() {
             </div>
             <StoneHeatmap />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className={s.tabs}>

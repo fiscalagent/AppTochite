@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { startBlur, stopBlur } from '../../utils/modalBlur'
 import s from './ConfirmModal.module.css'
 
 interface Props {
@@ -13,6 +15,12 @@ interface Props {
 export default function ConfirmModal({
   isOpen, title, message, confirmLabel = 'Удалить', onConfirm, onCancel,
 }: Props) {
+  useEffect(() => {
+    if (!isOpen) return
+    startBlur()
+    return stopBlur
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return createPortal(

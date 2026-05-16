@@ -20,6 +20,13 @@ html, body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: filter 0.2s;
+}
+
+body.has-modal #root {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
 }
 
 button {

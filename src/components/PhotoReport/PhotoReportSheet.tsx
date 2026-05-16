@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Sharpening } from '../../db/db'
+import { startBlur, stopBlur } from '../../utils/modalBlur'
 import s from './PhotoReportSheet.module.css'
 
 interface Props {
@@ -224,6 +226,11 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
+    startBlur()
+    return stopBlur
+  }, [])
+
+  useEffect(() => {
     if (canvasRef.current) {
       renderReport(canvasRef.current, photos[selected], sharpening)
     }
@@ -257,7 +264,7 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
     }
   }
 
-  return (
+  return createPortal(
     <div className={s.overlay} onClick={onClose}>
       <div className={s.sheet} onClick={e => e.stopPropagation()}>
         <div className={s.title}>Фото-отчёт</div>
@@ -285,6 +292,7 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
         </button>
         <button className={s.cancelBtn} onClick={onClose}>Отмена</button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

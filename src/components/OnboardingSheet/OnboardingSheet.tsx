@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { db } from '../../db/instance'
+import { startBlur, stopBlur } from '../../utils/modalBlur'
 import s from './OnboardingSheet.module.css'
 
 export default function OnboardingSheet() {
@@ -10,6 +12,12 @@ export default function OnboardingSheet() {
       if (!entry) setVisible(true)
     })
   }, [])
+
+  useEffect(() => {
+    if (!visible) return
+    startBlur()
+    return stopBlur
+  }, [visible])
 
   async function dismiss() {
     await db.settings.put({ key: 'onboardingShown', value: true })
@@ -23,7 +31,7 @@ export default function OnboardingSheet() {
 
   if (!visible) return null
 
-  return (
+  return createPortal(
     <div className={s.overlay} onClick={dismiss}>
       <div className={s.sheet} onClick={e => e.stopPropagation()}>
         <div className={s.handle} />
@@ -34,6 +42,7 @@ export default function OnboardingSheet() {
         </button>
         <button className={s.skip} onClick={dismiss}>Пропустить</button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

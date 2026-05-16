@@ -1,3 +1,6 @@
+import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { startBlur, stopBlur } from '../../utils/modalBlur'
 import s from './PhotoSourceSheet.module.css'
 
 const IconCamera = () => (
@@ -22,7 +25,12 @@ interface Props {
 }
 
 export default function PhotoSourceSheet({ onCamera, onGallery, onClose }: Props) {
-  return (
+  useEffect(() => {
+    startBlur()
+    return stopBlur
+  }, [])
+
+  return createPortal(
     <div className={s.overlay} onClick={onClose}>
       <div className={s.sheet} onClick={e => e.stopPropagation()}>
         <div className={s.handle} />
@@ -36,6 +44,7 @@ export default function PhotoSourceSheet({ onCamera, onGallery, onClose }: Props
         </button>
         <button className={s.cancel} onClick={onClose}>Отмена</button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
