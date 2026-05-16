@@ -472,10 +472,10 @@ export default function SharpeningForm() {
             )}
             {newStoneOpen && createPortal(
               <div
-                style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:200, display:'flex', alignItems:'flex-end' }}
+                style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:'var(--space-4)' }}
                 onClick={() => setNewStoneOpen(false)}
               >
-              <div style={{ width:'100%', background:'var(--bg-100)', borderRadius:'var(--radius-lg) var(--radius-lg) 0 0', maxHeight:'92vh', overflowY:'auto', padding:'var(--space-4)', paddingBottom:'var(--space-6)', display:'flex', flexDirection:'column', gap:'var(--space-2)' }}
+              <div style={{ width:'100%', background:'var(--bg-100)', borderRadius:'var(--radius-lg)', maxHeight:'92vh', overflowY:'auto', padding:'var(--space-4)', display:'flex', flexDirection:'column', gap:'var(--space-2)' }}
                 onClick={e => e.stopPropagation()}
               >
               <span className={s.newStoneTitle}>Новый камень в справочник</span>
