@@ -116,6 +116,12 @@ export interface Knife {
   updatedAt?: Date
 }
 
+export interface AnalyticsQueueItem {
+  id?: number
+  payload: string
+  queuedAt: Date
+}
+
 export class AppTochiteDB extends Dexie {
   clients!: Table<Client>
   sharpenings!: Table<Sharpening>
@@ -124,6 +130,7 @@ export class AppTochiteDB extends Dexie {
   knives!: Table<Knife>
   meta!: Table<Meta>
   settings!: Table<Setting>
+  analyticsQueue!: Table<AnalyticsQueueItem>
 
   constructor(name = 'AppTochiteDB') {
     super(name)
@@ -161,6 +168,10 @@ export class AppTochiteDB extends Dexie {
           await tx.table('meta').delete(key)
         }
       }
+    })
+    // v6: analyticsQueue for offline event buffering (not included in backups).
+    this.version(6).stores({
+      analyticsQueue: '++id, queuedAt',
     })
     // v5: updatedAt for merge-based restore (last-write-wins per record).
     // Existing records get a best-effort timestamp from existing date fields.

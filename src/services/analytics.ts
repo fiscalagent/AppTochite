@@ -20,6 +20,28 @@ export async function setAnalyticsEnabled(enabled: boolean): Promise<void> {
   await db.settings.put({ key: 'analyticsOptOut', value: !enabled })
 }
 
+async function sendPayload(payload: object): Promise<void> {
+  const url = `${ENDPOINT}?data=${encodeURIComponent(JSON.stringify(payload))}`
+  await fetch(url, { mode: 'no-cors' })
+}
+
+async function enqueue(payload: object): Promise<void> {
+  await db.analyticsQueue.add({ payload: JSON.stringify(payload), queuedAt: new Date() })
+}
+
+export async function flushAnalyticsQueue(): Promise<void> {
+  if (!ENDPOINT || !navigator.onLine) return
+  const items = await db.analyticsQueue.orderBy('queuedAt').toArray()
+  for (const item of items) {
+    try {
+      await sendPayload(JSON.parse(item.payload))
+      await db.analyticsQueue.delete(item.id!)
+    } catch {
+      break
+    }
+  }
+}
+
 export async function trackSharpening(sharpening: Sharpening): Promise<void> {
   if (!ENDPOINT || sharpening.status !== 'done') return
   if (!(await isAnalyticsEnabled())) return
@@ -58,6 +80,14 @@ export async function trackSharpening(sharpening: Sharpening): Promise<void> {
     stones,
   }
 
-  const url = `${ENDPOINT}?data=${encodeURIComponent(JSON.stringify(payload))}`
-  fetch(url, { mode: 'no-cors' }).catch(() => {})
+  if (!navigator.onLine) {
+    enqueue(payload).catch(() => {})
+    return
+  }
+
+  try {
+    await sendPayload(payload)
+  } catch {
+    enqueue(payload).catch(() => {})
+  }
 }
