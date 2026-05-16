@@ -549,9 +549,8 @@ function StonesTab({ search }: { search: string }) {
         </button>
       )}
       {open && createPortal(
-        <div className={s.overlay} onClick={() => setOpen(false)}>
-        <div className={s.sheet} onClick={e => e.stopPropagation()}>
-          <div className={s.addCard}>
+        <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
+        <div className={s.dialog} onClick={e => e.stopPropagation()}>
           <span className={s.addTitle}>Новый камень</span>
           <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
           {addBrandSuggestions.length > 0 && (
@@ -614,16 +613,14 @@ function StonesTab({ search }: { search: string }) {
             <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
           </div>
-          </div>
         </div>
         </div>,
         document.body
       )}
 
       {editingId !== null && createPortal(
-        <div className={s.overlay} onClick={cancelEdit}>
-        <div className={s.sheet} onClick={e => e.stopPropagation()}>
-        <div className={s.addCard}>
+        <div className={s.dialogOverlay} onClick={cancelEdit}>
+        <div className={s.dialog} onClick={e => e.stopPropagation()}>
           <span className={s.addTitle}>Редактировать камень</span>
           <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
           <div className={s.gritUnitRow}>
@@ -675,7 +672,6 @@ function StonesTab({ search }: { search: string }) {
           <div className={s.addRow}>
             <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>Отмена</button>
-          </div>
           </div>
         </div>
         </div>,
@@ -767,6 +763,12 @@ function SteelsTab({ search }: { search: string }) {
   const [hrc, setHrc] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
+  useEffect(() => {
+    if (!open) return
+    startBlur()
+    return stopBlur
+  }, [open])
+
   const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), [])
 
   const filtered = steels?.filter(st =>
@@ -806,8 +808,9 @@ function SteelsTab({ search }: { search: string }) {
           + Добавить сталь
         </button>
       )}
-      {open && (
-        <div className={s.addCard}>
+      {open && createPortal(
+        <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
+        <div className={s.dialog} onClick={e => e.stopPropagation()}>
           <span className={s.addTitle}>Новая сталь</span>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Название (AUS-8, D2, VG-10...)" autoFocus />
           <div className={s.addRow}>
@@ -818,6 +821,8 @@ function SteelsTab({ search }: { search: string }) {
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
           </div>
         </div>
+        </div>,
+        document.body
       )}
 
       <div className={s.list}>
@@ -875,6 +880,12 @@ function KnivesTab({ search }: { search: string }) {
   const [knifeSteel, setKnifeSteel] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
 
+  useEffect(() => {
+    if (!open) return
+    startBlur()
+    return stopBlur
+  }, [open])
+
   const knives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
   const steelNames = useLiveQuery(() => db.steels.orderBy('name').toArray().then(arr => arr.map(st => st.name)), []) ?? []
 
@@ -915,8 +926,9 @@ function KnivesTab({ search }: { search: string }) {
           + Добавить нож
         </button>
       )}
-      {open && (
-        <div className={s.addCard}>
+      {open && createPortal(
+        <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
+        <div className={s.dialog} onClick={e => e.stopPropagation()}>
           <span className={s.addTitle}>Новый нож</span>
           <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Mora, Victorinox...)" autoFocus />
           <div className={s.addRow}>
@@ -932,6 +944,8 @@ function KnivesTab({ search }: { search: string }) {
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
           </div>
         </div>
+        </div>,
+        document.body
       )}
 
       <div className={s.list}>
