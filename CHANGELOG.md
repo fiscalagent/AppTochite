@@ -1,3 +1,10 @@
+## [1.45.4](https://github.com/fiscalagent/AppTochite/compare/v1.45.3...v1.45.4) (2026-05-16)
+
+
+### fix
+
+* блюр фона при добавлении камня из формы заточки ([](https://github.com/fiscalagent/AppTochite/commit/8f1c0e492d021bda866bf829e244d2b9d2db33b6))
+
 ## [1.45.3](https://github.com/fiscalagent/AppTochite/compare/v1.45.2...v1.45.3) (2026-05-16)
 
 

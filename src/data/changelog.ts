@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.45.4',
+    date: '2026-05-16',
+    changes: [
+      'блюр фона при добавлении камня из формы заточки',
+    ],
+  },
+  {
     version: '1.45.3',
     date: '2026-05-16',
     changes: [
