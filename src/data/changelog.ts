@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.45.1',
+    date: '2026-05-16',
+    changes: [
+      'блюр фона через filter на #root вместо backdrop-filter ([](https://github.com/fiscalagent/AppTochite/commit/22547cfda99e9fc719b2fc0a96d56dfa98a6bcfa)), closes [#root](https://github.com/fiscalagent/AppTochite/issues/root) [#root](https://github.com/fiscalagent/AppTochite/issues/root)',
+      'офлайн-буфер аналитики — события сохраняются в очередь и отправляются при восстановлении сети',
+      'добавить -webkit-backdrop-filter для блюра на Android',
+    ],
+  },
+  {
     version: '1.45.0',
     date: '2026-05-16',
     changes: [

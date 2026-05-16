@@ -1,3 +1,10 @@
+## [1.45.1](https://github.com/fiscalagent/AppTochite/compare/v1.45.0...v1.45.1) (2026-05-16)
+
+
+### fix
+
+* блюр фона через filter на #root вместо backdrop-filter ([](https://github.com/fiscalagent/AppTochite/commit/22547cfda99e9fc719b2fc0a96d56dfa98a6bcfa)), closes [#root](https://github.com/fiscalagent/AppTochite/issues/root) [#root](https://github.com/fiscalagent/AppTochite/issues/root)
+
 # [1.45.0](https://github.com/fiscalagent/AppTochite/compare/v1.44.1...v1.45.0) (2026-05-16)
 
 
