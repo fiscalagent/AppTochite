@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.45.3',
+    date: '2026-05-16',
+    changes: [
+      'блюр через прямой style на #root вместо CSS-класса (обход кэша SW) ([](https://github.com/fiscalagent/AppTochite/commit/13ba4dfc8ffd2f159f302acbcc1b43d4130815d6)), closes [#root](https://github.com/fiscalagent/AppTochite/issues/root)',
+    ],
+  },
+  {
     version: '1.45.2',
     date: '2026-05-16',
     changes: [
