@@ -1,3 +1,10 @@
+## [1.45.5](https://github.com/fiscalagent/AppTochite/compare/v1.45.4...v1.45.5) (2026-05-16)
+
+
+### fix
+
+* убрать двойной фон в bottom sheet добавления камня из формы заточки ([](https://github.com/fiscalagent/AppTochite/commit/29ea1274e55e8d12bee655a6bdcf452b153b462e))
+
 ## [1.45.4](https://github.com/fiscalagent/AppTochite/compare/v1.45.3...v1.45.4) (2026-05-16)
 
 
