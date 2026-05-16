@@ -1,3 +1,10 @@
+# [1.46.0](https://github.com/fiscalagent/AppTochite/compare/v1.45.7...v1.46.0) (2026-05-16)
+
+
+### feat
+
+* два слота автобэкапа — при закрытии и ежедневный с датой в имени ([](https://github.com/fiscalagent/AppTochite/commit/f6d5b8ee45c9246f430518bc73153f717cf89316))
+
 ## [1.45.7](https://github.com/fiscalagent/AppTochite/compare/v1.45.6...v1.45.7) (2026-05-16)
 
 
