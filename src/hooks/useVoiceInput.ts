@@ -1,5 +1,29 @@
 import { useState, useEffect, useRef } from 'react'
 
+interface ISpeechRecognitionEvent {
+  readonly results: { readonly 0: { readonly 0: { readonly transcript: string } } }
+}
+
+interface ISpeechRecognition {
+  lang: string
+  interimResults: boolean
+  maxAlternatives: number
+  onresult: ((event: ISpeechRecognitionEvent) => void) | null
+  onend: (() => void) | null
+  start(): void
+  stop(): void
+}
+
+type SpeechRecognitionConstructor = new () => ISpeechRecognition
+
+function getSR(): SpeechRecognitionConstructor | undefined {
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionConstructor
+    webkitSpeechRecognition?: SpeechRecognitionConstructor
+  }
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition
+}
+
 interface UseVoiceInputReturn {
   isAvailable: boolean
   start: (onResult: (text: string) => void, onEnd?: () => void) => void
@@ -8,12 +32,11 @@ interface UseVoiceInputReturn {
 
 export function useVoiceInput(): UseVoiceInputReturn {
   const [isAvailable, setIsAvailable] = useState(false)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const onResultRef = useRef<((text: string) => void) | null>(null)
 
   useEffect(() => {
-    const SR = (window as { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition }).SpeechRecognition
-      ?? (window as { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition
+    const SR = getSR()
     const update = () => setIsAvailable(Boolean(SR) && navigator.onLine)
     update()
     window.addEventListener('online', update)
@@ -25,8 +48,7 @@ export function useVoiceInput(): UseVoiceInputReturn {
   }, [])
 
   function start(onResult: (text: string) => void, onEnd?: () => void) {
-    const SR = (window as { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition }).SpeechRecognition
-      ?? (window as { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition
+    const SR = getSR()
     if (!SR || !navigator.onLine) return
 
     recognitionRef.current?.stop()
