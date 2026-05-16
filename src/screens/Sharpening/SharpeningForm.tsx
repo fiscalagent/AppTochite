@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus, type SharpeningStone, type Stone, type GritUnit, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
@@ -9,6 +10,7 @@ import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { trackSharpening } from '../../services/analytics'
+import { startBlur, stopBlur } from '../../utils/modalBlur'
 import s from './SharpeningForm.module.css'
 
 const IconChevronLeft = () => (
@@ -89,6 +91,13 @@ export default function SharpeningForm() {
   const [photosAfter, setPhotosAfter] = useState<string[]>([])
 
   const [newStoneOpen, setNewStoneOpen] = useState(false)
+
+  useEffect(() => {
+    if (!newStoneOpen) return
+    startBlur()
+    return stopBlur
+  }, [newStoneOpen])
+
   const [newStoneBrand, setNewStoneBrand] = useState('')
   const [newStoneGritUnit, setNewStoneGritUnit] = useState<GritUnit | ''>('')
   const [newStoneGrit, setNewStoneGrit] = useState('')
@@ -461,7 +470,14 @@ export default function SharpeningForm() {
                 + создать новый камень
               </button>
             )}
-            {newStoneOpen && (
+            {newStoneOpen && createPortal(
+              <div
+                style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:200, display:'flex', alignItems:'flex-end' }}
+                onClick={() => setNewStoneOpen(false)}
+              >
+              <div style={{ width:'100%', background:'var(--bg-100)', borderRadius:'var(--radius-lg) var(--radius-lg) 0 0', maxHeight:'92vh', overflowY:'auto', paddingBottom:'var(--space-6)' }}
+                onClick={e => e.stopPropagation()}
+              >
               <div className={s.newStoneCard}>
                 <span className={s.newStoneTitle}>Новый камень в справочник</span>
                 <input
@@ -523,6 +539,9 @@ export default function SharpeningForm() {
                   <button className={s.newStoneCancelBtn} onClick={() => setNewStoneOpen(false)}>Отмена</button>
                 </div>
               </div>
+              </div>
+              </div>,
+              document.body
             )}
           </div>
 
