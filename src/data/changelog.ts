@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.47.1',
+    date: '2026-05-16',
+    changes: [
+      'типы Web Speech API — убрать зависимость от глобального SpeechRecognition',
+      'голосовой ввод полей формы заточки (бета, opt-in в настройках)',
+      'два слота автобэкапа — при закрытии и ежедневный с датой в имени',
+    ],
+  },
+  {
     version: '1.47.0',
     date: '2026-05-16',
     changes: [

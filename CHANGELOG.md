@@ -1,3 +1,10 @@
+## [1.47.1](https://github.com/fiscalagent/AppTochite/compare/v1.47.0...v1.47.1) (2026-05-16)
+
+
+### fix
+
+* типы Web Speech API — убрать зависимость от глобального SpeechRecognition ([](https://github.com/fiscalagent/AppTochite/commit/06ec5fbd840e48db7ee1f44689b6bf19624e1a86))
+
 # [1.47.0](https://github.com/fiscalagent/AppTochite/compare/v1.46.0...v1.47.0) (2026-05-16)
 
 
