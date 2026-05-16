@@ -234,7 +234,7 @@
   padding: 7px 4px;
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border-200);
   background: var(--bg-300);
@@ -260,7 +260,7 @@
   padding: 6px 4px;
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border-100);
   background: var(--bg-300);

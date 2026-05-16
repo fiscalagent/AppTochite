@@ -2,6 +2,17 @@
   position: relative;
 }
 
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputWithMic {
+  padding-right: 40px !important;
+  width: 100%;
+}
+
 .dropdown {
   position: absolute;
   top: calc(100% + 4px);

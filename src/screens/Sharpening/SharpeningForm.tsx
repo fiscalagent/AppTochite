@@ -11,7 +11,17 @@ import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { trackSharpening } from '../../services/analytics'
 import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { useVoiceInput } from '../../hooks/useVoiceInput'
+import MicButton from '../../components/MicButton/MicButton'
+import { isVoiceEnabled } from '../../config/features'
 import s from './SharpeningForm.module.css'
+
+const DONE_KEYWORDS = ['готово', 'готов', 'выполнено', 'сделано', 'закончил', 'завершено']
+
+function extractNumber(text: string): string {
+  const cleaned = text.replace(/[^\d,.]/g, '').replace(/,/g, '.')
+  return cleaned || ''
+}
 
 const IconChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -89,6 +99,39 @@ export default function SharpeningForm() {
   const [status, setStatus] = useState<SharpeningStatus>('accepted')
   const [doneAt, setDoneAt] = useState<Date | undefined>(undefined)
   const [photosAfter, setPhotosAfter] = useState<string[]>([])
+
+  const voice = useVoiceInput()
+  const [listeningField, setListeningField] = useState<string | null>(null)
+
+  function toggleVoice(fieldName: string, onResult: (text: string) => void) {
+    if (listeningField === fieldName) {
+      voice.stop()
+      setListeningField(null)
+      return
+    }
+    voice.start((text) => {
+      onResult(text)
+      setListeningField(null)
+    }, () => setListeningField(null))
+    setListeningField(fieldName)
+  }
+
+  function micBtn(fieldName: string, onResult: (text: string) => void) {
+    if (!isVoiceEnabled()) return undefined
+    return (
+      <MicButton
+        isAvailable={voice.isAvailable}
+        isListening={listeningField === fieldName}
+        onToggle={() => {
+          if (!voice.isAvailable) {
+            showToast('Голосовой ввод недоступен офлайн')
+            return
+          }
+          toggleVoice(fieldName, onResult)
+        }}
+      />
+    )
+  }
 
   const [newStoneOpen, setNewStoneOpen] = useState(false)
 
@@ -291,17 +334,31 @@ export default function SharpeningForm() {
           {!prefilledClientId && (
             <div className={`${s.field} ${s.fieldRequired}`}>
               <label className={s.label}>Клиент <span className={s.req}>*</span></label>
-              <select
-                className={s.select}
-                value={clientId ?? ''}
-                onChange={e => setClientId(Number(e.target.value))}
-                required
-              >
-                <option value="">Выбрать клиента</option>
-                {sortedClients.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <div className={s.inputWithMicRow}>
+                <select
+                  className={s.select}
+                  value={clientId ?? ''}
+                  onChange={e => setClientId(Number(e.target.value))}
+                  required
+                >
+                  <option value="">Выбрать клиента</option>
+                  {sortedClients.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {micBtn('client', (text) => {
+                  const lower = text.toLowerCase()
+                  const match = sortedClients.find(c =>
+                    c.name.toLowerCase().includes(lower) || lower.includes(c.name.toLowerCase())
+                  )
+                  if (match?.id) {
+                    setClientId(match.id)
+                    showToast(`Клиент: ${match.name}`)
+                  } else {
+                    showToast('Клиент не найден')
+                  }
+                })}
+              </div>
             </div>
           )}
 
@@ -313,6 +370,7 @@ export default function SharpeningForm() {
               suggestions={knifeSuggestions}
               placeholder={knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...'}
               autoFocus={!prefilledClientId}
+              micButton={micBtn('knifeBrand', setKnifeBrand)}
             />
           </div>
 
@@ -323,6 +381,7 @@ export default function SharpeningForm() {
               onChange={setSteel}
               suggestions={steelSuggestions}
               placeholder="AUS-8, D2..."
+              micButton={micBtn('steel', setSteel)}
             />
           </div>
 
@@ -416,14 +475,20 @@ export default function SharpeningForm() {
         <div className={s.form}>
           <div className={s.field}>
             <label className={s.label}>Угол заточки, °</label>
-            <input
-              value={angle}
-              onChange={e => setAngle(e.target.value)}
-              placeholder="15"
-              type="number"
-              min={1}
-              max={45}
-            />
+            <div className={s.inputWithMicRow}>
+              <input
+                value={angle}
+                onChange={e => setAngle(e.target.value)}
+                placeholder="15"
+                type="number"
+                min={1}
+                max={45}
+              />
+              {micBtn('angle', (text) => {
+                const num = extractNumber(text)
+                if (num) setAngle(num)
+              })}
+            </div>
           </div>
 
           <div className={s.field}>
@@ -458,6 +523,9 @@ export default function SharpeningForm() {
                 suggestions={stoneSuggestions}
                 onSelect={addStone}
                 placeholder="Naniwa 1000, Shapton 2000..."
+                micButton={micBtn('stone', (text) => {
+                  setStoneInput(text)
+                })}
               />
               <button
                 className={s.stoneAddBtn}
@@ -545,30 +613,50 @@ export default function SharpeningForm() {
 
           <div className={s.field}>
             <label className={s.label}>Комментарий</label>
-            <textarea
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              placeholder="Особенности, замечания..."
-              rows={3}
-              style={{ resize: 'vertical' }}
-            />
+            <div className={s.textareaWithMicWrap}>
+              <textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                placeholder="Особенности, замечания..."
+                rows={3}
+                style={{ resize: 'vertical' }}
+              />
+              {micBtn('comment', (text) => {
+                setComment(prev => prev ? `${prev} ${text}` : text)
+              })}
+            </div>
           </div>
 
           <div className={s.row}>
             <div className={s.field}>
               <label className={s.label}>Цена, ₽</label>
-              <input
-                value={price}
-                onChange={e => setPrice(e.target.value)}
-                placeholder="500"
-                type="number"
-                min={0}
-              />
+              <div className={s.inputWithMicRow}>
+                <input
+                  value={price}
+                  onChange={e => setPrice(e.target.value)}
+                  placeholder="500"
+                  type="number"
+                  min={0}
+                />
+                {micBtn('price', (text) => {
+                  const num = extractNumber(text)
+                  if (num) setPrice(num)
+                })}
+              </div>
             </div>
           </div>
 
           <div className={s.field}>
-            <label className={s.label}>Статус</label>
+            <div className={s.labelRow}>
+              <label className={s.label}>Статус</label>
+              {micBtn('status', (text) => {
+                const lower = text.toLowerCase()
+                if (DONE_KEYWORDS.some(kw => lower.includes(kw))) {
+                  setStatus('done')
+                  showToast('Статус изменён на «Готово»')
+                }
+              })}
+            </div>
             <div className={s.statusChips}>
               {(['accepted', 'done'] as SharpeningStatus[]).map(st => {
                 const labels = { accepted: 'принят', done: 'готов' }

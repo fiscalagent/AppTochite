@@ -80,11 +80,6 @@ export async function trackSharpening(sharpening: Sharpening): Promise<void> {
     stones,
   }
 
-  if (!navigator.onLine) {
-    enqueue(payload).catch(() => {})
-    return
-  }
-
   try {
     await sendPayload(payload)
   } catch {

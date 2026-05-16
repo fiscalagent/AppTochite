@@ -109,6 +109,40 @@
   color: var(--text-300);
 }
 
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.inputWithMicRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.inputWithMicRow input,
+.inputWithMicRow select {
+  flex: 1;
+  min-width: 0;
+}
+
+.textareaWithMicWrap {
+  position: relative;
+}
+
+.textareaWithMicWrap textarea {
+  width: 100%;
+  padding-right: 40px;
+  box-sizing: border-box;
+}
+
+.textareaWithMicWrap > :last-child {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+}
+
 .req {
   color: var(--accent-light);
   margin-left: 2px;
@@ -454,7 +488,7 @@
   padding: 7px 4px;
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border-200);
   background: var(--bg-300);

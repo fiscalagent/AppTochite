@@ -8,9 +8,10 @@ interface Props {
   placeholder?: string
   autoFocus?: boolean
   onSelect?: (value: string) => void
+  micButton?: React.ReactNode
 }
 
-export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect }: Props) {
+export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect, micButton }: Props) {
   const [open, setOpen] = useState(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -31,16 +32,20 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
 
   return (
     <div className={s.wrap}>
-      <input
-        value={value}
-        onChange={e => { onChange(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-        onKeyDown={e => { if (e.key === 'Enter' && value.trim()) { onSelect?.(value); setOpen(false) } }}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        autoComplete="off"
-      />
+      <div className={micButton ? s.inputWrap : undefined}>
+        <input
+          value={value}
+          onChange={e => { onChange(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onKeyDown={e => { if (e.key === 'Enter' && value.trim()) { onSelect?.(value); setOpen(false) } }}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          autoComplete="off"
+          className={micButton ? s.inputWithMic : undefined}
+        />
+        {micButton}
+      </div>
       {visible && (
         <div className={s.dropdown}>
           {filtered.map(item => (
@@ -64,3 +69,4 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
     </div>
   )
 }
+

@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
 import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
+import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -29,6 +31,13 @@ export default function AboutScreen() {
 
   const analyticsOptOut = useLiveQuery(() => db.settings.get('analyticsOptOut'), [])
   const analyticsOn = !analyticsOptOut?.value
+
+  const [voiceOn, setVoiceOn] = useState(() => isVoiceEnabled())
+
+  function handleVoiceToggle(enabled: boolean) {
+    setVoiceEnabled(enabled)
+    setVoiceOn(enabled)
+  }
 
   const checkedStr = lastChecked
     ? new Date(lastChecked).toLocaleString('ru', {
@@ -139,6 +148,22 @@ export default function AboutScreen() {
               <span className={s.toggleSlider} />
             </label>
           </div>
+          {FEATURES.voiceInput && (
+            <div className={s.toggleItem}>
+              <div className={s.toggleLabel}>
+                <div className={s.toggleLabelTitle}>Голосовой ввод <span className={s.betaBadge}>бета</span></div>
+                <div className={s.toggleLabelDesc}>Заполняйте поля голосом при создании заточки. Требует подключения к сети.</div>
+              </div>
+              <label className={s.toggle}>
+                <input
+                  type="checkbox"
+                  checked={voiceOn}
+                  onChange={e => handleVoiceToggle(e.target.checked)}
+                />
+                <span className={s.toggleSlider} />
+              </label>
+            </div>
+          )}
         </div>
       </div>
 

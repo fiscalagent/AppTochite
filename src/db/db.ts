@@ -169,10 +169,6 @@ export class AppTochiteDB extends Dexie {
         }
       }
     })
-    // v6: analyticsQueue for offline event buffering (not included in backups).
-    this.version(6).stores({
-      analyticsQueue: '++id, queuedAt',
-    })
     // v5: updatedAt for merge-based restore (last-write-wins per record).
     // Existing records get a best-effort timestamp from existing date fields.
     this.version(5).stores({}).upgrade(async tx => {
@@ -187,6 +183,10 @@ export class AppTochiteDB extends Dexie {
           if (!item.updatedAt) item.updatedAt = new Date(0)
         })
       }
+    })
+    // v6: analyticsQueue for offline event buffering (not included in backups).
+    this.version(6).stores({
+      analyticsQueue: '++id, queuedAt',
     })
   }
 }
