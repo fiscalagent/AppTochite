@@ -1,3 +1,10 @@
+# [1.47.0](https://github.com/fiscalagent/AppTochite/compare/v1.46.0...v1.47.0) (2026-05-16)
+
+
+### feat
+
+* голосовой ввод полей формы заточки (бета, opt-in в настройках) ([](https://github.com/fiscalagent/AppTochite/commit/849e528e7e55021e6ac93c6d9c9d120fc2ecede9))
+
 # [1.46.0](https://github.com/fiscalagent/AppTochite/compare/v1.45.7...v1.46.0) (2026-05-16)
 
 
