@@ -1,3 +1,10 @@
+## [1.45.7](https://github.com/fiscalagent/AppTochite/compare/v1.45.6...v1.45.7) (2026-05-16)
+
+
+### fix
+
+* формы добавления камня, стали и ножа как центрированный диалог с блюром ([](https://github.com/fiscalagent/AppTochite/commit/d5fd8fff67c5557c0884894f33f82795204ee80c))
+
 ## [1.45.6](https://github.com/fiscalagent/AppTochite/compare/v1.45.5...v1.45.6) (2026-05-16)
 
 
