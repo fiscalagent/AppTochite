@@ -1,3 +1,10 @@
+## [1.45.6](https://github.com/fiscalagent/AppTochite/compare/v1.45.5...v1.45.6) (2026-05-16)
+
+
+### fix
+
+* форма нового камня по центру экрана вместо bottom sheet ([](https://github.com/fiscalagent/AppTochite/commit/5908be17dccacc598874518d86d0a6e41d97b1b3))
+
 ## [1.45.5](https://github.com/fiscalagent/AppTochite/compare/v1.45.4...v1.45.5) (2026-05-16)
 
 
