@@ -5,6 +5,7 @@ import {
   saveDirectoryHandle,
   clearDirectoryHandle,
   performAutoBackup,
+  performDailyBackupIfNeeded,
   updateLastBackupAt,
 } from '../utils/backup'
 import { pickDirectory, queryDirectoryPermission } from '../utils/fileSystemAccess'
@@ -53,6 +54,7 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
       }
       try {
         await performAutoBackup(db, h)
+        await performDailyBackupIfNeeded(db, h)
         setPermissionLost(false)
       } catch {
         // silently skip — don't interrupt user

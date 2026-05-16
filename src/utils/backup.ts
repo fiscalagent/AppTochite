@@ -44,6 +44,29 @@ export async function performAutoBackup(database: AppTochiteDB, handle: FileSyst
   await updateLastBackupAt(database)
 }
 
+export async function performDailyBackupIfNeeded(database: AppTochiteDB, handle: FileSystemDirectoryHandle): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10)
+  const entry = await database.settings.get('lastDailyBackupAt')
+  if (entry && (entry.value as string).slice(0, 10) === today) return
+
+  const backup = await exportBackup(database)
+  const json = JSON.stringify(backup)
+  const newFileName = `apptochite-daily-${today}.json`
+
+  const fileHandle = await handle.getFileHandle(newFileName, { create: true })
+  const writable = await fileHandle.createWritable()
+  await writable.write(json)
+  await writable.close()
+
+  // Delete old daily backup files only after successful write
+  for await (const [name] of handle.entries()) {
+    if (name.startsWith('apptochite-daily-') && name.endsWith('.json') && name !== newFileName) {
+      await handle.removeEntry(name)
+    }
+  }
+  await database.settings.put({ key: 'lastDailyBackupAt', value: new Date().toISOString() })
+}
+
 export interface BackupFile {
   version: 1
   exportedAt: string
