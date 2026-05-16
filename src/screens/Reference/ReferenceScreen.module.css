@@ -458,6 +458,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
