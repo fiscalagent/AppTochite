@@ -1,3 +1,10 @@
+## [1.51.1](https://github.com/fiscalagent/AppTochite/compare/v1.51.0...v1.51.1) (2026-05-17)
+
+
+### fix
+
+* голосовой ввод — убрать авто-перезапуск, список совпадений всегда тапается ([](https://github.com/fiscalagent/AppTochite/commit/9cd5a19639522b7c48883e76831a4ec879130f33))
+
 # [1.51.0](https://github.com/fiscalagent/AppTochite/compare/v1.50.0...v1.51.0) (2026-05-17)
 
 
