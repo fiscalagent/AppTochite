@@ -1,3 +1,10 @@
+## [1.49.1](https://github.com/fiscalagent/AppTochite/compare/v1.49.0...v1.49.1) (2026-05-17)
+
+
+### fix
+
+* двухфазовый голосовой ввод — дропдаун и только справочник ([](https://github.com/fiscalagent/AppTochite/commit/a32dbe8c2cffdb818b84ca9b4bd70a8e58981c0c))
+
 # [1.49.0](https://github.com/fiscalagent/AppTochite/compare/v1.48.0...v1.49.0) (2026-05-17)
 
 
