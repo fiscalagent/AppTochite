@@ -52,7 +52,7 @@ function bigramSim(a: string, b: string): number {
   return (2 * hit) / (ba.size + bb.size)
 }
 
-function findBestStone(voiceText: string, suggestions: string[]): string | null {
+function findBestMatch(voiceText: string, suggestions: string[]): string | null {
   const vLow = voiceText.toLowerCase()
   const vNorm = normForMatch(vLow)
   const gritMatch = vLow.match(/\b(\d{3,4})\b/)
@@ -431,7 +431,15 @@ export default function SharpeningForm() {
               suggestions={knifeSuggestions}
               placeholder={knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...'}
               autoFocus={!prefilledClientId}
-              micButton={micBtn('knifeBrand', setKnifeBrand)}
+              micButton={micBtn('knifeBrand', (text) => {
+                const match = findBestMatch(text, knifeSuggestions)
+                if (match) {
+                  setKnifeBrand(match)
+                  showToast(`Нож: ${match}`)
+                } else {
+                  setKnifeBrand(text)
+                }
+              })}
             />
           </div>
 
@@ -442,7 +450,15 @@ export default function SharpeningForm() {
               onChange={setSteel}
               suggestions={steelSuggestions}
               placeholder="AUS-8, D2..."
-              micButton={micBtn('steel', setSteel)}
+              micButton={micBtn('steel', (text) => {
+                const match = findBestMatch(text, steelSuggestions)
+                if (match) {
+                  setSteel(match)
+                  showToast(`Сталь: ${match}`)
+                } else {
+                  setSteel(text)
+                }
+              })}
             />
           </div>
 
@@ -585,7 +601,7 @@ export default function SharpeningForm() {
                 onSelect={addStone}
                 placeholder="Naniwa 1000, Shapton 2000..."
                 micButton={micBtn('stone', (text) => {
-                  const match = findBestStone(text, stoneSuggestions)
+                  const match = findBestMatch(text, stoneSuggestions)
                   if (match) {
                     addStone(match)
                     showToast(`Добавлен: ${match}`)
