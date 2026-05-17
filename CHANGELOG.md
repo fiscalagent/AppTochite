@@ -1,3 +1,10 @@
+# [1.50.0](https://github.com/fiscalagent/AppTochite/compare/v1.49.1...v1.50.0) (2026-05-17)
+
+
+### feat
+
+* голосовой поиск через отдельный список совпадений под полем ([](https://github.com/fiscalagent/AppTochite/commit/dd6c7fb1d60fe2af638567ee5aea7da10c186345))
+
 ## [1.49.1](https://github.com/fiscalagent/AppTochite/compare/v1.49.0...v1.49.1) (2026-05-17)
 
 
