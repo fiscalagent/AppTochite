@@ -209,6 +209,8 @@ export default function SharpeningForm() {
     return items.map(st => stoneDisplayName(st))
   }, []) ?? []
   const knifeSuggestions = useLiveQuery(async () => {
+    const items = await db.knives.orderBy('brand').toArray()
+    const allBrands = [...new Set(items.map(k => k.brand))]
     if (clientId) {
       const clientSharpenings = await db.sharpenings.where('clientId').equals(clientId).toArray()
       if (clientSharpenings.length > 0) {
@@ -216,11 +218,14 @@ export default function SharpeningForm() {
         for (const sh of clientSharpenings) {
           freq.set(sh.knifeBrand, (freq.get(sh.knifeBrand) ?? 0) + 1)
         }
-        return [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([brand]) => brand)
+        const prior = [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([brand]) => brand)
+        // Client's prior knives ranked first, then rest of the dictionary so
+        // adding a brand the client hasn't used before still works via search.
+        const seen = new Set(prior)
+        return [...prior, ...allBrands.filter(b => !seen.has(b))]
       }
     }
-    const items = await db.knives.orderBy('brand').toArray()
-    return [...new Set(items.map(k => k.brand))]
+    return allBrands
   }, [clientId]) ?? []
   const steelSuggestions = useLiveQuery(async () => {
     const items = await db.steels.orderBy('name').toArray()
