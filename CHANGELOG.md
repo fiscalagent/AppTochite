@@ -1,3 +1,10 @@
+# [1.52.0](https://github.com/fiscalagent/AppTochite/compare/v1.51.1...v1.52.0) (2026-05-17)
+
+
+### feat
+
+* довыбор из списка совпадений голосом — "8" выбирает AUS-8 ([](https://github.com/fiscalagent/AppTochite/commit/aa57766c174ca3c0ca58adc1fe7b072441b4959f))
+
 ## [1.51.1](https://github.com/fiscalagent/AppTochite/compare/v1.51.0...v1.51.1) (2026-05-17)
 
 
