@@ -1,3 +1,10 @@
+# [1.51.0](https://github.com/fiscalagent/AppTochite/compare/v1.50.0...v1.51.0) (2026-05-17)
+
+
+### feat
+
+* голосовой ввод клиента и HRC, щадящий матчинг для русского произношения и фолбэк на произнесённый текст ([](https://github.com/fiscalagent/AppTochite/commit/29b1ff50575af0110412b05dc087df26bfb18d98))
+
 # [1.50.0](https://github.com/fiscalagent/AppTochite/compare/v1.49.1...v1.50.0) (2026-05-17)
 
 
