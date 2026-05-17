@@ -1,3 +1,10 @@
+# [1.53.0](https://github.com/fiscalagent/AppTochite/compare/v1.52.0...v1.53.0) (2026-05-17)
+
+
+### feat
+
+* автоматический довыбор голосом — после списка микрофон сам слушает уточнение ([](https://github.com/fiscalagent/AppTochite/commit/29e831a4204296e964c1780c6e74ac66f14e3164))
+
 # [1.52.0](https://github.com/fiscalagent/AppTochite/compare/v1.51.1...v1.52.0) (2026-05-17)
 
 
