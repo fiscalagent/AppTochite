@@ -20,7 +20,8 @@
 
 .listening {
   color: var(--accent);
-  animation: pulse 1.2s ease-in-out infinite;
+  background: var(--accent-dim, rgba(74, 144, 217, 0.15));
+  animation: pulseRing 1.3s ease-in-out infinite;
 }
 
 .disabled {
@@ -29,7 +30,7 @@
   cursor: default;
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim, rgba(74, 144, 217, 0.35)); }
+  50%      { box-shadow: 0 0 0 5px var(--accent-dim, rgba(74, 144, 217, 0.0)); }
 }

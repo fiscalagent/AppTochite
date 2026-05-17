@@ -10,9 +10,10 @@ interface Props {
   onSelect?: (value: string) => void
   micButton?: React.ReactNode
   forceOpen?: boolean
+  listening?: boolean
 }
 
-export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect, micButton, forceOpen }: Props) {
+export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect, micButton, forceOpen, listening }: Props) {
   const [open, setOpen] = useState(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -43,7 +44,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
           placeholder={placeholder}
           autoFocus={autoFocus}
           autoComplete="off"
-          className={micButton ? s.inputWithMic : undefined}
+          className={[micButton ? s.inputWithMic : '', listening ? s.listening : ''].filter(Boolean).join(' ') || undefined}
         />
         {micButton}
       </div>

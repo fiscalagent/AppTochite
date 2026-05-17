@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -11,132 +11,22 @@ import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { trackSharpening } from '../../services/analytics'
 import { startBlur, stopBlur } from '../../utils/modalBlur'
-import { useVoiceInput } from '../../hooks/useVoiceInput'
+import { useVoiceInput, type VoiceErrorCode } from '../../hooks/useVoiceInput'
+import { useTwoPhaseVoice } from '../../hooks/useTwoPhaseVoice'
+import { extractNumber, containsDoneKeyword, findClientMatch } from '../../utils/voiceMatch'
 import MicButton from '../../components/MicButton/MicButton'
 import { isVoiceEnabled } from '../../config/features'
 import s from './SharpeningForm.module.css'
 
-const DONE_KEYWORDS = ['готово', 'готов', 'выполнено', 'сделано', 'закончил', 'завершено']
-
-function extractNumber(text: string): string {
-  const cleaned = text.replace(/[^\d,.]/g, '').replace(/,/g, '.')
-  return cleaned || ''
-}
-
-const TRANSLIT: Record<string, string> = {
-  'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh',
-  'з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o',
-  'п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts',
-  'ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
-}
-
-function transliterate(text: string): string {
-  return text.toLowerCase().split('').map(c => TRANSLIT[c] ?? c).join('')
-}
-
-function normForMatch(text: string): string {
-  return transliterate(text).replace(/[^a-z0-9]/g, '')
-}
-
-function bigramSim(a: string, b: string): number {
-  if (!a || !b) return 0
-  if (a === b) return 1
-  const bgs = (s: string) => {
-    const set = new Set<string>()
-    for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2))
-    return set
+function voiceErrorMessage(code: VoiceErrorCode): string {
+  switch (code) {
+    case 'not-allowed': return 'Нет доступа к микрофону'
+    case 'no-speech': return 'Не услышал — попробуйте ещё раз'
+    case 'network': return 'Голосовой ввод недоступен офлайн'
+    case 'audio-capture': return 'Микрофон недоступен'
+    case 'aborted': return ''
+    default: return 'Ошибка голосового ввода'
   }
-  const ba = bgs(a), bb = bgs(b)
-  let hit = 0
-  for (const bg of ba) if (bb.has(bg)) hit++
-  return (2 * hit) / (ba.size + bb.size)
-}
-
-// Returns all suggestions with score >= minScore, sorted by score (best first)
-function findAllMatches(voiceText: string, suggestions: string[], minScore = 20): string[] {
-  const vLow = voiceText.toLowerCase()
-  const vNorm = normForMatch(vLow)
-  const vNormW = vNorm.replace(/v/g, 'w')
-  const gritMatch = vLow.match(/\b(\d{3,4})\b/)
-  const voiceGrit = gritMatch?.[1]
-
-  const scored: { name: string; score: number }[] = []
-  for (const sug of suggestions) {
-    const sLow = sug.toLowerCase()
-    const sNorm = normForMatch(sLow)
-    let score = 0
-    if (voiceGrit && sLow.includes(voiceGrit)) score += 40
-    if (sLow.includes(vLow) || vLow.includes(sLow)) score += 35
-    score += bigramSim(vNorm, sNorm) * 60
-    if (vNormW !== vNorm) score += bigramSim(vNormW, sNorm) * 20
-    if (score >= minScore) scored.push({ name: sug, score })
-  }
-  scored.sort((a, b) => b.score - a.score)
-  return scored.slice(0, 8).map(x => x.name)
-}
-
-const RU_NUM: Record<string, number> = {
-  'один': 1, 'первый': 1, 'первая': 1, 'первое': 1,
-  'два': 2, 'две': 2, 'второй': 2, 'второго': 2,
-  'три': 3, 'третий': 3, 'третья': 3, 'третье': 3,
-  'четыре': 4, 'четвёртый': 4, 'четвертый': 4,
-  'пять': 5, 'пятый': 5, 'пятая': 5,
-  'шесть': 6, 'шестой': 6, 'шестая': 6,
-  'семь': 7, 'седьмой': 7, 'семи': 7,
-  'восемь': 8, 'восьмой': 8, 'восьмая': 8,
-  'девять': 9, 'девятый': 9, 'девяти': 9,
-  'десять': 10, 'десятый': 10, 'десяти': 10,
-}
-
-function pickFromFiltered(text: string, items: string[]): string | null {
-  const lower = text.toLowerCase()
-  for (const [word, num] of Object.entries(RU_NUM)) {
-    if (lower.includes(word)) {
-      const byContent = items.find(it => it.includes(String(num)))
-      if (byContent) return byContent
-      if (num >= 1 && num <= items.length) return items[num - 1]
-    }
-  }
-  const digitMatch = lower.match(/\b(\d+)\b/)
-  if (digitMatch) {
-    const num = Number(digitMatch[1])
-    const byContent = items.find(it => it.includes(digitMatch[1]))
-    if (byContent) return byContent
-    if (num >= 1 && num <= items.length) return items[num - 1]
-  }
-  return findBestMatch(text, items)
-}
-
-function findBestMatch(voiceText: string, suggestions: string[]): string | null {
-  const vLow = voiceText.toLowerCase()
-  const vNorm = normForMatch(vLow)
-  const gritMatch = vLow.match(/\b(\d{3,4})\b/)
-  const voiceGrit = gritMatch?.[1]
-
-  let best: { name: string; score: number } | null = null
-
-  for (const s of suggestions) {
-    const sLow = s.toLowerCase()
-    const sNorm = normForMatch(sLow)
-    let score = 0
-
-    // Совпадение зернистости — сильный сигнал
-    if (voiceGrit && sLow.includes(voiceGrit)) score += 40
-
-    // Прямое вхождение (если движок распознал латиницу)
-    if (sLow.includes(vLow) || vLow.includes(sLow)) score += 35
-
-    // Сходство транслитерированных строк
-    score += bigramSim(vNorm, sNorm) * 60
-
-    // «в» нередко соответствует «w» — пробуем замену
-    const vNormW = vNorm.replace(/v/g, 'w')
-    if (vNormW !== vNorm) score += bigramSim(vNormW, sNorm) * 20
-
-    if (!best || score > best.score) best = { name: s, score }
-  }
-
-  return best && best.score >= 28 ? best.name : null
 }
 
 const IconChevronLeft = () => (
@@ -217,24 +107,33 @@ export default function SharpeningForm() {
   const [photosAfter, setPhotosAfter] = useState<string[]>([])
 
   const voice = useVoiceInput()
+  const twoPhase = useTwoPhaseVoice()
+  // Tracks which single-field mic is currently listening (angle/price/hrc/comment/status)
   const [listeningField, setListeningField] = useState<string | null>(null)
-  // voiceSearch: field name + matched items shown below the field
-  const [voiceSearch, setVoiceSearch] = useState<{ field: string; items: string[] } | null>(null)
-  // voiceNoMatch: field that had a failed voice attempt → show "ввести вручную" placeholder
-  const [voiceNoMatch, setVoiceNoMatch] = useState<string | null>(null)
-  const phase2TimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function toggleVoice(fieldName: string, onResult: (text: string) => void) {
+  function handleVoiceError(code: VoiceErrorCode) {
+    const msg = voiceErrorMessage(code)
+    if (msg) showToast(msg)
+  }
+
+  function toggleSimpleVoice(fieldName: string, onResult: (text: string) => void) {
     if (listeningField === fieldName) {
       voice.stop()
       setListeningField(null)
       return
     }
-    voice.start((text) => {
-      onResult(text)
-      setListeningField(null)
-    }, () => setListeningField(null))
     setListeningField(fieldName)
+    voice.start({
+      onResult: (text) => {
+        onResult(text)
+        setListeningField(null)
+      },
+      onEnd: () => setListeningField(null),
+      onError: (code) => {
+        setListeningField(null)
+        handleVoiceError(code)
+      },
+    })
   }
 
   function micBtn(fieldName: string, onResult: (text: string) => void) {
@@ -248,87 +147,41 @@ export default function SharpeningForm() {
             showToast('Голосовой ввод недоступен офлайн')
             return
           }
-          toggleVoice(fieldName, onResult)
+          toggleSimpleVoice(fieldName, onResult)
         }}
       />
     )
   }
 
-  function clearPhase2Timer() {
-    if (phase2TimerRef.current !== null) {
-      clearTimeout(phase2TimerRef.current)
-      phase2TimerRef.current = null
-    }
-  }
-
-  function cancelVoiceTwoPhase() {
-    clearPhase2Timer()
-    voice.stop()
-    setVoiceSearch(null)
-    setVoiceNoMatch(null)
-    setListeningField(null)
-  }
-
-  // Two-phase voice for reference-backed autocomplete (steel/knife/stone).
-  // Phase 1: voice → findAllMatches → show results list below field.
-  //   1 match → auto-select. Multiple → show list + auto-start phase 2.
-  //   0 matches → show "ввести вручную" placeholder on field.
-  // Phase 2 (auto-started after 500ms): voice → pick by number/ordinal/fuzzy.
-  // Results list also stays tappable for manual selection.
   function micBtnTwoPhase(
     fieldName: string,
     suggestions: string[],
     onSelectItem: (item: string) => void,
+    onNoMatchItem?: (rawText: string) => void,
   ) {
     if (!isVoiceEnabled()) return undefined
-    const isListening = listeningField === fieldName || listeningField === `${fieldName}_p2`
+    const isListening = twoPhase.isListeningOn(fieldName)
 
     return (
       <MicButton
-        isAvailable={voice.isAvailable}
+        isAvailable={twoPhase.isAvailable}
         isListening={isListening}
         onToggle={() => {
-          if (!voice.isAvailable) {
+          if (!twoPhase.isAvailable) {
             showToast('Голосовой ввод недоступен офлайн')
             return
           }
-          if (isListening) {
-            cancelVoiceTwoPhase()
+          if (isListening || twoPhase.pickItems(fieldName)) {
+            twoPhase.cancel()
             return
           }
-          setVoiceNoMatch(null)
-          setListeningField(fieldName)
-          voice.start(
-            (text) => {
-              setListeningField(null)
-              const matches = findAllMatches(text, suggestions)
-              if (matches.length === 0) {
-                setVoiceNoMatch(fieldName)
-              } else if (matches.length === 1) {
-                onSelectItem(matches[0])
-              } else {
-                setVoiceSearch({ field: fieldName, items: matches })
-                clearPhase2Timer()
-                phase2TimerRef.current = setTimeout(() => {
-                  setListeningField(`${fieldName}_p2`)
-                  voice.start(
-                    (text2) => {
-                      const picked = pickFromFiltered(text2, matches)
-                      setListeningField(null)
-                      if (picked) {
-                        onSelectItem(picked)
-                        setVoiceSearch(null)
-                      } else {
-                        setVoiceNoMatch(fieldName)
-                      }
-                    },
-                    () => setListeningField(null)
-                  )
-                }, 500)
-              }
-            },
-            () => setListeningField(null)
-          )
+          twoPhase.start({
+            field: fieldName,
+            suggestions,
+            onSelect: onSelectItem,
+            onNoMatch: onNoMatchItem,
+            onError: handleVoiceError,
+          })
         }}
       />
     )
@@ -537,7 +390,7 @@ export default function SharpeningForm() {
               <label className={s.label}>Клиент <span className={s.req}>*</span></label>
               <div className={s.inputWithMicRow}>
                 <select
-                  className={s.select}
+                  className={`${s.select} ${twoPhase.isListeningOn('client') ? s.inputListening : ''}`}
                   value={clientId ?? ''}
                   onChange={e => setClientId(Number(e.target.value))}
                   required
@@ -547,19 +400,27 @@ export default function SharpeningForm() {
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
-                {micBtn('client', (text) => {
-                  const lower = text.toLowerCase()
-                  const match = sortedClients.find(c =>
-                    c.name.toLowerCase().includes(lower) || lower.includes(c.name.toLowerCase())
-                  )
-                  if (match?.id) {
-                    setClientId(match.id)
-                    showToast(`Клиент: ${match.name}`)
-                  } else {
-                    showToast('Клиент не найден')
-                  }
+                {micBtnTwoPhase('client', sortedClients.map(c => c.name), (name) => {
+                  // Try precise fuzzy first (handles "Я" correctly via word boundaries)
+                  const matched = findClientMatch(name, sortedClients.map(c => c.name)) ?? name
+                  const c = sortedClients.find(c => c.name === matched)
+                  if (c?.id) setClientId(c.id)
                 })}
               </div>
+              {twoPhase.pickItems('client') && (
+                <div className={s.voiceResults}>
+                  {twoPhase.pickItems('client')!.map(name => {
+                    const c = sortedClients.find(c => c.name === name)
+                    return (
+                      <button
+                        key={name}
+                        className={s.voiceResultItem}
+                        onClick={() => { if (c?.id) setClientId(c.id); twoPhase.cancel() }}
+                      >{name}</button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -567,17 +428,18 @@ export default function SharpeningForm() {
             <label className={s.label}>Нож / Бренд <span className={s.req}>*</span></label>
             <Autocomplete
               value={knifeBrand}
-              onChange={(v) => { setKnifeBrand(v); if (voiceSearch?.field === 'knifeBrand' || voiceNoMatch === 'knifeBrand') cancelVoiceTwoPhase() }}
-              onSelect={(item) => { setKnifeBrand(item); cancelVoiceTwoPhase() }}
+              onChange={(v) => { setKnifeBrand(v); if (twoPhase.pickItems('knifeBrand') || twoPhase.noMatchOn('knifeBrand')) twoPhase.cancel() }}
+              onSelect={(item) => { setKnifeBrand(item); twoPhase.cancel() }}
               suggestions={knifeSuggestions}
-              placeholder={voiceNoMatch === 'knifeBrand' ? 'ввести вручную' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
+              placeholder={twoPhase.noMatchOn('knifeBrand') ? 'ввести вручную' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
               autoFocus={!prefilledClientId}
-              micButton={micBtnTwoPhase('knifeBrand', knifeSuggestions, (item) => { setKnifeBrand(item); showToast(`Нож: ${item}`) })}
+              micButton={micBtnTwoPhase('knifeBrand', knifeSuggestions, (item) => setKnifeBrand(item), (raw) => setKnifeBrand(raw))}
+              listening={twoPhase.isListeningOn('knifeBrand')}
             />
-            {voiceSearch?.field === 'knifeBrand' && (
+            {twoPhase.pickItems('knifeBrand') && (
               <div className={s.voiceResults}>
-                {voiceSearch.items.map(item => (
-                  <button key={item} className={s.voiceResultItem} onClick={() => { setKnifeBrand(item); showToast(`Нож: ${item}`); cancelVoiceTwoPhase() }}>{item}</button>
+                {twoPhase.pickItems('knifeBrand')!.map(item => (
+                  <button key={item} className={s.voiceResultItem} onClick={() => { setKnifeBrand(item); twoPhase.cancel() }}>{item}</button>
                 ))}
               </div>
             )}
@@ -587,16 +449,17 @@ export default function SharpeningForm() {
             <label className={s.label}>Сталь</label>
             <Autocomplete
               value={steel}
-              onChange={(v) => { setSteel(v); if (voiceSearch?.field === 'steel' || voiceNoMatch === 'steel') cancelVoiceTwoPhase() }}
-              onSelect={(item) => { setSteel(item); cancelVoiceTwoPhase() }}
+              onChange={(v) => { setSteel(v); if (twoPhase.pickItems('steel') || twoPhase.noMatchOn('steel')) twoPhase.cancel() }}
+              onSelect={(item) => { setSteel(item); twoPhase.cancel() }}
               suggestions={steelSuggestions}
-              placeholder={voiceNoMatch === 'steel' ? 'ввести вручную' : 'AUS-8, D2...'}
-              micButton={micBtnTwoPhase('steel', steelSuggestions, (item) => { setSteel(item); showToast(`Сталь: ${item}`) })}
+              placeholder={twoPhase.noMatchOn('steel') ? 'ввести вручную' : 'AUS-8, D2...'}
+              micButton={micBtnTwoPhase('steel', steelSuggestions, (item) => setSteel(item), (raw) => setSteel(raw))}
+              listening={twoPhase.isListeningOn('steel')}
             />
-            {voiceSearch?.field === 'steel' && (
+            {twoPhase.pickItems('steel') && (
               <div className={s.voiceResults}>
-                {voiceSearch.items.map(item => (
-                  <button key={item} className={s.voiceResultItem} onClick={() => { setSteel(item); showToast(`Сталь: ${item}`); cancelVoiceTwoPhase() }}>{item}</button>
+                {twoPhase.pickItems('steel')!.map(item => (
+                  <button key={item} className={s.voiceResultItem} onClick={() => { setSteel(item); twoPhase.cancel() }}>{item}</button>
                 ))}
               </div>
             )}
@@ -605,14 +468,21 @@ export default function SharpeningForm() {
           <div className={s.row}>
             <div className={s.field}>
               <label className={s.label}>HRC</label>
-              <input
-                value={hrc}
-                onChange={e => setHrc(e.target.value)}
-                placeholder="58"
-                type="number"
-                min={0}
-                max={70}
-              />
+              <div className={s.inputWithMicRow}>
+                <input
+                  value={hrc}
+                  onChange={e => setHrc(e.target.value)}
+                  placeholder="58"
+                  type="number"
+                  min={0}
+                  max={70}
+                  className={listeningField === 'hrc' ? s.inputListening : ''}
+                />
+                {micBtn('hrc', (text) => {
+                  const num = extractNumber(text)
+                  if (num) setHrc(num)
+                })}
+              </div>
             </div>
             <div className={s.field}>
               <label className={s.label}>Дата приёмки</label>
@@ -700,6 +570,7 @@ export default function SharpeningForm() {
                 type="number"
                 min={1}
                 max={45}
+                className={listeningField === 'angle' ? s.inputListening : ''}
               />
               {micBtn('angle', (text) => {
                 const num = extractNumber(text)
@@ -736,11 +607,12 @@ export default function SharpeningForm() {
             <div className={s.stoneInputRow}>
               <Autocomplete
                 value={stoneInput}
-                onChange={(v) => { setStoneInput(v); if (voiceSearch?.field === 'stone' || voiceNoMatch === 'stone') cancelVoiceTwoPhase() }}
-                onSelect={(item) => { addStone(item); cancelVoiceTwoPhase() }}
+                onChange={(v) => { setStoneInput(v); if (twoPhase.pickItems('stone') || twoPhase.noMatchOn('stone')) twoPhase.cancel() }}
+                onSelect={(item) => { addStone(item); twoPhase.cancel() }}
                 suggestions={stoneSuggestions}
-                placeholder={voiceNoMatch === 'stone' ? 'ввести вручную' : 'Naniwa 1000, Shapton 2000...'}
-                micButton={micBtnTwoPhase('stone', stoneSuggestions, (item) => { addStone(item); showToast(`Добавлен: ${item}`) })}
+                placeholder={twoPhase.noMatchOn('stone') ? 'ввести вручную' : 'Naniwa 1000, Shapton 2000...'}
+                micButton={micBtnTwoPhase('stone', stoneSuggestions, (item) => addStone(item), (raw) => setStoneInput(raw))}
+                listening={twoPhase.isListeningOn('stone')}
               />
               <button
                 className={s.stoneAddBtn}
@@ -748,10 +620,10 @@ export default function SharpeningForm() {
                 disabled={!stoneInput.trim()}
               >+</button>
             </div>
-            {voiceSearch?.field === 'stone' && (
+            {twoPhase.pickItems('stone') && (
               <div className={s.voiceResults}>
-                {voiceSearch.items.map(item => (
-                  <button key={item} className={s.voiceResultItem} onClick={() => { addStone(item); showToast(`Добавлен: ${item}`); cancelVoiceTwoPhase() }}>{item}</button>
+                {twoPhase.pickItems('stone')!.map(item => (
+                  <button key={item} className={s.voiceResultItem} onClick={() => { addStone(item); twoPhase.cancel() }}>{item}</button>
                 ))}
               </div>
             )}
@@ -842,6 +714,7 @@ export default function SharpeningForm() {
                 placeholder="Особенности, замечания..."
                 rows={3}
                 style={{ resize: 'vertical' }}
+                className={listeningField === 'comment' ? s.inputListening : ''}
               />
               {micBtn('comment', (text) => {
                 setComment(prev => prev ? `${prev} ${text}` : text)
@@ -859,6 +732,7 @@ export default function SharpeningForm() {
                   placeholder="500"
                   type="number"
                   min={0}
+                  className={listeningField === 'price' ? s.inputListening : ''}
                 />
                 {micBtn('price', (text) => {
                   const num = extractNumber(text)
@@ -872,8 +746,7 @@ export default function SharpeningForm() {
             <div className={s.labelRow}>
               <label className={s.label}>Статус</label>
               {micBtn('status', (text) => {
-                const lower = text.toLowerCase()
-                if (DONE_KEYWORDS.some(kw => lower.includes(kw))) {
+                if (containsDoneKeyword(text)) {
                   setStatus('done')
                   showToast('Статус изменён на «Готово»')
                 }

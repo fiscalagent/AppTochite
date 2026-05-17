@@ -1,17 +1,24 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface ISpeechRecognitionEvent {
   readonly results: { readonly 0: { readonly 0: { readonly transcript: string } } }
+}
+
+interface ISpeechRecognitionErrorEvent {
+  readonly error: string
 }
 
 interface ISpeechRecognition {
   lang: string
   interimResults: boolean
   maxAlternatives: number
+  continuous: boolean
   onresult: ((event: ISpeechRecognitionEvent) => void) | null
   onend: (() => void) | null
+  onerror: ((event: ISpeechRecognitionErrorEvent) => void) | null
   start(): void
   stop(): void
+  abort(): void
 }
 
 type SpeechRecognitionConstructor = new () => ISpeechRecognition
@@ -24,16 +31,41 @@ function getSR(): SpeechRecognitionConstructor | undefined {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition
 }
 
+export type VoiceErrorCode = 'not-allowed' | 'no-speech' | 'network' | 'aborted' | 'audio-capture' | 'other'
+
+function mapError(raw: string): VoiceErrorCode {
+  switch (raw) {
+    case 'not-allowed':
+    case 'service-not-allowed':
+      return 'not-allowed'
+    case 'no-speech': return 'no-speech'
+    case 'network': return 'network'
+    case 'aborted': return 'aborted'
+    case 'audio-capture': return 'audio-capture'
+    default: return 'other'
+  }
+}
+
+interface StartOptions {
+  onResult: (text: string) => void
+  onEnd?: () => void
+  onError?: (code: VoiceErrorCode) => void
+}
+
 interface UseVoiceInputReturn {
   isAvailable: boolean
-  start: (onResult: (text: string) => void, onEnd?: () => void) => void
+  isListening: boolean
+  start: (opts: StartOptions) => void
   stop: () => void
 }
 
 export function useVoiceInput(): UseVoiceInputReturn {
   const [isAvailable, setIsAvailable] = useState(false)
+  const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
-  const onResultRef = useRef<((text: string) => void) | null>(null)
+  // Each session gets a unique id; callbacks check it to ignore late events
+  // from a previous recognition that was replaced by a quick re-start.
+  const sessionIdRef = useRef(0)
 
   useEffect(() => {
     const SR = getSR()
@@ -47,31 +79,74 @@ export function useVoiceInput(): UseVoiceInputReturn {
     }
   }, [])
 
-  function start(onResult: (text: string) => void, onEnd?: () => void) {
+  const stop = useCallback(() => {
+    sessionIdRef.current++
+    const rec = recognitionRef.current
+    recognitionRef.current = null
+    if (rec) {
+      try { rec.abort() } catch { /* ignore */ }
+    }
+    setIsListening(false)
+  }, [])
+
+  const start = useCallback(({ onResult, onEnd, onError }: StartOptions) => {
     const SR = getSR()
-    if (!SR || !navigator.onLine) return
+    if (!SR || !navigator.onLine) {
+      onError?.('network')
+      return
+    }
 
-    recognitionRef.current?.stop()
+    // Abort any prior session and invalidate its callbacks.
+    sessionIdRef.current++
+    const mySession = sessionIdRef.current
+    const prev = recognitionRef.current
+    recognitionRef.current = null
+    if (prev) {
+      try { prev.abort() } catch { /* ignore */ }
+    }
 
-    onResultRef.current = onResult
     const recognition = new SR()
     recognition.lang = 'ru-RU'
     recognition.interimResults = false
     recognition.maxAlternatives = 1
+    recognition.continuous = false
 
     recognition.onresult = (e) => {
+      if (mySession !== sessionIdRef.current) return
       const text = e.results[0][0].transcript
-      onResultRef.current?.(text)
+      onResult(text)
     }
-    recognition.onend = () => onEnd?.()
+    recognition.onend = () => {
+      if (mySession !== sessionIdRef.current) return
+      recognitionRef.current = null
+      setIsListening(false)
+      onEnd?.()
+    }
+    recognition.onerror = (e) => {
+      if (mySession !== sessionIdRef.current) return
+      recognitionRef.current = null
+      setIsListening(false)
+      onError?.(mapError(e.error))
+    }
 
     recognitionRef.current = recognition
-    recognition.start()
-  }
+    setIsListening(true)
+    try {
+      recognition.start()
+    } catch {
+      // InvalidStateError if a previous recognition is still ending. Retry once on next tick.
+      setTimeout(() => {
+        if (mySession !== sessionIdRef.current) return
+        try {
+          recognition.start()
+        } catch {
+          recognitionRef.current = null
+          setIsListening(false)
+          onError?.('other')
+        }
+      }, 50)
+    }
+  }, [])
 
-  function stop() {
-    recognitionRef.current?.stop()
-  }
-
-  return { isAvailable, start, stop }
+  return { isAvailable, isListening, start, stop }
 }
