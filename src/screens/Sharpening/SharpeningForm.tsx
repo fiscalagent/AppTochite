@@ -23,6 +23,67 @@ function extractNumber(text: string): string {
   return cleaned || ''
 }
 
+const TRANSLIT: Record<string, string> = {
+  'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh',
+  'з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o',
+  'п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts',
+  'ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya',
+}
+
+function transliterate(text: string): string {
+  return text.toLowerCase().split('').map(c => TRANSLIT[c] ?? c).join('')
+}
+
+function normForMatch(text: string): string {
+  return transliterate(text).replace(/[^a-z0-9]/g, '')
+}
+
+function bigramSim(a: string, b: string): number {
+  if (!a || !b) return 0
+  if (a === b) return 1
+  const bgs = (s: string) => {
+    const set = new Set<string>()
+    for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2))
+    return set
+  }
+  const ba = bgs(a), bb = bgs(b)
+  let hit = 0
+  for (const bg of ba) if (bb.has(bg)) hit++
+  return (2 * hit) / (ba.size + bb.size)
+}
+
+function findBestStone(voiceText: string, suggestions: string[]): string | null {
+  const vLow = voiceText.toLowerCase()
+  const vNorm = normForMatch(vLow)
+  const gritMatch = vLow.match(/\b(\d{3,4})\b/)
+  const voiceGrit = gritMatch?.[1]
+
+  let best: { name: string; score: number } | null = null
+
+  for (const s of suggestions) {
+    const sLow = s.toLowerCase()
+    const sNorm = normForMatch(sLow)
+    let score = 0
+
+    // Совпадение зернистости — сильный сигнал
+    if (voiceGrit && sLow.includes(voiceGrit)) score += 40
+
+    // Прямое вхождение (если движок распознал латиницу)
+    if (sLow.includes(vLow) || vLow.includes(sLow)) score += 35
+
+    // Сходство транслитерированных строк
+    score += bigramSim(vNorm, sNorm) * 60
+
+    // «в» нередко соответствует «w» — пробуем замену
+    const vNormW = vNorm.replace(/v/g, 'w')
+    if (vNormW !== vNorm) score += bigramSim(vNormW, sNorm) * 20
+
+    if (!best || score > best.score) best = { name: s, score }
+  }
+
+  return best && best.score >= 28 ? best.name : null
+}
+
 const IconChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="15 18 9 12 15 6"/>
@@ -524,7 +585,14 @@ export default function SharpeningForm() {
                 onSelect={addStone}
                 placeholder="Naniwa 1000, Shapton 2000..."
                 micButton={micBtn('stone', (text) => {
-                  setStoneInput(text)
+                  const match = findBestStone(text, stoneSuggestions)
+                  if (match) {
+                    addStone(match)
+                    showToast(`Добавлен: ${match}`)
+                  } else {
+                    setStoneInput(text)
+                    showToast('Камень не найден — уточните вручную')
+                  }
                 })}
               />
               <button
