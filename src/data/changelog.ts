@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.54.1',
+    date: '2026-05-17',
+    changes: [
+      'пробрасывать VITE_ANALYTICS_URL в прод-сборку — аналитика не работала у пользователей',
+      'голосовой довыбор сужает список и слушает продолжение — grinderman → 120 → FEPA',
+    ],
+  },
+  {
     version: '1.54.0',
     date: '2026-05-17',
     changes: [

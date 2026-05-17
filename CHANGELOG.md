@@ -1,3 +1,10 @@
+## [1.54.1](https://github.com/fiscalagent/AppTochite/compare/v1.54.0...v1.54.1) (2026-05-17)
+
+
+### fix
+
+* пробрасывать VITE_ANALYTICS_URL в прод-сборку — аналитика не работала у пользователей ([](https://github.com/fiscalagent/AppTochite/commit/9d8c436bc675a7bb3c304102b8cb734bbe41e988))
+
 # [1.54.0](https://github.com/fiscalagent/AppTochite/compare/v1.53.2...v1.54.0) (2026-05-17)
 
 
