@@ -31,14 +31,21 @@ interface UseTwoPhaseVoiceReturn {
 }
 
 // Voice flow with tappable picker on ambiguous matches:
-//   First tap (idle):
-//     speak → 0 matches  → fallback to raw text (if onNoMatch) / show "manual" hint
-//            → 1 match   → auto-select
-//            → multiple  → show list (state: pick)
-//   Second tap while picker is visible: refine mode
-//     speak → narrows within the visible list via pickFromFiltered
-//             ("8" picks "AUS-8", "первый" picks first item, …)
-//     unmatched refine → list stays as-is so user can tap or try again
+//   Tap mic, speak:
+//     0 matches → fallback to raw text (if onNoMatch) / show "manual" hint
+//     1 match   → auto-select
+//     multiple  → show list, then auto-open mic again after AUTO_REFINE_DELAY_MS
+//                 so the user can either tap a result OR just say a narrower
+//                 token ("восемь" → AUS-8, "первый" → first row, …).
+//   While refine is listening:
+//     - tap on a list row cancels mic and selects
+//     - speak a narrower token → pickFromFiltered → onSelect
+//     - say nothing / unrecognized → list stays put for retry/tap
+// Delay between phase 1 result and auto-started refine listening. Gives the
+// user a moment to see the list before the mic re-opens. Tap still works
+// during this window and during refine listening itself.
+const AUTO_REFINE_DELAY_MS = 700
+
 export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   const voice = useVoiceInput()
   const [state, setState] = useState<VoiceState>({ kind: 'idle' })
@@ -48,47 +55,64 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   // Snapshot of state at start() time, so callbacks can read it without stale-closure issues.
   const stateRef = useRef<VoiceState>(state)
   stateRef.current = state
+  const autoRefineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearAutoRefine = () => {
+    if (autoRefineTimerRef.current !== null) {
+      clearTimeout(autoRefineTimerRef.current)
+      autoRefineTimerRef.current = null
+    }
+  }
 
   const cancel = useCallback(() => {
+    clearAutoRefine()
     sessionRef.current++
     voice.stop()
     setState({ kind: 'idle' })
   }, [voice])
 
+  const startRefine = useCallback((
+    field: string,
+    items: string[],
+    onSelect: (item: string) => void,
+    onError?: (code: VoiceErrorCode) => void,
+  ) => {
+    clearAutoRefine()
+    sessionRef.current++
+    const session = sessionRef.current
+    setState({ kind: 'listening', field, items })
+    voice.start({
+      onResult: (text) => {
+        if (session !== sessionRef.current) return
+        const picked = pickFromFiltered(text, items)
+        if (picked) {
+          onSelect(picked)
+          setState({ kind: 'idle' })
+        } else {
+          setState({ kind: 'pick', field, items })
+        }
+      },
+      onError: (code) => {
+        if (session !== sessionRef.current) return
+        if (code === 'no-speech' || code === 'aborted') {
+          setState({ kind: 'pick', field, items })
+        } else {
+          setState({ kind: 'idle' })
+          onError?.(code)
+        }
+      },
+    })
+  }, [voice])
+
   const start = useCallback(({ field, suggestions, onSelect, onNoMatch, onError }: StartArgs) => {
+    clearAutoRefine()
     sessionRef.current++
     const session = sessionRef.current
 
-    // Detect refine mode: a picker is currently shown for this field.
+    // Manual second-tap refine: picker is already visible → refine directly.
     const current = stateRef.current
-    const refineItems: string[] | null =
-      current.kind === 'pick' && current.field === field ? current.items : null
-
-    if (refineItems) {
-      setState({ kind: 'listening', field, items: refineItems })
-      voice.start({
-        onResult: (text) => {
-          if (session !== sessionRef.current) return
-          const picked = pickFromFiltered(text, refineItems)
-          if (picked) {
-            onSelect(picked)
-            setState({ kind: 'idle' })
-          } else {
-            // Could not pick — keep the original list visible for tap/retry.
-            setState({ kind: 'pick', field, items: refineItems })
-          }
-        },
-        onError: (code) => {
-          if (session !== sessionRef.current) return
-          // Preserve picker on transient errors (no-speech, aborted).
-          if (code === 'no-speech' || code === 'aborted') {
-            setState({ kind: 'pick', field, items: refineItems })
-          } else {
-            setState({ kind: 'idle' })
-            onError?.(code)
-          }
-        },
-      })
+    if (current.kind === 'pick' && current.field === field) {
+      startRefine(field, current.items, onSelect, onError)
       return
     }
 
@@ -109,6 +133,12 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
           setState({ kind: 'idle' })
         } else {
           setState({ kind: 'pick', field, items: matches })
+          // Auto-arm refine after a short pause so user can either tap a result
+          // or just speak ("восемь" → AUS-8) without a second tap on the mic.
+          autoRefineTimerRef.current = setTimeout(() => {
+            if (session !== sessionRef.current) return
+            startRefine(field, matches, onSelect, onError)
+          }, AUTO_REFINE_DELAY_MS)
         }
       },
       onError: (code) => {
@@ -117,7 +147,7 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
         onError?.(code)
       },
     })
-  }, [voice])
+  }, [voice, startRefine])
 
   const isListeningOn = useCallback((field: string) =>
     state.kind === 'listening' && state.field === field,
