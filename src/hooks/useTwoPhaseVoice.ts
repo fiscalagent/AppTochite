@@ -34,17 +34,19 @@ interface UseTwoPhaseVoiceReturn {
 //   Tap mic, speak:
 //     0 matches → fallback to raw text (if onNoMatch) / show "manual" hint
 //     1 match   → auto-select
-//     multiple  → show list, then auto-open mic again after AUTO_REFINE_DELAY_MS
-//                 so the user can either tap a result OR just say a narrower
-//                 token ("восемь" → AUS-8, "первый" → first row, …).
+//     multiple  → show list AND immediately keep listening for a refining
+//                 token ("восемь" → AUS-8, "первый" → first row, …) for
+//                 REFINE_WINDOW_MS. Mic does NOT close between phase 1 and
+//                 refine — there's no second tap needed.
 //   While refine is listening:
 //     - tap on a list row cancels mic and selects
 //     - speak a narrower token → pickFromFiltered → onSelect
-//     - say nothing / unrecognized → list stays put for retry/tap
-// Delay between phase 1 result and auto-started refine listening. Gives the
-// user a moment to see the list before the mic re-opens. Tap still works
-// during this window and during refine listening itself.
-const AUTO_REFINE_DELAY_MS = 700
+//     - say nothing / unrecognized within the window → mic stops, list stays
+//       visible indefinitely until the user taps or starts over.
+// Refine listens for this long after phase 1's list appears. Mic re-opens with
+// no perceptible gap and stays hot for this window; if nothing recognizable is
+// said it stops on its own and the list stays for tap selection indefinitely.
+const REFINE_WINDOW_MS = 1000
 
 export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   const voice = useVoiceInput()
@@ -55,17 +57,17 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   // Snapshot of state at start() time, so callbacks can read it without stale-closure issues.
   const stateRef = useRef<VoiceState>(state)
   stateRef.current = state
-  const autoRefineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const refineWindowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const clearAutoRefine = () => {
-    if (autoRefineTimerRef.current !== null) {
-      clearTimeout(autoRefineTimerRef.current)
-      autoRefineTimerRef.current = null
+  const clearRefineTimer = () => {
+    if (refineWindowTimerRef.current !== null) {
+      clearTimeout(refineWindowTimerRef.current)
+      refineWindowTimerRef.current = null
     }
   }
 
   const cancel = useCallback(() => {
-    clearAutoRefine()
+    clearRefineTimer()
     sessionRef.current++
     voice.stop()
     setState({ kind: 'idle' })
@@ -77,13 +79,14 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
     onSelect: (item: string) => void,
     onError?: (code: VoiceErrorCode) => void,
   ) => {
-    clearAutoRefine()
+    clearRefineTimer()
     sessionRef.current++
     const session = sessionRef.current
     setState({ kind: 'listening', field, items })
     voice.start({
       onResult: (text) => {
         if (session !== sessionRef.current) return
+        clearRefineTimer()
         const picked = pickFromFiltered(text, items)
         if (picked) {
           onSelect(picked)
@@ -94,6 +97,7 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
       },
       onError: (code) => {
         if (session !== sessionRef.current) return
+        clearRefineTimer()
         if (code === 'no-speech' || code === 'aborted') {
           setState({ kind: 'pick', field, items })
         } else {
@@ -102,10 +106,18 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
         }
       },
     })
+    // Hard cap on the refine window: if nothing matchable is captured, stop
+    // the mic but keep the list visible so the user can still tap.
+    refineWindowTimerRef.current = setTimeout(() => {
+      if (session !== sessionRef.current) return
+      refineWindowTimerRef.current = null
+      voice.stop()
+      setState({ kind: 'pick', field, items })
+    }, REFINE_WINDOW_MS)
   }, [voice])
 
   const start = useCallback(({ field, suggestions, onSelect, onNoMatch, onError }: StartArgs) => {
-    clearAutoRefine()
+    clearRefineTimer()
     sessionRef.current++
     const session = sessionRef.current
 
@@ -132,13 +144,9 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
           onSelect(matches[0])
           setState({ kind: 'idle' })
         } else {
-          setState({ kind: 'pick', field, items: matches })
-          // Auto-arm refine after a short pause so user can either tap a result
-          // or just speak ("восемь" → AUS-8) without a second tap on the mic.
-          autoRefineTimerRef.current = setTimeout(() => {
-            if (session !== sessionRef.current) return
-            startRefine(field, matches, onSelect, onError)
-          }, AUTO_REFINE_DELAY_MS)
+          // Hand off to refine immediately — no gap where the mic is closed.
+          // useVoiceInput handles InvalidStateError on rapid re-start via retry.
+          startRefine(field, matches, onSelect, onError)
         }
       },
       onError: (code) => {
