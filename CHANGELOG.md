@@ -1,3 +1,10 @@
+## [1.53.2](https://github.com/fiscalagent/AppTochite/compare/v1.53.1...v1.53.2) (2026-05-17)
+
+
+### fix
+
+* автодополнение ножа дополняет историю клиента полным справочником, а не заменяет его ([](https://github.com/fiscalagent/AppTochite/commit/4c6c7cd32a2497f25466bed7258b3df828088279))
+
 ## [1.53.1](https://github.com/fiscalagent/AppTochite/compare/v1.53.0...v1.53.1) (2026-05-17)
 
 

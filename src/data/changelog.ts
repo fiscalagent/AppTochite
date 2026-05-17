@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.53.2',
+    date: '2026-05-17',
+    changes: [
+      'автодополнение ножа дополняет историю клиента полным справочником, а не заменяет его',
+    ],
+  },
+  {
     version: '1.53.1',
     date: '2026-05-17',
     changes: [
