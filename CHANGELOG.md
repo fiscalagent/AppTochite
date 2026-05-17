@@ -1,3 +1,10 @@
+# [1.49.0](https://github.com/fiscalagent/AppTochite/compare/v1.48.0...v1.49.0) (2026-05-17)
+
+
+### feat
+
+* двухфазовый голосовой ввод для сталей, ножей и камней ([](https://github.com/fiscalagent/AppTochite/commit/52260cfe2611395ad75fcd549bf1c7460aa9e4ff))
+
 # [1.48.0](https://github.com/fiscalagent/AppTochite/compare/v1.47.1...v1.48.0) (2026-05-17)
 
 
