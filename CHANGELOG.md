@@ -1,3 +1,10 @@
+# [1.54.0](https://github.com/fiscalagent/AppTochite/compare/v1.53.2...v1.54.0) (2026-05-17)
+
+
+### feat
+
+* голосовой довыбор сужает список и слушает продолжение — grinderman → 120 → FEPA ([](https://github.com/fiscalagent/AppTochite/commit/5657bd8e53f53f2728b987e4a90e3b0026e07e5f))
+
 ## [1.53.2](https://github.com/fiscalagent/AppTochite/compare/v1.53.1...v1.53.2) (2026-05-17)
 
 
