@@ -39,6 +39,8 @@ jobs:
         run: npx semantic-release
 
       - run: npm run build
+        env:
+          VITE_ANALYTICS_URL: ${{ secrets.VITE_ANALYTICS_URL }}
 
       - uses: actions/configure-pages@v5
 
