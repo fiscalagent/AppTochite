@@ -1,3 +1,10 @@
+## [1.53.1](https://github.com/fiscalagent/AppTochite/compare/v1.53.0...v1.53.1) (2026-05-17)
+
+
+### fix
+
+* микрофон не закрывается между поиском и довыбором — слушает 1000 мс подряд ([](https://github.com/fiscalagent/AppTochite/commit/3893e4b4e88e02d1be49b37df2be2518c486361a))
+
 # [1.53.0](https://github.com/fiscalagent/AppTochite/compare/v1.52.0...v1.53.0) (2026-05-17)
 
 
