@@ -9,9 +9,10 @@ interface Props {
   autoFocus?: boolean
   onSelect?: (value: string) => void
   micButton?: React.ReactNode
+  forceOpen?: boolean
 }
 
-export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect, micButton }: Props) {
+export default function Autocomplete({ value, onChange, suggestions, placeholder, autoFocus, onSelect, micButton, forceOpen }: Props) {
   const [open, setOpen] = useState(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -22,7 +23,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
       }).slice(0, 8)
     : []
 
-  const visible = open && filtered.length > 0
+  const visible = (open || !!forceOpen) && filtered.length > 0
 
   function handleSelect(item: string) {
     onChange(item)

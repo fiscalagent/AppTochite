@@ -52,6 +52,51 @@ function bigramSim(a: string, b: string): number {
   return (2 * hit) / (ba.size + bb.size)
 }
 
+function voiceToSearchText(text: string): string {
+  return transliterate(text.toLowerCase()).replace(/v/g, 'w')
+}
+
+function filterSuggestions(value: string, suggestions: string[]): string[] {
+  if (!value) return []
+  const lower = value.toLowerCase()
+  return suggestions.filter(item => {
+    const ilow = item.toLowerCase()
+    return lower.split(/\s+/).filter(Boolean).every(tok => ilow.includes(tok))
+  }).slice(0, 8)
+}
+
+const RU_NUM: Record<string, number> = {
+  'один': 1, 'первый': 1, 'первая': 1, 'первое': 1,
+  'два': 2, 'две': 2, 'второй': 2, 'второго': 2,
+  'три': 3, 'третий': 3, 'третья': 3, 'третье': 3,
+  'четыре': 4, 'четвёртый': 4, 'четвертый': 4,
+  'пять': 5, 'пятый': 5, 'пятая': 5,
+  'шесть': 6, 'шестой': 6, 'шестая': 6,
+  'семь': 7, 'седьмой': 7, 'семи': 7,
+  'восемь': 8, 'восьмой': 8, 'восьмая': 8,
+  'девять': 9, 'девятый': 9, 'девяти': 9,
+  'десять': 10, 'десятый': 10, 'десяти': 10,
+}
+
+function pickFromFiltered(text: string, items: string[]): string | null {
+  const lower = text.toLowerCase()
+  for (const [word, num] of Object.entries(RU_NUM)) {
+    if (lower.includes(word)) {
+      const byContent = items.find(it => it.includes(String(num)))
+      if (byContent) return byContent
+      if (num >= 1 && num <= items.length) return items[num - 1]
+    }
+  }
+  const digitMatch = lower.match(/\b(\d+)\b/)
+  if (digitMatch) {
+    const num = Number(digitMatch[1])
+    const byContent = items.find(it => it.includes(digitMatch[1]))
+    if (byContent) return byContent
+    if (num >= 1 && num <= items.length) return items[num - 1]
+  }
+  return findBestMatch(text, items)
+}
+
 function findBestMatch(voiceText: string, suggestions: string[]): string | null {
   const vLow = voiceText.toLowerCase()
   const vNorm = normForMatch(vLow)
@@ -163,6 +208,7 @@ export default function SharpeningForm() {
 
   const voice = useVoiceInput()
   const [listeningField, setListeningField] = useState<string | null>(null)
+  const [voiceForceOpen, setVoiceForceOpen] = useState<string | null>(null)
 
   function toggleVoice(fieldName: string, onResult: (text: string) => void) {
     if (listeningField === fieldName) {
@@ -192,6 +238,76 @@ export default function SharpeningForm() {
         }}
       />
     )
+  }
+
+  function micBtnTwoPhase(
+    fieldName: string,
+    suggestions: string[],
+    onSetSearchText: (text: string) => void,
+    onSelectItem: (item: string) => void,
+  ) {
+    if (!isVoiceEnabled()) return undefined
+    const isListening = listeningField === fieldName || listeningField === `${fieldName}_p2`
+    return (
+      <MicButton
+        isAvailable={voice.isAvailable}
+        isListening={isListening}
+        onToggle={() => {
+          if (!voice.isAvailable) {
+            showToast('Голосовой ввод недоступен офлайн')
+            return
+          }
+          if (isListening) {
+            voice.stop()
+            setListeningField(null)
+            setVoiceForceOpen(null)
+            return
+          }
+          let startedPhase2 = false
+          voice.start(
+            (text) => {
+              const searchText = voiceToSearchText(text)
+              onSetSearchText(searchText)
+              const matches = filterSuggestions(searchText, suggestions)
+              if (matches.length === 1) {
+                onSelectItem(matches[0])
+                setVoiceForceOpen(null)
+                setListeningField(null)
+              } else if (matches.length > 1) {
+                setVoiceForceOpen(fieldName)
+                showToast(`Найдено ${matches.length} — уточните голосом`)
+                startedPhase2 = true
+                setListeningField(`${fieldName}_p2`)
+                voice.start(
+                  (text2) => {
+                    const picked = pickFromFiltered(text2, matches)
+                    if (picked) onSelectItem(picked)
+                    else showToast('Не распознано — выберите вручную')
+                    setVoiceForceOpen(null)
+                    setListeningField(null)
+                  },
+                  () => { setVoiceForceOpen(null); setListeningField(null) }
+                )
+              } else {
+                onSetSearchText(text)
+                showToast('Ничего не найдено')
+                setListeningField(null)
+              }
+            },
+            () => { if (!startedPhase2) setListeningField(null) }
+          )
+          setListeningField(fieldName)
+        }}
+      />
+    )
+  }
+
+  function cancelVoiceTwoPhase(fieldName: string) {
+    if (voiceForceOpen === fieldName) {
+      voice.stop()
+      setVoiceForceOpen(null)
+      setListeningField(null)
+    }
   }
 
   const [newStoneOpen, setNewStoneOpen] = useState(false)
@@ -431,15 +547,14 @@ export default function SharpeningForm() {
               suggestions={knifeSuggestions}
               placeholder={knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...'}
               autoFocus={!prefilledClientId}
-              micButton={micBtn('knifeBrand', (text) => {
-                const match = findBestMatch(text, knifeSuggestions)
-                if (match) {
-                  setKnifeBrand(match)
-                  showToast(`Нож: ${match}`)
-                } else {
-                  setKnifeBrand(text)
-                }
-              })}
+              forceOpen={voiceForceOpen === 'knifeBrand'}
+              onSelect={(item) => { setKnifeBrand(item); cancelVoiceTwoPhase('knifeBrand') }}
+              micButton={micBtnTwoPhase(
+                'knifeBrand',
+                knifeSuggestions,
+                setKnifeBrand,
+                (item) => { setKnifeBrand(item); showToast(`Нож: ${item}`) }
+              )}
             />
           </div>
 
@@ -450,15 +565,14 @@ export default function SharpeningForm() {
               onChange={setSteel}
               suggestions={steelSuggestions}
               placeholder="AUS-8, D2..."
-              micButton={micBtn('steel', (text) => {
-                const match = findBestMatch(text, steelSuggestions)
-                if (match) {
-                  setSteel(match)
-                  showToast(`Сталь: ${match}`)
-                } else {
-                  setSteel(text)
-                }
-              })}
+              forceOpen={voiceForceOpen === 'steel'}
+              onSelect={(item) => { setSteel(item); cancelVoiceTwoPhase('steel') }}
+              micButton={micBtnTwoPhase(
+                'steel',
+                steelSuggestions,
+                setSteel,
+                (item) => { setSteel(item); showToast(`Сталь: ${item}`) }
+              )}
             />
           </div>
 
@@ -598,18 +712,15 @@ export default function SharpeningForm() {
                 value={stoneInput}
                 onChange={setStoneInput}
                 suggestions={stoneSuggestions}
-                onSelect={addStone}
+                onSelect={(item) => { addStone(item); cancelVoiceTwoPhase('stone') }}
                 placeholder="Naniwa 1000, Shapton 2000..."
-                micButton={micBtn('stone', (text) => {
-                  const match = findBestMatch(text, stoneSuggestions)
-                  if (match) {
-                    addStone(match)
-                    showToast(`Добавлен: ${match}`)
-                  } else {
-                    setStoneInput(text)
-                    showToast('Камень не найден — уточните вручную')
-                  }
-                })}
+                forceOpen={voiceForceOpen === 'stone'}
+                micButton={micBtnTwoPhase(
+                  'stone',
+                  stoneSuggestions,
+                  setStoneInput,
+                  (item) => { addStone(item); showToast(`Добавлен: ${item}`) }
+                )}
               />
               <button
                 className={s.stoneAddBtn}
