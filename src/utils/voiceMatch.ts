@@ -182,6 +182,42 @@ export function extractNumber(text: string): string {
   return hasAny ? String(total) : ''
 }
 
+// Narrow a list to all items matching a refining token (digit, ordinal, or
+// fuzzy substring). Returns possibly-many items — caller decides whether to
+// auto-select on length===1 or keep narrowing on length>1.
+// Order of precedence:
+//   1. Russian numeral word ("сто двадцать" or "первый") matches digits in
+//      item names, or falls back to ordinal index when no name has that digit.
+//   2. Plain digit ("120") matches whole-word digit in item names.
+//   3. Fuzzy fallback — drop-in findAllMatches against the filtered list.
+export function narrowFromFiltered(text: string, items: string[]): string[] {
+  if (items.length === 0) return []
+  const tokens = tokenize(text)
+
+  // Russian numerals first — for "сто двадцать" / "двадцать пять" we get the
+  // composed number via extractNumber and match by content.
+  const composedNum = extractNumber(text)
+  if (composedNum) {
+    const byContent = items.filter(it => hasWholeWord(it, composedNum))
+    if (byContent.length > 0) return byContent
+    const n = Number(composedNum)
+    if (n >= 1 && n <= items.length) return [items[n - 1]]
+  }
+
+  // Single-word ordinal/cardinal (covers "первый", "второй", … as ordinal index).
+  for (const [word, num] of Object.entries(RU_NUM)) {
+    if (tokens.includes(word)) {
+      const numStr = String(num)
+      const byContent = items.filter(it => hasWholeWord(it, numStr))
+      if (byContent.length > 0) return byContent
+      if (num >= 1 && num <= items.length) return [items[num - 1]]
+    }
+  }
+
+  // Fuzzy substring narrowing
+  return findAllMatches(text, items)
+}
+
 // Pick an item from a pre-filtered list by ordinal/number/fuzzy.
 // Used in phase 2 of two-phase voice flow.
 export function pickFromFiltered(text: string, items: string[]): string | null {

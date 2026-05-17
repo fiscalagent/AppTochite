@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useVoiceInput, type VoiceErrorCode } from './useVoiceInput'
-import { findAllMatches, pickFromFiltered } from '../utils/voiceMatch'
+import { findAllMatches, narrowFromFiltered } from '../utils/voiceMatch'
 
 type VoiceState =
   | { kind: 'idle' }
@@ -30,23 +30,21 @@ interface UseTwoPhaseVoiceReturn {
   cancel: () => void
 }
 
-// Voice flow with tappable picker on ambiguous matches:
-//   Tap mic, speak:
+// Voice flow with tappable picker that narrows continuously:
+//   Tap mic, speak first token (e.g. "grinderman"):
 //     0 matches → fallback to raw text (if onNoMatch) / show "manual" hint
 //     1 match   → auto-select
-//     multiple  → show list AND immediately keep listening for a refining
-//                 token ("восемь" → AUS-8, "первый" → first row, …) for
-//                 REFINE_WINDOW_MS. Mic does NOT close between phase 1 and
-//                 refine — there's no second tap needed.
-//   While refine is listening:
-//     - tap on a list row cancels mic and selects
-//     - speak a narrower token → pickFromFiltered → onSelect
-//     - say nothing / unrecognized within the window → mic stops, list stays
-//       visible indefinitely until the user taps or starts over.
-// Refine listens for this long after phase 1's list appears. Mic re-opens with
-// no perceptible gap and stays hot for this window; if nothing recognizable is
-// said it stops on its own and the list stays for tap selection indefinitely.
-const REFINE_WINDOW_MS = 1000
+//     multiple  → show list and keep mic open for the next token, no gap.
+//   Each subsequent recognized phrase narrows the list:
+//     "120" → keep grinderman items containing 120; if exactly 1 → auto-select,
+//             else show narrowed list and keep listening.
+//     "FEPA" → narrow further by substring/fuzzy.
+//     "первый" → pick by ordinal from the current list.
+//     unrecognized / no narrowing → previous list stays, mic continues until
+//     Web Speech's natural no-speech timeout (~5s), then mic stops and list
+//     stays for tap selection. Tap on a row works at any moment.
+// (no explicit refine timer — we rely on Web Speech's natural no-speech
+// timeout, ~5s on Chrome. Each successful refine cycle restarts the mic.)
 
 export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   const voice = useVoiceInput()
@@ -57,48 +55,47 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   // Snapshot of state at start() time, so callbacks can read it without stale-closure issues.
   const stateRef = useRef<VoiceState>(state)
   stateRef.current = state
-  const refineWindowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const clearRefineTimer = () => {
-    if (refineWindowTimerRef.current !== null) {
-      clearTimeout(refineWindowTimerRef.current)
-      refineWindowTimerRef.current = null
-    }
-  }
-
   const cancel = useCallback(() => {
-    clearRefineTimer()
     sessionRef.current++
     voice.stop()
     setState({ kind: 'idle' })
   }, [voice])
 
-  const startRefine = useCallback((
+  // Defined as a ref to allow recursion (each successful narrow restarts refine
+  // with the narrowed list). Using a ref dodges useCallback dependency cycles.
+  const startRefineRef = useRef<(
     field: string,
     items: string[],
     onSelect: (item: string) => void,
     onError?: (code: VoiceErrorCode) => void,
-  ) => {
-    clearRefineTimer()
+  ) => void>(() => {})
+
+  startRefineRef.current = (field, items, onSelect, onError) => {
     sessionRef.current++
     const session = sessionRef.current
     setState({ kind: 'listening', field, items })
     voice.start({
       onResult: (text) => {
         if (session !== sessionRef.current) return
-        clearRefineTimer()
-        const picked = pickFromFiltered(text, items)
-        if (picked) {
-          onSelect(picked)
+        const narrowed = narrowFromFiltered(text, items)
+        if (narrowed.length === 1) {
+          onSelect(narrowed[0])
           setState({ kind: 'idle' })
+        } else if (narrowed.length > 1) {
+          // Keep narrowing — restart refine on the smaller list. Mic re-opens
+          // immediately so consecutive tokens ("grinderman" → "120" → "FEPA")
+          // flow as one continuous interaction.
+          startRefineRef.current(field, narrowed, onSelect, onError)
         } else {
+          // Nothing matched the spoken token. Keep the previous list visible
+          // so the user can tap or speak again (mic closes; tap re-opens).
           setState({ kind: 'pick', field, items })
         }
       },
       onError: (code) => {
         if (session !== sessionRef.current) return
-        clearRefineTimer()
         if (code === 'no-speech' || code === 'aborted') {
+          // User paused or aborted — leave the list visible for tap selection.
           setState({ kind: 'pick', field, items })
         } else {
           setState({ kind: 'idle' })
@@ -106,18 +103,16 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
         }
       },
     })
-    // Hard cap on the refine window: if nothing matchable is captured, stop
-    // the mic but keep the list visible so the user can still tap.
-    refineWindowTimerRef.current = setTimeout(() => {
-      if (session !== sessionRef.current) return
-      refineWindowTimerRef.current = null
-      voice.stop()
-      setState({ kind: 'pick', field, items })
-    }, REFINE_WINDOW_MS)
-  }, [voice])
+  }
+
+  const startRefine = useCallback((
+    field: string,
+    items: string[],
+    onSelect: (item: string) => void,
+    onError?: (code: VoiceErrorCode) => void,
+  ) => startRefineRef.current(field, items, onSelect, onError), [])
 
   const start = useCallback(({ field, suggestions, onSelect, onNoMatch, onError }: StartArgs) => {
-    clearRefineTimer()
     sessionRef.current++
     const session = sessionRef.current
 

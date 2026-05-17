@@ -135,6 +135,40 @@ describe('extractNumber', () => {
   })
 })
 
+describe('narrowFromFiltered', () => {
+  it('narrows to all items containing the digit', async () => {
+    const { narrowFromFiltered } = await import('./voiceMatch')
+    const items = ['Grinderman 60', 'Grinderman 120 FEPA', 'Grinderman 120 JIS', 'Grinderman 220', 'Grinderman 400']
+    expect(narrowFromFiltered('120', items)).toEqual(['Grinderman 120 FEPA', 'Grinderman 120 JIS'])
+  })
+  it('120 does not match 1200 (word boundary)', async () => {
+    const { narrowFromFiltered } = await import('./voiceMatch')
+    const items = ['Grinderman 120', 'Grinderman 1200']
+    expect(narrowFromFiltered('120', items)).toEqual(['Grinderman 120'])
+  })
+  it('narrows by russian numeral word', async () => {
+    const { narrowFromFiltered } = await import('./voiceMatch')
+    const items = ['Grinderman 120 FEPA', 'Grinderman 220', 'Grinderman 400']
+    expect(narrowFromFiltered('сто двадцать', items)).toEqual(['Grinderman 120 FEPA'])
+  })
+  it('falls back to ordinal index when number has no content match', async () => {
+    const { narrowFromFiltered } = await import('./voiceMatch')
+    const items = ['Naniwa A', 'Naniwa B', 'Naniwa C']
+    expect(narrowFromFiltered('второй', items)).toEqual(['Naniwa B'])
+  })
+  it('narrows by fuzzy when no digit/ordinal', async () => {
+    const { narrowFromFiltered } = await import('./voiceMatch')
+    const items = ['Grinderman 120 FEPA', 'Grinderman 120 JIS', 'Grinderman 120 oil']
+    const r = narrowFromFiltered('FEPA', items)
+    expect(r).toContain('Grinderman 120 FEPA')
+  })
+  it('returns empty when no match in filtered list', async () => {
+    const { narrowFromFiltered } = await import('./voiceMatch')
+    const items = ['Grinderman 120', 'Grinderman 220']
+    expect(narrowFromFiltered('zzzzz', items)).toEqual([])
+  })
+})
+
 describe('pickFromFiltered', () => {
   const items = ['Naniwa 1000', 'Naniwa 2000', 'Shapton 5000']
   it('picks by ordinal', () => {
