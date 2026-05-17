@@ -1,3 +1,11 @@
+# [1.48.0](https://github.com/fiscalagent/AppTochite/compare/v1.47.1...v1.48.0) (2026-05-17)
+
+
+### feat
+
+* нечёткое распознавание камней по голосу — транслитерация и bigram-сходство ([](https://github.com/fiscalagent/AppTochite/commit/c293e5650edbad18734d32cf75ac242c11906374))
+* нечёткое распознавание ножа и стали по голосу — транслитерация и bigram-сходство ([](https://github.com/fiscalagent/AppTochite/commit/27b88128be9e6dd5fd153aec16621df24f200533))
+
 ## [1.47.1](https://github.com/fiscalagent/AppTochite/compare/v1.47.0...v1.47.1) (2026-05-16)
 
 
