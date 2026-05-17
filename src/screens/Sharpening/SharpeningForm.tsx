@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -52,17 +52,27 @@ function bigramSim(a: string, b: string): number {
   return (2 * hit) / (ba.size + bb.size)
 }
 
-function voiceToSearchText(text: string): string {
-  return transliterate(text.toLowerCase()).replace(/v/g, 'w')
-}
+// Returns all suggestions with score >= minScore, sorted by score (best first)
+function findAllMatches(voiceText: string, suggestions: string[], minScore = 20): string[] {
+  const vLow = voiceText.toLowerCase()
+  const vNorm = normForMatch(vLow)
+  const vNormW = vNorm.replace(/v/g, 'w')
+  const gritMatch = vLow.match(/\b(\d{3,4})\b/)
+  const voiceGrit = gritMatch?.[1]
 
-function filterSuggestions(value: string, suggestions: string[]): string[] {
-  if (!value) return []
-  const lower = value.toLowerCase()
-  return suggestions.filter(item => {
-    const ilow = item.toLowerCase()
-    return lower.split(/\s+/).filter(Boolean).every(tok => ilow.includes(tok))
-  }).slice(0, 8)
+  const scored: { name: string; score: number }[] = []
+  for (const sug of suggestions) {
+    const sLow = sug.toLowerCase()
+    const sNorm = normForMatch(sLow)
+    let score = 0
+    if (voiceGrit && sLow.includes(voiceGrit)) score += 40
+    if (sLow.includes(vLow) || vLow.includes(sLow)) score += 35
+    score += bigramSim(vNorm, sNorm) * 60
+    if (vNormW !== vNorm) score += bigramSim(vNormW, sNorm) * 20
+    if (score >= minScore) scored.push({ name: sug, score })
+  }
+  scored.sort((a, b) => b.score - a.score)
+  return scored.slice(0, 8).map(x => x.name)
 }
 
 const RU_NUM: Record<string, number> = {
@@ -208,8 +218,11 @@ export default function SharpeningForm() {
 
   const voice = useVoiceInput()
   const [listeningField, setListeningField] = useState<string | null>(null)
-  const [voiceForceOpen, setVoiceForceOpen] = useState<string | null>(null)
-  const [voicePhase2Items, setVoicePhase2Items] = useState<string[]>([])
+  // voiceSearch: field name + matched items shown below the field
+  const [voiceSearch, setVoiceSearch] = useState<{ field: string; items: string[] } | null>(null)
+  // voiceNoMatch: field that had a failed voice attempt → show "ввести вручную" placeholder
+  const [voiceNoMatch, setVoiceNoMatch] = useState<string | null>(null)
+  const phase2TimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function toggleVoice(fieldName: string, onResult: (text: string) => void) {
     if (listeningField === fieldName) {
@@ -241,27 +254,34 @@ export default function SharpeningForm() {
     )
   }
 
-  // Two-phase voice for autocomplete fields backed by a reference (steel/knife/stone).
-  // Phase 1 (first tap): voice → transliterate → filter → open dropdown with matches.
-  //   Single match → auto-select. Multiple → show list, mic returns to idle.
-  //   No match → toast, field unchanged (never sets raw voice text).
-  // Phase 2 (second tap while dropdown is open): voice → pick by number/ordinal/fuzzy.
+  function clearPhase2Timer() {
+    if (phase2TimerRef.current !== null) {
+      clearTimeout(phase2TimerRef.current)
+      phase2TimerRef.current = null
+    }
+  }
+
+  function cancelVoiceTwoPhase() {
+    clearPhase2Timer()
+    voice.stop()
+    setVoiceSearch(null)
+    setVoiceNoMatch(null)
+    setListeningField(null)
+  }
+
+  // Two-phase voice for reference-backed autocomplete (steel/knife/stone).
+  // Phase 1: voice → findAllMatches → show results list below field.
+  //   1 match → auto-select. Multiple → show list + auto-start phase 2.
+  //   0 matches → show "ввести вручную" placeholder on field.
+  // Phase 2 (auto-started after 500ms): voice → pick by number/ordinal/fuzzy.
+  // Results list also stays tappable for manual selection.
   function micBtnTwoPhase(
     fieldName: string,
     suggestions: string[],
-    onSetSearchText: (text: string) => void,
     onSelectItem: (item: string) => void,
   ) {
     if (!isVoiceEnabled()) return undefined
-    const isPhase1 = listeningField === fieldName
-    const isPhase2 = listeningField === `${fieldName}_p2`
-    const isListening = isPhase1 || isPhase2
-    const dropdownOpen = voiceForceOpen === fieldName
-
-    function closeDropdown() {
-      setVoiceForceOpen(null)
-      setVoicePhase2Items([])
-    }
+    const isListening = listeningField === fieldName || listeningField === `${fieldName}_p2`
 
     return (
       <MicButton
@@ -273,45 +293,38 @@ export default function SharpeningForm() {
             return
           }
           if (isListening) {
-            voice.stop()
-            setListeningField(null)
-            closeDropdown()
+            cancelVoiceTwoPhase()
             return
           }
-          if (dropdownOpen && voicePhase2Items.length > 0) {
-            // Phase 2: pick from visible list
-            const items = voicePhase2Items
-            setListeningField(`${fieldName}_p2`)
-            voice.start(
-              (text2) => {
-                const picked = pickFromFiltered(text2, items)
-                if (picked) onSelectItem(picked)
-                else showToast('Не распознано — выберите вручную')
-                setListeningField(null)
-                closeDropdown()
-              },
-              () => { setListeningField(null); closeDropdown() }
-            )
-            return
-          }
-          // Phase 1: search
+          setVoiceNoMatch(null)
           setListeningField(fieldName)
           voice.start(
             (text) => {
-              const searchText = voiceToSearchText(text)
-              const matches = filterSuggestions(searchText, suggestions)
-              if (matches.length === 1) {
+              setListeningField(null)
+              const matches = findAllMatches(text, suggestions)
+              if (matches.length === 0) {
+                setVoiceNoMatch(fieldName)
+              } else if (matches.length === 1) {
                 onSelectItem(matches[0])
-                setListeningField(null)
-              } else if (matches.length > 1) {
-                onSetSearchText(searchText)
-                setVoiceForceOpen(fieldName)
-                setVoicePhase2Items(matches)
-                showToast(`Найдено ${matches.length} — нажмите mic для выбора`)
-                setListeningField(null)
               } else {
-                showToast('Не найдено в справочнике')
-                setListeningField(null)
+                setVoiceSearch({ field: fieldName, items: matches })
+                clearPhase2Timer()
+                phase2TimerRef.current = setTimeout(() => {
+                  setListeningField(`${fieldName}_p2`)
+                  voice.start(
+                    (text2) => {
+                      const picked = pickFromFiltered(text2, matches)
+                      setListeningField(null)
+                      if (picked) {
+                        onSelectItem(picked)
+                        setVoiceSearch(null)
+                      } else {
+                        setVoiceNoMatch(fieldName)
+                      }
+                    },
+                    () => setListeningField(null)
+                  )
+                }, 500)
               }
             },
             () => setListeningField(null)
@@ -319,15 +332,6 @@ export default function SharpeningForm() {
         }}
       />
     )
-  }
-
-  function cancelVoiceTwoPhase(fieldName: string) {
-    if (voiceForceOpen === fieldName) {
-      voice.stop()
-      setVoiceForceOpen(null)
-      setVoicePhase2Items([])
-      setListeningField(null)
-    }
   }
 
   const [newStoneOpen, setNewStoneOpen] = useState(false)
@@ -563,37 +567,39 @@ export default function SharpeningForm() {
             <label className={s.label}>Нож / Бренд <span className={s.req}>*</span></label>
             <Autocomplete
               value={knifeBrand}
-              onChange={setKnifeBrand}
+              onChange={(v) => { setKnifeBrand(v); if (voiceSearch?.field === 'knifeBrand' || voiceNoMatch === 'knifeBrand') cancelVoiceTwoPhase() }}
+              onSelect={(item) => { setKnifeBrand(item); cancelVoiceTwoPhase() }}
               suggestions={knifeSuggestions}
-              placeholder={knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...'}
+              placeholder={voiceNoMatch === 'knifeBrand' ? 'ввести вручную' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
               autoFocus={!prefilledClientId}
-              forceOpen={voiceForceOpen === 'knifeBrand'}
-              onSelect={(item) => { setKnifeBrand(item); cancelVoiceTwoPhase('knifeBrand') }}
-              micButton={micBtnTwoPhase(
-                'knifeBrand',
-                knifeSuggestions,
-                setKnifeBrand,
-                (item) => { setKnifeBrand(item); showToast(`Нож: ${item}`) }
-              )}
+              micButton={micBtnTwoPhase('knifeBrand', knifeSuggestions, (item) => { setKnifeBrand(item); showToast(`Нож: ${item}`) })}
             />
+            {voiceSearch?.field === 'knifeBrand' && (
+              <div className={s.voiceResults}>
+                {voiceSearch.items.map(item => (
+                  <button key={item} className={s.voiceResultItem} onClick={() => { setKnifeBrand(item); showToast(`Нож: ${item}`); cancelVoiceTwoPhase() }}>{item}</button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className={s.field}>
             <label className={s.label}>Сталь</label>
             <Autocomplete
               value={steel}
-              onChange={setSteel}
+              onChange={(v) => { setSteel(v); if (voiceSearch?.field === 'steel' || voiceNoMatch === 'steel') cancelVoiceTwoPhase() }}
+              onSelect={(item) => { setSteel(item); cancelVoiceTwoPhase() }}
               suggestions={steelSuggestions}
-              placeholder="AUS-8, D2..."
-              forceOpen={voiceForceOpen === 'steel'}
-              onSelect={(item) => { setSteel(item); cancelVoiceTwoPhase('steel') }}
-              micButton={micBtnTwoPhase(
-                'steel',
-                steelSuggestions,
-                setSteel,
-                (item) => { setSteel(item); showToast(`Сталь: ${item}`) }
-              )}
+              placeholder={voiceNoMatch === 'steel' ? 'ввести вручную' : 'AUS-8, D2...'}
+              micButton={micBtnTwoPhase('steel', steelSuggestions, (item) => { setSteel(item); showToast(`Сталь: ${item}`) })}
             />
+            {voiceSearch?.field === 'steel' && (
+              <div className={s.voiceResults}>
+                {voiceSearch.items.map(item => (
+                  <button key={item} className={s.voiceResultItem} onClick={() => { setSteel(item); showToast(`Сталь: ${item}`); cancelVoiceTwoPhase() }}>{item}</button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className={s.row}>
@@ -730,17 +736,11 @@ export default function SharpeningForm() {
             <div className={s.stoneInputRow}>
               <Autocomplete
                 value={stoneInput}
-                onChange={setStoneInput}
+                onChange={(v) => { setStoneInput(v); if (voiceSearch?.field === 'stone' || voiceNoMatch === 'stone') cancelVoiceTwoPhase() }}
+                onSelect={(item) => { addStone(item); cancelVoiceTwoPhase() }}
                 suggestions={stoneSuggestions}
-                onSelect={(item) => { addStone(item); cancelVoiceTwoPhase('stone') }}
-                placeholder="Naniwa 1000, Shapton 2000..."
-                forceOpen={voiceForceOpen === 'stone'}
-                micButton={micBtnTwoPhase(
-                  'stone',
-                  stoneSuggestions,
-                  setStoneInput,
-                  (item) => { addStone(item); showToast(`Добавлен: ${item}`) }
-                )}
+                placeholder={voiceNoMatch === 'stone' ? 'ввести вручную' : 'Naniwa 1000, Shapton 2000...'}
+                micButton={micBtnTwoPhase('stone', stoneSuggestions, (item) => { addStone(item); showToast(`Добавлен: ${item}`) })}
               />
               <button
                 className={s.stoneAddBtn}
@@ -748,6 +748,13 @@ export default function SharpeningForm() {
                 disabled={!stoneInput.trim()}
               >+</button>
             </div>
+            {voiceSearch?.field === 'stone' && (
+              <div className={s.voiceResults}>
+                {voiceSearch.items.map(item => (
+                  <button key={item} className={s.voiceResultItem} onClick={() => { addStone(item); showToast(`Добавлен: ${item}`); cancelVoiceTwoPhase() }}>{item}</button>
+                ))}
+              </div>
+            )}
             {!newStoneOpen && (
               <button className={s.newStoneToggle} onClick={() => setNewStoneOpen(true)}>
                 + создать новый камень

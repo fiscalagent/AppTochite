@@ -545,3 +545,32 @@
   font-size: 14px;
   font-family: var(--font-body);
 }
+
+/* Voice search results list */
+.voiceResults {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-300);
+}
+
+.voiceResultItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: var(--font-body);
+  color: var(--text-100);
+  border-bottom: 1px solid var(--border-100);
+  background: transparent;
+  cursor: pointer;
+}
+
+.voiceResultItem:last-child {
+  border-bottom: none;
+}
+
+.voiceResultItem:active {
+  background: var(--accent-dim);
+}
