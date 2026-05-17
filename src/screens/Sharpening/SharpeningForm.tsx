@@ -171,10 +171,12 @@ export default function SharpeningForm() {
             showToast('Голосовой ввод недоступен офлайн')
             return
           }
-          if (isListening || twoPhase.pickItems(fieldName)) {
+          if (isListening) {
             twoPhase.cancel()
             return
           }
+          // If picker is visible, tapping mic re-runs voice (start() bumps session
+          // and replaces state).
           twoPhase.start({
             field: fieldName,
             suggestions,

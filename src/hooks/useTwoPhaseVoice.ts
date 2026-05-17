@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
 import { useVoiceInput, type VoiceErrorCode } from './useVoiceInput'
-import { findAllMatches, pickFromFiltered } from '../utils/voiceMatch'
+import { findAllMatches } from '../utils/voiceMatch'
 
 type VoiceState =
   | { kind: 'idle' }
-  | { kind: 'listening'; field: string; phase: 1 | 2 }
+  | { kind: 'listening'; field: string }
   | { kind: 'pick'; field: string; items: string[] }
   | { kind: 'noMatch'; field: string }
 
@@ -28,36 +28,30 @@ interface UseTwoPhaseVoiceReturn {
   cancel: () => void
 }
 
-const PHASE2_DELAY_MS = 500
-
+// Single-phase voice flow with a tappable picker on ambiguous matches:
+//   speak → 0 matches  → fallback to raw text (if onNoMatch) / show "manual" hint
+//          → 1 match   → auto-select
+//          → multiple  → show list, user taps to pick (or taps mic again to retry)
+// The name "twoPhase" is historical: phase 2 (auto-listen for ordinal) was
+// removed because it surprised users and stole their tap window.
 export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   const voice = useVoiceInput()
   const [state, setState] = useState<VoiceState>({ kind: 'idle' })
-  const phase2TimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Increments on every cancel/new-start. Pending callbacks bail if their session
   // id no longer matches — protects against late onresult firing after cancel.
   const sessionRef = useRef(0)
 
-  const clearTimer = () => {
-    if (phase2TimerRef.current !== null) {
-      clearTimeout(phase2TimerRef.current)
-      phase2TimerRef.current = null
-    }
-  }
-
   const cancel = useCallback(() => {
-    clearTimer()
     sessionRef.current++
     voice.stop()
     setState({ kind: 'idle' })
   }, [voice])
 
   const start = useCallback(({ field, suggestions, onSelect, onNoMatch, onError }: StartArgs) => {
-    clearTimer()
     sessionRef.current++
     const session = sessionRef.current
 
-    setState({ kind: 'listening', field, phase: 1 })
+    setState({ kind: 'listening', field })
     voice.start({
       onResult: (text) => {
         if (session !== sessionRef.current) return
@@ -74,36 +68,6 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
           setState({ kind: 'idle' })
         } else {
           setState({ kind: 'pick', field, items: matches })
-          // Auto-start phase 2 after a short pause
-          phase2TimerRef.current = setTimeout(() => {
-            if (session !== sessionRef.current) return
-            setState({ kind: 'listening', field, phase: 2 })
-            voice.start({
-              onResult: (text2) => {
-                if (session !== sessionRef.current) return
-                const picked = pickFromFiltered(text2, matches)
-                if (picked) {
-                  onSelect(picked)
-                  setState({ kind: 'idle' })
-                } else if (onNoMatch) {
-                  onNoMatch(text2.trim())
-                  setState({ kind: 'idle' })
-                } else {
-                  setState({ kind: 'noMatch', field })
-                }
-              },
-              onError: (code) => {
-                if (session !== sessionRef.current) return
-                if (code === 'no-speech') {
-                  // Keep the picker visible so user can tap
-                  setState({ kind: 'pick', field, items: matches })
-                } else {
-                  setState({ kind: 'idle' })
-                  onError?.(code)
-                }
-              },
-            })
-          }, PHASE2_DELAY_MS)
         }
       },
       onError: (code) => {
