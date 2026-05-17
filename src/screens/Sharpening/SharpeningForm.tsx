@@ -209,6 +209,7 @@ export default function SharpeningForm() {
   const voice = useVoiceInput()
   const [listeningField, setListeningField] = useState<string | null>(null)
   const [voiceForceOpen, setVoiceForceOpen] = useState<string | null>(null)
+  const [voicePhase2Items, setVoicePhase2Items] = useState<string[]>([])
 
   function toggleVoice(fieldName: string, onResult: (text: string) => void) {
     if (listeningField === fieldName) {
@@ -240,6 +241,11 @@ export default function SharpeningForm() {
     )
   }
 
+  // Two-phase voice for autocomplete fields backed by a reference (steel/knife/stone).
+  // Phase 1 (first tap): voice → transliterate → filter → open dropdown with matches.
+  //   Single match → auto-select. Multiple → show list, mic returns to idle.
+  //   No match → toast, field unchanged (never sets raw voice text).
+  // Phase 2 (second tap while dropdown is open): voice → pick by number/ordinal/fuzzy.
   function micBtnTwoPhase(
     fieldName: string,
     suggestions: string[],
@@ -247,7 +253,16 @@ export default function SharpeningForm() {
     onSelectItem: (item: string) => void,
   ) {
     if (!isVoiceEnabled()) return undefined
-    const isListening = listeningField === fieldName || listeningField === `${fieldName}_p2`
+    const isPhase1 = listeningField === fieldName
+    const isPhase2 = listeningField === `${fieldName}_p2`
+    const isListening = isPhase1 || isPhase2
+    const dropdownOpen = voiceForceOpen === fieldName
+
+    function closeDropdown() {
+      setVoiceForceOpen(null)
+      setVoicePhase2Items([])
+    }
+
     return (
       <MicButton
         isAvailable={voice.isAvailable}
@@ -260,43 +275,47 @@ export default function SharpeningForm() {
           if (isListening) {
             voice.stop()
             setListeningField(null)
-            setVoiceForceOpen(null)
+            closeDropdown()
             return
           }
-          let startedPhase2 = false
+          if (dropdownOpen && voicePhase2Items.length > 0) {
+            // Phase 2: pick from visible list
+            const items = voicePhase2Items
+            setListeningField(`${fieldName}_p2`)
+            voice.start(
+              (text2) => {
+                const picked = pickFromFiltered(text2, items)
+                if (picked) onSelectItem(picked)
+                else showToast('Не распознано — выберите вручную')
+                setListeningField(null)
+                closeDropdown()
+              },
+              () => { setListeningField(null); closeDropdown() }
+            )
+            return
+          }
+          // Phase 1: search
+          setListeningField(fieldName)
           voice.start(
             (text) => {
               const searchText = voiceToSearchText(text)
-              onSetSearchText(searchText)
               const matches = filterSuggestions(searchText, suggestions)
               if (matches.length === 1) {
                 onSelectItem(matches[0])
-                setVoiceForceOpen(null)
                 setListeningField(null)
               } else if (matches.length > 1) {
+                onSetSearchText(searchText)
                 setVoiceForceOpen(fieldName)
-                showToast(`Найдено ${matches.length} — уточните голосом`)
-                startedPhase2 = true
-                setListeningField(`${fieldName}_p2`)
-                voice.start(
-                  (text2) => {
-                    const picked = pickFromFiltered(text2, matches)
-                    if (picked) onSelectItem(picked)
-                    else showToast('Не распознано — выберите вручную')
-                    setVoiceForceOpen(null)
-                    setListeningField(null)
-                  },
-                  () => { setVoiceForceOpen(null); setListeningField(null) }
-                )
+                setVoicePhase2Items(matches)
+                showToast(`Найдено ${matches.length} — нажмите mic для выбора`)
+                setListeningField(null)
               } else {
-                onSetSearchText(text)
-                showToast('Ничего не найдено')
+                showToast('Не найдено в справочнике')
                 setListeningField(null)
               }
             },
-            () => { if (!startedPhase2) setListeningField(null) }
+            () => setListeningField(null)
           )
-          setListeningField(fieldName)
         }}
       />
     )
@@ -306,6 +325,7 @@ export default function SharpeningForm() {
     if (voiceForceOpen === fieldName) {
       voice.stop()
       setVoiceForceOpen(null)
+      setVoicePhase2Items([])
       setListeningField(null)
     }
   }
