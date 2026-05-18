@@ -1,3 +1,15 @@
+# [1.57.0](https://github.com/fiscalagent/AppTochite/compare/v1.56.3...v1.57.0) (2026-05-18)
+
+
+### feat
+
+* подсказки-префиксы на полях формы при активной диктовке ([](https://github.com/fiscalagent/AppTochite/commit/8b5a9b5a9751a9c7581b5b371803427deee5b415))
+
+
+### fix
+
+* подсказка HRC изменена на «твёрдость ...» ([](https://github.com/fiscalagent/AppTochite/commit/7770ccef7d73bfa0ea744357e5bbd5927863308e))
+
 ## [1.56.3](https://github.com/fiscalagent/AppTochite/compare/v1.56.2...v1.56.3) (2026-05-18)
 
 
