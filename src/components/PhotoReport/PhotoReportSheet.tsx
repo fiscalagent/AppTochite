@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Sharpening } from '../../db/db'
-import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { startBlur } from '../../utils/modalBlur'
 import s from './PhotoReportSheet.module.css'
 
 interface Props {
@@ -225,10 +225,7 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
   const [sharing, setSharing] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  useEffect(() => {
-    startBlur()
-    return stopBlur
-  }, [])
+  useEffect(() => startBlur(), [])
 
   useEffect(() => {
     if (canvasRef.current) {

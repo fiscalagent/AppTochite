@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
 import { useToast } from '../Toast/ToastContext'
-import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { startBlur } from '../../utils/modalBlur'
 import s from './StorageWarning.module.css'
 
 const DISMISS_KEY = 'storage-warn-dismissed'
@@ -23,8 +23,7 @@ export default function StorageWarning() {
 
   useEffect(() => {
     if (!visible) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [visible])
 
   useEffect(() => {

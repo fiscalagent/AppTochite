@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { startBlur } from '../../utils/modalBlur'
 import s from './PhotoShareSheet.module.css'
 
 export interface SharePhoto {
@@ -52,10 +52,7 @@ export default function PhotoShareSheet({ photos, onClose }: Props) {
   )
   const [sharing, setSharing] = useState(false)
 
-  useEffect(() => {
-    startBlur()
-    return stopBlur
-  }, [])
+  useEffect(() => startBlur(), [])
 
   function toggle(i: number) {
     setSelected(prev => {

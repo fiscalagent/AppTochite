@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type StoneCoolant, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import { getGritDisplay, getGritSortValue, GRIT_TABLE, type GritDisplayMode } from '../../data/gritTable'
-import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { startBlur } from '../../utils/modalBlur'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -416,8 +416,7 @@ function StonesTab({ search }: { search: string }) {
 
   useEffect(() => {
     if (!open && editingId === null) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [open, editingId])
 
   const stones = useLiveQuery(
@@ -765,8 +764,7 @@ function SteelsTab({ search }: { search: string }) {
 
   useEffect(() => {
     if (!open) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [open])
 
   const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), [])
@@ -882,8 +880,7 @@ function KnivesTab({ search }: { search: string }) {
 
   useEffect(() => {
     if (!open) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [open])
 
   const knives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
@@ -1006,8 +1003,7 @@ export default function ReferenceScreen() {
 
   useEffect(() => {
     if (!showConverter && !showHeatmap) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [showConverter, showHeatmap])
 
   function goTab(t: Tab) {

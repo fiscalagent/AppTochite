@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { db } from '../../db/instance'
-import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { startBlur } from '../../utils/modalBlur'
 import s from './OnboardingSheet.module.css'
 
 export default function OnboardingSheet() {
@@ -15,8 +15,7 @@ export default function OnboardingSheet() {
 
   useEffect(() => {
     if (!visible) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [visible])
 
   async function dismiss() {

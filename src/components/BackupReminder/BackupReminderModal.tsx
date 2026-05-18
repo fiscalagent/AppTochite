@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { startBlur } from '../../utils/modalBlur'
 import s from './BackupReminderModal.module.css'
 
 interface Props {
@@ -17,8 +17,7 @@ export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm
 
   useEffect(() => {
     if (!isOpen) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [isOpen])
 
   if (!isOpen) return null
