@@ -748,7 +748,7 @@ export default function SharpeningForm() {
               <input
                   value={hrc}
                   onChange={e => setHrc(e.target.value)}
-                  placeholder={dictation.isActive ? 'hrc ...' : '58'}
+                  placeholder={dictation.isActive ? 'твёрдость ...' : '58'}
                   type="number"
                   min={0}
                   max={70}
