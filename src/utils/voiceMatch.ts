@@ -84,7 +84,7 @@ function scoreCandidate(vLow: string, vNorm: string, vNormW: string, voiceGrit: 
   let score = 0
   // Grit hit — strong signal, word boundary by manual tokenization (avoid 1000 ⊂ 10000)
   if (voiceGrit && hasWholeWord(sLow, voiceGrit)) score += 40
-  if (sLow.includes(vLow) || vLow.includes(sLow)) score += 35
+  if (sNorm.includes(vNorm) || vNorm.includes(sNorm)) score += 35
   // Bigram similarity (good for long strings, partial word overlap)
   score += bigramSim(vNorm, sNorm) * 50
   // Levenshtein (good for single-char phonetic substitutions: вашита↔washita)
