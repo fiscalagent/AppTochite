@@ -27,6 +27,10 @@
   color: var(--text-100);
 }
 
+.headerRight {
+  margin-left: auto;
+}
+
 /* Stepper */
 .stepper {
   display: flex;

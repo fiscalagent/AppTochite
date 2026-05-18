@@ -1,0 +1,38 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-200);
+  background: transparent;
+  color: var(--text-200);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.btn:active {
+  background: var(--bg-200);
+}
+
+.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim, rgba(74, 144, 217, 0.15));
+  animation: pulseRing 1.3s ease-in-out infinite;
+}
+
+.disabled {
+  color: var(--text-400);
+  opacity: 0.4;
+  cursor: default;
+}
+
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-dim, rgba(74, 144, 217, 0.35)); }
+  50%      { box-shadow: 0 0 0 6px var(--accent-dim, rgba(74, 144, 217, 0.0)); }
+}

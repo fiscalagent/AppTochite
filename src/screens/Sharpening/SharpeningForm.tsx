@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -13,8 +13,12 @@ import { trackSharpening } from '../../services/analytics'
 import { startBlur, stopBlur } from '../../utils/modalBlur'
 import { useVoiceInput, type VoiceErrorCode } from '../../hooks/useVoiceInput'
 import { useTwoPhaseVoice } from '../../hooks/useTwoPhaseVoice'
+import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
 import { extractNumber, containsDoneKeyword, findClientMatch } from '../../utils/voiceMatch'
+import type { Command, CommandContext } from '../../utils/voiceCommand'
 import MicButton from '../../components/MicButton/MicButton'
+import DictationButton from '../../components/DictationButton/DictationButton'
+import DictationIndicator from '../../components/DictationIndicator/DictationIndicator'
 import { isVoiceEnabled } from '../../config/features'
 import s from './SharpeningForm.module.css'
 
@@ -108,8 +112,50 @@ export default function SharpeningForm() {
 
   const voice = useVoiceInput()
   const twoPhase = useTwoPhaseVoice()
+  const dictation = useDictationMode()
   // Tracks which single-field mic is currently listening (angle/price/hrc/comment/status)
   const [listeningField, setListeningField] = useState<string | null>(null)
+
+  // Dictation context — re-read on every recognition event via getContext().
+  const stepRef = useRef<1 | 2>(1)
+  useEffect(() => { stepRef.current = step as 1 | 2 }, [step])
+  const getDictationContext = (): CommandContext => ({
+    step: stepRef.current,
+    awaitingListField: null,
+    awaitingCancelConfirm: false,
+  })
+
+  function handleDictationCommand(cmd: Command, raw: string) {
+    // Шаг 3: диспетчера ещё нет — просто индикация что распознали.
+    if (cmd.kind === 'unknown') {
+      showToast(`Не понял: «${raw}»`)
+      return
+    }
+    showToast(`Команда: ${cmd.kind}`)
+  }
+
+  function handleDictationListenError(_code: DictationErrorCode) {
+    // Тихо — счётчик в хуке сам остановит после 3 подряд.
+  }
+
+  function handleDictationAutoStop(reason: AutoStopReason) {
+    if (reason === 'errors') showToast('Микрофон отключён, проверь связь')
+    else if (reason === 'fatal') showToast('Нет доступа к микрофону')
+    else if (reason === 'unavailable') showToast('Голосовой ввод недоступен офлайн')
+  }
+
+  function toggleDictation() {
+    if (dictation.isActive) {
+      dictation.stop()
+    } else {
+      dictation.start({
+        onCommand: handleDictationCommand,
+        getContext: getDictationContext,
+        onAutoStop: handleDictationAutoStop,
+        onListenError: handleDictationListenError,
+      })
+    }
+  }
 
   function handleVoiceError(code: VoiceErrorCode) {
     const msg = voiceErrorMessage(code)
@@ -372,7 +418,20 @@ export default function SharpeningForm() {
       <div className={s.header}>
         <button className={s.backBtn} onClick={() => step === 2 ? setStep(1) : navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>{isEdit ? 'РЕДАКТИРОВАТЬ' : 'НОВАЯ ЗАТОЧКА'}</span>
+        {isVoiceEnabled() && (
+          <div className={s.headerRight}>
+            <DictationButton
+              isAvailable={dictation.isAvailable}
+              isActive={dictation.isActive}
+              onToggle={toggleDictation}
+            />
+          </div>
+        )}
       </div>
+
+      {dictation.isActive && (
+        <DictationIndicator lastTranscript={dictation.lastTranscript} />
+      )}
 
       {/* Stepper */}
       <div className={s.stepper}>
