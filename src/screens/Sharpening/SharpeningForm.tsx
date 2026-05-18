@@ -126,6 +126,7 @@ export default function SharpeningForm() {
   const awaitingCancelConfirmRef = useRef(false)
   const lastRawRef = useRef('')
   const stoneInputRef = useRef('')
+  const cancelTimerRef = useRef<number | null>(null)
   useEffect(() => { stepRef.current = step as 1 | 2 }, [step])
   useEffect(() => { awaitingListFieldRef.current = awaitingListField }, [awaitingListField])
   useEffect(() => { awaitingCancelConfirmRef.current = awaitingCancelConfirm }, [awaitingCancelConfirm])
@@ -161,6 +162,35 @@ export default function SharpeningForm() {
     setAwaitingListField(null)
     setDictationCandidates(null)
   }
+
+  function clearCancelConfirm(silent: boolean) {
+    if (cancelTimerRef.current !== null) {
+      clearTimeout(cancelTimerRef.current)
+      cancelTimerRef.current = null
+    }
+    setAwaitingCancelConfirm(false)
+    awaitingCancelConfirmRef.current = false
+    if (!silent) showToast('Отмена сброшена')
+  }
+
+  function armCancelConfirm() {
+    if (cancelTimerRef.current !== null) clearTimeout(cancelTimerRef.current)
+    setAwaitingCancelConfirm(true)
+    awaitingCancelConfirmRef.current = true
+    cancelTimerRef.current = window.setTimeout(() => {
+      cancelTimerRef.current = null
+      setAwaitingCancelConfirm(false)
+      awaitingCancelConfirmRef.current = false
+      showToast('Отмена сброшена')
+    }, 5000)
+    showToast('Сказать «да» для отмены')
+  }
+
+  useEffect(() => {
+    return () => {
+      if (cancelTimerRef.current !== null) clearTimeout(cancelTimerRef.current)
+    }
+  }, [])
 
   function applyClientByName(name: string) {
     const c = clients?.find(cl => cl.name === name)
@@ -282,6 +312,11 @@ export default function SharpeningForm() {
       closeDictationList()
     }
 
+    // DI-41: any recognized non-confirmCancel command resets the cancel-confirm window.
+    if (awaitingCancelConfirmRef.current && cmd.kind !== 'confirmCancel' && cmd.kind !== 'unknown') {
+      clearCancelConfirm(true)
+    }
+
     switch (cmd.kind) {
       case 'field':
         applyFieldCommand(cmd.field, cmd.value)
@@ -307,19 +342,35 @@ export default function SharpeningForm() {
         showToast(`Очистить ${cmd.field}`)
         return
       case 'nav':
-        // Шаг 7.
-        showToast(`Навигация: ${cmd.action}`)
+        if (cmd.action === 'next') {
+          if (stepRef.current === 2) { showToast('Вы уже на последнем шаге'); return }
+          if (!canProceed) { showToast('Заполни клиента и нож'); return }
+          setStep(2)
+          return
+        }
+        if (cmd.action === 'prev') {
+          if (stepRef.current === 1) { showToast('Это первый шаг'); return }
+          setStep(1)
+          return
+        }
+        // cancel
+        armCancelConfirm()
         return
       case 'submit':
-        // Шаг 7.
-        showToast(cmd.markDone ? 'Готово (submit)' : 'Сохранить')
+        if (!clientId || !knifeBrand.trim()) {
+          showToast('Заполни клиента и нож')
+          return
+        }
+        dictation.stop()
+        handleSave({ markDoneOverride: cmd.markDone })
         return
       case 'stop':
         dictation.stop()
         return
       case 'confirmCancel':
-        // Шаг 7.
-        showToast('Подтверждено: отмена')
+        clearCancelConfirm(true)
+        dictation.stop()
+        navigate(-1)
         return
       case 'pickFromList':
         handlePickFromList(cmd.hint)
@@ -538,9 +589,12 @@ export default function SharpeningForm() {
     setNewStoneBrand(''); setNewStoneGritUnit(''); setNewStoneGrit(''); setNewStoneGritMk(''); setNewStoneType(''); setNewStoneOpen(false)
   }
 
-  async function handleSave() {
+  async function handleSave(opts: { markDoneOverride?: boolean } = {}) {
     if (!clientId || !knifeBrand.trim() || saving) return
     setSaving(true)
+
+    const effectiveStatus: SharpeningStatus = opts.markDoneOverride ? 'done' : status
+    const effectiveDoneAt = effectiveStatus === 'done' ? (doneAt ?? new Date()) : undefined
 
     const now = new Date()
 
@@ -586,8 +640,8 @@ export default function SharpeningForm() {
       stones: selectedStones.length ? selectedStones : undefined,
       comment: comment.trim() || undefined,
       price: price ? Number(price) : undefined,
-      status,
-      doneAt: status === 'done' ? (doneAt ?? new Date()) : undefined,
+      status: effectiveStatus,
+      doneAt: effectiveDoneAt,
       photosAfter: photosAfter.length ? photosAfter : undefined,
       updatedAt: new Date(),
     }
