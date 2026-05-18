@@ -76,7 +76,7 @@ function hasWholeWord(text: string, word: string): boolean {
   return tokenize(text).includes(word.toLowerCase())
 }
 
-function scoreCandidate(vLow: string, vNorm: string, vNormW: string, voiceGrit: string | undefined, sug: string): number {
+function scoreCandidate(vNorm: string, vNormW: string, voiceGrit: string | undefined, sug: string): number {
   const sLow = sug.toLowerCase()
   const sNorm = normForMatch(sLow)
   const vPh = phoneticNorm(vNorm)
@@ -110,7 +110,7 @@ export function findAllMatches(voiceText: string, suggestions: string[], minScor
 
   const scored: { name: string; score: number }[] = []
   for (const sug of suggestions) {
-    const score = scoreCandidate(vLow, vNorm, vNormW, voiceGrit, sug)
+    const score = scoreCandidate(vNorm, vNormW, voiceGrit,sug)
     if (score >= minScore) scored.push({ name: sug, score })
   }
   scored.sort((a, b) => b.score - a.score)
@@ -126,7 +126,7 @@ export function findBestMatch(voiceText: string, suggestions: string[], minScore
 
   let best: { name: string; score: number } | null = null
   for (const s of suggestions) {
-    const score = scoreCandidate(vLow, vNorm, vNormW, voiceGrit, s)
+    const score = scoreCandidate(vNorm, vNormW, voiceGrit,s)
     if (!best || score > best.score) best = { name: s, score }
   }
   return best && best.score >= minScore ? best.name : null
