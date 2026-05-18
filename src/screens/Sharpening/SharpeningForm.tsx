@@ -10,7 +10,7 @@ import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { trackSharpening } from '../../services/analytics'
-import { startBlur, stopBlur } from '../../utils/modalBlur'
+import { startBlur } from '../../utils/modalBlur'
 import { useVoiceInput, type VoiceErrorCode } from '../../hooks/useVoiceInput'
 import { useTwoPhaseVoice } from '../../hooks/useTwoPhaseVoice'
 import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
@@ -72,6 +72,33 @@ function parseStoneName(name: string): { brand: string; grit?: number; gritUnit?
   return { brand: name }
 }
 
+type RepeatState = {
+  clientId: number
+  knifeBrand: string
+  steel?: string
+  hrc?: number
+  angle?: number
+  stones?: SharpeningStone[]
+  price?: number
+}
+
+function parseRepeatState(state: unknown): RepeatState | undefined {
+  if (!state || typeof state !== 'object') return undefined
+  const r = (state as { repeat?: unknown }).repeat
+  if (!r || typeof r !== 'object') return undefined
+  const x = r as Record<string, unknown>
+  if (typeof x.clientId !== 'number' || typeof x.knifeBrand !== 'string') return undefined
+  return {
+    clientId: x.clientId,
+    knifeBrand: x.knifeBrand,
+    steel: typeof x.steel === 'string' ? x.steel : undefined,
+    hrc: typeof x.hrc === 'number' ? x.hrc : undefined,
+    angle: typeof x.angle === 'number' ? x.angle : undefined,
+    stones: Array.isArray(x.stones) ? (x.stones as SharpeningStone[]) : undefined,
+    price: typeof x.price === 'number' ? x.price : undefined,
+  }
+}
+
 export default function SharpeningForm() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
@@ -85,7 +112,7 @@ export default function SharpeningForm() {
     ? Number(searchParams.get('clientId'))
     : null
 
-  const repeat = !isEdit ? (location.state as { repeat?: { clientId: number; knifeBrand: string; steel?: string; hrc?: number; angle?: number; stones?: SharpeningStone[]; price?: number } } | null)?.repeat : undefined
+  const repeat = !isEdit ? parseRepeatState(location.state) : undefined
 
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
@@ -408,15 +435,36 @@ export default function SharpeningForm() {
     else if (reason === 'unavailable') showToast('Голосовой ввод недоступен офлайн')
   }
 
+  // Stable callback refs — recognition events fire with the closure captured at
+  // start() time, so we must read the latest handlers through a ref instead.
+  const dictationCallbacksRef = useRef({
+    onCommand: handleDictationCommand,
+    onAutoStop: handleDictationAutoStop,
+    onListenError: handleDictationListenError,
+  })
+  useEffect(() => {
+    dictationCallbacksRef.current = {
+      onCommand: handleDictationCommand,
+      onAutoStop: handleDictationAutoStop,
+      onListenError: handleDictationListenError,
+    }
+  })
+
   function toggleDictation() {
     if (dictation.isActive) {
       dictation.stop()
+      closeDictationList()
+      clearCancelConfirm(true)
     } else {
+      // Avoid two parallel SR sessions — kill any single-field mic first.
+      voice.stop()
+      twoPhase.cancel()
+      setListeningField(null)
       dictation.start({
-        onCommand: handleDictationCommand,
+        onCommand: (cmd, raw) => dictationCallbacksRef.current.onCommand(cmd, raw),
         getContext: getDictationContext,
-        onAutoStop: handleDictationAutoStop,
-        onListenError: handleDictationListenError,
+        onAutoStop: (reason) => dictationCallbacksRef.current.onAutoStop(reason),
+        onListenError: (code) => dictationCallbacksRef.current.onListenError(code),
       })
     }
   }
@@ -432,6 +480,8 @@ export default function SharpeningForm() {
       setListeningField(null)
       return
     }
+    // Avoid two parallel SR sessions — pause dictation if it's on.
+    if (dictation.isActive) dictation.stop()
     setListeningField(fieldName)
     voice.start({
       onResult: (text) => {
@@ -485,6 +535,8 @@ export default function SharpeningForm() {
             twoPhase.cancel()
             return
           }
+          // Avoid two parallel SR sessions — pause dictation if it's on.
+          if (dictation.isActive) dictation.stop()
           // If picker is visible, tapping mic re-runs voice (start() bumps session
           // and replaces state).
           twoPhase.start({
@@ -503,8 +555,7 @@ export default function SharpeningForm() {
 
   useEffect(() => {
     if (!newStoneOpen) return
-    startBlur()
-    return stopBlur
+    return startBlur()
   }, [newStoneOpen])
 
   const [newStoneBrand, setNewStoneBrand] = useState('')
@@ -544,8 +595,9 @@ export default function SharpeningForm() {
 
   useEffect(() => {
     if (!id) return
+    let cancelled = false
     db.sharpenings.get(Number(id)).then(sh => {
-      if (!sh) return
+      if (cancelled || !sh) return
       setClientId(sh.clientId)
       setKnifeBrand(sh.knifeBrand)
       setSteel(sh.steel ?? '')
@@ -561,6 +613,7 @@ export default function SharpeningForm() {
       setDoneAt(sh.doneAt)
       setPhotosAfter(sh.photosAfter ?? [])
     })
+    return () => { cancelled = true }
   }, [id])
 
   const sortedClients = clients
@@ -612,36 +665,6 @@ export default function SharpeningForm() {
 
     const now = new Date()
 
-    const knifeInRef = knifeSuggestions.some(k => k.toLowerCase() === knifeBrand.trim().toLowerCase())
-    if (!knifeInRef) {
-      await db.knives.add({ brand: knifeBrand.trim(), isCustom: true, updatedAt: now })
-    }
-
-    if (steel.trim()) {
-      const steelInRef = steelSuggestions.some(name => name.toLowerCase() === steel.trim().toLowerCase())
-      if (!steelInRef) {
-        await db.steels.add({ name: steel.trim(), isCustom: true, updatedAt: now })
-      }
-    }
-
-    if (selectedStones.length) {
-      const existingStones = await db.stones.toArray()
-      const existingKeys = new Set(existingStones.map(st => {
-        if (st.gritUnit === 'mk') return `${st.brand.toLowerCase()} mk:${st.gritMk ?? ''}`
-        return `${st.brand.toLowerCase()} ${st.grit ?? 0}`
-      }))
-      for (const stone of selectedStones) {
-        const parsed = parseStoneName(stone.name)
-        const key = parsed.gritUnit === 'mk'
-          ? `${parsed.brand.toLowerCase()} mk:${parsed.gritMk ?? ''}`
-          : `${parsed.brand.toLowerCase()} ${parsed.grit ?? 0}`
-        if (!existingKeys.has(key)) {
-          await db.stones.add({ brand: parsed.brand, grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk, type: 'ao', isCustom: true, updatedAt: now })
-          existingKeys.add(key)
-        }
-      }
-    }
-
     const data = {
       clientId,
       knifeBrand: knifeBrand.trim(),
@@ -657,20 +680,65 @@ export default function SharpeningForm() {
       status: effectiveStatus,
       doneAt: effectiveDoneAt,
       photosAfter: photosAfter.length ? photosAfter : undefined,
-      updatedAt: new Date(),
+      updatedAt: now,
     }
 
     try {
+      const savedId = await db.transaction(
+        'rw',
+        [db.knives, db.steels, db.stones, db.sharpenings],
+        async () => {
+          const addIfMissing = async <T,>(
+            value: string,
+            existing: string[],
+            add: (v: string) => Promise<T>,
+          ) => {
+            const v = value.trim()
+            if (!v) return
+            if (existing.some(e => e.toLowerCase() === v.toLowerCase())) return
+            await add(v)
+          }
+
+          await addIfMissing(knifeBrand, knifeSuggestions, v =>
+            db.knives.add({ brand: v, isCustom: true, updatedAt: now })
+          )
+          await addIfMissing(steel, steelSuggestions, v =>
+            db.steels.add({ name: v, isCustom: true, updatedAt: now })
+          )
+
+          if (selectedStones.length) {
+            const existingStones = await db.stones.toArray()
+            const existingKeys = new Set(existingStones.map(st => {
+              if (st.gritUnit === 'mk') return `${st.brand.toLowerCase()} mk:${st.gritMk ?? ''}`
+              return `${st.brand.toLowerCase()} ${st.grit ?? 0}`
+            }))
+            for (const stone of selectedStones) {
+              const parsed = parseStoneName(stone.name)
+              const key = parsed.gritUnit === 'mk'
+                ? `${parsed.brand.toLowerCase()} mk:${parsed.gritMk ?? ''}`
+                : `${parsed.brand.toLowerCase()} ${parsed.grit ?? 0}`
+              if (!existingKeys.has(key)) {
+                await db.stones.add({ brand: parsed.brand, grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk, type: 'ao', isCustom: true, updatedAt: now })
+                existingKeys.add(key)
+              }
+            }
+          }
+
+          if (isEdit) {
+            await db.sharpenings.update(Number(id), data)
+            return Number(id)
+          }
+          return Number(await db.sharpenings.add(data))
+        }
+      )
+
+      trackSharpening(data)
       if (isEdit) {
-        await db.sharpenings.update(Number(id), data)
-        trackSharpening(data)
         showToast('Заточка сохранена')
         navigate('/', { replace: true })
       } else {
-        const newId = await db.sharpenings.add(data)
-        trackSharpening(data)
         showToast('Заточка создана')
-        navigate(`/sharpenings/${newId}`)
+        navigate(`/sharpenings/${savedId}`)
       }
     } catch {
       showToast('Ошибка при сохранении')
