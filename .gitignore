@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Нагрузочные бэкапы — генерируются через scripts/generate-*.mjs, не для репо
+load-test-backup.json
+photo-load-test-backup.json
+
+# Видео презентации — генерируется через presentation/generate-video.js
+presentation/*.mp4
+
 # Claude Code
 .claude/
 
