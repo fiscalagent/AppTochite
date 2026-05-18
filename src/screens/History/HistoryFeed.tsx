@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus } from '../../db/instance'
@@ -36,7 +36,13 @@ function dayLabel(date: Date | string) {
 export default function HistoryFeed() {
   const [filter, setFilter] = useState<Filter>('all')
   const [query, setQuery] = useState('')
+  const filterKey = `${filter}|${query.trim().toLowerCase()}`
+  const [activeKey, setActiveKey] = useState(filterKey)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  if (activeKey !== filterKey) {
+    setActiveKey(filterKey)
+    setVisibleCount(PAGE_SIZE)
+  }
 
   const data = useLiveQuery(async () => {
     const sharpenings = await db.sharpenings.orderBy('receivedAt').reverse().toArray()
@@ -65,11 +71,6 @@ export default function HistoryFeed() {
       )
     })
   }, [data, filter, query])
-
-  // reset pagination when search or filter changes
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE) // eslint-disable-line react-hooks/set-state-in-effect
-  }, [filter, query])
 
   const visible = filtered.slice(0, visibleCount)
   const hasMore = visibleCount < filtered.length
