@@ -1,0 +1,85 @@
+erDiagram
+    clients {
+        number id PK
+        string name
+        string phone
+        string telegram
+        string avatar
+        boolean isSelf
+        Date createdAt
+        Date updatedAt
+    }
+
+    sharpenings {
+        number id PK
+        number clientId FK
+        string knifeBrand
+        string steel
+        number hrc
+        string[] condition
+        Date receivedAt
+        number angle
+        SharpeningStone[] stones
+        string comment
+        number price
+        string status
+        Date doneAt
+        string[] photosBefore
+        string[] photosAfter
+        Date updatedAt
+    }
+
+    stones {
+        number id PK
+        string brand
+        number grit
+        string gritUnit
+        string gritMk
+        string type
+        string coolant
+        string category
+        string description
+        boolean isCustom
+        Date updatedAt
+    }
+
+    steels {
+        number id PK
+        string name
+        number hrc
+        string category
+        string description
+        boolean isCustom
+        Date updatedAt
+    }
+
+    knives {
+        number id PK
+        string brand
+        string country
+        string steel
+        number recommendedAngle
+        string type
+        string category
+        string description
+        boolean isCustom
+        Date updatedAt
+    }
+
+    meta {
+        string key PK
+        any value
+    }
+
+    settings {
+        string key PK
+        any value
+    }
+
+    analyticsQueue {
+        number id PK
+        string payload
+        Date queuedAt
+    }
+
+    clients ||--o{ sharpenings : "clientId"

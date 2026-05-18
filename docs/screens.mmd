@@ -1,0 +1,57 @@
+flowchart TD
+    NAV["🧭 BottomNav / FAB\n(присутствует на всех экранах)"]
+
+    NAV -->|"Клиенты"| C1
+    NAV -->|"История"| H1
+    NAV -->|"Справочники"| S
+    NAV -->|"FAB + Заточка"| Z1
+
+    C1["C-1 Список клиентов\n/"]
+    C1 -->|"тап на клиента"| C2
+    C1 -->|"+ Клиент"| C3new
+    C1 -->|"иконка бэкап"| BK1
+
+    C2["C-2 Карточка клиента\n/clients/:id"]
+    C2 -->|"Редактировать"| C3edit
+    C2 -->|"+ Заточка"| Z1
+    C2 -->|"тап на заточку"| Z2
+    C2 -->|"назад / удалить"| C1
+
+    C3new["C-3 Новый клиент\n/clients/new"]
+    C3edit["C-3 Редактировать клиента\n/clients/:id/edit"]
+    C3new -->|"сохранить"| C2
+    C3new -->|"отмена"| C1
+    C3edit -->|"сохранить"| C2
+    C3edit -->|"отмена"| C1
+
+    H1["H-1 Лента заточек\n/history"]
+    H1 -->|"тап на заточку"| Z2
+
+    Z1["Z-1 Форма заточки\n/sharpenings/new\n/sharpenings/:id/edit\n\nШаг 1: Приёмка\nШаг 2: Заточка"]
+    Z1 -->|"сохранить"| Z2
+    Z1 -->|"отмена"| C1
+
+    Z2["Z-2 Просмотр заточки\n/sharpenings/:id"]
+    Z2 -->|"Редактировать"| Z1
+    Z2 -->|"Повторить заточку"| Z1
+    Z2 -->|"ссылка на клиента"| C2
+
+    S["S-1/2/3 Справочники\n/reference/:tab\n\ntab: stones / steels / knives"]
+
+    BK1["BK-1 Бэкап и восстановление\n/backup"]
+    BK1 -->|"О программе"| A1
+    BK1 -->|"после импорта"| C1
+
+    A1["A-1 О программе\n/about"]
+
+    style NAV fill:#4A90D9,color:#fff,stroke:#2e6da4
+    style C1 fill:#dbeeff,stroke:#4A90D9
+    style C2 fill:#dbeeff,stroke:#4A90D9
+    style C3new fill:#dbeeff,stroke:#4A90D9
+    style C3edit fill:#dbeeff,stroke:#4A90D9
+    style H1 fill:#dbeeff,stroke:#4A90D9
+    style Z1 fill:#fff8e1,stroke:#f0a500
+    style Z2 fill:#fff8e1,stroke:#f0a500
+    style S fill:#e8f8f1,stroke:#3DB87A
+    style BK1 fill:#f5f5f5,stroke:#999
+    style A1 fill:#f5f5f5,stroke:#999
