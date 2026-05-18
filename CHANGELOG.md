@@ -1,3 +1,10 @@
+## [1.56.3](https://github.com/fiscalagent/AppTochite/compare/v1.56.2...v1.56.3) (2026-05-18)
+
+
+### fix
+
+* диктовка показывает список кандидатов, когда их несколько (раньше всегда применяла первый) ([](https://github.com/fiscalagent/AppTochite/commit/1f9cb2658ae09cdd04084bf851b5f62bce8bf40d))
+
 ## [1.56.2](https://github.com/fiscalagent/AppTochite/compare/v1.56.1...v1.56.2) (2026-05-18)
 
 
