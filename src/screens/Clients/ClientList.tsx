@@ -57,24 +57,30 @@ export default function ClientList() {
   const [query, setQuery] = useState('')
   const { hasUpdate } = useVersionCheck()
   const rows = useLiveQuery<ClientRow[]>(async () => {
-    const clients = await db.clients.orderBy('name').toArray()
+    const [clients, allSharpenings] = await Promise.all([
+      db.clients.orderBy('name').toArray(),
+      db.sharpenings.toArray(),
+    ])
+
+    const counts = new Map<number, { count: number; accepted: number; done: number }>()
+    for (const sh of allSharpenings) {
+      const c = counts.get(sh.clientId) ?? { count: 0, accepted: 0, done: 0 }
+      c.count++
+      if (sh.status === 'accepted') c.accepted++
+      else if (sh.status === 'done') c.done++
+      counts.set(sh.clientId, c)
+    }
+
     // «Я» — всегда первый
     const sorted = [
       ...clients.filter(c => c.isSelf),
       ...clients.filter(c => !c.isSelf),
     ]
 
-    return Promise.all(
-      sorted.map(async (client) => {
-        const sharpenings = await db.sharpenings
-          .where('clientId').equals(client.id!)
-          .toArray()
-        const count = sharpenings.length
-        const acceptedCount = sharpenings.filter(s => s.status === 'accepted').length
-        const doneCount = sharpenings.filter(s => s.status === 'done').length
-        return { client, count, acceptedCount, doneCount }
-      })
-    )
+    return sorted.map(client => {
+      const c = counts.get(client.id!) ?? { count: 0, accepted: 0, done: 0 }
+      return { client, count: c.count, acceptedCount: c.accepted, doneCount: c.done }
+    })
   }, [])
 
   const trimmed = query.trim()
