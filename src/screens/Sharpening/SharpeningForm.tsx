@@ -1222,7 +1222,7 @@ export default function SharpeningForm() {
           )}
 
           <div className={s.actions}>
-            <button className={s.primaryBtn} onClick={handleSave} disabled={saving}>
+            <button className={s.primaryBtn} onClick={() => handleSave()} disabled={saving}>
               {saving ? 'Сохранение…' : (isEdit ? 'Сохранить' : 'Сохранить заточку')}
             </button>
             <button className={s.secondaryBtn} onClick={() => setStep(1)}>
