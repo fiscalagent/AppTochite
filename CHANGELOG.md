@@ -1,3 +1,21 @@
+# [1.55.0](https://github.com/fiscalagent/AppTochite/compare/v1.54.1...v1.55.0) (2026-05-18)
+
+
+### feat
+
+* голосовая диктовка — диспетчер команд с поддержкой стоп и повтори ([](https://github.com/fiscalagent/AppTochite/commit/34e8fa2600c781d886598fa0f7fcdd888951d345))
+* голосовая диктовка — кнопка-тумблер и индикатор «слышу» в шапке формы заточки ([](https://github.com/fiscalagent/AppTochite/commit/4a9ead3833ef1921c6cd76ec81ddbab2bf063e4a))
+* голосовая диктовка — команды Заточки и добавление камня в список ([](https://github.com/fiscalagent/AppTochite/commit/e321acfbf4e45851af6dd6fbfa3804bb3ba4b594))
+* голосовая диктовка — команды Приёмки и список кандидатов для fuzzy-выбора ([](https://github.com/fiscalagent/AppTochite/commit/40eb0372b8cb20b59f946ca0f3689a9c4c2fee69))
+* голосовая диктовка — коррекции: очистить поле и удалить последний камень ([](https://github.com/fiscalagent/AppTochite/commit/dc9b6229a2879361748c3146ef66010eaf4b197c))
+* голосовая диктовка — навигация, сохранение и подтверждение отмены ([](https://github.com/fiscalagent/AppTochite/commit/b733a6c2c8b686cc5f6de078cd662aea5acdd5c8))
+* голосовая диктовка — хук непрерывного слушания с авто-перезапуском ([](https://github.com/fiscalagent/AppTochite/commit/0e4ffacbd63176189638774092b81844747121ce))
+
+
+### fix
+
+* голосовая диктовка — устранены stale closure в колбэках и конфликт двух SR-сессий ([](https://github.com/fiscalagent/AppTochite/commit/c7d5672f1feee8fd3bf89285cf760e9e294f6e72))
+
 ## [1.54.1](https://github.com/fiscalagent/AppTochite/compare/v1.54.0...v1.54.1) (2026-05-17)
 
 
