@@ -1,3 +1,10 @@
+## [1.55.1](https://github.com/fiscalagent/AppTochite/compare/v1.55.0...v1.55.1) (2026-05-18)
+
+
+### fix
+
+* тип handleSave стал несовместим с onClick — обернул в стрелку ([](https://github.com/fiscalagent/AppTochite/commit/bec1ecd7458d97ded0ef518cd71ba447bc256422))
+
 # [1.55.0](https://github.com/fiscalagent/AppTochite/compare/v1.54.1...v1.55.0) (2026-05-18)
 
 
