@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.56.2',
+    date: '2026-05-18',
+    changes: [
+      'фокус на поле клиента и серый цвет placeholder в select',
+    ],
+  },
+  {
     version: '1.56.1',
     date: '2026-05-18',
     changes: [

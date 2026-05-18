@@ -1,3 +1,10 @@
+## [1.56.2](https://github.com/fiscalagent/AppTochite/compare/v1.56.1...v1.56.2) (2026-05-18)
+
+
+### fix
+
+* фокус на поле клиента и серый цвет placeholder в select ([](https://github.com/fiscalagent/AppTochite/commit/aca81abc5d4aff27081332e9bff27eb443c264e6))
+
 ## [1.56.1](https://github.com/fiscalagent/AppTochite/compare/v1.56.0...v1.56.1) (2026-05-18)
 
 
