@@ -1,3 +1,15 @@
+# [1.56.0](https://github.com/fiscalagent/AppTochite/compare/v1.55.2...v1.56.0) (2026-05-18)
+
+
+### feat
+
+* диктовка — поля «твёрдость/HRC/ХРЦ», синонимы «камни», «комментарий/комментарии» ([](https://github.com/fiscalagent/AppTochite/commit/929bea38a75d989617bff98275112362911e546b))
+
+
+### fix
+
+* fuzzy-поиск равноправен для кириллицы и латиницы — Grinderman 1000 и Гриндерман 120 оба в списке ([](https://github.com/fiscalagent/AppTochite/commit/1b6274247b664dd191d54a53d83f1c792f807d3a))
+
 ## [1.55.2](https://github.com/fiscalagent/AppTochite/compare/v1.55.1...v1.55.2) (2026-05-18)
 
 
