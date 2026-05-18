@@ -14,11 +14,12 @@ import { startBlur, stopBlur } from '../../utils/modalBlur'
 import { useVoiceInput, type VoiceErrorCode } from '../../hooks/useVoiceInput'
 import { useTwoPhaseVoice } from '../../hooks/useTwoPhaseVoice'
 import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
-import { extractNumber, containsDoneKeyword, findClientMatch } from '../../utils/voiceMatch'
+import { extractNumber, containsDoneKeyword, findClientMatch, findBestMatch, findAllMatches, pickFromFiltered } from '../../utils/voiceMatch'
 import type { Command, CommandContext, FieldKey } from '../../utils/voiceCommand'
 import MicButton from '../../components/MicButton/MicButton'
 import DictationButton from '../../components/DictationButton/DictationButton'
 import DictationIndicator from '../../components/DictationIndicator/DictationIndicator'
+import DictationCandidates from '../../components/DictationCandidates/DictationCandidates'
 import { isVoiceEnabled } from '../../config/features'
 import s from './SharpeningForm.module.css'
 
@@ -119,6 +120,7 @@ export default function SharpeningForm() {
   // Dictation context — re-read on every recognition event via getContext().
   const [awaitingListField, setAwaitingListField] = useState<FieldKey | null>(null)
   const [awaitingCancelConfirm, setAwaitingCancelConfirm] = useState(false)
+  const [dictationCandidates, setDictationCandidates] = useState<{ field: FieldKey; items: string[] } | null>(null)
   const stepRef = useRef<1 | 2>(1)
   const awaitingListFieldRef = useRef<FieldKey | null>(null)
   const awaitingCancelConfirmRef = useRef(false)
@@ -132,13 +134,147 @@ export default function SharpeningForm() {
     awaitingCancelConfirm: awaitingCancelConfirmRef.current,
   })
 
+  function fieldLabel(f: FieldKey): string {
+    switch (f) {
+      case 'client': return 'Клиент'
+      case 'knife': return 'Нож'
+      case 'steel': return 'Сталь'
+      case 'condition': return 'Требуется'
+      case 'notes': return 'Примечание'
+      case 'stone': return 'Камень'
+      case 'angle': return 'Угол'
+      case 'price': return 'Цена'
+    }
+  }
+
+  function normalizeConditionValue(v: string): string | null {
+    const lc = v.toLowerCase().trim()
+    if (lc === 'заточка') return 'заточка'
+    if (lc === 'ремонт') return 'ремонт'
+    if (lc === 'правка' || lc === 'правка рк') return 'правка РК'
+    return null
+  }
+
+  function closeDictationList() {
+    setAwaitingListField(null)
+    setDictationCandidates(null)
+  }
+
+  function applyClientByName(name: string) {
+    const c = clients?.find(cl => cl.name === name)
+    if (c?.id) setClientId(c.id)
+  }
+
+  function applyByField(field: FieldKey, item: string) {
+    switch (field) {
+      case 'client': applyClientByName(item); break
+      case 'knife': setKnifeBrand(item); break
+      case 'steel': setSteel(item); break
+      case 'stone': setStoneInput(item); break
+      default: break
+    }
+  }
+
+  function dispatchFuzzyField(
+    field: FieldKey,
+    value: string,
+    suggestions: string[],
+  ) {
+    if (!value.trim() || suggestions.length === 0) {
+      showToast(`${fieldLabel(field)} не найдено`)
+      return
+    }
+    const top = findBestMatch(value, suggestions, 70)
+    const all = findAllMatches(value, suggestions, 30)
+
+    // High confidence: top is clearly the only strong match
+    if (top && (all.length <= 1 || all[0] === top)) {
+      applyByField(field, top)
+      closeDictationList()
+      showToast(`${fieldLabel(field)}: ${top}`)
+      return
+    }
+
+    if (all.length > 0) {
+      setDictationCandidates({ field, items: all })
+      setAwaitingListField(field)
+      showToast(`Уточни ${fieldLabel(field).toLowerCase()}`)
+      return
+    }
+
+    showToast(`${fieldLabel(field)} не найдено`)
+  }
+
+  function applyClientCommand(value: string) {
+    const names = (clients ?? []).map(c => c.name)
+    const single = findClientMatch(value, names)
+    if (single) {
+      applyClientByName(single)
+      closeDictationList()
+      showToast(`Клиент: ${single}`)
+      return
+    }
+    const all = findAllMatches(value, names, 30)
+    if (all.length > 0) {
+      setDictationCandidates({ field: 'client', items: all })
+      setAwaitingListField('client')
+      showToast('Уточни клиента')
+      return
+    }
+    showToast('Клиент не найден')
+  }
+
   function applyFieldCommand(field: FieldKey, value: string) {
-    // Шаги 5-6 заменят на реальные обработчики (fuzzy + setters).
-    showToast(`Поле ${field}: ${value}`)
+    switch (field) {
+      case 'client':
+        applyClientCommand(value)
+        return
+      case 'knife':
+        dispatchFuzzyField('knife', value, knifeSuggestions)
+        return
+      case 'steel':
+        dispatchFuzzyField('steel', value, steelSuggestions)
+        return
+      case 'condition': {
+        const chip = normalizeConditionValue(value)
+        if (!chip) { showToast('Не понял требование'); return }
+        toggleCondition(chip)
+        showToast(`Требуется: ${chip}`)
+        return
+      }
+      case 'notes':
+        setComment(prev => prev ? `${prev} ${value}` : value)
+        showToast('Дописано в примечание')
+        return
+      case 'stone':
+      case 'angle':
+      case 'price':
+        // Шаг 6.
+        showToast(`Поле ${field}: ${value}`)
+        return
+    }
+  }
+
+  function handlePickFromList(hint: string) {
+    const list = dictationCandidates
+    const field = awaitingListField
+    if (!list || !field) return
+    const picked = pickFromFiltered(hint, list.items)
+    if (!picked) return  // mismatch — list stays per β
+    applyByField(field, picked)
+    closeDictationList()
+    showToast(`${fieldLabel(field)}: ${picked}`)
   }
 
   function handleDictationCommand(cmd: Command, raw: string) {
     lastRawRef.current = raw
+
+    // Variant β: any valid non-pick non-unknown command while list is hanging closes it first.
+    if (awaitingListFieldRef.current && cmd.kind !== 'pickFromList' && cmd.kind !== 'unknown') {
+      // For same-field field command, dispatchFuzzyField/applyClientCommand will reopen the list as needed.
+      closeDictationList()
+    }
+
     switch (cmd.kind) {
       case 'field':
         applyFieldCommand(cmd.field, cmd.value)
@@ -171,8 +307,7 @@ export default function SharpeningForm() {
         showToast('Подтверждено: отмена')
         return
       case 'pickFromList':
-        // Шаги 5-6 (вместе с fuzzy-списками).
-        showToast(`Выбор из списка: ${cmd.hint}`)
+        handlePickFromList(cmd.hint)
         return
       case 'repeat':
         showToast(`Слышал: «${lastRawRef.current}»`)
@@ -480,6 +615,19 @@ export default function SharpeningForm() {
 
       {dictation.isActive && (
         <DictationIndicator lastTranscript={dictation.lastTranscript} />
+      )}
+
+      {dictationCandidates && (
+        <DictationCandidates
+          label={fieldLabel(dictationCandidates.field).toLowerCase()}
+          items={dictationCandidates.items}
+          onPick={(item) => {
+            applyByField(dictationCandidates.field, item)
+            closeDictationList()
+            showToast(`${fieldLabel(dictationCandidates.field)}: ${item}`)
+          }}
+          onClose={closeDictationList}
+        />
       )}
 
       {/* Stepper */}

@@ -35,7 +35,7 @@ const FIELD_BY_PREFIX: Record<string, FieldKey> = {
   'нож': 'knife',
   'сталь': 'steel',
   'камень': 'stone',
-  'состояние': 'condition',
+  'требуется': 'condition',
   'примечание': 'notes',
   'угол': 'angle',
   'цена': 'price',
@@ -46,7 +46,7 @@ const CLEAR_FIELD_MAP: Record<string, FieldKey> = {
   'клиента': 'client',
   'нож': 'knife',
   'сталь': 'steel',
-  'состояние': 'condition',
+  'требуется': 'condition',
   'примечание': 'notes',
   'примечания': 'notes',
   'камень': 'stone',
@@ -55,7 +55,7 @@ const CLEAR_FIELD_MAP: Record<string, FieldKey> = {
   'цену': 'price',
 }
 
-const CONDITION_VALUES: ReadonlySet<string> = new Set(['тупой', 'средний', 'острый'])
+const CONDITION_VALUES: ReadonlySet<string> = new Set(['заточка', 'правка', 'правка рк', 'ремонт'])
 
 const FILLERS: ReadonlySet<string> = new Set(['эм', 'ээ', 'эээ', 'мм', 'ммм', 'ну'])
 

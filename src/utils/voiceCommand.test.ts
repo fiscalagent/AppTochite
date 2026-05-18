@@ -27,26 +27,32 @@ describe('Команды Приёмки (step=1)', () => {
     })
   })
 
-  it('состояние тупой → chip', () => {
-    expect(parseCommand('состояние тупой', ctx())).toEqual({
-      kind: 'field', field: 'condition', value: 'тупой',
+  it('требуется заточка → chip', () => {
+    expect(parseCommand('требуется заточка', ctx())).toEqual({
+      kind: 'field', field: 'condition', value: 'заточка',
     })
   })
 
-  it('состояние средний → chip', () => {
-    expect(parseCommand('состояние средний', ctx())).toEqual({
-      kind: 'field', field: 'condition', value: 'средний',
+  it('требуется правка → chip', () => {
+    expect(parseCommand('требуется правка', ctx())).toEqual({
+      kind: 'field', field: 'condition', value: 'правка',
     })
   })
 
-  it('состояние острый → chip', () => {
-    expect(parseCommand('состояние острый', ctx())).toEqual({
-      kind: 'field', field: 'condition', value: 'острый',
+  it('требуется правка рк → chip', () => {
+    expect(parseCommand('требуется правка рк', ctx())).toEqual({
+      kind: 'field', field: 'condition', value: 'правка рк',
     })
   })
 
-  it('состояние с невалидным значением → unknown', () => {
-    expect(parseCommand('состояние плохое', ctx())).toEqual({ kind: 'unknown' })
+  it('требуется ремонт → chip', () => {
+    expect(parseCommand('требуется ремонт', ctx())).toEqual({
+      kind: 'field', field: 'condition', value: 'ремонт',
+    })
+  })
+
+  it('требуется с невалидным значением → unknown', () => {
+    expect(parseCommand('требуется что-то непонятное', ctx())).toEqual({ kind: 'unknown' })
   })
 
   it('примечание <текст> → весь хвост в value', () => {
