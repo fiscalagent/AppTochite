@@ -1,3 +1,13 @@
+## [1.55.2](https://github.com/fiscalagent/AppTochite/compare/v1.55.1...v1.55.2) (2026-05-18)
+
+
+### fix
+
+* HistoryFeed сбрасывает страницу без лишнего эффекта ([](https://github.com/fiscalagent/AppTochite/commit/b728e7dcd65d2a23052e9d544bd57e5f0e96f0ab))
+* атомарность БД-операций — транзакции при удалении клиента и updatedAt у аватара ([](https://github.com/fiscalagent/AppTochite/commit/a717c9fd0a64e36d2ff17cfdd64580c3abe0ac13))
+* блюр модалок устойчив к наложению — переход на токены вместо глобального счётчика ([](https://github.com/fiscalagent/AppTochite/commit/46fffe3c43f0b62853cc52bd7722447273815a7d))
+* список клиентов открывается быстрее — один запрос вместо N+1 ([](https://github.com/fiscalagent/AppTochite/commit/138d0f249c80dd9d14c92c5b2b8443f0299d1169))
+
 ## [1.55.1](https://github.com/fiscalagent/AppTochite/compare/v1.55.0...v1.55.1) (2026-05-18)
 
 
