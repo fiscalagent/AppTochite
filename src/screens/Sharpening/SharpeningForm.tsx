@@ -14,7 +14,7 @@ import { startBlur } from '../../utils/modalBlur'
 import { useVoiceInput, type VoiceErrorCode } from '../../hooks/useVoiceInput'
 import { useTwoPhaseVoice } from '../../hooks/useTwoPhaseVoice'
 import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
-import { extractNumber, containsDoneKeyword, findClientMatch, findBestMatch, findAllMatches, pickFromFiltered } from '../../utils/voiceMatch'
+import { extractNumber, containsDoneKeyword, findClientMatch, findAllMatches, pickFromFiltered } from '../../utils/voiceMatch'
 import type { Command, CommandContext, FieldKey } from '../../utils/voiceCommand'
 import MicButton from '../../components/MicButton/MicButton'
 import DictationButton from '../../components/DictationButton/DictationButton'
@@ -246,18 +246,16 @@ export default function SharpeningForm() {
       showToast(`${fieldLabel(field)} не найдено`)
       return
     }
-    const top = findBestMatch(value, suggestions, 70)
     const all = findAllMatches(value, suggestions, 30)
 
-    // High confidence: top is clearly the only strong match
-    if (top && (all.length <= 1 || all[0] === top)) {
-      applyByField(field, top)
+    if (all.length === 1) {
+      applyByField(field, all[0])
       closeDictationList()
-      showToast(`${fieldLabel(field)}: ${top}`)
+      showToast(`${fieldLabel(field)}: ${all[0]}`)
       return
     }
 
-    if (all.length > 0) {
+    if (all.length > 1) {
       setDictationCandidates({ field, items: all })
       setAwaitingListField(field)
       showToast(`Уточни ${fieldLabel(field).toLowerCase()}`)
