@@ -78,8 +78,10 @@ export default function ClientForm() {
 
   async function handleDelete() {
     if (!id) return
-    await db.sharpenings.where('clientId').equals(Number(id)).delete()
-    await db.clients.delete(Number(id))
+    await db.transaction('rw', [db.sharpenings, db.clients], async () => {
+      await db.sharpenings.where('clientId').equals(Number(id)).delete()
+      await db.clients.delete(Number(id))
+    })
     showToast('Клиент удалён')
     navigate('/')
   }

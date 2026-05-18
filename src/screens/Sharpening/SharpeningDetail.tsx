@@ -95,7 +95,12 @@ export default function SharpeningDetail() {
   )
   async function handleMarkDone() {
     const doneAt = new Date()
-    await db.sharpenings.update(sharpeningId, { status: 'done', doneAt })
+    try {
+      await db.sharpenings.update(sharpeningId, { status: 'done', doneAt })
+    } catch {
+      showToast('Ошибка при сохранении')
+      return
+    }
     if (sh) trackSharpening({ ...sh, status: 'done', doneAt })
     showToast('Статус обновлён — готово!')
     setPhotoModal(true)

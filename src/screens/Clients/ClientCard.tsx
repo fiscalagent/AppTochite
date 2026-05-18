@@ -52,8 +52,10 @@ export default function ClientCard() {
   )
 
   async function handleDelete() {
-    await db.sharpenings.where('clientId').equals(clientId).delete()
-    await db.clients.delete(clientId)
+    await db.transaction('rw', [db.sharpenings, db.clients], async () => {
+      await db.sharpenings.where('clientId').equals(clientId).delete()
+      await db.clients.delete(clientId)
+    })
     showToast('Клиент удалён')
     navigate('/')
   }
@@ -210,8 +212,8 @@ export default function ClientCard() {
 
       {avatarSheetOpen && (
         <PhotoSourceSheet
-          onCamera={() => pickAvatarFile(true, b64 => db.clients.update(clientId, { avatar: b64 }))}
-          onGallery={() => pickAvatarFile(false, b64 => db.clients.update(clientId, { avatar: b64 }))}
+          onCamera={() => pickAvatarFile(true, b64 => db.clients.update(clientId, { avatar: b64, updatedAt: new Date() }))}
+          onGallery={() => pickAvatarFile(false, b64 => db.clients.update(clientId, { avatar: b64, updatedAt: new Date() }))}
           onClose={() => setAvatarSheetOpen(false)}
         />
       )}

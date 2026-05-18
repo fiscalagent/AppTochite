@@ -7,8 +7,7 @@ export interface Meta {
 
 export interface Setting {
   key: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any
+  value: unknown
 }
 
 export interface Client {
