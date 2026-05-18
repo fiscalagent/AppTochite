@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.56.1',
+    date: '2026-05-18',
+    changes: [
+      'убран неиспользуемый параметр vLow в scoreCandidate — падение CI',
+      'диктовка — поля «твёрдость/HRC/ХРЦ», синонимы «камни», «комментарий/комментарии»',
+      'fuzzy-поиск равноправен для кириллицы и латиницы — Grinderman 1000 и Гриндерман 120 оба в списке',
+    ],
+  },
+  {
     version: '1.56.0',
     date: '2026-05-18',
     changes: [

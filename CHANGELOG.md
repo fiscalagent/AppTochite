@@ -1,3 +1,10 @@
+## [1.56.1](https://github.com/fiscalagent/AppTochite/compare/v1.56.0...v1.56.1) (2026-05-18)
+
+
+### fix
+
+* убран неиспользуемый параметр vLow в scoreCandidate — падение CI ([](https://github.com/fiscalagent/AppTochite/commit/2898b687917fab01baecf974af40227eaabe2859))
+
 # [1.56.0](https://github.com/fiscalagent/AppTochite/compare/v1.55.2...v1.56.0) (2026-05-18)
 
 
