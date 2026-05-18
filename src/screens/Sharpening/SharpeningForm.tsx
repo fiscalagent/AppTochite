@@ -11,28 +11,15 @@ import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { trackSharpening } from '../../services/analytics'
 import { startBlur } from '../../utils/modalBlur'
-import { useVoiceInput, type VoiceErrorCode } from '../../hooks/useVoiceInput'
-import { useTwoPhaseVoice } from '../../hooks/useTwoPhaseVoice'
 import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
-import { extractNumber, containsDoneKeyword, findClientMatch, findAllMatches, pickFromFiltered } from '../../utils/voiceMatch'
+import { findClientMatch, findAllMatches, pickFromFiltered } from '../../utils/voiceMatch'
 import type { Command, CommandContext, FieldKey } from '../../utils/voiceCommand'
-import MicButton from '../../components/MicButton/MicButton'
 import DictationButton from '../../components/DictationButton/DictationButton'
 import DictationIndicator from '../../components/DictationIndicator/DictationIndicator'
 import DictationCandidates from '../../components/DictationCandidates/DictationCandidates'
 import { isVoiceEnabled } from '../../config/features'
 import s from './SharpeningForm.module.css'
 
-function voiceErrorMessage(code: VoiceErrorCode): string {
-  switch (code) {
-    case 'not-allowed': return 'Нет доступа к микрофону'
-    case 'no-speech': return 'Не услышал — попробуйте ещё раз'
-    case 'network': return 'Голосовой ввод недоступен офлайн'
-    case 'audio-capture': return 'Микрофон недоступен'
-    case 'aborted': return ''
-    default: return 'Ошибка голосового ввода'
-  }
-}
 
 const IconChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -138,11 +125,7 @@ export default function SharpeningForm() {
   const [doneAt, setDoneAt] = useState<Date | undefined>(undefined)
   const [photosAfter, setPhotosAfter] = useState<string[]>([])
 
-  const voice = useVoiceInput()
-  const twoPhase = useTwoPhaseVoice()
   const dictation = useDictationMode()
-  // Tracks which single-field mic is currently listening (angle/price/hrc/comment/status)
-  const [listeningField, setListeningField] = useState<string | null>(null)
 
   // Dictation context — re-read on every recognition event via getContext().
   const [awaitingListField, setAwaitingListField] = useState<FieldKey | null>(null)
@@ -460,10 +443,6 @@ export default function SharpeningForm() {
       closeDictationList()
       clearCancelConfirm(true)
     } else {
-      // Avoid two parallel SR sessions — kill any single-field mic first.
-      voice.stop()
-      twoPhase.cancel()
-      setListeningField(null)
       dictation.start({
         onCommand: (cmd, raw) => dictationCallbacksRef.current.onCommand(cmd, raw),
         getContext: getDictationContext,
@@ -473,87 +452,6 @@ export default function SharpeningForm() {
     }
   }
 
-  function handleVoiceError(code: VoiceErrorCode) {
-    const msg = voiceErrorMessage(code)
-    if (msg) showToast(msg)
-  }
-
-  function toggleSimpleVoice(fieldName: string, onResult: (text: string) => void) {
-    if (listeningField === fieldName) {
-      voice.stop()
-      setListeningField(null)
-      return
-    }
-    // Avoid two parallel SR sessions — pause dictation if it's on.
-    if (dictation.isActive) dictation.stop()
-    setListeningField(fieldName)
-    voice.start({
-      onResult: (text) => {
-        onResult(text)
-        setListeningField(null)
-      },
-      onEnd: () => setListeningField(null),
-      onError: (code) => {
-        setListeningField(null)
-        handleVoiceError(code)
-      },
-    })
-  }
-
-  function micBtn(fieldName: string, onResult: (text: string) => void) {
-    if (!isVoiceEnabled()) return undefined
-    return (
-      <MicButton
-        isAvailable={voice.isAvailable}
-        isListening={listeningField === fieldName}
-        onToggle={() => {
-          if (!voice.isAvailable) {
-            showToast('Голосовой ввод недоступен офлайн')
-            return
-          }
-          toggleSimpleVoice(fieldName, onResult)
-        }}
-      />
-    )
-  }
-
-  function micBtnTwoPhase(
-    fieldName: string,
-    suggestions: string[],
-    onSelectItem: (item: string) => void,
-    onNoMatchItem?: (rawText: string) => void,
-  ) {
-    if (!isVoiceEnabled()) return undefined
-    const isListening = twoPhase.isListeningOn(fieldName)
-
-    return (
-      <MicButton
-        isAvailable={twoPhase.isAvailable}
-        isListening={isListening}
-        onToggle={() => {
-          if (!twoPhase.isAvailable) {
-            showToast('Голосовой ввод недоступен офлайн')
-            return
-          }
-          if (isListening) {
-            twoPhase.cancel()
-            return
-          }
-          // Avoid two parallel SR sessions — pause dictation if it's on.
-          if (dictation.isActive) dictation.stop()
-          // If picker is visible, tapping mic re-runs voice (start() bumps session
-          // and replaces state).
-          twoPhase.start({
-            field: fieldName,
-            suggestions,
-            onSelect: onSelectItem,
-            onNoMatch: onNoMatchItem,
-            onError: handleVoiceError,
-          })
-        }}
-      />
-    )
-  }
 
   const [newStoneOpen, setNewStoneOpen] = useState(false)
 
@@ -806,9 +704,8 @@ export default function SharpeningForm() {
           {!prefilledClientId && (
             <div className={`${s.field} ${s.fieldRequired}`}>
               <label className={s.label}>Клиент <span className={s.req}>*</span></label>
-              <div className={s.inputWithMicRow}>
-                <select
-                  className={`${s.select} ${!clientId ? s.selectPlaceholder : ''} ${twoPhase.isListeningOn('client') ? s.inputListening : ''}`}
+              <select
+                  className={`${s.select} ${!clientId ? s.selectPlaceholder : ''}`}
                   value={clientId ?? ''}
                   onChange={e => setClientId(Number(e.target.value))}
                   autoFocus={!prefilledClientId}
@@ -819,27 +716,6 @@ export default function SharpeningForm() {
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
-                {micBtnTwoPhase('client', sortedClients.map(c => c.name), (name) => {
-                  // Try precise fuzzy first (handles "Я" correctly via word boundaries)
-                  const matched = findClientMatch(name, sortedClients.map(c => c.name)) ?? name
-                  const c = sortedClients.find(c => c.name === matched)
-                  if (c?.id) setClientId(c.id)
-                })}
-              </div>
-              {twoPhase.pickItems('client') && (
-                <div className={s.voiceResults}>
-                  {twoPhase.pickItems('client')!.map(name => {
-                    const c = sortedClients.find(c => c.name === name)
-                    return (
-                      <button
-                        key={name}
-                        className={s.voiceResultItem}
-                        onClick={() => { if (c?.id) setClientId(c.id); twoPhase.cancel() }}
-                      >{name}</button>
-                    )
-                  })}
-                </div>
-              )}
             </div>
           )}
 
@@ -847,61 +723,36 @@ export default function SharpeningForm() {
             <label className={s.label}>Нож / Бренд <span className={s.req}>*</span></label>
             <Autocomplete
               value={knifeBrand}
-              onChange={(v) => { setKnifeBrand(v); if (twoPhase.pickItems('knifeBrand') || twoPhase.noMatchOn('knifeBrand')) twoPhase.cancel() }}
-              onSelect={(item) => { setKnifeBrand(item); twoPhase.cancel() }}
+              onChange={setKnifeBrand}
+              onSelect={setKnifeBrand}
               suggestions={knifeSuggestions}
-              placeholder={twoPhase.noMatchOn('knifeBrand') ? 'ввести вручную' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
+              placeholder={knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...'}
               autoFocus={Boolean(prefilledClientId)}
-              micButton={micBtnTwoPhase('knifeBrand', knifeSuggestions, (item) => setKnifeBrand(item), (raw) => setKnifeBrand(raw))}
-              listening={twoPhase.isListeningOn('knifeBrand')}
             />
-            {twoPhase.pickItems('knifeBrand') && (
-              <div className={s.voiceResults}>
-                {twoPhase.pickItems('knifeBrand')!.map(item => (
-                  <button key={item} className={s.voiceResultItem} onClick={() => { setKnifeBrand(item); twoPhase.cancel() }}>{item}</button>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className={s.field}>
             <label className={s.label}>Сталь</label>
             <Autocomplete
               value={steel}
-              onChange={(v) => { setSteel(v); if (twoPhase.pickItems('steel') || twoPhase.noMatchOn('steel')) twoPhase.cancel() }}
-              onSelect={(item) => { setSteel(item); twoPhase.cancel() }}
+              onChange={setSteel}
+              onSelect={setSteel}
               suggestions={steelSuggestions}
-              placeholder={twoPhase.noMatchOn('steel') ? 'ввести вручную' : 'AUS-8, D2...'}
-              micButton={micBtnTwoPhase('steel', steelSuggestions, (item) => setSteel(item), (raw) => setSteel(raw))}
-              listening={twoPhase.isListeningOn('steel')}
+              placeholder="AUS-8, D2..."
             />
-            {twoPhase.pickItems('steel') && (
-              <div className={s.voiceResults}>
-                {twoPhase.pickItems('steel')!.map(item => (
-                  <button key={item} className={s.voiceResultItem} onClick={() => { setSteel(item); twoPhase.cancel() }}>{item}</button>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className={s.row}>
             <div className={s.field}>
               <label className={s.label}>HRC</label>
-              <div className={s.inputWithMicRow}>
-                <input
+              <input
                   value={hrc}
                   onChange={e => setHrc(e.target.value)}
                   placeholder="58"
                   type="number"
                   min={0}
                   max={70}
-                  className={listeningField === 'hrc' ? s.inputListening : ''}
                 />
-                {micBtn('hrc', (text) => {
-                  const num = extractNumber(text)
-                  if (num) setHrc(num)
-                })}
-              </div>
             </div>
             <div className={s.field}>
               <label className={s.label}>Дата приёмки</label>
@@ -981,21 +832,14 @@ export default function SharpeningForm() {
         <div className={s.form}>
           <div className={s.field}>
             <label className={s.label}>Угол заточки, °</label>
-            <div className={s.inputWithMicRow}>
-              <input
-                value={angle}
-                onChange={e => setAngle(e.target.value)}
-                placeholder="15"
-                type="number"
-                min={1}
-                max={45}
-                className={listeningField === 'angle' ? s.inputListening : ''}
-              />
-              {micBtn('angle', (text) => {
-                const num = extractNumber(text)
-                if (num) setAngle(num)
-              })}
-            </div>
+            <input
+              value={angle}
+              onChange={e => setAngle(e.target.value)}
+              placeholder="15"
+              type="number"
+              min={1}
+              max={45}
+            />
           </div>
 
           <div className={s.field}>
@@ -1026,12 +870,10 @@ export default function SharpeningForm() {
             <div className={s.stoneInputRow}>
               <Autocomplete
                 value={stoneInput}
-                onChange={(v) => { setStoneInput(v); if (twoPhase.pickItems('stone') || twoPhase.noMatchOn('stone')) twoPhase.cancel() }}
-                onSelect={(item) => { addStone(item); twoPhase.cancel() }}
+                onChange={setStoneInput}
+                onSelect={addStone}
                 suggestions={stoneSuggestions}
-                placeholder={twoPhase.noMatchOn('stone') ? 'ввести вручную' : 'Naniwa 1000, Shapton 2000...'}
-                micButton={micBtnTwoPhase('stone', stoneSuggestions, (item) => addStone(item), (raw) => setStoneInput(raw))}
-                listening={twoPhase.isListeningOn('stone')}
+                placeholder="Naniwa 1000, Shapton 2000..."
               />
               <button
                 className={s.stoneAddBtn}
@@ -1039,13 +881,6 @@ export default function SharpeningForm() {
                 disabled={!stoneInput.trim()}
               >+</button>
             </div>
-            {twoPhase.pickItems('stone') && (
-              <div className={s.voiceResults}>
-                {twoPhase.pickItems('stone')!.map(item => (
-                  <button key={item} className={s.voiceResultItem} onClick={() => { addStone(item); twoPhase.cancel() }}>{item}</button>
-                ))}
-              </div>
-            )}
             {!newStoneOpen && (
               <button className={s.newStoneToggle} onClick={() => setNewStoneOpen(true)}>
                 + создать новый камень
@@ -1126,51 +961,30 @@ export default function SharpeningForm() {
 
           <div className={s.field}>
             <label className={s.label}>Комментарий</label>
-            <div className={s.textareaWithMicWrap}>
-              <textarea
-                value={comment}
-                onChange={e => setComment(e.target.value)}
-                placeholder="Особенности, замечания..."
-                rows={3}
-                style={{ resize: 'vertical' }}
-                className={listeningField === 'comment' ? s.inputListening : ''}
-              />
-              {micBtn('comment', (text) => {
-                setComment(prev => prev ? `${prev} ${text}` : text)
-              })}
-            </div>
+            <textarea
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder="Особенности, замечания..."
+              rows={3}
+              style={{ resize: 'vertical' }}
+            />
           </div>
 
           <div className={s.row}>
             <div className={s.field}>
               <label className={s.label}>Цена, ₽</label>
-              <div className={s.inputWithMicRow}>
-                <input
+              <input
                   value={price}
                   onChange={e => setPrice(e.target.value)}
                   placeholder="500"
                   type="number"
                   min={0}
-                  className={listeningField === 'price' ? s.inputListening : ''}
                 />
-                {micBtn('price', (text) => {
-                  const num = extractNumber(text)
-                  if (num) setPrice(num)
-                })}
-              </div>
             </div>
           </div>
 
           <div className={s.field}>
-            <div className={s.labelRow}>
-              <label className={s.label}>Статус</label>
-              {micBtn('status', (text) => {
-                if (containsDoneKeyword(text)) {
-                  setStatus('done')
-                  showToast('Статус изменён на «Готово»')
-                }
-              })}
-            </div>
+            <label className={s.label}>Статус</label>
             <div className={s.statusChips}>
               {(['accepted', 'done'] as SharpeningStatus[]).map(st => {
                 const labels = { accepted: 'принят', done: 'готов' }
