@@ -125,9 +125,11 @@ export default function SharpeningForm() {
   const awaitingListFieldRef = useRef<FieldKey | null>(null)
   const awaitingCancelConfirmRef = useRef(false)
   const lastRawRef = useRef('')
+  const stoneInputRef = useRef('')
   useEffect(() => { stepRef.current = step as 1 | 2 }, [step])
   useEffect(() => { awaitingListFieldRef.current = awaitingListField }, [awaitingListField])
   useEffect(() => { awaitingCancelConfirmRef.current = awaitingCancelConfirm }, [awaitingCancelConfirm])
+  useEffect(() => { stoneInputRef.current = stoneInput }, [stoneInput])
   const getDictationContext = (): CommandContext => ({
     step: stepRef.current,
     awaitingListField: awaitingListFieldRef.current,
@@ -247,10 +249,15 @@ export default function SharpeningForm() {
         showToast('Дописано в примечание')
         return
       case 'stone':
+        dispatchFuzzyField('stone', value, stoneSuggestions)
+        return
       case 'angle':
+        setAngle(value)
+        showToast(`Угол: ${value}`)
+        return
       case 'price':
-        // Шаг 6.
-        showToast(`Поле ${field}: ${value}`)
+        setPrice(value)
+        showToast(`Цена: ${value}`)
         return
     }
   }
@@ -280,8 +287,16 @@ export default function SharpeningForm() {
         applyFieldCommand(cmd.field, cmd.value)
         return
       case 'addStone':
-        // Шаг 6.
-        showToast('Добавить камень')
+        if (stepRef.current !== 2) {
+          showToast('Команда недоступна на этом шаге')
+          return
+        }
+        if (!stoneInputRef.current.trim()) {
+          showToast('Нет камня для добавления')
+          return
+        }
+        addStone(stoneInputRef.current)
+        showToast(`Камень добавлен: ${stoneInputRef.current}`)
         return
       case 'removeLastStone':
         // Шаг 8.
