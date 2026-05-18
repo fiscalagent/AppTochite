@@ -726,7 +726,7 @@ export default function SharpeningForm() {
               onChange={setKnifeBrand}
               onSelect={setKnifeBrand}
               suggestions={knifeSuggestions}
-              placeholder={knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...'}
+              placeholder={dictation.isActive ? 'нож ...' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
               autoFocus={Boolean(prefilledClientId)}
             />
           </div>
@@ -738,7 +738,7 @@ export default function SharpeningForm() {
               onChange={setSteel}
               onSelect={setSteel}
               suggestions={steelSuggestions}
-              placeholder="AUS-8, D2..."
+              placeholder={dictation.isActive ? 'сталь ...' : 'AUS-8, D2...'}
             />
           </div>
 
@@ -748,7 +748,7 @@ export default function SharpeningForm() {
               <input
                   value={hrc}
                   onChange={e => setHrc(e.target.value)}
-                  placeholder="58"
+                  placeholder={dictation.isActive ? 'hrc ...' : '58'}
                   type="number"
                   min={0}
                   max={70}
@@ -835,7 +835,7 @@ export default function SharpeningForm() {
             <input
               value={angle}
               onChange={e => setAngle(e.target.value)}
-              placeholder="15"
+              placeholder={dictation.isActive ? 'угол ...' : '15'}
               type="number"
               min={1}
               max={45}
@@ -873,7 +873,7 @@ export default function SharpeningForm() {
                 onChange={setStoneInput}
                 onSelect={addStone}
                 suggestions={stoneSuggestions}
-                placeholder="Naniwa 1000, Shapton 2000..."
+                placeholder={dictation.isActive ? 'камень ...' : 'Naniwa 1000, Shapton 2000...'}
               />
               <button
                 className={s.stoneAddBtn}
@@ -964,7 +964,7 @@ export default function SharpeningForm() {
             <textarea
               value={comment}
               onChange={e => setComment(e.target.value)}
-              placeholder="Особенности, замечания..."
+              placeholder={dictation.isActive ? 'примечание ...' : 'Особенности, замечания...'}
               rows={3}
               style={{ resize: 'vertical' }}
             />
@@ -976,7 +976,7 @@ export default function SharpeningForm() {
               <input
                   value={price}
                   onChange={e => setPrice(e.target.value)}
-                  placeholder="500"
+                  placeholder={dictation.isActive ? 'цена ...' : '500'}
                   type="number"
                   min={0}
                 />
