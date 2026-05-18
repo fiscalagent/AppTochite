@@ -126,11 +126,13 @@ export default function SharpeningForm() {
   const awaitingCancelConfirmRef = useRef(false)
   const lastRawRef = useRef('')
   const stoneInputRef = useRef('')
+  const selectedStonesRef = useRef<SharpeningStone[]>([])
   const cancelTimerRef = useRef<number | null>(null)
   useEffect(() => { stepRef.current = step as 1 | 2 }, [step])
   useEffect(() => { awaitingListFieldRef.current = awaitingListField }, [awaitingListField])
   useEffect(() => { awaitingCancelConfirmRef.current = awaitingCancelConfirm }, [awaitingCancelConfirm])
   useEffect(() => { stoneInputRef.current = stoneInput }, [stoneInput])
+  useEffect(() => { selectedStonesRef.current = selectedStones }, [selectedStones])
   const getDictationContext = (): CommandContext => ({
     step: stepRef.current,
     awaitingListField: awaitingListFieldRef.current,
@@ -334,12 +336,24 @@ export default function SharpeningForm() {
         showToast(`Камень добавлен: ${stoneInputRef.current}`)
         return
       case 'removeLastStone':
-        // Шаг 8.
-        showToast('Удалить последний камень')
+        if (stepRef.current !== 2) { showToast('Команда недоступна на этом шаге'); return }
+        if (selectedStonesRef.current.length === 0) { showToast('Нет камней для удаления'); return }
+        removeStone(selectedStonesRef.current.length - 1)
+        showToast('Последний камень удалён')
         return
       case 'clear':
-        // Шаг 8.
-        showToast(`Очистить ${cmd.field}`)
+        switch (cmd.field) {
+          case 'client': setClientId(null); break
+          case 'knife': setKnifeBrand(''); break
+          case 'steel': setSteel(''); break
+          case 'condition': setCondition([]); break
+          case 'notes': setComment(''); break
+          case 'stone': setStoneInput(''); break
+          case 'angle': setAngle(''); break
+          case 'price': setPrice(''); break
+        }
+        closeDictationList()
+        showToast(`Очищено: ${fieldLabel(cmd.field)}`)
         return
       case 'nav':
         if (cmd.action === 'next') {
