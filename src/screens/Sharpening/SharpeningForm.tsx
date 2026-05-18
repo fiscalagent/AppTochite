@@ -810,9 +810,10 @@ export default function SharpeningForm() {
               <label className={s.label}>Клиент <span className={s.req}>*</span></label>
               <div className={s.inputWithMicRow}>
                 <select
-                  className={`${s.select} ${twoPhase.isListeningOn('client') ? s.inputListening : ''}`}
+                  className={`${s.select} ${!clientId ? s.selectPlaceholder : ''} ${twoPhase.isListeningOn('client') ? s.inputListening : ''}`}
                   value={clientId ?? ''}
                   onChange={e => setClientId(Number(e.target.value))}
+                  autoFocus={!prefilledClientId}
                   required
                 >
                   <option value="">Выбрать клиента</option>
@@ -852,7 +853,7 @@ export default function SharpeningForm() {
               onSelect={(item) => { setKnifeBrand(item); twoPhase.cancel() }}
               suggestions={knifeSuggestions}
               placeholder={twoPhase.noMatchOn('knifeBrand') ? 'ввести вручную' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
-              autoFocus={!prefilledClientId}
+              autoFocus={Boolean(prefilledClientId)}
               micButton={micBtnTwoPhase('knifeBrand', knifeSuggestions, (item) => setKnifeBrand(item), (raw) => setKnifeBrand(raw))}
               listening={twoPhase.isListeningOn('knifeBrand')}
             />

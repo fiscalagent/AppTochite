@@ -321,6 +321,10 @@
   outline: none;
 }
 
+.selectPlaceholder {
+  color: var(--text-300);
+}
+
 /* Actions */
 .actions {
   display: flex;
