@@ -80,11 +80,10 @@ describe('Первый запуск (чистая установка)', () => {
     expect(count).toBeGreaterThan(0)
   })
 
-  it('seed содержит камни типа galvanic', async () => {
-    await seedDatabaseWith(db)
-    const count = await db.stones.where('type').equals('galvanic').count()
-    expect(count).toBeGreaterThan(0)
-  })
+  // Тип 'galvanic' остаётся валидным в схеме (DMT и др. — гальванический способ
+  // изготовления алмазных дисков), но из коробки seed-каталог их больше не
+  // поставляет — DMT/Атома реклассифицированы как 'diamond'. Пользователь
+  // может пометить свой кастомный камень как 'galvanic'.
 
   it('seed содержит камни типа natural', async () => {
     await seedDatabaseWith(db)
@@ -254,13 +253,14 @@ describe('Неполное удаление: очищена только meta (�
     expect(stored).toBeUndefined()
   })
 
-  it('при потере meta seedDatabase считает currentVersion = 0 и повторно запускает миграции', async () => {
-    // Известное поведение: если meta потеряна, а данные в таблицах остались —
-    // справочники (камни, стали, ножи) задублируются, но клиент «Я» — нет
-    // (ensureSelfClient видит существующего «Я» и пропускает создание).
+  it('при потере meta seedDatabase не дублирует системные камни (catalog-sync идемпотентен)', async () => {
+    // syncStonesCatalog сравнивает хэш STONES_CATALOG с meta.stonesCatalogHash.
+    // При потере meta хэш тоже исчез — поэтому sync пересчитывает: удаляет все
+    // системные (isCustom=false) камни и заливает каталог заново.
+    // Итог: ровно STONES_CATALOG.length камней, без дублирования.
     await seedDatabaseWith(db)
     const stonesAfter = await db.stones.count()
-    expect(stonesAfter).toBeGreaterThan(stonesBefore)
+    expect(stonesAfter).toBe(stonesBefore)
   })
 
   it('после повторного запуска seedVersion восстанавливается в 12', async () => {
