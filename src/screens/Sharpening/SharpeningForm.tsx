@@ -15,7 +15,7 @@ import { useVoiceInput, type VoiceErrorCode } from '../../hooks/useVoiceInput'
 import { useTwoPhaseVoice } from '../../hooks/useTwoPhaseVoice'
 import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
 import { extractNumber, containsDoneKeyword, findClientMatch } from '../../utils/voiceMatch'
-import type { Command, CommandContext } from '../../utils/voiceCommand'
+import type { Command, CommandContext, FieldKey } from '../../utils/voiceCommand'
 import MicButton from '../../components/MicButton/MicButton'
 import DictationButton from '../../components/DictationButton/DictationButton'
 import DictationIndicator from '../../components/DictationIndicator/DictationIndicator'
@@ -117,21 +117,70 @@ export default function SharpeningForm() {
   const [listeningField, setListeningField] = useState<string | null>(null)
 
   // Dictation context — re-read on every recognition event via getContext().
+  const [awaitingListField, setAwaitingListField] = useState<FieldKey | null>(null)
+  const [awaitingCancelConfirm, setAwaitingCancelConfirm] = useState(false)
   const stepRef = useRef<1 | 2>(1)
+  const awaitingListFieldRef = useRef<FieldKey | null>(null)
+  const awaitingCancelConfirmRef = useRef(false)
+  const lastRawRef = useRef('')
   useEffect(() => { stepRef.current = step as 1 | 2 }, [step])
+  useEffect(() => { awaitingListFieldRef.current = awaitingListField }, [awaitingListField])
+  useEffect(() => { awaitingCancelConfirmRef.current = awaitingCancelConfirm }, [awaitingCancelConfirm])
   const getDictationContext = (): CommandContext => ({
     step: stepRef.current,
-    awaitingListField: null,
-    awaitingCancelConfirm: false,
+    awaitingListField: awaitingListFieldRef.current,
+    awaitingCancelConfirm: awaitingCancelConfirmRef.current,
   })
 
+  function applyFieldCommand(field: FieldKey, value: string) {
+    // Шаги 5-6 заменят на реальные обработчики (fuzzy + setters).
+    showToast(`Поле ${field}: ${value}`)
+  }
+
   function handleDictationCommand(cmd: Command, raw: string) {
-    // Шаг 3: диспетчера ещё нет — просто индикация что распознали.
-    if (cmd.kind === 'unknown') {
-      showToast(`Не понял: «${raw}»`)
-      return
+    lastRawRef.current = raw
+    switch (cmd.kind) {
+      case 'field':
+        applyFieldCommand(cmd.field, cmd.value)
+        return
+      case 'addStone':
+        // Шаг 6.
+        showToast('Добавить камень')
+        return
+      case 'removeLastStone':
+        // Шаг 8.
+        showToast('Удалить последний камень')
+        return
+      case 'clear':
+        // Шаг 8.
+        showToast(`Очистить ${cmd.field}`)
+        return
+      case 'nav':
+        // Шаг 7.
+        showToast(`Навигация: ${cmd.action}`)
+        return
+      case 'submit':
+        // Шаг 7.
+        showToast(cmd.markDone ? 'Готово (submit)' : 'Сохранить')
+        return
+      case 'stop':
+        dictation.stop()
+        return
+      case 'confirmCancel':
+        // Шаг 7.
+        showToast('Подтверждено: отмена')
+        return
+      case 'pickFromList':
+        // Шаги 5-6 (вместе с fuzzy-списками).
+        showToast(`Выбор из списка: ${cmd.hint}`)
+        return
+      case 'repeat':
+        showToast(`Слышал: «${lastRawRef.current}»`)
+        return
+      case 'unknown':
+        showToast(`Не понял: «${raw}»`)
+        return
     }
-    showToast(`Команда: ${cmd.kind}`)
   }
 
   function handleDictationListenError(_code: DictationErrorCode) {
