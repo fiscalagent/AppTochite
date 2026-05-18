@@ -7,6 +7,7 @@ export type FieldKey =
   | 'stone'
   | 'angle'
   | 'price'
+  | 'hrc'
 
 export type Command =
   | { kind: 'field'; field: FieldKey; value: string }
@@ -27,7 +28,7 @@ export interface CommandContext {
   awaitingCancelConfirm: boolean
 }
 
-const STEP1_FIELDS: ReadonlySet<FieldKey> = new Set(['client', 'knife', 'steel', 'condition', 'notes'])
+const STEP1_FIELDS: ReadonlySet<FieldKey> = new Set(['client', 'knife', 'steel', 'hrc', 'condition', 'notes'])
 const STEP2_FIELDS: ReadonlySet<FieldKey> = new Set(['stone', 'angle', 'price', 'notes'])
 
 const FIELD_BY_PREFIX: Record<string, FieldKey> = {
@@ -35,10 +36,17 @@ const FIELD_BY_PREFIX: Record<string, FieldKey> = {
   'нож': 'knife',
   'сталь': 'steel',
   'камень': 'stone',
+  'камни': 'stone',
   'требуется': 'condition',
   'примечание': 'notes',
+  'комментарий': 'notes',
+  'комментарии': 'notes',
   'угол': 'angle',
   'цена': 'price',
+  'твёрдость': 'hrc',
+  'твердость': 'hrc',
+  'hrc': 'hrc',
+  'хрц': 'hrc',
 }
 
 const CLEAR_FIELD_MAP: Record<string, FieldKey> = {
@@ -49,10 +57,17 @@ const CLEAR_FIELD_MAP: Record<string, FieldKey> = {
   'требуется': 'condition',
   'примечание': 'notes',
   'примечания': 'notes',
+  'комментарий': 'notes',
+  'комментарии': 'notes',
   'камень': 'stone',
+  'камни': 'stone',
   'угол': 'angle',
   'цена': 'price',
   'цену': 'price',
+  'твёрдость': 'hrc',
+  'твердость': 'hrc',
+  'hrc': 'hrc',
+  'хрц': 'hrc',
 }
 
 const CONDITION_VALUES: ReadonlySet<string> = new Set(['заточка', 'правка', 'правка рк', 'ремонт'])
@@ -181,7 +196,7 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
       return { kind: 'unknown' }
     }
 
-    if (field === 'angle' || field === 'price') {
+    if (field === 'angle' || field === 'price' || field === 'hrc') {
       const n = parseNumber(restLc)
       if (n === null) return { kind: 'unknown' }
       return { kind: 'field', field, value: String(n) }

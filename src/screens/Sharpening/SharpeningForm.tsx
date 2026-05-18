@@ -176,6 +176,7 @@ export default function SharpeningForm() {
       case 'stone': return 'Камень'
       case 'angle': return 'Угол'
       case 'price': return 'Цена'
+      case 'hrc': return 'HRC'
     }
   }
 
@@ -318,6 +319,10 @@ export default function SharpeningForm() {
         setPrice(value)
         showToast(`Цена: ${value}`)
         return
+      case 'hrc':
+        setHrc(value)
+        showToast(`HRC: ${value}`)
+        return
     }
   }
 
@@ -378,6 +383,7 @@ export default function SharpeningForm() {
           case 'stone': setStoneInput(''); break
           case 'angle': setAngle(''); break
           case 'price': setPrice(''); break
+          case 'hrc': setHrc(''); break
         }
         closeDictationList()
         showToast(`Очищено: ${fieldLabel(cmd.field)}`)
