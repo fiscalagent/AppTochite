@@ -8,7 +8,7 @@ import {
   performDailyBackupIfNeeded,
   updateLastBackupAt,
 } from '../utils/backup'
-import { pickDirectory, queryDirectoryPermission } from '../utils/fileSystemAccess'
+import { pickDirectory, requestDirectoryPermission } from '../utils/fileSystemAccess'
 
 interface AutoBackupContextValue {
   isEnabled: boolean
@@ -47,17 +47,15 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
       if (document.visibilityState !== 'hidden') return
       const h = handleRef.current
       if (!h) return
-      const perm = await queryDirectoryPermission(h)
-      if (perm !== 'granted') {
-        setPermissionLost(true)
-        return
-      }
       try {
         await performAutoBackup(db, h)
         await performDailyBackupIfNeeded(db, h)
         setPermissionLost(false)
-      } catch {
-        // silently skip — don't interrupt user
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'NotAllowedError') {
+          setPermissionLost(true)
+        }
+        // other errors: silently skip — don't interrupt user
       }
     }
 
@@ -66,8 +64,17 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   async function enable() {
-    const h = await pickDirectory()
-    await saveDirectoryHandle(db, h)
+    let h = handleRef.current
+    if (h) {
+      const perm = await requestDirectoryPermission(h)
+      if (perm !== 'granted') {
+        h = await pickDirectory()
+        await saveDirectoryHandle(db, h)
+      }
+    } else {
+      h = await pickDirectory()
+      await saveDirectoryHandle(db, h)
+    }
     handleRef.current = h
     setHandle(h)
     setPermissionLost(false)

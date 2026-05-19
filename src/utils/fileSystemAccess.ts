@@ -2,6 +2,7 @@
 
 interface FSDirectoryHandleWithPermission extends FileSystemDirectoryHandle {
   queryPermission(desc: { mode: 'read' | 'readwrite' }): Promise<PermissionState>
+  requestPermission(desc: { mode: 'read' | 'readwrite' }): Promise<PermissionState>
 }
 
 declare global {
@@ -20,4 +21,8 @@ export async function pickDirectory(): Promise<FileSystemDirectoryHandle> {
 
 export async function queryDirectoryPermission(handle: FileSystemDirectoryHandle): Promise<PermissionState> {
   return (handle as FSDirectoryHandleWithPermission).queryPermission({ mode: 'readwrite' })
+}
+
+export async function requestDirectoryPermission(handle: FileSystemDirectoryHandle): Promise<PermissionState> {
+  return (handle as FSDirectoryHandleWithPermission).requestPermission({ mode: 'readwrite' })
 }
