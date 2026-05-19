@@ -1,3 +1,10 @@
+# [1.58.0](https://github.com/fiscalagent/AppTochite/compare/v1.57.0...v1.58.0) (2026-05-19)
+
+
+### feat
+
+* кнопка «Сохранить как принятый» на шаге приёмки ([](https://github.com/fiscalagent/AppTochite/commit/d0406813b109248240b25579aff4c1daea2ed38a))
+
 # [1.57.0](https://github.com/fiscalagent/AppTochite/compare/v1.56.3...v1.57.0) (2026-05-18)
 
 
