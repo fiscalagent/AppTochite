@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.58.1',
+    date: '2026-05-19',
+    changes: [
+      'автобэкап не требует queryPermission — пробуем запись напрямую',
+      'кнопка «Сохранить как принятый» на шаге приёмки',
+      'подсказки-префиксы на полях формы при активной диктовке',
+      'подсказка HRC изменена на «твёрдость ...»',
+    ],
+  },
+  {
     version: '1.58.0',
     date: '2026-05-19',
     changes: [

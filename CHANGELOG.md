@@ -1,3 +1,10 @@
+## [1.58.1](https://github.com/fiscalagent/AppTochite/compare/v1.58.0...v1.58.1) (2026-05-19)
+
+
+### fix
+
+* автобэкап не требует queryPermission — пробуем запись напрямую ([](https://github.com/fiscalagent/AppTochite/commit/9352d44c3125965d3d9c43e4b50ad88593735a8f))
+
 # [1.58.0](https://github.com/fiscalagent/AppTochite/compare/v1.57.0...v1.58.0) (2026-05-19)
 
 
