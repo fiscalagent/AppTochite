@@ -639,7 +639,7 @@ export default function SharpeningForm() {
         showToast('Заточка сохранена')
         navigate('/', { replace: true })
       } else {
-        showToast('Заточка создана')
+        showToast(step === 1 ? 'Приёмка сохранена' : 'Заточка создана')
         navigate(`/sharpenings/${savedId}`)
       }
     } catch {
@@ -821,7 +821,14 @@ export default function SharpeningForm() {
               onClick={() => setStep(2)}
               disabled={!canProceed}
             >
-              Далее — Заточка
+              Заточить сейчас
+            </button>
+            <button
+              className={s.secondaryBtn}
+              onClick={() => handleSave()}
+              disabled={!canProceed || saving}
+            >
+              {saving ? 'Сохранение…' : 'Сохранить как принятый'}
             </button>
           </div>
         </div>
