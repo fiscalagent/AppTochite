@@ -412,7 +412,7 @@ function StonesTab({ search }: { search: string }) {
   const [editGritMk, setEditGritMk] = useState('')
   const [editType, setEditType] = useState<Stone['type'] | ''>('')
   const [editCoolant, setEditCoolant] = useState<StoneCoolant | ''>('')
-  const [displayUnit, setDisplayUnit] = useState<GritDisplayMode>('native')
+  const [displayUnit, setDisplayUnit] = useState<GritDisplayMode | 'alpha'>('native')
 
   useEffect(() => {
     if (!open && editingId === null) return
@@ -446,7 +446,9 @@ function StonesTab({ search }: { search: string }) {
     const custom   = allFiltered.filter(st => st.isCustom)
     const standard = allFiltered.filter(st => !st.isCustom)
     const sortedCustom = [...custom].sort((a, b) =>
-      getGritSortValue(a, displayUnit) - getGritSortValue(b, displayUnit)
+      displayUnit === 'alpha'
+        ? a.brand.localeCompare(b.brand, 'ru')
+        : getGritSortValue(a, displayUnit) - getGritSortValue(b, displayUnit)
     )
     return [...sortedCustom, ...standard]
   })()
@@ -683,7 +685,8 @@ function StonesTab({ search }: { search: string }) {
           ['fepa',   'FEPA'],
           ['jis',    'JIS'],
           ['gost',   'мк'],
-        ] as [GritDisplayMode, string][]).map(([unit, label]) => (
+          ['alpha',  'А-Я'],
+        ] as [GritDisplayMode | 'alpha', string][]).map(([unit, label]) => (
           <button
             key={unit}
             className={`${s.displayUnitBtn} ${displayUnit === unit ? s.displayUnitActive : ''}`}
@@ -723,7 +726,7 @@ function StonesTab({ search }: { search: string }) {
               </div>
               <div className={s.itemRight}>
                 {(st.grit != null || (st.gritUnit === 'mk' && st.gritMk)) && (() => {
-                  const { mainValue, mainUnit, alts } = getGritDisplay(st, displayUnit)
+                  const { mainValue, mainUnit, alts } = getGritDisplay(st, displayUnit === 'alpha' ? 'native' : displayUnit)
                   return (
                     <div className={s.gritGroup}>
                       {alts[0] && <span className={s.gritAlts}>{alts[0]}</span>}
