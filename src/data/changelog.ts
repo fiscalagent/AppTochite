@@ -6,6 +6,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.61.1',
+    date: '2026-05-20',
+    changes: [
+      'кнопки шапки недоступны на iPhone в портретной ориентации',
+      'импорт камней из CSV и скачивание шаблона в справочнике',
+      'сортировка камней по алфавиту (А-Я) в справочнике',
+    ],
+  },
+  {
     version: '1.61.0',
     date: '2026-05-20',
     changes: [

@@ -1,3 +1,10 @@
+## [1.61.1](https://github.com/fiscalagent/AppTochite/compare/v1.61.0...v1.61.1) (2026-05-20)
+
+
+### fix
+
+* кнопки шапки недоступны на iPhone в портретной ориентации ([](https://github.com/fiscalagent/AppTochite/commit/d89d9d9851fe05fdb05c5ecbf2a3974b49f00219))
+
 # [1.61.0](https://github.com/fiscalagent/AppTochite/compare/v1.60.0...v1.61.0) (2026-05-20)
 
 
