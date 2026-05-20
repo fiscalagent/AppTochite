@@ -8,12 +8,10 @@ interface Props {
   daysSinceBackup: number | null
   onConfirm: () => Promise<void>
   onSnooze: () => void
-  onAutoBackup?: () => Promise<void>
 }
 
-export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm, onSnooze, onAutoBackup }: Props) {
+export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm, onSnooze }: Props) {
   const [saving, setSaving] = useState(false)
-  const [enablingAuto, setEnablingAuto] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
@@ -22,7 +20,7 @@ export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm
 
   if (!isOpen) return null
 
-  const busy = saving || enablingAuto
+  const busy = saving
 
   const subtitle = daysSinceBackup === null
     ? 'Вы ещё ни разу не делали бэкап'
@@ -31,12 +29,6 @@ export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm
   async function handleConfirm() {
     setSaving(true)
     try { await onConfirm() } finally { setSaving(false) }
-  }
-
-  async function handleAutoBackup() {
-    if (!onAutoBackup) return
-    setEnablingAuto(true)
-    try { await onAutoBackup() } catch { /* user cancelled picker */ } finally { setEnablingAuto(false) }
   }
 
   return createPortal(
@@ -58,11 +50,6 @@ export default function BackupReminderModal({ isOpen, daysSinceBackup, onConfirm
           <button className={s.primaryBtn} onClick={handleConfirm} disabled={busy}>
             {saving ? 'Сохранение…' : 'Сделать бэкап'}
           </button>
-          {onAutoBackup && (
-            <button className={s.autoBtn} onClick={handleAutoBackup} disabled={busy}>
-              {enablingAuto ? 'Выбор папки…' : 'Включить автобэкап'}
-            </button>
-          )}
           <button className={s.snoozeBtn} onClick={onSnooze} disabled={busy}>Напомнить завтра</button>
         </div>
       </div>

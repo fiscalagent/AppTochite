@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../db/instance'
 import { exportBackup, downloadBlob, getLastBackupAt, updateLastBackupAt } from '../../utils/backup'
-import { useAutoBackup } from '../../contexts/AutoBackupContext'
-import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import BackupReminderModal from './BackupReminderModal'
 
 const SNOOZE_KEY = 'backupReminderSnoozedUntil'
@@ -13,14 +11,9 @@ const SHOW_DELAY_MS = 1500
 export default function BackupReminder() {
   const [open, setOpen] = useState(false)
   const [daysSince, setDaysSince] = useState<number | null>(null)
-  const { isEnabled: autoBackupEnabled, enable: enableAutoBackup } = useAutoBackup()
-  const supportsAutoBackup = supportsFileSystemAccess()
 
   useEffect(() => {
     const t = setTimeout(async () => {
-      if (autoBackupEnabled) return
-
-      // Record first launch; skip reminder until GRACE_DAYS have passed
       const firstLaunchEntry = await db.settings.get('firstLaunchAt')
       if (!firstLaunchEntry) {
         await db.settings.put({ key: 'firstLaunchAt', value: new Date().toISOString() })
@@ -48,7 +41,7 @@ export default function BackupReminder() {
     }, SHOW_DELAY_MS)
 
     return () => clearTimeout(t)
-  }, [autoBackupEnabled])
+  }, [])
 
   async function handleConfirm() {
     const backup = await exportBackup(db)
@@ -66,18 +59,12 @@ export default function BackupReminder() {
     setOpen(false)
   }
 
-  async function handleAutoBackup() {
-    await enableAutoBackup()
-    setOpen(false)
-  }
-
   return (
     <BackupReminderModal
       isOpen={open}
       daysSinceBackup={daysSince}
       onConfirm={handleConfirm}
       onSnooze={handleSnooze}
-      onAutoBackup={supportsAutoBackup ? handleAutoBackup : undefined}
     />
   )
 }

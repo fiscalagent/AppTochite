@@ -21,50 +21,47 @@ export async function updateLastBackupAt(database: AppTochiteDB): Promise<void> 
   await database.settings.put({ key: 'lastBackupAt', value: new Date().toISOString() })
 }
 
-export async function getDirectoryHandle(database: AppTochiteDB): Promise<FileSystemDirectoryHandle | null> {
-  const entry = await database.settings.get('directoryHandle')
-  return (entry?.value as FileSystemDirectoryHandle) ?? null
-}
+const OPFS_FILENAME = 'apptochite-auto.json'
 
-export async function saveDirectoryHandle(database: AppTochiteDB, handle: FileSystemDirectoryHandle): Promise<void> {
-  await database.settings.put({ key: 'directoryHandle', value: handle })
-}
-
-export async function clearDirectoryHandle(database: AppTochiteDB): Promise<void> {
-  await database.settings.delete('directoryHandle')
-}
-
-export async function performAutoBackup(database: AppTochiteDB, handle: FileSystemDirectoryHandle): Promise<void> {
+export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
+  const root = await navigator.storage.getDirectory()
   const backup = await exportBackup(database)
   const json = JSON.stringify(backup)
-  const fileHandle = await handle.getFileHandle('apptochite-auto.json', { create: true })
+  const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
   const writable = await fileHandle.createWritable()
   await writable.write(json)
   await writable.close()
   await updateLastBackupAt(database)
 }
 
-export async function performDailyBackupIfNeeded(database: AppTochiteDB, handle: FileSystemDirectoryHandle): Promise<void> {
-  const today = new Date().toISOString().slice(0, 10)
-  const entry = await database.settings.get('lastDailyBackupAt')
-  if (entry && (entry.value as string).slice(0, 10) === today) return
+export interface OPFSBackupMeta {
+  date: Date
+  size: number
+}
 
-  const backup = await exportBackup(database)
-  const json = JSON.stringify(backup)
-  const newFileName = `apptochite-daily-${today}.json`
-
-  const fileHandle = await handle.getFileHandle(newFileName, { create: true })
-  const writable = await fileHandle.createWritable()
-  await writable.write(json)
-  await writable.close()
-
-  // Delete old daily backup files only after successful write
-  for await (const [name] of handle.entries()) {
-    if (name.startsWith('apptochite-daily-') && name.endsWith('.json') && name !== newFileName) {
-      await handle.removeEntry(name)
-    }
+export async function getOPFSBackupMeta(): Promise<OPFSBackupMeta | null> {
+  try {
+    const root = await navigator.storage.getDirectory()
+    const fileHandle = await root.getFileHandle(OPFS_FILENAME)
+    const file = await fileHandle.getFile()
+    if (file.size === 0) return null
+    return { date: new Date(file.lastModified), size: file.size }
+  } catch {
+    return null
   }
-  await database.settings.put({ key: 'lastDailyBackupAt', value: new Date().toISOString() })
+}
+
+export async function readOPFSBackup(): Promise<BackupFile | null> {
+  try {
+    const root = await navigator.storage.getDirectory()
+    const fileHandle = await root.getFileHandle(OPFS_FILENAME)
+    const file = await fileHandle.getFile()
+    if (file.size === 0) return null
+    const parsed = JSON.parse(await file.text(), reviveDates)
+    return isValidBackup(parsed) ? parsed : null
+  } catch {
+    return null
+  }
 }
 
 export interface BackupFile {

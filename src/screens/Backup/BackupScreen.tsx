@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
 const IconChevronLeft = () => (
@@ -25,11 +25,12 @@ import {
   reviveDates,
   downloadBlob,
   updateLastBackupAt,
+  getOPFSBackupMeta,
+  readOPFSBackup,
   type BackupFile,
   type MergeStats,
+  type OPFSBackupMeta,
 } from '../../utils/backup'
-import { useAutoBackup } from '../../contexts/AutoBackupContext'
-import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -52,9 +53,11 @@ export default function BackupScreen() {
     localStorage.getItem(PHOTO_COMPRESS_KEY) === 'on'
   )
   const [storageMb, setStorageMb] = useState<number | null>(null)
-  const { isEnabled: autoBackupEnabled, folderName, permissionLost, enable: enableAutoBackup, disable: disableAutoBackup } = useAutoBackup()
-  const [autoBackupLoading, setAutoBackupLoading] = useState(false)
-  const supportsAutoBackup = supportsFileSystemAccess()
+  const [opfsMeta, setOpfsMeta] = useState<OPFSBackupMeta | null | undefined>(undefined)
+
+  const refreshOpfsMeta = useCallback(() => {
+    getOPFSBackupMeta().then(setOpfsMeta)
+  }, [])
 
   useEffect(() => {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
@@ -62,7 +65,8 @@ export default function BackupScreen() {
         if (usage != null) setStorageMb(usage / (1024 * 1024))
       })
     }
-  }, [])
+    refreshOpfsMeta()
+  }, [refreshOpfsMeta])
 
   function toggleCompression() {
     const next = !compressed
@@ -218,65 +222,31 @@ export default function BackupScreen() {
 
       <div className={s.divider} />
 
-      {supportsAutoBackup && (
-        <>
-          <div className={s.section}>
-            <p className={s.sectionTitle}>Автобэкап</p>
-            {autoBackupEnabled ? (
-              <>
-                <div className={s.autoBackupRow}>
-                  <span className={s.autoBackupFolder}>{folderName}</span>
-                  <span className={s.autoBackupBadge}>Активен</span>
-                </div>
-                {permissionLost && (
-                  <p className={s.autoBackupWarn}>Нет доступа к папке. Нажмите «Переподключить», чтобы выбрать папку заново.</p>
-                )}
-                <div className={s.autoBackupActions}>
-                  {permissionLost && (
-                    <button className={s.primaryBtn} disabled={autoBackupLoading} onClick={async () => {
-                      setAutoBackupLoading(true)
-                      try {
-                        await enableAutoBackup()
-                        showToast('Автобэкап восстановлен')
-                      } catch (err) {
-                        if (!(err instanceof DOMException && (err.name === 'AbortError' || err.name === 'NotAllowedError'))) {
-                          showToast('Не удалось записать бэкап в папку')
-                        }
-                      } finally {
-                        setAutoBackupLoading(false)
-                      }
-                    }}>
-                      {autoBackupLoading ? 'Подключение…' : 'Переподключить папку'}
-                    </button>
-                  )}
-                  <button className={s.secondaryBtn} onClick={disableAutoBackup}>Отключить автобэкап</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className={s.desc}>Приложение будет автоматически сохранять бэкап в выбранную папку каждый раз при открытии. Один раз выбрали — и забыли.</p>
-                <button className={s.primaryBtn} disabled={autoBackupLoading} onClick={async () => {
-                  setAutoBackupLoading(true)
-                  try {
-                    await enableAutoBackup()
-                    showToast('Автобэкап включён')
-                  } catch (err) {
-                    if (!(err instanceof DOMException && (err.name === 'AbortError' || err.name === 'NotAllowedError'))) {
-                      showToast('Не удалось записать бэкап в папку')
-                    }
-                  } finally {
-                    setAutoBackupLoading(false)
-                  }
-                }}>
-                  {autoBackupLoading ? 'Выбор папки…' : 'Включить автобэкап'}
-                </button>
-              </>
-            )}
-          </div>
+      <div className={s.section}>
+        <p className={s.sectionTitle}>Автобэкап</p>
+        <div className={s.autoBackupRow}>
+          <span className={s.autoBackupBadge}>Активен</span>
+          <span className={s.autoBackupMeta}>
+            {opfsMeta === undefined
+              ? 'Загрузка…'
+              : opfsMeta === null
+                ? 'Ещё не создавался'
+                : `${new Date(opfsMeta.date).toLocaleString('ru', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} · ${(opfsMeta.size / 1024).toFixed(0)} КБ`}
+          </span>
+        </div>
+        <p className={s.desc}>Сохраняется автоматически при каждом открытии приложения. Без диалогов и разрешений.</p>
+        {opfsMeta !== null && (
+          <button className={s.secondaryBtn} onClick={async () => {
+            const backup = await readOPFSBackup()
+            if (!backup) { showToast('Авто-бэкап не найден или повреждён'); return }
+            setPreview(backup)
+          }}>
+            Восстановить из авто-бэкапа
+          </button>
+        )}
+      </div>
 
-          <div className={s.divider} />
-        </>
-      )}
+      <div className={s.divider} />
 
       <div className={s.section}>
         <p className={s.sectionTitle}>Экспорт</p>
