@@ -91,7 +91,7 @@ export default function SharpeningForm() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { showToast } = useToast()
+  const { showToast, setRaisedMode } = useToast()
   const { openCamera, openGallery } = useCamera()
   const isEdit = Boolean(id)
 
@@ -204,6 +204,11 @@ export default function SharpeningForm() {
       if (cancelTimerRef.current !== null) clearTimeout(cancelTimerRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    setRaisedMode(dictation.isActive)
+    return () => setRaisedMode(false)
+  }, [dictation.isActive])
 
   function applyClientByName(name: string) {
     const c = clients?.find(cl => cl.name === name)
@@ -390,7 +395,7 @@ export default function SharpeningForm() {
           return
         }
         dictation.stop()
-        handleSave({ markDoneOverride: cmd.markDone })
+        handleSave({ markDoneOverride: cmd.markDone, voiceTriggered: true })
         return
       case 'stop':
         dictation.stop()
@@ -558,7 +563,7 @@ export default function SharpeningForm() {
     setNewStoneBrand(''); setNewStoneGritUnit(''); setNewStoneGrit(''); setNewStoneGritMk(''); setNewStoneType(''); setNewStoneOpen(false)
   }
 
-  async function handleSave(opts: { markDoneOverride?: boolean } = {}) {
+  async function handleSave(opts: { markDoneOverride?: boolean; voiceTriggered?: boolean } = {}) {
     if (!clientId || !knifeBrand.trim() || saving) return
     setSaving(true)
 
@@ -636,10 +641,10 @@ export default function SharpeningForm() {
 
       trackSharpening(data)
       if (isEdit) {
-        showToast('Заточка сохранена')
+        if (opts.voiceTriggered) showToast('Заточка сохранена')
         navigate('/', { replace: true })
       } else {
-        showToast(step === 1 ? 'Приёмка сохранена' : 'Заточка создана')
+        if (opts.voiceTriggered) showToast(step === 1 ? 'Приёмка сохранена' : 'Заточка создана')
         navigate(`/sharpenings/${savedId}`)
       }
     } catch {
