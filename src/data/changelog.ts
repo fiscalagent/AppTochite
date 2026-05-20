@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.58.4',
+    date: '2026-05-20',
+    changes: [
+      'устранён race condition баннера и добавлен daily бэкап при reconnect',
+    ],
+  },
+  {
     version: '1.58.3',
     date: '2026-05-20',
     changes: [

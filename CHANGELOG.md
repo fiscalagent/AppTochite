@@ -1,3 +1,10 @@
+## [1.58.4](https://github.com/fiscalagent/AppTochite/compare/v1.58.3...v1.58.4) (2026-05-20)
+
+
+### fix
+
+* устранён race condition баннера и добавлен daily бэкап при reconnect ([](https://github.com/fiscalagent/AppTochite/commit/7a1fd1190e37421bf9df73de1d67a4c6934711de))
+
 ## [1.58.3](https://github.com/fiscalagent/AppTochite/compare/v1.58.2...v1.58.3) (2026-05-20)
 
 
