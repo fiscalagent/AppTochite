@@ -56,7 +56,6 @@ export default function ClientCard() {
       await db.sharpenings.where('clientId').equals(clientId).delete()
       await db.clients.delete(clientId)
     })
-    showToast('Клиент удалён')
     navigate('/')
   }
 

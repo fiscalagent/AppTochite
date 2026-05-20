@@ -643,6 +643,9 @@ export default function SharpeningForm() {
       if (isEdit) {
         if (opts.voiceTriggered) showToast('Заточка сохранена')
         navigate('/', { replace: true })
+      } else if (effectiveStatus === 'done') {
+        if (opts.voiceTriggered) showToast('Заточка завершена')
+        navigate('/', { replace: true })
       } else {
         if (opts.voiceTriggered) showToast(step === 1 ? 'Приёмка сохранена' : 'Заточка создана')
         navigate(`/sharpenings/${savedId}`)

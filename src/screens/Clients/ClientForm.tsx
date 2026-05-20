@@ -4,7 +4,6 @@ import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
-import { useToast } from '../../components/Toast/ToastContext'
 import { pickAvatarFile } from '../../hooks/useCamera'
 import s from './ClientForm.module.css'
 
@@ -17,7 +16,6 @@ const IconChevronLeft = () => (
 export default function ClientForm() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { showToast } = useToast()
   const isEdit = Boolean(id)
 
   const [name, setName] = useState('')
@@ -58,7 +56,6 @@ export default function ClientForm() {
         avatar,
         updatedAt: new Date(),
       })
-      showToast('Клиент сохранён')
       navigate(`/clients/${id}`)
     } else {
       const now = new Date()
@@ -71,7 +68,6 @@ export default function ClientForm() {
         createdAt: now,
         updatedAt: now,
       })
-      showToast('Клиент добавлен')
       navigate(`/clients/${newId}`)
     }
   }
@@ -82,7 +78,6 @@ export default function ClientForm() {
       await db.sharpenings.where('clientId').equals(Number(id)).delete()
       await db.clients.delete(Number(id))
     })
-    showToast('Клиент удалён')
     navigate('/')
   }
 

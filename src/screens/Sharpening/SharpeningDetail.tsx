@@ -102,7 +102,6 @@ export default function SharpeningDetail() {
       return
     }
     if (sh) trackSharpening({ ...sh, status: 'done', doneAt })
-    showToast('Статус обновлён — готово!')
     setPhotoModal(true)
   }
 
@@ -129,7 +128,6 @@ export default function SharpeningDetail() {
 
   async function handleDelete() {
     await db.sharpenings.delete(sharpeningId)
-    showToast('Заточка удалена')
     navigate(-1)
   }
 
