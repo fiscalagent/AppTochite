@@ -8,7 +8,7 @@ import {
   performDailyBackupIfNeeded,
   updateLastBackupAt,
 } from '../utils/backup'
-import { pickDirectory, requestDirectoryPermission } from '../utils/fileSystemAccess'
+import { pickDirectory, queryDirectoryPermission, requestDirectoryPermission } from '../utils/fileSystemAccess'
 
 interface AutoBackupContextValue {
   isEnabled: boolean
@@ -44,9 +44,18 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     async function onVisibilityChange() {
-      if (document.visibilityState !== 'hidden') return
+      // Run backup when user returns to the app (page in foreground).
+      // Doing it on 'hidden' is unreliable: Android Chrome freezes/kills
+      // the page immediately, interrupting async writes (causes 0-byte files)
+      // and revokes FS permissions before the write completes.
+      if (document.visibilityState !== 'visible') return
       const h = handleRef.current
       if (!h) return
+      const perm = await queryDirectoryPermission(h)
+      if (perm !== 'granted') {
+        setPermissionLost(true)
+        return
+      }
       try {
         await performAutoBackup(db, h)
         await performDailyBackupIfNeeded(db, h)
