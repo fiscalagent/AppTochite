@@ -1,3 +1,10 @@
+# [1.60.0](https://github.com/fiscalagent/AppTochite/compare/v1.59.1...v1.60.0) (2026-05-20)
+
+
+### feat
+
+* сортировка камней по алфавиту (А-Я) в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/c7afc777e6a1bba357d65344d4b211ec2c40fb47))
+
 ## [1.59.1](https://github.com/fiscalagent/AppTochite/compare/v1.59.0...v1.59.1) (2026-05-20)
 
 
