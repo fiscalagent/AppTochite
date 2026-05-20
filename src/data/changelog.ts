@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.59.1',
+    date: '2026-05-20',
+    changes: [
+      'автобэкап запускается при старте приложения, а не только при возврате',
+      'автобэкап переведён на OPFS — без диалогов разрешений',
+    ],
+  },
+  {
     version: '1.59.0',
     date: '2026-05-20',
     changes: [

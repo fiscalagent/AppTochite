@@ -1,3 +1,10 @@
+## [1.59.1](https://github.com/fiscalagent/AppTochite/compare/v1.59.0...v1.59.1) (2026-05-20)
+
+
+### fix
+
+* автобэкап запускается при старте приложения, а не только при возврате ([](https://github.com/fiscalagent/AppTochite/commit/0e9ac39c28454ee435b6356366da8efe79a893cb))
+
 # [1.59.0](https://github.com/fiscalagent/AppTochite/compare/v1.58.4...v1.59.0) (2026-05-20)
 
 
