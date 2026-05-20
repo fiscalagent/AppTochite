@@ -5,8 +5,11 @@ import {
   reviveDates,
   exportBackup,
   restoreBackup,
+  mergeBackup,
   buildSharpeningCSV,
   performOPFSBackup,
+  getOPFSBackupMeta,
+  readOPFSBackup,
   type BackupFile,
 } from './backup'
 import { AppTochiteDB } from '../db/db'
@@ -380,6 +383,158 @@ describe('exportBackup + restoreBackup', () => {
     const sharpenings = await db.sharpenings.toArray()
     expect(sharpenings[0].photosBefore).toEqual(['data:image/jpeg;base64,/9j/fake'])
     expect(sharpenings[0].photosAfter).toEqual(['data:image/jpeg;base64,/9j/fake2'])
+  })
+})
+
+// ─── mergeBackup ─────────────────────────────────────────────────────────────
+
+describe('mergeBackup', () => {
+  let db: AppTochiteDB
+
+  beforeEach(async () => { db = makeDB(); await db.open() })
+  afterEach(async () => { db.close(); await db.delete() })
+
+  it('добавляет новые записи из файла', async () => {
+    const backup = makeValidBackup({
+      clients: [{ id: 1, name: 'Иванов', isSelf: false, createdAt: new Date() }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.added).toBe(1)
+    expect(stats.updated).toBe(0)
+    expect(stats.skipped).toBe(0)
+    expect(await db.clients.count()).toBe(1)
+  })
+
+  it('оставляет запись только на устройстве нетронутой', async () => {
+    await db.clients.add({ id: 1, name: 'Оригинал', isSelf: false, createdAt: new Date() })
+    const stats = await mergeBackup(db, makeValidBackup())
+    expect(stats.added).toBe(0)
+    expect(stats.updated).toBe(0)
+    const clients = await db.clients.toArray()
+    expect(clients[0].name).toBe('Оригинал')
+  })
+
+  it('конфликт: updatedAt файла новее → победила версия из файла', async () => {
+    await db.clients.add({ id: 1, name: 'Старый', isSelf: false, createdAt: new Date(), updatedAt: new Date('2026-01-01') })
+    const backup = makeValidBackup({
+      clients: [{ id: 1, name: 'Новый', isSelf: false, createdAt: new Date(), updatedAt: new Date('2026-06-01') }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.updated).toBe(1)
+    expect((await db.clients.get(1))!.name).toBe('Новый')
+  })
+
+  it('конфликт: updatedAt устройства новее → остаётся версия устройства', async () => {
+    await db.clients.add({ id: 1, name: 'Новый', isSelf: false, createdAt: new Date(), updatedAt: new Date('2026-06-01') })
+    const backup = makeValidBackup({
+      clients: [{ id: 1, name: 'Старый', isSelf: false, createdAt: new Date(), updatedAt: new Date('2026-01-01') }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.skipped).toBe(1)
+    expect((await db.clients.get(1))!.name).toBe('Новый')
+  })
+
+  it('бэкап без updatedAt трактуется как epoch — устройство побеждает', async () => {
+    await db.clients.add({ id: 1, name: 'Устройство', isSelf: false, createdAt: new Date(), updatedAt: new Date('2026-01-01') })
+    const backup = makeValidBackup({
+      clients: [{ id: 1, name: 'Файл', isSelf: false, createdAt: new Date() }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.skipped).toBe(1)
+    expect((await db.clients.get(1))!.name).toBe('Устройство')
+  })
+
+  it('мерж нескольких таблиц одновременно', async () => {
+    const backup = makeValidBackup({
+      clients: [{ id: 1, name: 'Клиент', isSelf: false, createdAt: new Date() }],
+      stones: [{ id: 1, brand: 'Shapton 1000', grit: 1000, type: 'ao' as const, isCustom: false }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.added).toBe(2)
+    expect(await db.clients.count()).toBe(1)
+    expect(await db.stones.count()).toBe(1)
+  })
+})
+
+// ─── getOPFSBackupMeta ────────────────────────────────────────────────────────
+
+describe('getOPFSBackupMeta', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('возвращает null если файл не существует', async () => {
+    mockOPFS()
+    const meta = await getOPFSBackupMeta()
+    expect(meta).toBeNull()
+  })
+
+  it('возвращает { date, size } после записи бэкапа', async () => {
+    const root = mockOPFS()
+    const db = makeDB(); await db.open()
+    await performOPFSBackup(db)
+    db.close(); await db.delete()
+
+    const handle = root.files.get('apptochite-auto.json')!
+    expect(handle).toBeDefined()
+
+    const meta = await getOPFSBackupMeta()
+    expect(meta).not.toBeNull()
+    expect(meta!.size).toBeGreaterThan(0)
+    expect(meta!.date).toBeInstanceOf(Date)
+  })
+
+  it('возвращает null если файл пустой (size === 0)', async () => {
+    const root = mockOPFS()
+    // Создаём файл вручную с пустым содержимым
+    const handle = new MockFileHandle()
+    // Переопределяем getFile чтобы вернуть size=0
+    handle.getFile = async () => ({ text: async () => '', size: 0, lastModified: Date.now() } as unknown as File)
+    root.files.set('apptochite-auto.json', handle)
+
+    const meta = await getOPFSBackupMeta()
+    expect(meta).toBeNull()
+  })
+})
+
+// ─── readOPFSBackup ───────────────────────────────────────────────────────────
+
+describe('readOPFSBackup', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('возвращает null если файл не существует', async () => {
+    mockOPFS()
+    expect(await readOPFSBackup()).toBeNull()
+  })
+
+  it('возвращает BackupFile после записи performOPFSBackup', async () => {
+    mockOPFS()
+    const db = makeDB(); await db.open()
+    await db.clients.add({ name: 'Тест', isSelf: false, createdAt: new Date() })
+    await performOPFSBackup(db)
+    db.close(); await db.delete()
+
+    const result = await readOPFSBackup()
+    expect(result).not.toBeNull()
+    expect(isValidBackup(result)).toBe(true)
+    expect(result!.data.clients[0].name).toBe('Тест')
+  })
+
+  it('возвращает null при невалидном JSON-содержимом', async () => {
+    const root = mockOPFS()
+    const handle = new MockFileHandle()
+    handle.getFile = async () => ({ text: async () => 'not json at all', size: 14, lastModified: Date.now() } as unknown as File)
+    root.files.set('apptochite-auto.json', handle)
+
+    expect(await readOPFSBackup()).toBeNull()
+  })
+
+  it('возвращает null при файле с невалидной структурой', async () => {
+    const root = mockOPFS()
+    const handle = new MockFileHandle()
+    const bad = JSON.stringify({ version: 2, data: {} })
+    handle.getFile = async () => ({ text: async () => bad, size: bad.length, lastModified: Date.now() } as unknown as File)
+    root.files.set('apptochite-auto.json', handle)
+
+    expect(await readOPFSBackup()).toBeNull()
   })
 })
 
