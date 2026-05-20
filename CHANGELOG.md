@@ -1,3 +1,10 @@
+# [1.62.0](https://github.com/fiscalagent/AppTochite/compare/v1.61.1...v1.62.0) (2026-05-20)
+
+
+### feat
+
+* тосты сохранения только при голосовом вводе; позиция тоста выше при диктовке ([](https://github.com/fiscalagent/AppTochite/commit/0d39237d1b77f1a7cce07ba213ca2bfd599dbe4e))
+
 ## [1.61.1](https://github.com/fiscalagent/AppTochite/compare/v1.61.0...v1.61.1) (2026-05-20)
 
 
