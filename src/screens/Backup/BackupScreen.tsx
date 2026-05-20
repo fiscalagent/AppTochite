@@ -235,7 +235,16 @@ export default function BackupScreen() {
                   {permissionLost && (
                     <button className={s.primaryBtn} disabled={autoBackupLoading} onClick={async () => {
                       setAutoBackupLoading(true)
-                      try { await enableAutoBackup() } catch { /* user cancelled */ } finally { setAutoBackupLoading(false) }
+                      try {
+                        await enableAutoBackup()
+                        showToast('Автобэкап восстановлен')
+                      } catch (err) {
+                        if (!(err instanceof DOMException && (err.name === 'AbortError' || err.name === 'NotAllowedError'))) {
+                          showToast('Не удалось записать бэкап в папку')
+                        }
+                      } finally {
+                        setAutoBackupLoading(false)
+                      }
                     }}>
                       {autoBackupLoading ? 'Подключение…' : 'Переподключить папку'}
                     </button>
@@ -245,10 +254,19 @@ export default function BackupScreen() {
               </>
             ) : (
               <>
-                <p className={s.desc}>Приложение будет автоматически сохранять бэкап в выбранную папку каждый раз, когда вы сворачиваете приложение. Один раз выбрали — и забыли.</p>
+                <p className={s.desc}>Приложение будет автоматически сохранять бэкап в выбранную папку каждый раз при открытии. Один раз выбрали — и забыли.</p>
                 <button className={s.primaryBtn} disabled={autoBackupLoading} onClick={async () => {
                   setAutoBackupLoading(true)
-                  try { await enableAutoBackup(); showToast('Автобэкап включён') } catch { /* user cancelled */ } finally { setAutoBackupLoading(false) }
+                  try {
+                    await enableAutoBackup()
+                    showToast('Автобэкап включён')
+                  } catch (err) {
+                    if (!(err instanceof DOMException && (err.name === 'AbortError' || err.name === 'NotAllowedError'))) {
+                      showToast('Не удалось записать бэкап в папку')
+                    }
+                  } finally {
+                    setAutoBackupLoading(false)
+                  }
                 }}>
                   {autoBackupLoading ? 'Выбор папки…' : 'Включить автобэкап'}
                 </button>

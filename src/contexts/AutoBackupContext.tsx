@@ -8,7 +8,7 @@ import {
   performDailyBackupIfNeeded,
   updateLastBackupAt,
 } from '../utils/backup'
-import { pickDirectory, queryDirectoryPermission, requestDirectoryPermission } from '../utils/fileSystemAccess'
+import { pickDirectory, requestDirectoryPermission } from '../utils/fileSystemAccess'
 
 interface AutoBackupContextValue {
   isEnabled: boolean
@@ -51,11 +51,9 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
       if (document.visibilityState !== 'visible') return
       const h = handleRef.current
       if (!h) return
-      const perm = await queryDirectoryPermission(h)
-      if (perm !== 'granted') {
-        setPermissionLost(true)
-        return
-      }
+      // Attempt backup without pre-checking queryPermission: on Chrome 122+
+      // installed PWAs, queryPermission conservatively returns 'prompt' even
+      // when Chrome has persisted the grant and the write would succeed.
       try {
         await performAutoBackup(db, h)
         await performDailyBackupIfNeeded(db, h)
@@ -87,6 +85,8 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
     handleRef.current = h
     setHandle(h)
     setPermissionLost(false)
+    // Intentionally not caught here — backup errors propagate to the caller
+    // so the UI can show a meaningful error instead of silently failing.
     await performAutoBackup(db, h)
     await updateLastBackupAt(db)
   }
