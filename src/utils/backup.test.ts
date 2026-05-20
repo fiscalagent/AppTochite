@@ -6,13 +6,12 @@ import {
   exportBackup,
   restoreBackup,
   buildSharpeningCSV,
-  performAutoBackup,
-  performDailyBackupIfNeeded,
+  performOPFSBackup,
   type BackupFile,
 } from './backup'
 import { AppTochiteDB } from '../db/db'
 
-// ─── File System Access API mock ─────────────────────────────────────────────
+// ─── OPFS mock ───────────────────────────────────────────────────────────────
 
 class MockWritable {
   private chunks: string[] = []
@@ -23,34 +22,40 @@ class MockWritable {
 
 class MockFileHandle {
   writables: MockWritable[] = []
+  private _content = ''
   async createWritable() {
     const w = new MockWritable()
     this.writables.push(w)
+    // simulate close committing content
+    const origClose = w.close.bind(w)
+    w.close = async () => { await origClose(); this._content = w.content }
     return w
   }
-  get lastContent() { return this.writables.at(-1)?.content ?? '' }
+  async getFile() {
+    return { text: async () => this._content, size: this._content.length, lastModified: Date.now() } as unknown as File
+  }
+  get lastContent() { return this._content }
 }
 
-class MockDirectoryHandle {
+class MockOPFSRoot {
   files = new Map<string, MockFileHandle>()
 
   async getFileHandle(name: string, opts?: { create?: boolean }) {
     if (!this.files.has(name)) {
       if (opts?.create) this.files.set(name, new MockFileHandle())
-      else throw new Error(`NotFoundError: ${name}`)
+      else throw new DOMException('NotFoundError', 'NotFoundError')
     }
     return this.files.get(name)!
   }
-
-  async removeEntry(name: string) { this.files.delete(name) }
-
-  async *entries(): AsyncGenerator<[string, MockFileHandle]> {
-    for (const entry of this.files) yield entry
-  }
 }
 
-function mockDir() {
-  return new MockDirectoryHandle() as unknown as FileSystemDirectoryHandle
+function mockOPFS() {
+  const root = new MockOPFSRoot()
+  vi.stubGlobal('navigator', {
+    ...navigator,
+    storage: { getDirectory: async () => root },
+  })
+  return root
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -378,19 +383,19 @@ describe('exportBackup + restoreBackup', () => {
   })
 })
 
-// ─── performAutoBackup ───────────────────────────────────────────────────────
+// ─── performOPFSBackup ───────────────────────────────────────────────────────
 
-describe('performAutoBackup', () => {
+describe('performOPFSBackup', () => {
   let db: AppTochiteDB
 
   beforeEach(async () => { db = makeDB(); await db.open() })
-  afterEach(async () => { db.close(); await db.delete() })
+  afterEach(async () => { vi.unstubAllGlobals(); db.close(); await db.delete() })
 
   it('записывает apptochite-auto.json с валидным содержимым', async () => {
+    const root = mockOPFS()
     await db.clients.add({ name: 'Тест', isSelf: false, createdAt: new Date() })
-    const dir = mockDir()
-    await performAutoBackup(db, dir)
-    const handle = (dir as unknown as MockDirectoryHandle).files.get('apptochite-auto.json')
+    await performOPFSBackup(db)
+    const handle = root.files.get('apptochite-auto.json')
     expect(handle).toBeDefined()
     const parsed = JSON.parse(handle!.lastContent)
     expect(isValidBackup(parsed)).toBe(true)
@@ -399,97 +404,31 @@ describe('performAutoBackup', () => {
   })
 
   it('обновляет lastBackupAt в settings', async () => {
-    const dir = mockDir()
+    mockOPFS()
     const before = Date.now()
-    await performAutoBackup(db, dir)
+    await performOPFSBackup(db)
     const entry = await db.settings.get('lastBackupAt')
     expect(entry).toBeDefined()
     expect(new Date(entry!.value as string).getTime()).toBeGreaterThanOrEqual(before)
   })
-})
 
-// ─── performDailyBackupIfNeeded ──────────────────────────────────────────────
-
-describe('performDailyBackupIfNeeded', () => {
-  let db: AppTochiteDB
-
-  beforeEach(async () => {
-    db = makeDB()
-    await db.open()
-    vi.useFakeTimers({ toFake: ['Date'] })
-  })
-
-  afterEach(async () => {
-    vi.useRealTimers()
-    db.close()
-    await db.delete()
-  })
-
-  it('создаёт датированный файл при первом вызове', async () => {
-    vi.setSystemTime(new Date('2026-05-16T10:00:00Z'))
-    const dir = mockDir()
-    await performDailyBackupIfNeeded(db, dir)
-    const mock = dir as unknown as MockDirectoryHandle
-    expect(mock.files.has('apptochite-daily-2026-05-16.json')).toBe(true)
-    expect(isValidBackup(JSON.parse(mock.files.get('apptochite-daily-2026-05-16.json')!.lastContent))).toBe(true)
-  })
-
-  it('не пишет повторно в тот же день', async () => {
-    vi.setSystemTime(new Date('2026-05-16T10:00:00Z'))
-    const dir = mockDir()
-    await performDailyBackupIfNeeded(db, dir)
-    const handle = (dir as unknown as MockDirectoryHandle).files.get('apptochite-daily-2026-05-16.json')!
-    const count = handle.writables.length
-
-    await performDailyBackupIfNeeded(db, dir)
-    expect(handle.writables.length).toBe(count) // повторный writable не создавался
-  })
-
-  it('через 24 часа пишет новый файл и удаляет старый', async () => {
-    vi.setSystemTime(new Date('2026-05-16T10:00:00Z'))
-    const dir = mockDir()
-    await performDailyBackupIfNeeded(db, dir)
-
-    vi.setSystemTime(new Date('2026-05-17T10:00:00Z'))
-    await performDailyBackupIfNeeded(db, dir)
-
-    const mock = dir as unknown as MockDirectoryHandle
-    expect(mock.files.has('apptochite-daily-2026-05-17.json')).toBe(true)
-    expect(mock.files.has('apptochite-daily-2026-05-16.json')).toBe(false)
-  })
-
-  it('auto и daily содержат одинаковые данные и оба восстанавливаются корректно', async () => {
-    vi.setSystemTime(new Date('2026-05-16T10:00:00Z'))
+  it('бэкап восстанавливается корректно', async () => {
+    const root = mockOPFS()
     await db.clients.add({ name: 'Иванов', isSelf: false, createdAt: new Date() })
     await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
+    await performOPFSBackup(db)
 
-    const dir = mockDir()
-    await performAutoBackup(db, dir)
-    await performDailyBackupIfNeeded(db, dir)
+    const handle = root.files.get('apptochite-auto.json')!
+    const backup = JSON.parse(handle.lastContent, reviveDates) as BackupFile
+    expect(isValidBackup(backup)).toBe(true)
 
-    const mock = dir as unknown as MockDirectoryHandle
-    const autoBackup = JSON.parse(mock.files.get('apptochite-auto.json')!.lastContent, reviveDates) as BackupFile
-    const dailyBackup = JSON.parse(mock.files.get('apptochite-daily-2026-05-16.json')!.lastContent, reviveDates) as BackupFile
+    const db2 = makeDB()
+    await db2.open()
+    await restoreBackup(db2, backup)
+    const names = (await db2.clients.toArray()).map(c => c.name).sort()
+    db2.close(); await db2.delete()
 
-    expect(isValidBackup(autoBackup)).toBe(true)
-    expect(isValidBackup(dailyBackup)).toBe(true)
-
-    // Восстанавливаем из auto
-    const dbAuto = makeDB()
-    await dbAuto.open()
-    await restoreBackup(dbAuto, autoBackup)
-    const clientsAuto = (await dbAuto.clients.toArray()).map(c => c.name).sort()
-    dbAuto.close(); await dbAuto.delete()
-
-    // Восстанавливаем из daily
-    const dbDaily = makeDB()
-    await dbDaily.open()
-    await restoreBackup(dbDaily, dailyBackup)
-    const clientsDaily = (await dbDaily.clients.toArray()).map(c => c.name).sort()
-    dbDaily.close(); await dbDaily.delete()
-
-    expect(clientsAuto).toEqual(clientsDaily)
-    expect(clientsAuto).toContain('Иванов')
-    expect(clientsAuto).toContain('Я')
+    expect(names).toContain('Иванов')
+    expect(names).toContain('Я')
   })
 })
