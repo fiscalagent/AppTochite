@@ -1,3 +1,10 @@
+## [1.62.1](https://github.com/fiscalagent/AppTochite/compare/v1.62.0...v1.62.1) (2026-05-20)
+
+
+### fix
+
+* тосты сохранения только при голосовом вводе; выход в клиенты после готово ([](https://github.com/fiscalagent/AppTochite/commit/5b0bd43ca5103a0e6b1cec4c2874b4d50b5aa218))
+
 # [1.62.0](https://github.com/fiscalagent/AppTochite/compare/v1.61.1...v1.62.0) (2026-05-20)
 
 

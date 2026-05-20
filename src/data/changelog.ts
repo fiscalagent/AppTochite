@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.62.1',
+    date: '2026-05-20',
+    changes: [
+      'тосты сохранения только при голосовом вводе; выход в клиенты после готово',
+      'тосты сохранения только при голосовом вводе; позиция тоста выше при диктовке',
+    ],
+  },
+  {
     version: '1.62.0',
     date: '2026-05-20',
     changes: [
