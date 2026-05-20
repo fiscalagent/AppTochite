@@ -1,3 +1,10 @@
+## [1.58.3](https://github.com/fiscalagent/AppTochite/compare/v1.58.2...v1.58.3) (2026-05-20)
+
+
+### fix
+
+* автобэкап без queryPermission-гейта, ошибки записи показывают тост ([](https://github.com/fiscalagent/AppTochite/commit/81b8bd54ad947f1a023cfbacf06cd457fa0862f1))
+
 ## [1.58.2](https://github.com/fiscalagent/AppTochite/compare/v1.58.1...v1.58.2) (2026-05-20)
 
 
