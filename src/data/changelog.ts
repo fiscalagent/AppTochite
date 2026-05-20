@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.58.2',
+    date: '2026-05-20',
+    changes: [
+      'автобэкап запускается при возврате в приложение, а не при сворачивании',
+    ],
+  },
+  {
     version: '1.58.1',
     date: '2026-05-19',
     changes: [
