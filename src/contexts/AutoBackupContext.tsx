@@ -1,22 +1,35 @@
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { db } from '../db/instance'
 import { performOPFSBackup } from '../utils/backup'
 
-const AutoBackupContext = createContext<null>(null)
+interface AutoBackupContextValue {
+  lastBackupTick: number  // increments after each successful backup — use to refresh UI
+}
+
+const AutoBackupContext = createContext<AutoBackupContextValue>({ lastBackupTick: 0 })
 
 export function useAutoBackup() {
   return useContext(AutoBackupContext)
 }
 
 export function AutoBackupProvider({ children }: { children: React.ReactNode }) {
+  const [lastBackupTick, setLastBackupTick] = useState(0)
+
+  async function runBackup() {
+    try {
+      await performOPFSBackup(db)
+      setLastBackupTick(t => t + 1)
+    } catch {
+      // silently skip — OPFS is always available, failures are transient
+    }
+  }
+
   useEffect(() => {
-    async function onVisibilityChange() {
-      if (document.visibilityState !== 'visible') return
-      try {
-        await performOPFSBackup(db)
-      } catch {
-        // silently skip — OPFS is always available, failures are transient
-      }
+    // Run on initial load (page starts visible, no visibilitychange fires)
+    runBackup()
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') runBackup()
     }
 
     document.addEventListener('visibilitychange', onVisibilityChange)
@@ -24,7 +37,7 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   return (
-    <AutoBackupContext.Provider value={null}>
+    <AutoBackupContext.Provider value={{ lastBackupTick }}>
       {children}
     </AutoBackupContext.Provider>
   )

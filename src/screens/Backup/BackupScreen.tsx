@@ -31,6 +31,7 @@ import {
   type MergeStats,
   type OPFSBackupMeta,
 } from '../../utils/backup'
+import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -54,6 +55,7 @@ export default function BackupScreen() {
   )
   const [storageMb, setStorageMb] = useState<number | null>(null)
   const [opfsMeta, setOpfsMeta] = useState<OPFSBackupMeta | null | undefined>(undefined)
+  const { lastBackupTick } = useAutoBackup()
 
   const refreshOpfsMeta = useCallback(() => {
     getOPFSBackupMeta().then(setOpfsMeta)
@@ -67,6 +69,10 @@ export default function BackupScreen() {
     }
     refreshOpfsMeta()
   }, [refreshOpfsMeta])
+
+  useEffect(() => {
+    if (lastBackupTick > 0) refreshOpfsMeta()
+  }, [lastBackupTick, refreshOpfsMeta])
 
   function toggleCompression() {
     const next = !compressed
