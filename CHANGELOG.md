@@ -1,3 +1,10 @@
+# [1.61.0](https://github.com/fiscalagent/AppTochite/compare/v1.60.0...v1.61.0) (2026-05-20)
+
+
+### feat
+
+* импорт камней из CSV и скачивание шаблона в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/2ebf8734f976ef5fff28190fd8b17b3e5060d33d))
+
 # [1.60.0](https://github.com/fiscalagent/AppTochite/compare/v1.59.1...v1.60.0) (2026-05-20)
 
 
