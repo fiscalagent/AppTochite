@@ -1,3 +1,10 @@
+# [1.59.0](https://github.com/fiscalagent/AppTochite/compare/v1.58.4...v1.59.0) (2026-05-20)
+
+
+### feat
+
+* автобэкап переведён на OPFS — без диалогов разрешений ([](https://github.com/fiscalagent/AppTochite/commit/2eb7def728f4ca7ec56a496887e9b1ce968451c5))
+
 ## [1.58.4](https://github.com/fiscalagent/AppTochite/compare/v1.58.3...v1.58.4) (2026-05-20)
 
 
