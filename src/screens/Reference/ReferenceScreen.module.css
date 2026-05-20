@@ -413,6 +413,82 @@
   cursor: pointer;
 }
 
+/* CSV import/export */
+.csvActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.csvBtn {
+  flex: 1;
+  padding: 9px 8px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--text-200);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: center;
+}
+
+.csvBtn:active {
+  background: var(--bg-400);
+}
+
+.importStats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-200);
+}
+
+.importSkipped {
+  font-size: 13px;
+  color: var(--text-400);
+}
+
+.importPreviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.importPreviewItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+}
+
+.importPreviewName {
+  color: var(--text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.importPreviewGrit {
+  color: var(--text-300);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.importPreviewMore {
+  font-size: 12px;
+  color: var(--text-400);
+  text-align: center;
+  padding-top: 2px;
+}
+
 /* Fuzzy suggestions */
 .fuzzySuggestions {
   display: flex;

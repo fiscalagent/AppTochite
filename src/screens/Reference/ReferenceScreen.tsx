@@ -52,6 +52,12 @@ const COOLANT_LABELS: Record<string, string> = {
   both:  'вода+масло',
 }
 
+const COOLANT_BY_LABEL: Record<string, StoneCoolant> = {
+  'вода':       'water',
+  'масло':      'oil',
+  'вода+масло': 'both',
+}
+
 function SelectAllRow({
   total,
   selected,
@@ -372,6 +378,97 @@ function StoneHeatmap() {
   )
 }
 
+// ─── CSV import/export ───────────────────────────────────────────────────────
+
+interface ParsedStoneRow {
+  brand: string
+  grit?: number
+  gritUnit?: GritUnit
+  gritMk?: string
+  type?: Stone['type']
+  coolant?: StoneCoolant
+}
+
+function downloadStonesTemplate() {
+  const sep = ';'
+  const lines = [
+    ['Название', 'мкм', 'FEPA', 'JIS', 'ГОСТ', 'тип', 'СОЖ'].join(sep),
+    ['GRINDERMAN CLR Oil OA', '', '120', '', '', 'ОА', 'масло'].join(sep),
+    ['Венёв Двусторонний B2-01 Алмаз 25%', '', '', '', '160/125', 'алмаз', 'вода'].join(sep),
+    ['Washita (природа)', '', '', '', '', 'природа', 'масло'].join(sep),
+  ]
+  const csv = '﻿' + lines.join('\r\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'stones_template.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function parseStonesCSV(text: string): ParsedStoneRow[] {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+  if (lines.length < 2) return []
+
+  const sep = lines[0].includes(';') ? ';' : '\t'
+  const headers = lines[0].split(sep).map(h => h.trim().toLowerCase())
+
+  const col = (...names: string[]) => headers.findIndex(h => names.includes(h))
+  const cNazv    = col('название')
+  const cMkm     = col('мкм', 'µm')
+  const cFepa    = col('fepa')
+  const cJis     = col('jis')
+  const cGost    = col('гост', 'gost', 'мк')
+  const cType    = col('тип')
+  const cCoolant = col('сож')
+
+  if (cNazv === -1) return []
+
+  const result: ParsedStoneRow[] = []
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(sep)
+    const get = (c: number) => (c >= 0 ? (cells[c]?.trim() ?? '') : '')
+
+    const brand = get(cNazv)
+    if (!brand) continue
+
+    const row: ParsedStoneRow = { brand }
+
+    const mkm  = parseFloat(get(cMkm))
+    const fepa = parseFloat(get(cFepa))
+    const jis  = parseFloat(get(cJis))
+    const gost = get(cGost)
+
+    if (!isNaN(mkm) && mkm > 0) {
+      const tableRow = GRIT_TABLE.reduce((best, r) =>
+        Math.abs(r.microns - mkm) < Math.abs(best.microns - mkm) ? r : best
+      )
+      row.grit = tableRow.fepa
+      row.gritUnit = 'fepa'
+    } else if (!isNaN(fepa) && fepa > 0) {
+      row.grit = fepa
+      row.gritUnit = 'fepa'
+    } else if (!isNaN(jis) && jis > 0) {
+      row.grit = jis
+      row.gritUnit = 'jis'
+    } else if (gost) {
+      row.gritMk = gost
+      row.gritUnit = 'mk'
+    }
+
+    const typeLabel = get(cType).toLowerCase()
+    if (typeLabel) row.type = STONE_TYPE_BY_LABEL[typeLabel]
+
+    const coolantLabel = get(cCoolant).toLowerCase()
+    if (coolantLabel) row.coolant = COOLANT_BY_LABEL[coolantLabel]
+
+    result.push(row)
+  }
+
+  return result
+}
+
 // ─── Fuzzy match ─────────────────────────────────────────────────────────────
 
 function fuzzyScore(query: string, target: string): number {
@@ -413,11 +510,13 @@ function StonesTab({ search }: { search: string }) {
   const [editType, setEditType] = useState<Stone['type'] | ''>('')
   const [editCoolant, setEditCoolant] = useState<StoneCoolant | ''>('')
   const [displayUnit, setDisplayUnit] = useState<GritDisplayMode | 'alpha'>('native')
+  const [importPreview, setImportPreview] = useState<{ toAdd: ParsedStoneRow[], skipped: number } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!open && editingId === null) return
+    if (!open && editingId === null && importPreview === null) return
     return startBlur()
-  }, [open, editingId])
+  }, [open, editingId, importPreview])
 
   const stones = useLiveQuery(
     () => db.stones.toArray().then(arr => arr.sort(compareStonesForSort)),
@@ -532,6 +631,45 @@ function StonesTab({ search }: { search: string }) {
     setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setType(''); setCoolant(''); setOpen(false)
   }
 
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    const text = await file.text()
+    const parsed = parseStonesCSV(text)
+    if (parsed.length === 0) return
+    const existing = await db.stones.toArray()
+    const toAdd: ParsedStoneRow[] = []
+    let skipped = 0
+    for (const p of parsed) {
+      const isDup = existing.some(ex => {
+        if (ex.brand.toLowerCase() !== p.brand.toLowerCase()) return false
+        if (p.gritUnit === 'mk') return ex.gritUnit === 'mk' && ex.gritMk === p.gritMk
+        if (p.gritUnit === 'fepa' || p.gritUnit === 'jis') return ex.gritUnit === p.gritUnit && ex.grit === p.grit
+        return ex.grit == null && ex.gritMk == null
+      })
+      if (isDup) skipped++
+      else toAdd.push(p)
+    }
+    setImportPreview({ toAdd, skipped })
+  }
+
+  async function handleConfirmImport() {
+    if (!importPreview) return
+    const now = new Date()
+    await db.stones.bulkAdd(importPreview.toAdd.map(p => ({
+      brand: p.brand,
+      grit: p.grit,
+      gritUnit: p.gritUnit,
+      gritMk: p.gritMk,
+      type: p.type,
+      coolant: p.coolant,
+      isCustom: true,
+      updatedAt: now,
+    })))
+    setImportPreview(null)
+  }
+
   const allBrands = [...new Set(stones?.map(st => st.brand) ?? [])]
   const addBrandSuggestions = brand.trim().length >= 2
     ? allBrands
@@ -544,10 +682,23 @@ function StonesTab({ search }: { search: string }) {
 
   return (
     <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
       {!open && selected.size === 0 && editingId === null && (
-        <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
-          + Добавить камень
-        </button>
+        <>
+          <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
+            + Добавить камень
+          </button>
+          <div className={s.csvActions}>
+            <button className={s.csvBtn} onClick={downloadStonesTemplate}>⬇ Шаблон CSV</button>
+            <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>⬆ Загрузить CSV</button>
+          </div>
+        </>
       )}
       {open && createPortal(
         <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
@@ -752,6 +903,57 @@ function StonesTab({ search }: { search: string }) {
           onDelete={deleteSelected}
           onEdit={startEdit}
         />
+      )}
+
+      {importPreview !== null && createPortal(
+        <div className={s.dialogOverlay} onClick={() => setImportPreview(null)}>
+          <div className={s.dialog} onClick={e => e.stopPropagation()}>
+            <span className={s.addTitle}>Импорт камней</span>
+            <div className={s.importStats}>
+              <span>Будет добавлено: <strong>{importPreview.toAdd.length}</strong></span>
+              {importPreview.skipped > 0 && (
+                <span className={s.importSkipped}>Дубли пропущены: {importPreview.skipped}</span>
+              )}
+            </div>
+            {importPreview.toAdd.length > 0 && (
+              <div className={s.importPreviewList}>
+                {importPreview.toAdd.slice(0, 5).map((p, i) => (
+                  <div key={i} className={s.importPreviewItem}>
+                    <span className={s.importPreviewName}>{p.brand}</span>
+                    {(p.grit != null || p.gritMk) && (
+                      <span className={s.importPreviewGrit}>
+                        {p.gritUnit === 'mk' ? `${p.gritMk} мк` : `${p.grit} ${p.gritUnit?.toUpperCase()}`}
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {importPreview.toAdd.length > 5 && (
+                  <div className={s.importPreviewMore}>...и ещё {importPreview.toAdd.length - 5}</div>
+                )}
+              </div>
+            )}
+            {importPreview.toAdd.length === 0 && (
+              <p className={s.importSkipped}>Все камни уже есть в справочнике</p>
+            )}
+            <div className={s.addRow}>
+              <button
+                className={s.addBtn}
+                onClick={handleConfirmImport}
+                disabled={importPreview.toAdd.length === 0}
+              >
+                Добавить {importPreview.toAdd.length > 0 ? importPreview.toAdd.length : ''}
+              </button>
+              <button
+                className={s.addBtn}
+                style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }}
+                onClick={() => setImportPreview(null)}
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </>
   )
