@@ -11,7 +11,7 @@
     font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 11.5px;
     color: #1a1a1a;
-    background: #fff;
+    background: #eef0f4;
     line-height: 1.45;
   }
 
@@ -22,6 +22,7 @@
     padding: 11mm 13mm 9mm;
     background: #fff;
   }
+  .page + .page { margin-top: 16px; }
 
   /* ─── HEADER ─── */
   .header {
@@ -48,6 +49,11 @@
   .header-qr img { width: 70px; height: 70px; border: 1px solid #ddd; border-radius: 8px; display: block; }
   .header-qr p { font-size: 9px; color: #888; margin-top: 3px; }
 
+  /* compact header (page 2) */
+  .header.cont .app-icon { width: 38px; height: 38px; font-size: 20px; border-radius: 10px; }
+  .header.cont .header-title h1 { font-size: 17px; }
+  .header.cont .page-tag { font-size: 10px; color: #aaa; font-weight: 600; }
+
   /* ─── DISCLAIMER ─── */
   .disclaimer {
     background: #FFF8E6;
@@ -68,6 +74,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 11px;
+    align-items: start;
   }
 
   /* ─── SECTIONS ─── */
@@ -82,6 +89,7 @@
   .section.green { border-left: 3px solid #2a9d5c; border-color: #a8dfc0; }
   .section.red   { border-left: 3px solid #c0392b; border-color: #f0b8b4; }
   .section.grey  { border-left: 3px solid #999;    border-color: #dde0ea; }
+  .section.purple{ border-left: 3px solid #7a5cc0; border-color: #d2c6ee; }
 
   .section-title {
     font-size: 10px;
@@ -93,10 +101,11 @@
     align-items: center;
     gap: 6px;
   }
-  .section.blue  .section-title { color: #2a6db5; }
-  .section.green .section-title { color: #1e7a44; }
-  .section.red   .section-title { color: #a12820; }
-  .section.grey  .section-title { color: #666; }
+  .section.blue   .section-title { color: #2a6db5; }
+  .section.green  .section-title { color: #1e7a44; }
+  .section.red    .section-title { color: #a12820; }
+  .section.grey   .section-title { color: #666; }
+  .section.purple .section-title { color: #5a3fa0; }
 
   .num {
     width: 18px; height: 18px;
@@ -106,10 +115,11 @@
     flex-shrink: 0;
     color: #fff;
   }
-  .section.blue  .num { background: #4A90D9; }
-  .section.green .num { background: #2a9d5c; }
-  .section.red   .num { background: #c0392b; }
-  .section.grey  .num { background: #999; }
+  .section.blue   .num { background: #4A90D9; }
+  .section.green  .num { background: #2a9d5c; }
+  .section.red    .num { background: #c0392b; }
+  .section.grey   .num { background: #999; }
+  .section.purple .num { background: #7a5cc0; }
 
   /* ─── INSTALL VISUAL ─── */
   .install-visual {
@@ -143,10 +153,11 @@
     margin-top: 1px;
     color: #fff;
   }
-  .section.blue  .sn { background: #4A90D9; }
-  .section.green .sn { background: #2a9d5c; }
-  .section.red   .sn { background: #c0392b; }
-  .section.grey  .sn { background: #999; }
+  .section.blue   .sn { background: #4A90D9; }
+  .section.green  .sn { background: #2a9d5c; }
+  .section.red    .sn { background: #c0392b; }
+  .section.grey   .sn { background: #999; }
+  .section.purple .sn { background: #7a5cc0; }
 
   .st { font-size: 11px; line-height: 1.45; flex: 1; }
   .st strong { font-weight: 700; }
@@ -183,6 +194,7 @@
     line-height: 1.4;
     margin-top: 6px;
   }
+  .note.green { background: #e7f6ee; border-color: #a8dfc0; color: #1e6e3f; }
 
   /* ─── MOCKUPS ─── */
   .mockup-row { display: flex; gap: 6px; margin: 7px 0 6px; }
@@ -238,12 +250,22 @@
     line-height: 1.45;
     color: #a12820;
     font-weight: 500;
+    margin-top: 6px;
   }
+  .warn:first-child { margin-top: 0; }
   .warn strong { font-weight: 700; }
+  .warn.small { font-size: 10px; padding: 6px 9px; }
 
   /* ─── DIVIDER + SUB-TITLE ─── */
   .divider { height: 1px; background: #dde0ea; margin: 6px 0; }
   .sub-title { font-size: 10.5px; font-weight: 700; color: #333; margin: 0 0 5px; }
+  .sub-title.mt { margin-top: 7px; }
+
+  /* ─── USEFUL LIST ─── */
+  .useful { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .useful li { display: flex; gap: 8px; align-items: flex-start; font-size: 10.5px; line-height: 1.4; }
+  .useful .u-ico { font-size: 14px; flex-shrink: 0; margin-top: 1px; width: 18px; text-align: center; }
+  .useful b { font-weight: 700; color: #1a1a1a; }
 
   /* ─── FEATURES STRIP ─── */
   .features {
@@ -279,12 +301,16 @@
   /* ─── PRINT ─── */
   @media print {
     body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page { margin: 0; padding: 9mm 12mm 8mm; width: 100%; }
+    .page { margin: 0; padding: 9mm 12mm 8mm; width: 100%; page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .page + .page { margin-top: 0; }
   }
   @page { size: A4; margin: 0; }
 </style>
 </head>
 <body>
+
+<!-- ════════════════════ PAGE 1 ════════════════════ -->
 <div class="page">
 
   <!-- HEADER -->
@@ -293,7 +319,7 @@
       <div class="app-icon">🔪</div>
       <div class="header-title">
         <h1>AppTochite</h1>
-        <p>Журнал заточника ножей &nbsp;·&nbsp; v1.32.0</p>
+        <p>Журнал заточника ножей &nbsp;·&nbsp; v1.64.2</p>
       </div>
     </div>
     <div class="header-qr">
@@ -319,8 +345,9 @@
 
       <!-- INSTALL -->
       <div class="section blue">
-        <div class="section-title"><span class="num">1</span> Установка на телефон (Android, Chrome)</div>
+        <div class="section-title"><span class="num">1</span> Установка на телефон</div>
 
+        <div class="sub-title">📱 Android — через браузер Chrome</div>
         <div class="install-visual">
           <div class="iv-box"><span class="ico">🌐</span>Открыть Chrome</div>
           <div class="iv-arr">›</div>
@@ -356,8 +383,34 @@
             <span class="st">Нажмите <strong>«Установить»</strong> — значок AppTochite появится на рабочем столе</span>
           </li>
         </ul>
+
+        <div class="divider"></div>
+        <div class="sub-title">🍎 iPhone — через браузер Safari</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Откройте <strong>Safari</strong> и введите тот же адрес <span class="url-box">fiscalagent.github.io/AppTochite</span></span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Нажмите кнопку <strong>«Поделиться»</strong> (квадрат со стрелкой вверх) внизу экрана</span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Выберите <em>«На экран "Домой"»</em> → <strong>«Добавить»</strong></span>
+          </li>
+        </ul>
+
+        <div class="warn small">
+          <strong>⚠️ Не открывайте ссылку внутри мессенджера!</strong> Если перейти по ней прямо из Telegram, WhatsApp или Instagram — приложение откроется во встроенном браузере, где его <strong>нельзя установить и данные не сохранятся</strong>. Сначала откройте Chrome (Android) или Safari (iPhone) и введите адрес вручную.
+        </div>
         <div class="note">💡 Интернет нужен только при первом запуске. Потом приложение работает без сети.</div>
       </div>
+
+    </div>
+
+    <!-- ════ RIGHT ════ -->
+    <div>
 
       <!-- FIRST USE -->
       <div class="section blue">
@@ -379,7 +432,6 @@
             <span class="mockup-ico">🪨</span>
             <div class="mockup-label">Камни, стали,<br>ножи</div>
           </div>
-
         </div>
 
         <ul class="steps">
@@ -397,27 +449,25 @@
           </li>
           <li>
             <span class="sn">4</span>
-            <span class="st"><strong>Шаг 1 — Приёмка:</strong> выберите клиента, укажите нож, сталь, что требуется (заточка / правка РК / ремонт). Фото «до» — по желанию. Нажмите <em>«Далее — Заточка»</em></span>
+            <span class="st"><strong>Шаг 1 — Приёмка:</strong> выберите клиента, укажите нож, сталь, что требуется (заточка / правка РК / ремонт). Нажмите <em>«Заточить сейчас»</em> — перейдёте сразу к шагу 2, или <em>«Сохранить как принятый»</em> — нож зафиксирован в очереди, к шагу 2 вернётесь позже</span>
           </li>
           <li>
             <span class="sn">5</span>
-            <span class="st"><strong>Шаг 2 — Заточка:</strong> угол, камни, цена. Нажмите <em>«Создать заточку»</em></span>
+            <span class="st"><strong>Шаг 2 — Заточка:</strong> укажите угол, камни, цену. Добавьте фото «до» и «после» — по желанию. Нажмите <em>«Готово»</em> чтобы закрыть заточку, или <em>«Принято»</em> чтобы сохранить и вернуться позже</span>
           </li>
           <li>
             <span class="sn">6</span>
-            <span class="st">Когда нож готов — откройте запись и нажмите <strong>«ЗАТОЧИТЬ»</strong>. Приложение предложит добавить фото «после» — можно пропустить</span>
+            <span class="st">Если сохранили нож как принятый — откройте запись и нажмите <strong>«ЗАТОЧИТЬ»</strong>: откроется шаг 2 с уже заполненными данными</span>
           </li>
           <li>
             <span class="sn">7</span>
-            <span class="st">Нажмите <em>«Создать фото-отчёт»</em> — приложение нарисует карточку с ножом, сталью и камнями, которую можно сохранить или переслать клиенту</span>
+            <span class="st">В готовой записи нажмите <em>«Поделиться фото»</em> → <em>«Фотоотчёт»</em> — приложение нарисует карточку с ножом, сталью и камнями, которую можно сохранить или переслать клиенту</span>
           </li>
         </ul>
         <div class="statuses">
           <span class="badge badge-blue">● принят</span>
           <span class="badge badge-green">● готов</span>
         </div>
-        <div class="note">💡 В форме заточки: двойной тап по подсказке — быстрый выбор из списка.</div>
-        <div class="note">🎙️ В <em>«О программе»</em> можно включить <strong>голосовой ввод</strong>: кнопка-микрофон у каждого поля + кнопка <strong>«Диктовка»</strong> в шапке формы заточки — заполняйте без касаний: «<em>клиент Иван</em>», «<em>сталь d2</em>», «<em>угол 20</em>», «<em>добавить</em>», «<em>готово</em>».</div>
         <div class="nav-tabs">
           <span class="nav-tab">👥 Клиенты</span>
           <span class="nav-tab">🕑 История</span>
@@ -426,23 +476,89 @@
       </div>
 
     </div>
+  </div>
 
-    <!-- ════ RIGHT ════ -->
-    <div>
+  <!-- VOICE (full width) -->
+  <div class="section green" style="margin-top:11px;">
+    <div class="section-title"><span class="num">🎙️</span> Голосовой ввод — заведите заточку без рук <span style="font-size:8px;font-weight:700;background:#f0a500;color:#fff;border-radius:6px;padding:1px 5px;letter-spacing:0;text-transform:none;">бета</span></div>
+    <ul class="steps">
+      <li>
+        <span class="sn">1</span>
+        <span class="st"><strong>Включите бету:</strong> значок 💾 → строка <em>«О программе»</em> → тумблер <em>«Голосовой ввод»</em>. Нужен интернет; работает на Android (на iPhone недоступно)</span>
+      </li>
+      <li>
+        <span class="sn">2</span>
+        <span class="st">Откройте форму заточки и нажмите <strong>«Диктовка»</strong> в шапке — приложение слушает непрерывно, внизу видна последняя распознанная фраза</span>
+      </li>
+      <li>
+        <span class="sn">3</span>
+        <span class="st"><strong>Каждая команда начинается с названия поля.</strong> Приёмка: «<em>клиент Иван</em>», «<em>нож Victorinox</em>», «<em>сталь D2</em>», «<em>требуется заточка</em>», «<em>примечание сильно затупился</em>», затем «<em>дальше</em>»</span>
+      </li>
+      <li>
+        <span class="sn">4</span>
+        <span class="st">Заточка: «<em>угол 20</em>», «<em>камень нанива 1000</em>» → «<em>добавить</em>», «<em>цена 500</em>». Завершить: «<em>сохранить</em>» (нож принят) или «<em>готово</em>» (заточка закрыта)</span>
+      </li>
+      <li>
+        <span class="sn">5</span>
+        <span class="st"><strong>Исправить на лету:</strong> «<em>сотри сталь</em>», «<em>удали последний камень</em>», «<em>повтори</em>» (что услышал). Выключить диктовку — «<em>стоп</em>»</span>
+      </li>
+    </ul>
+    <div class="note green" style="margin-top:6px;">⚡ Можно надиктовать и одно поле: тапните микрофон рядом с ним. А двойной тап по подсказке под полем — быстрый выбор из списка камней, сталей и ножей.</div>
+  </div>
 
-      <!-- DATA WARNING -->
-      <div class="warn">
-        <strong>⚠️ Данные хранятся только на вашем телефоне!</strong><br>
-        Если очистить браузер, сбросить или сломать телефон — всё пропадёт без возможности восстановления. <strong>Делайте бэкап раз в неделю.</strong>
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-l">
+      <strong>AppTochite</strong> · Журнал профессионального заточника<br>
+      🌐 <a href="https://fiscalagent.github.io/AppTochite/">fiscalagent.github.io/AppTochite</a>
+      &nbsp;&nbsp;✈️ <a href="https://t.me/Apptochite">t.me/Apptochite</a>
+    </div>
+    <div class="footer-r">
+      Версия 1.64.2 · Май 2026<br>
+      Страница 1 из 2 — установка и работа
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════ PAGE 2 ════════════════════ -->
+<div class="page">
+
+  <!-- HEADER (compact) -->
+  <div class="header cont">
+    <div class="header-left">
+      <div class="app-icon">🔪</div>
+      <div class="header-title">
+        <h1>AppTochite</h1>
+        <p>Данные, бэкап и полезные функции</p>
       </div>
+    </div>
+    <div class="page-tag">Страница 2 из 2</div>
+  </div>
+
+  <!-- DATA WARNING -->
+  <div class="warn">
+    <strong>⚠️ Данные хранятся только на вашем телефоне!</strong><br>
+    Если очистить браузер, сбросить или сломать телефон — всё пропадёт без возможности восстановления. <strong>Делайте файловый бэкап раз в неделю и храните его отдельно от телефона.</strong>
+  </div>
+
+  <!-- TWO COLUMNS -->
+  <div class="two-col" style="margin-top:9px;">
+
+    <!-- ════ LEFT ════ -->
+    <div>
 
       <!-- BACKUP -->
       <div class="section green">
         <div class="section-title"><span class="num">3</span> Бэкап — как сохранить данные</div>
+
+        <div class="note green" style="margin-top:0;">🔄 <strong>Автобэкап уже включён:</strong> при каждом открытии приложение само сохраняет копию данных внутри себя. Но эта копия лежит <strong>на том же телефоне</strong> — при очистке браузера или потере телефона она тоже пропадёт. Поэтому обязательно делайте файловый бэкап ниже.</div>
+
+        <div class="sub-title mt">Файловый бэкап (главное)</div>
         <ul class="steps">
           <li>
             <span class="sn">1</span>
-            <span class="st">На экране «Клиенты» нажмите значок <strong>↓</strong> (стрелка-загрузка) вверху справа</span>
+            <span class="st">На экране «Клиенты» нажмите значок <strong>💾</strong> вверху справа — откроется экран <strong>«Настройки»</strong></span>
           </li>
           <li>
             <span class="sn">2</span>
@@ -450,7 +566,7 @@
           </li>
           <li>
             <span class="sn">3</span>
-            <span class="st">Файл <code>apptochite-2026-01-01.json</code> сохранится в папку <strong>«Загрузки»</strong> на телефоне</span>
+            <span class="st">Файл <code>apptochite-2026-05-22.json</code> сохранится в папку <strong>«Загрузки»</strong> на телефоне</span>
           </li>
           <li>
             <span class="sn">4</span>
@@ -463,17 +579,33 @@
         <ul class="steps">
           <li>
             <span class="sn">1</span>
-            <span class="st">Откройте раздел <strong>Бэкап</strong> → нажмите <strong>«Выбрать файл…»</strong> → найдите ваш файл <code>.json</code></span>
+            <span class="st">Откройте <strong>«Настройки»</strong> (значок 💾) → <strong>«Выбрать файл…»</strong> → найдите ваш файл <code>.json</code>.<br>Если файл потерян, но приложение цело — можно нажать <em>«Восстановить из авто-бэкапа»</em></span>
           </li>
           <li>
             <span class="sn">2</span>
-            <span class="st">Убедитесь, что данные в превью правильные, и выберите режим:<br>
-              <strong>«Объединить»</strong> — добавит новые записи из файла, не трогая то, что уже есть на телефоне. <em>Используйте, если работаете с двух устройств или хотите добавить данные без потерь.</em><br>
-              <strong>«Заменить всё»</strong> — удалит текущие данные и полностью восстановит из файла. <em>Используйте при переносе на новый телефон или после сброса.</em>
+            <span class="st">Проверьте превью (сколько клиентов и заточек) и выберите режим:<br>
+              <strong>«Объединить»</strong> — добавит новые записи из файла и обновит те, что новее в файле; данные на телефоне не исчезнут. <em>Для работы с двух устройств или добавления без потерь.</em><br>
+              <strong>«Заменить всё»</strong> — удалит текущие данные и полностью восстановит из файла. <em>Для переноса на новый телефон или после сброса.</em>
             </span>
           </li>
         </ul>
       </div>
+
+      <!-- PRIVACY -->
+      <div class="section purple">
+        <div class="section-title"><span class="num">🔒</span> Приватность</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">●</span>
+            <span class="st"><strong>Данные клиентов</strong> (имена, телефоны, телеграм, фото) и все заточки хранятся <strong>только на вашем телефоне</strong>. Нет облака, регистрации и входа по паролю — приложение работает офлайн</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- ════ RIGHT ════ -->
+    <div>
 
       <!-- UPDATE -->
       <div class="section grey">
@@ -485,7 +617,11 @@
           </li>
           <li>
             <span class="sn">2</span>
-            <span class="st">Если разработчик попросил переустановить — выполните полную очистку (см. раздел ниже)</span>
+            <span class="st">Проверить версию вручную можно в <strong>«О программе»</strong> (значок 💾 → строка «О программе») → <em>«Проверить»</em></span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Если разработчик попросил переустановить — выполните полную очистку (см. ниже)</span>
           </li>
         </ul>
       </div>
@@ -493,8 +629,8 @@
       <!-- REINSTALL -->
       <div class="section red">
         <div class="section-title"><span class="num">5</span> Полная переустановка</div>
-        <div class="warn" style="font-size:10px; padding:5px 9px; margin-bottom:6px;">
-          <strong>Сначала сделайте бэкап!</strong> После очистки данные восстановить нельзя.
+        <div class="warn small" style="margin-bottom:6px;">
+          <strong>Сначала сделайте файловый бэкап!</strong> После очистки данные восстановить нельзя.
         </div>
         <ul class="steps">
           <li>
@@ -513,16 +649,29 @@
           </li>
           <li>
             <span class="sn">4</span>
-            <span class="st">Установите приложение заново (см. раздел <strong>1</strong> слева)</span>
+            <span class="st">Установите приложение заново (см. раздел <strong>«Установка»</strong> на стр. 1)</span>
           </li>
           <li>
             <span class="sn">5</span>
-            <span class="st">Откройте <strong>Бэкап</strong> → «Выбрать файл…» → восстановите данные из вашего <code>.json</code></span>
+            <span class="st">Откройте <strong>«Настройки»</strong> → «Выбрать файл…» → восстановите данные из вашего <code>.json</code></span>
           </li>
         </ul>
       </div>
 
     </div>
+  </div>
+
+  <!-- USEFUL FEATURES (full width) -->
+  <div class="section blue" style="margin-top:11px;">
+    <div class="section-title"><span class="num">★</span> Полезные функции</div>
+    <ul class="useful">
+      <li><span class="u-ico">🔍</span><span><b>Поиск</b> — есть на экранах «Клиенты», «История» и «Справочник». Ищет по имени, телефону, телеграм, названию ножа или камня.</span></li>
+      <li><span class="u-ico">🏷️</span><span><b>Фильтры</b> — в «Истории» можно показать только <em>принятые</em> или только <em>готовые</em> заточки, а в карточке клиента — отфильтровать по конкретному ножу.</span></li>
+      <li><span class="u-ico">🔁</span><span><b>Повторить заточку</b> — в готовой записи кнопка <em>«Повторить заточку»</em> создаёт новую с теми же ножом, сталью и камнями. Удобно для постоянных клиентов.</span></li>
+      <li><span class="u-ico">🗜️</span><span><b>Сжатие фото</b> — если хранилище заполняется, включите <em>«Настройки» → «Сжатие новых фото»</em> (JPEG, до 1280 пкс — снимки в 3–5 раз меньше).</span></li>
+      <li><span class="u-ico">📊</span><span><b>Экспорт в Excel</b> — <em>«Настройки» → «Скачать CSV»</em> выгружает все заточки таблицей для Excel, Google Таблиц или Numbers.</span></li>
+      <li><span class="u-ico">🪨</span><span><b>Свои камни из файла</b> — Справочник → «Камни» → <em>«Импорт CSV»</em>. Нужна колонка «Название» и одна из шкал гритности (мкм / FEPA / JIS / ГОСТ) — остальные пересчитаются. Кодировка UTF-8 или Win-1251.</span></li>
+    </ul>
   </div>
 
   <!-- FEATURES STRIP -->
@@ -535,7 +684,7 @@
     <div class="feat">
       <span class="feat-ico">🪨</span>
       <div class="feat-name">Справочники</div>
-      <div class="feat-desc">890 ножей, 219 сталей, 450+ камней</div>
+      <div class="feat-desc">890 ножей, 219 сталей, 100+ камней. Свои можно добавить вручную или из файла</div>
     </div>
     <div class="feat">
       <span class="feat-ico">🖼️</span>
@@ -553,19 +702,14 @@
       <div class="feat-desc">Какие камни используете чаще всего</div>
     </div>
     <div class="feat">
-      <span class="feat-ico">📊</span>
-      <div class="feat-name">Экспорт в Excel</div>
-      <div class="feat-desc">Все заточки в CSV для таблиц</div>
+      <span class="feat-ico">🎙️</span>
+      <div class="feat-name">Голосовая диктовка</div>
+      <div class="feat-desc">Заполнить заточку без касаний экрана</div>
     </div>
     <div class="feat">
       <span class="feat-ico">🔒</span>
       <div class="feat-name">Приватность</div>
-      <div class="feat-desc">Никаких облаков — данные только у вас</div>
-    </div>
-    <div class="feat">
-      <span class="feat-ico">🎙️</span>
-      <div class="feat-name">Голосовая диктовка</div>
-      <div class="feat-desc">Заполнить заточку без касаний экрана</div>
+      <div class="feat-desc">Данные клиентов — только на вашем телефоне</div>
     </div>
     <div class="feat">
       <span class="feat-ico">🆓</span>
@@ -582,7 +726,7 @@
       &nbsp;&nbsp;✈️ <a href="https://t.me/Apptochite">t.me/Apptochite</a>
     </div>
     <div class="footer-r">
-      Версия 1.54.0 · Май 2026<br>
+      Версия 1.64.2 · Май 2026<br>
       Данные хранятся локально на устройстве
     </div>
   </div>
