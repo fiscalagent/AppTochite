@@ -1013,67 +1013,50 @@ export default function SharpeningForm() {
             </div>
           </div>
 
-          <div className={s.field}>
-            <label className={s.label}>Статус</label>
-            <div className={s.statusChips}>
-              {(['accepted', 'done'] as SharpeningStatus[]).map(st => {
-                const labels = { accepted: 'принят', done: 'готов' }
-                const activeClass = { accepted: s.activeAccepted, done: s.activeDone }
-                return (
-                  <button
-                    key={st}
-                    className={`${s.statusChip} ${s[st]} ${status === st ? activeClass[st] : ''}`}
-                    onClick={() => setStatus(st)}
-                  >
-                    {labels[st]}
-                  </button>
-                )
-              })}
-            </div>
+          <div className={s.photoSection}>
+            <span className={s.photoTitle}>
+              Фото «После»{photosAfter.length > 0 ? ` · ${photosAfter.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
+            </span>
+            {photosAfter.length > 0 && (
+              <div className={s.photoThumbs}>
+                {photosAfter.map((src, i) => {
+                  const isCover = i === 0
+                  return (
+                    <div key={i} className={`${s.photoThumb} ${isCover ? s.photoThumbCover : ''}`}>
+                      <img
+                        src={src}
+                        alt=""
+                        onClick={() => setLightbox({ photos: photosAfter, index: i })}
+                      />
+                      {isCover && <span className={s.coverBadge}>обложка</span>}
+                      <button
+                        className={s.photoRemove}
+                        onClick={() => setPhotosAfter(prev => prev.filter((_, j) => j !== i))}
+                      >×</button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <button
+              className={s.photoAddBtn}
+              disabled={photosAfter.length >= PHOTO_LIMIT}
+              onClick={() => setPickerFor('after')}
+            >
+              <span className={s.photoAddIcon}><IconCamera /></span>
+              {photosAfter.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
+            </button>
           </div>
 
-          {/* Фото «После» — только когда статус «готов» */}
-          {status === 'done' && (
-            <div className={s.photoSection}>
-              <span className={s.photoTitle}>
-                Фото «После»{photosAfter.length > 0 ? ` · ${photosAfter.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
-              </span>
-              {photosAfter.length > 0 && (
-                <div className={s.photoThumbs}>
-                  {photosAfter.map((src, i) => {
-                    const isCover = i === 0
-                    return (
-                      <div key={i} className={`${s.photoThumb} ${isCover ? s.photoThumbCover : ''}`}>
-                        <img
-                          src={src}
-                          alt=""
-                          onClick={() => setLightbox({ photos: photosAfter, index: i })}
-                        />
-                        {isCover && <span className={s.coverBadge}>обложка</span>}
-                        <button
-                          className={s.photoRemove}
-                          onClick={() => setPhotosAfter(prev => prev.filter((_, j) => j !== i))}
-                        >×</button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              <button
-                className={s.photoAddBtn}
-                disabled={photosAfter.length >= PHOTO_LIMIT}
-                onClick={() => setPickerFor('after')}
-              >
-                <span className={s.photoAddIcon}><IconCamera /></span>
-                {photosAfter.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
+          <div className={s.actions}>
+            <div className={s.btnRow}>
+              <button className={s.primaryBtn} onClick={() => handleSave()} disabled={saving}>
+                {saving ? '…' : 'Принято'}
+              </button>
+              <button className={s.doneBtn} onClick={() => handleSave({ markDoneOverride: true })} disabled={saving}>
+                {saving ? '…' : 'Готово'}
               </button>
             </div>
-          )}
-
-          <div className={s.actions}>
-            <button className={s.primaryBtn} onClick={() => handleSave()} disabled={saving}>
-              {saving ? 'Сохранение…' : (isEdit ? 'Сохранить' : 'Сохранить заточку')}
-            </button>
             <button className={s.secondaryBtn} onClick={() => setStep(1)}>
               ← Назад к приёмке
             </button>
