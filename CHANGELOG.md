@@ -1,3 +1,18 @@
+# [1.64.0](https://github.com/fiscalagent/AppTochite/compare/v1.63.0...v1.64.0) (2026-05-21)
+
+
+### feat
+
+* все 4 поля гритности в базе + импорт/экспорт камней CSV ([](https://github.com/fiscalagent/AppTochite/commit/9ed14584cb6c01d8e37ea9b93bba5abd866dda7f))
+
+
+### fix
+
+* CSV экспорт с кавычками; дедупликация по нативной шкале ([](https://github.com/fiscalagent/AppTochite/commit/6419b2f06be2f24b4d9d37f640b9bf5d74b6835d))
+* fromJis/fromFepa заполняют gritMicrons через nearest-neighbour; кнопка ГОСТ ([](https://github.com/fiscalagent/AppTochite/commit/782c70cf1c4d72e15ec9ff928c0b0132fafe7f08))
+* импорт CSV камней — кодировки UTF-8/UTF-16/Win-1251, кавычки и BOM в заголовках; мкм в parseStoneName; тост и try/catch при добавлении нового камня ([](https://github.com/fiscalagent/AppTochite/commit/fb18051f9bc8b375e0ee999c2b6e4dd7a0f71ab1))
+* нормализация камней при восстановлении старого бэкапа ([](https://github.com/fiscalagent/AppTochite/commit/d3f8fee888271cd377549b6fe73f73ac06ae6e4d))
+
 # [1.63.0](https://github.com/fiscalagent/AppTochite/compare/v1.62.2...v1.63.0) (2026-05-21)
 
 
