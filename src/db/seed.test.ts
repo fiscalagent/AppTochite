@@ -312,7 +312,7 @@ describe('Пользовательские данные при переуста�
   })
 
   it('кастомные камни пользователя удаляются при переустановке', async () => {
-    await db.stones.add({ brand: 'Мой Naniwa Pro 400', grit: 400, type: 'ao', isCustom: true })
+    await db.stones.add({ brand: 'Мой Naniwa Pro 400', gritFepa: 400, type: 'ao', isCustom: true })
     const countWithCustom = await db.stones.count()
 
     await db.clients.clear()

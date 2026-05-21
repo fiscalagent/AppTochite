@@ -220,7 +220,7 @@ describe('Камни', () => {
   it('создаёт камень без гритности (необязательное поле)', async () => {
     const id = await db.stones.add({ brand: 'Притир', type: 'pritir', isCustom: true })
     const stone = await db.stones.get(id)
-    expect(stone?.grit).toBeUndefined()
+    expect(stone?.gritFepa).toBeUndefined()
   })
 
   it('создаёт камни всех 7 типов', async () => {
