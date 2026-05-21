@@ -1,3 +1,10 @@
+# [1.63.0](https://github.com/fiscalagent/AppTochite/compare/v1.62.2...v1.63.0) (2026-05-21)
+
+
+### feat
+
+* экспорт всего справочника камней в CSV вместо шаблона ([](https://github.com/fiscalagent/AppTochite/commit/94653a6a551a5f6bbc054e0a7ede70edc6cf92a7))
+
 ## [1.62.2](https://github.com/fiscalagent/AppTochite/compare/v1.62.1...v1.62.2) (2026-05-21)
 
 
