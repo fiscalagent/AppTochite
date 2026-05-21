@@ -6,6 +6,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.64.1',
+    date: '2026-05-21',
+    changes: [
+      'все 4 поля гритности в базе + импорт/экспорт камней CSV',
+      'CSV экспорт с кавычками; дедупликация по нативной шкале',
+      'fromJis/fromFepa заполняют gritMicrons через nearest-neighbour; кнопка ГОСТ',
+      'импорт CSV камней — кодировки UTF-8/UTF-16/Win-1251, кавычки и BOM в заголовках; мкм в parseStoneName; тост и try/catch при добавлении нового камня',
+      'нормализация камней при восстановлении старого бэкапа',
+      'экспорт всего справочника камней в CSV вместо шаблона',
+    ],
+  },
+  {
     version: '1.64.0',
     date: '2026-05-21',
     changes: [
