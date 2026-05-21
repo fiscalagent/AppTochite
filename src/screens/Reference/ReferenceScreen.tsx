@@ -539,15 +539,15 @@ function StonesTab({ search }: { search: string }) {
     return name.includes(search.toLowerCase())
   }) ?? []
 
-  // Мои камни идут первыми, отсортированные по выбранной шкале.
-  // Стандартные камни — в подвале списка, в исходном порядке.
+  // При А-Я — весь список по алфавиту. Иначе: мои камни первыми по гритности, стандартные в подвале.
   const filtered = (() => {
+    if (displayUnit === 'alpha') {
+      return [...allFiltered].sort((a, b) => a.brand.localeCompare(b.brand, 'ru'))
+    }
     const custom   = allFiltered.filter(st => st.isCustom)
     const standard = allFiltered.filter(st => !st.isCustom)
     const sortedCustom = [...custom].sort((a, b) =>
-      displayUnit === 'alpha'
-        ? a.brand.localeCompare(b.brand, 'ru')
-        : getGritSortValue(a, displayUnit) - getGritSortValue(b, displayUnit)
+      getGritSortValue(a, displayUnit) - getGritSortValue(b, displayUnit)
     )
     return [...sortedCustom, ...standard]
   })()
