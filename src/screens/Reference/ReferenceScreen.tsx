@@ -400,7 +400,7 @@ function downloadStonesCSV(stones: Stone[]) {
       st.gritMicrons ?? null,
       st.gritFepa    ?? null,
       st.gritJis     ?? null,
-      st.gritMk      ?? null,
+      st.gritMk ? `\t${st.gritMk}` : null,
       st.type    ? STONE_TYPE_LABELS[st.type]  : null,
       st.coolant ? COOLANT_LABELS[st.coolant]  : null,
     ]),
@@ -418,8 +418,10 @@ function parseStonesCSV(text: string): ParsedStoneRow[] {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
   if (lines.length < 2) return []
 
-  const sep = lines[0].includes(';') ? ';' : '\t'
-  const headers = lines[0].split(sep).map(h => h.trim().toLowerCase())
+  const firstLine = lines[0].replace(/^﻿/, '')
+  const sep = firstLine.includes(';') ? ';' : ','
+  const unquoteHeader = (h: string) => { const t = h.trim(); return (t.startsWith('"') && t.endsWith('"') ? t.slice(1, -1) : t).toLowerCase() }
+  const headers = firstLine.split(sep).map(unquoteHeader)
 
   const col = (...names: string[]) => headers.findIndex(h => names.includes(h))
   const cNazv    = col('название')
@@ -449,7 +451,7 @@ function parseStonesCSV(text: string): ParsedStoneRow[] {
     const mkmVal  = parseFloat(get(cMkm))
     const fepaVal = parseFloat(get(cFepa))
     const jisVal  = parseFloat(get(cJis))
-    const gostVal = get(cGost)
+    const gostVal = get(cGost).trim()
 
     // Приоритет: мкм > FEPA > JIS > ГОСТ — используем первую заполненную колонку
     let gritFields: Partial<ParsedStoneRow> = {}
@@ -656,7 +658,17 @@ function StonesTab({ search }: { search: string }) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    const text = await file.text()
+    const buf = await file.arrayBuffer()
+    const bytes = new Uint8Array(buf)
+    let text: string
+    if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+      text = new TextDecoder('utf-8').decode(buf)
+    } else if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+      text = new TextDecoder('utf-16le').decode(buf)
+    } else {
+      const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(buf)
+      text = utf8.includes('�') ? new TextDecoder('windows-1251').decode(buf) : utf8
+    }
     const parsed = parseStonesCSV(text)
     if (parsed.length === 0) return
     const existing = await db.stones.toArray()

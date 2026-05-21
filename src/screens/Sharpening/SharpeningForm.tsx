@@ -54,6 +54,8 @@ function parseStoneName(name: string): { brand: string } & Partial<ReturnType<ty
   if (fepaMatch) return { brand: fepaMatch[1], ...fromFepa(Number(fepaMatch[2])) }
   const jisMatch = name.match(/^(.*?)\s+(\d+)\s+JIS$/)
   if (jisMatch) return { brand: jisMatch[1], ...fromJis(Number(jisMatch[2])) }
+  const mkмMatch = name.match(/^(.*?)\s+(\d+(?:\.\d+)?)\s+мкм$/)
+  if (mkмMatch) return { brand: mkмMatch[1], ...fromMicrons(Number(mkмMatch[2])) }
   const numMatch = name.match(/^(.*?)\s+(\d+)$/)
   if (numMatch) return { brand: numMatch[1], ...fromJis(Number(numMatch[2])) }
   return { brand: name }
@@ -549,7 +551,7 @@ export default function SharpeningForm() {
 
   async function saveNewStone() {
     if (!newStoneBrand.trim()) return
-    let gritFields = {}
+    let gritFields: ReturnType<typeof fromFepa> | Record<string, never> = {}
     if (newStoneGritSource === 'fepa' && newStoneGritVal) gritFields = fromFepa(Number(newStoneGritVal))
     else if (newStoneGritSource === 'jis' && newStoneGritVal) gritFields = fromJis(Number(newStoneGritVal))
     else if (newStoneGritSource === 'microns' && newStoneGritVal) gritFields = fromMicrons(Number(newStoneGritVal))
@@ -561,8 +563,16 @@ export default function SharpeningForm() {
       isCustom: true,
       updatedAt: new Date(),
     }
-    await db.stones.add(stone)
-    addStone(stoneDisplayName(stone))
+    try {
+      await db.stones.add(stone)
+    } catch (e) {
+      showToast('Не удалось сохранить камень')
+      console.error(e)
+      return
+    }
+    const displayName = stoneDisplayName(stone)
+    addStone(displayName)
+    showToast(`Камень добавлен: ${displayName}`)
     setNewStoneBrand(''); setNewStoneGritSource(''); setNewStoneGritVal(''); setNewStoneGritMk(''); setNewStoneType(''); setNewStoneOpen(false)
   }
 
