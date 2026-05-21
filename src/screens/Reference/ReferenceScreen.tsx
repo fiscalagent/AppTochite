@@ -389,20 +389,24 @@ interface ParsedStoneRow {
   coolant?: StoneCoolant
 }
 
-function downloadStonesTemplate() {
+function downloadStonesCSV(stones: Stone[]) {
   const sep = ';'
-  const lines = [
-    ['Название', 'мкм', 'FEPA', 'JIS', 'ГОСТ', 'тип', 'СОЖ'].join(sep),
-    ['GRINDERMAN CLR Oil OA', '', '120', '', '', 'ОА', 'масло'].join(sep),
-    ['Венёв Двусторонний B2-01 Алмаз 25%', '', '', '', '160/125', 'алмаз', 'вода'].join(sep),
-    ['Washita (природа)', '', '', '', '', 'природа', 'масло'].join(sep),
-  ]
-  const csv = '﻿' + lines.join('\r\n')
+  const header = ['Название', 'мкм', 'FEPA', 'JIS', 'ГОСТ', 'тип', 'СОЖ'].join(sep)
+  const rows = stones.map(st => [
+    st.brand,
+    '',
+    st.gritUnit === 'fepa' ? (st.grit ?? '') : '',
+    st.gritUnit === 'jis'  ? (st.grit ?? '') : '',
+    st.gritUnit === 'mk'   ? (st.gritMk ?? '') : '',
+    st.type    ? STONE_TYPE_LABELS[st.type]    : '',
+    st.coolant ? COOLANT_LABELS[st.coolant]    : '',
+  ].join(sep))
+  const csv = '﻿' + [header, ...rows].join('\r\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'stones_template.csv'
+  a.download = 'stones.csv'
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -695,7 +699,7 @@ function StonesTab({ search }: { search: string }) {
             + Добавить камень
           </button>
           <div className={s.csvActions}>
-            <button className={s.csvBtn} onClick={downloadStonesTemplate}>⬇ Шаблон CSV</button>
+            <button className={s.csvBtn} onClick={() => downloadStonesCSV(stones ?? [])}>⬇ Экспорт CSV</button>
             <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>⬆ Загрузить CSV</button>
           </div>
         </>
