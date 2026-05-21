@@ -13,6 +13,7 @@ import {
   type BackupFile,
 } from './backup'
 import { AppTochiteDB } from '../db/db'
+import { fromJis } from '../data/gritTable'
 
 // ─── OPFS mock ───────────────────────────────────────────────────────────────
 
@@ -280,7 +281,7 @@ describe('exportBackup + restoreBackup', () => {
 
   it('экспортирует созданные данные', async () => {
     await db.clients.add({ name: 'Тестовый клиент', isSelf: false, createdAt: new Date() })
-    await db.stones.add({ brand: 'Shapton 1000', grit: 1000, type: 'ao', isCustom: true })
+    await db.stones.add({ brand: 'Shapton 1000', ...fromJis(1000), type: 'ao', isCustom: true })
 
     const backup = await exportBackup(db)
     expect(backup.data.clients).toHaveLength(1)
@@ -301,7 +302,7 @@ describe('exportBackup + restoreBackup', () => {
       stones: [{ name: 'Naniwa 2000', order: 1 }],
       price: 500,
     })
-    await db.stones.add({ brand: 'Naniwa Chosera', grit: 2000, type: 'ao', isCustom: false })
+    await db.stones.add({ brand: 'Naniwa Chosera', ...fromJis(2000), type: 'ao', isCustom: false })
 
     // Экспортируем
     const backup = await exportBackup(db)
@@ -326,7 +327,8 @@ describe('exportBackup + restoreBackup', () => {
 
     const stones = await db.stones.toArray()
     expect(stones).toHaveLength(1)
-    expect(stones[0].grit).toBe(2000)
+    expect(stones[0].gritJis).toBe(2000)
+    expect(stones[0].gritSource).toBe('jis')
   })
 
   it('после восстановления isSelf сохраняется', async () => {
@@ -447,12 +449,48 @@ describe('mergeBackup', () => {
   it('мерж нескольких таблиц одновременно', async () => {
     const backup = makeValidBackup({
       clients: [{ id: 1, name: 'Клиент', isSelf: false, createdAt: new Date() }],
-      stones: [{ id: 1, brand: 'Shapton 1000', grit: 1000, type: 'ao' as const, isCustom: false }],
+      stones: [{ id: 1, brand: 'Shapton 1000', ...fromJis(1000), type: 'ao' as const, isCustom: false }],
     })
     const stats = await mergeBackup(db, backup)
     expect(stats.added).toBe(2)
     expect(await db.clients.count()).toBe(1)
     expect(await db.stones.count()).toBe(1)
+  })
+
+  it('restoreBackup нормализует камни из старого бэкапа (grit + gritUnit)', async () => {
+    const oldSchemaBackup = makeValidBackup({
+      stones: [
+        { id: 1, brand: 'Shapton Glass', grit: 2000, gritUnit: 'jis', type: 'ao' as const, isCustom: false } as never,
+        { id: 2, brand: 'DMT Fine', grit: 600, gritUnit: 'fepa', type: 'galvanic' as const, isCustom: false } as never,
+        { id: 3, brand: 'Эльбор', gritUnit: 'mk', gritMk: '7/5', type: 'elbor' as const, isCustom: false } as never,
+      ],
+    })
+    await restoreBackup(db, oldSchemaBackup)
+    const stones = await db.stones.toArray()
+    const shapton = stones.find(s => s.brand === 'Shapton Glass')!
+    expect(shapton.gritJis).toBe(2000)
+    expect(shapton.gritSource).toBe('jis')
+    expect(shapton.gritMicrons).toBeDefined()
+    const dmt = stones.find(s => s.brand === 'DMT Fine')!
+    expect(dmt.gritFepa).toBe(600)
+    expect(dmt.gritSource).toBe('fepa')
+    const elbor = stones.find(s => s.brand === 'Эльбор')!
+    expect(elbor.gritMk).toBe('7/5')
+    expect(elbor.gritSource).toBe('mk')
+    expect(elbor.gritMicrons).toBeDefined()
+  })
+
+  it('mergeBackup нормализует камни из старого бэкапа', async () => {
+    const oldSchemaBackup = makeValidBackup({
+      stones: [
+        { id: 10, brand: 'King KW-65', grit: 1000, gritUnit: 'jis', type: 'ao' as const, isCustom: false } as never,
+      ],
+    })
+    await mergeBackup(db, oldSchemaBackup)
+    const stone = await db.stones.get(10)
+    expect(stone).toBeDefined()
+    expect(stone!.gritJis).toBe(1000)
+    expect(stone!.gritSource).toBe('jis')
   })
 })
 

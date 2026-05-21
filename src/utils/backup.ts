@@ -1,4 +1,34 @@
 import type { AppTochiteDB, Client, Sharpening, Stone, Steel, Knife, Meta } from '../db/instance'
+import { GRIT_TABLE } from '../data/gritTable'
+
+function normalizeStoneFromBackup(raw: Stone): Stone {
+  if (raw.gritSource != null) return raw
+  const r = raw as unknown as Record<string, unknown>
+  const grit = r['grit'] as number | undefined
+  const gritUnit = r['gritUnit'] as string | undefined
+  if (gritUnit === 'fepa' && grit != null) {
+    const row = GRIT_TABLE.find(r => r.fepa === grit)
+    return { ...raw, gritFepa: grit, gritJis: row?.jis, gritMicrons: row?.microns, gritMk: row?.gost, gritSource: 'fepa' }
+  }
+  if (gritUnit === 'jis' && grit != null) {
+    const row = GRIT_TABLE.find(r => r.jis === grit)
+    return { ...raw, gritJis: grit, gritFepa: row?.fepa, gritMicrons: row?.microns, gritMk: row?.gost, gritSource: 'jis' }
+  }
+  if (gritUnit === 'mk') {
+    if (raw.gritMk) {
+      const row = GRIT_TABLE.find(r => r.gost === raw.gritMk)
+      return { ...raw, gritFepa: row?.fepa, gritJis: row?.jis, gritMicrons: row?.microns, gritSource: 'mk' }
+    }
+    return raw
+  }
+  if (grit != null) {
+    const jisRow = GRIT_TABLE.find(r => r.jis === grit)
+    if (jisRow) return { ...raw, gritJis: grit, gritFepa: jisRow.fepa, gritMicrons: jisRow.microns, gritMk: jisRow.gost, gritSource: 'jis' }
+    const fepaRow = GRIT_TABLE.find(r => r.fepa === grit)
+    if (fepaRow) return { ...raw, gritFepa: grit, gritJis: fepaRow.jis, gritMicrons: fepaRow.microns, gritMk: fepaRow.gost, gritSource: 'fepa' }
+  }
+  return raw
+}
 
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
@@ -144,8 +174,10 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
       ] as const
 
       for (const { table, records } of tables) {
-        for (const fileRecord of records) {
-          if (!fileRecord.id) continue
+        for (const rawRecord of records) {
+          if (!rawRecord.id) continue
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const fileRecord = table === database.stones ? normalizeStoneFromBackup(rawRecord as Stone) as typeof rawRecord : rawRecord
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const deviceRecord = await (table as any).get(fileRecord.id)
           if (!deviceRecord) {
@@ -190,7 +222,7 @@ export async function restoreBackup(database: AppTochiteDB, backup: BackupFile):
       await Promise.all([
         database.clients.bulkPut(backup.data.clients),
         database.sharpenings.bulkPut(backup.data.sharpenings),
-        database.stones.bulkPut(backup.data.stones),
+        database.stones.bulkPut(backup.data.stones.map(normalizeStoneFromBackup)),
         database.steels.bulkPut(backup.data.steels),
         database.knives.bulkPut(backup.data.knives),
         database.meta.bulkPut(backup.data.meta ?? []),
