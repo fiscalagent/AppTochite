@@ -1,3 +1,10 @@
+## [1.64.2](https://github.com/fiscalagent/AppTochite/compare/v1.64.1...v1.64.2) (2026-05-21)
+
+
+### fix
+
+* кнопка «ЗАТОЧИТЬ» ведёт на шаг 2 формы; удалён мёртвый код handleMarkDone ([](https://github.com/fiscalagent/AppTochite/commit/c2ac2ca1840889c8a83d2593055b45aa2373e0b5))
+
 ## [1.64.1](https://github.com/fiscalagent/AppTochite/compare/v1.64.0...v1.64.1) (2026-05-21)
 
 # [1.64.0](https://github.com/fiscalagent/AppTochite/compare/v1.63.0...v1.64.0) (2026-05-21)

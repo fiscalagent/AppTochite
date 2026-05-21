@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.64.2',
+    date: '2026-05-21',
+    changes: [
+      'кнопка «ЗАТОЧИТЬ» ведёт на шаг 2 формы; удалён мёртвый код handleMarkDone',
+    ],
+  },
+  {
     version: '1.64.1',
     date: '2026-05-21',
     changes: [
