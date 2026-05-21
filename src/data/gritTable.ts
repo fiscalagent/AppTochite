@@ -45,108 +45,113 @@ export const GRIT_TABLE: GritRow[] = [
   { microns: 1,    fepa: 3000, jis: 10000, gost: '1/0'     },
 ]
 
-/** FEPA → JIS. Возвращает undefined если нет точного соответствия. */
-export function fepaToJis(fepa: number): number | undefined {
-  return GRIT_TABLE.find(r => r.fepa === fepa)?.jis
+import type { GritSource } from '../db/db'
+
+// ─── Хелперы для создания камней — единственное место конвертации ─────────────
+
+export interface GritFields {
+  gritFepa?: number
+  gritJis?: number
+  gritMicrons?: number
+  gritMk?: string
+  gritSource: GritSource
 }
 
-/** JIS → FEPA. Возвращает ближайший FEPA для данного JIS. */
-export function jisToFepa(jis: number): number | undefined {
-  return GRIT_TABLE.find(r => r.jis === jis)?.fepa
+export function fromFepa(fepa: number): GritFields {
+  const row = GRIT_TABLE.find(r => r.fepa === fepa)
+  return { gritFepa: fepa, gritJis: row?.jis, gritMicrons: row?.microns, gritMk: row?.gost, gritSource: 'fepa' }
 }
 
-/** FEPA → ГОСТ (строка МК). */
-export function fepaToGost(fepa: number): string | undefined {
-  return GRIT_TABLE.find(r => r.fepa === fepa)?.gost
+export function fromJis(jis: number): GritFields {
+  const row = GRIT_TABLE.find(r => r.jis === jis)
+  return { gritJis: jis, gritFepa: row?.fepa, gritMicrons: row?.microns, gritMk: row?.gost, gritSource: 'jis' }
 }
 
-/** JIS → ГОСТ (строка МК). */
-export function jisToGost(jis: number): string | undefined {
-  return GRIT_TABLE.find(r => r.jis === jis)?.gost
+export function fromMk(mk: string): GritFields {
+  const row = GRIT_TABLE.find(r => r.gost === mk)
+  return { gritMk: mk, gritFepa: row?.fepa, gritJis: row?.jis, gritMicrons: row?.microns, gritSource: 'mk' }
 }
+
+export function fromMicrons(microns: number): GritFields {
+  const row = GRIT_TABLE.reduce((best, r) =>
+    Math.abs(r.microns - microns) < Math.abs(best.microns - microns) ? r : best
+  )
+  return { gritMicrons: row.microns, gritFepa: row.fepa, gritJis: row.jis, gritMk: row.gost, gritSource: 'microns' }
+}
+
+// ─── Отображение ──────────────────────────────────────────────────────────────
 
 export type GritDisplayMode = 'native' | 'fepa' | 'jis' | 'gost'
 
-type StoneForDisplay = {
-  grit?: number
-  gritUnit?: string
+export type StoneForDisplay = {
+  gritFepa?: number
+  gritJis?: number
+  gritMicrons?: number
   gritMk?: string
-}
-
-function resolveGrits(stone: StoneForDisplay): { fepa?: number; jis?: number; mk?: string } {
-  const { grit, gritUnit, gritMk } = stone
-  let row: GritRow | undefined
-  if (gritUnit === 'fepa' && grit != null) row = GRIT_TABLE.find(r => r.fepa === grit)
-  else if (gritUnit === 'jis' && grit != null) row = GRIT_TABLE.find(r => r.jis === grit)
-  else if (gritUnit === 'mk' && gritMk) row = GRIT_TABLE.find(r => r.gost === gritMk)
-
-  const fepa = gritUnit === 'fepa' ? grit : row?.fepa
-  const jis  = gritUnit === 'jis'  ? grit : row?.jis
-  const mk   = gritUnit === 'mk'   ? gritMk : row?.gost
-  return { fepa, jis, mk }
+  gritSource?: GritSource
 }
 
 export function getGritDisplay(
   stone: StoneForDisplay,
   mode: GritDisplayMode
 ): { mainValue: string; mainUnit: string; alts: string[] } {
-  const { grit, gritUnit, gritMk } = stone
-  const { fepa, jis, mk } = resolveGrits(stone)
+  const { gritFepa, gritJis, gritMicrons, gritMk, gritSource } = stone
 
-  const nativeValue = gritUnit === 'mk' ? (gritMk ?? '') : (grit != null ? String(grit) : '')
+  const fmt = (v: string | number, u: string) => `${v} ${u}`
+  const f = gritFepa    != null ? fmt(gritFepa,    'FEPA') : null
+  const j = gritJis     != null ? fmt(gritJis,     'JIS')  : null
+  const g = gritMk               ? fmt(gritMk,     'мк')   : null
+  const m = gritMicrons != null ? fmt(gritMicrons, 'мкм')  : null
+
+  const nativeValue =
+    gritSource === 'mk'      ? (gritMk      ?? '') :
+    gritSource === 'fepa'    ? String(gritFepa    ?? '') :
+    gritSource === 'jis'     ? String(gritJis     ?? '') :
+    gritSource === 'microns' ? String(gritMicrons ?? '') :
+    // Fallback без gritSource
+    gritMk ?? (gritFepa != null ? String(gritFepa) : gritJis != null ? String(gritJis) : '')
   const nativeUnit =
-    gritUnit === 'fepa' ? 'FEPA' :
-    gritUnit === 'jis'  ? 'JIS'  :
-    gritUnit === 'mk'   ? 'мк'   : ''
-
-  const fmt = (v: string, u: string) => `${v} ${u}`
-  const f = fepa != null ? fmt(String(fepa), 'FEPA') : null
-  const j = jis  != null ? fmt(String(jis),  'JIS')  : null
-  const g = mk   != null ? fmt(mk,            'мк')   : null
+    gritSource === 'mk'      ? 'мк'   :
+    gritSource === 'fepa'    ? 'FEPA' :
+    gritSource === 'jis'     ? 'JIS'  :
+    gritSource === 'microns' ? 'мкм'  :
+    gritMk ? 'мк' : gritFepa != null ? 'FEPA' : gritJis != null ? 'JIS' : ''
 
   if (mode === 'native') {
     const alts = [
-      gritUnit !== 'fepa' ? f : null,
-      gritUnit !== 'jis'  ? j : null,
-      gritUnit !== 'mk'   ? g : null,
+      gritSource !== 'fepa'    ? f : null,
+      gritSource !== 'jis'     ? j : null,
+      gritSource !== 'mk'      ? g : null,
+      gritSource !== 'microns' ? m : null,
     ].filter((x): x is string => x !== null)
     return { mainValue: nativeValue, mainUnit: nativeUnit, alts }
   }
 
   if (mode === 'fepa') {
-    if (fepa == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
-    return { mainValue: String(fepa), mainUnit: 'FEPA', alts: [j, g].filter((x): x is string => x !== null) }
+    if (gritFepa == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
+    return { mainValue: String(gritFepa), mainUnit: 'FEPA', alts: [j, g].filter((x): x is string => x !== null) }
   }
   if (mode === 'jis') {
-    if (jis == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
-    return { mainValue: String(jis), mainUnit: 'JIS', alts: [f, g].filter((x): x is string => x !== null) }
+    if (gritJis == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
+    return { mainValue: String(gritJis), mainUnit: 'JIS', alts: [f, g].filter((x): x is string => x !== null) }
   }
   // mode === 'gost'
-  if (mk == null) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
-  return { mainValue: mk, mainUnit: 'мк', alts: [f, j].filter((x): x is string => x !== null) }
+  if (!gritMk) return { mainValue: nativeValue, mainUnit: nativeUnit, alts: [] }
+  return { mainValue: gritMk, mainUnit: 'мк', alts: [f, j].filter((x): x is string => x !== null) }
 }
 
-export function getGritSortValue(
-  stone: StoneForDisplay,
-  mode: GritDisplayMode
-): number {
-  const { grit, gritUnit, gritMk } = stone
-  const { fepa, jis, mk } = resolveGrits(stone)
-
-  const mkToNum = (s: string) => {
-    const [a, b] = s.split('/').map(Number)
-    return (a + b) / 2
-  }
-
-  if (mode === 'fepa') return fepa ?? Infinity
-  if (mode === 'jis')  return jis  ?? Infinity
-  if (mode === 'gost') return mk ? mkToNum(mk) : Infinity
-  // native
-  if (gritUnit === 'mk') return gritMk ? mkToNum(gritMk) : Infinity
-  return grit ?? Infinity
+export function getGritSortValue(stone: StoneForDisplay, mode: GritDisplayMode): number {
+  const mkToNum = (s: string) => { const [a, b] = s.split('/').map(Number); return (a + b) / 2 }
+  if (mode === 'fepa') return stone.gritFepa    ?? Infinity
+  if (mode === 'jis')  return stone.gritJis     ?? Infinity
+  if (mode === 'gost') return stone.gritMk ? mkToNum(stone.gritMk) : Infinity
+  // native — сортируем по мкм убыв (грубее первые), если нет — по FEPA
+  if (stone.gritMicrons != null) return -stone.gritMicrons
+  if (stone.gritMk) return -mkToNum(stone.gritMk)
+  return stone.gritFepa ?? stone.gritJis ?? Infinity
 }
 
-/** Оставить для обратной совместимости с SharpeningForm */
-export function getAltGrits(opts: StoneForDisplay): string[] {
-  return getGritDisplay(opts, 'native').alts
+/** Обратная совместимость с SharpeningForm */
+export function getAltGrits(stone: StoneForDisplay): string[] {
+  return getGritDisplay(stone, 'native').alts
 }

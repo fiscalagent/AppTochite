@@ -2,9 +2,9 @@ import { useState, useRef, useEffect, Fragment } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Stone, type StoneCoolant, type GritUnit, MK_VALUES, compareStonesForSort } from '../../db/instance'
+import { db, type Stone, type StoneCoolant, type GritSource, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
-import { getGritDisplay, getGritSortValue, GRIT_TABLE, type GritDisplayMode } from '../../data/gritTable'
+import { getGritDisplay, getGritSortValue, GRIT_TABLE, fromFepa, fromJis, fromMk, fromMicrons, type GritDisplayMode } from '../../data/gritTable'
 import { startBlur } from '../../utils/modalBlur'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
@@ -382,9 +382,11 @@ function StoneHeatmap() {
 
 interface ParsedStoneRow {
   brand: string
-  grit?: number
-  gritUnit?: GritUnit
+  gritFepa?: number
+  gritJis?: number
+  gritMicrons?: number
   gritMk?: string
+  gritSource?: GritSource
   type?: Stone['type']
   coolant?: StoneCoolant
 }
@@ -394,12 +396,12 @@ function downloadStonesCSV(stones: Stone[]) {
   const header = ['Название', 'мкм', 'FEPA', 'JIS', 'ГОСТ', 'тип', 'СОЖ'].join(sep)
   const rows = stones.map(st => [
     st.brand,
-    '',
-    st.gritUnit === 'fepa' ? (st.grit ?? '') : '',
-    st.gritUnit === 'jis'  ? (st.grit ?? '') : '',
-    st.gritUnit === 'mk'   ? (st.gritMk ?? '') : '',
-    st.type    ? STONE_TYPE_LABELS[st.type]    : '',
-    st.coolant ? COOLANT_LABELS[st.coolant]    : '',
+    st.gritMicrons ?? '',
+    st.gritFepa    ?? '',
+    st.gritJis     ?? '',
+    st.gritMk      ?? '',
+    st.type    ? STONE_TYPE_LABELS[st.type]  : '',
+    st.coolant ? COOLANT_LABELS[st.coolant]  : '',
   ].join(sep))
   const csv = '﻿' + [header, ...rows].join('\r\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
@@ -437,37 +439,32 @@ function parseStonesCSV(text: string): ParsedStoneRow[] {
     const brand = get(cNazv)
     if (!brand) continue
 
-    const row: ParsedStoneRow = { brand }
+    const mkmVal  = parseFloat(get(cMkm))
+    const fepaVal = parseFloat(get(cFepa))
+    const jisVal  = parseFloat(get(cJis))
+    const gostVal = get(cGost)
 
-    const mkm  = parseFloat(get(cMkm))
-    const fepa = parseFloat(get(cFepa))
-    const jis  = parseFloat(get(cJis))
-    const gost = get(cGost)
-
-    if (!isNaN(mkm) && mkm > 0) {
-      const tableRow = GRIT_TABLE.reduce((best, r) =>
-        Math.abs(r.microns - mkm) < Math.abs(best.microns - mkm) ? r : best
-      )
-      row.grit = tableRow.fepa
-      row.gritUnit = 'fepa'
-    } else if (!isNaN(fepa) && fepa > 0) {
-      row.grit = fepa
-      row.gritUnit = 'fepa'
-    } else if (!isNaN(jis) && jis > 0) {
-      row.grit = jis
-      row.gritUnit = 'jis'
-    } else if (gost) {
-      row.gritMk = gost
-      row.gritUnit = 'mk'
+    // Приоритет: мкм > FEPA > JIS > ГОСТ — используем первую заполненную колонку
+    let gritFields: Partial<ParsedStoneRow> = {}
+    if (!isNaN(mkmVal) && mkmVal > 0) {
+      gritFields = fromMicrons(mkmVal)
+    } else if (!isNaN(fepaVal) && fepaVal > 0) {
+      gritFields = fromFepa(fepaVal)
+    } else if (!isNaN(jisVal) && jisVal > 0) {
+      gritFields = fromJis(jisVal)
+    } else if (gostVal) {
+      gritFields = fromMk(gostVal)
     }
 
     const typeLabel = get(cType).toLowerCase()
-    if (typeLabel) row.type = STONE_TYPE_BY_LABEL[typeLabel]
-
     const coolantLabel = get(cCoolant).toLowerCase()
-    if (coolantLabel) row.coolant = COOLANT_BY_LABEL[coolantLabel]
 
-    result.push(row)
+    result.push({
+      brand,
+      ...gritFields,
+      type:    typeLabel    ? STONE_TYPE_BY_LABEL[typeLabel]  : undefined,
+      coolant: coolantLabel ? COOLANT_BY_LABEL[coolantLabel]  : undefined,
+    })
   }
 
   return result
@@ -500,16 +497,16 @@ function fuzzyScore(query: string, target: string): number {
 function StonesTab({ search }: { search: string }) {
   const [open, setOpen] = useState(false)
   const [brand, setBrand] = useState('')
-  const [gritUnit, setGritUnit] = useState<GritUnit | ''>('')
-  const [grit, setGrit] = useState('')
+  const [gritSource, setGritSource] = useState<GritSource | ''>('')
+  const [gritVal, setGritVal] = useState('')
   const [gritMk, setGritMk] = useState('')
   const [type, setType] = useState<Stone['type'] | ''>('')
   const [coolant, setCoolant] = useState<StoneCoolant | ''>('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editBrand, setEditBrand] = useState('')
-  const [editGritUnit, setEditGritUnit] = useState<GritUnit | ''>('')
-  const [editGrit, setEditGrit] = useState('')
+  const [editGritSource, setEditGritSource] = useState<GritSource | ''>('')
+  const [editGritVal, setEditGritVal] = useState('')
   const [editGritMk, setEditGritMk] = useState('')
   const [editType, setEditType] = useState<Stone['type'] | ''>('')
   const [editCoolant, setEditCoolant] = useState<StoneCoolant | ''>('')
@@ -539,7 +536,7 @@ function StonesTab({ search }: { search: string }) {
       if ('масло'.includes(q)) return st.coolant === 'oil' || st.coolant === 'both'
       return false
     }
-    const name = `${st.brand} ${st.grit ?? ''} ${st.gritMk ?? ''}`.toLowerCase()
+    const name = `${st.brand} ${st.gritFepa ?? ''} ${st.gritJis ?? ''} ${st.gritMicrons ?? ''} ${st.gritMk ?? ''}`.toLowerCase()
     return name.includes(search.toLowerCase())
   }) ?? []
 
@@ -571,19 +568,31 @@ function StonesTab({ search }: { search: string }) {
     setSelected(new Set())
   }
 
-  function switchEditUnit(newUnit: GritUnit | '') {
-    if (newUnit === editGritUnit) return
-    let row = undefined as typeof GRIT_TABLE[0] | undefined
-    if (editGritUnit === 'fepa' && editGrit) row = GRIT_TABLE.find(r => r.fepa === Number(editGrit))
-    else if (editGritUnit === 'jis' && editGrit) row = GRIT_TABLE.find(r => r.jis === Number(editGrit))
-    else if (editGritUnit === 'mk' && editGritMk) row = GRIT_TABLE.find(r => r.gost === editGritMk)
-    setEditGritUnit(newUnit)
-    if (row && newUnit !== '') {
-      if (newUnit === 'fepa') { setEditGrit(String(row.fepa)); setEditGritMk('') }
-      else if (newUnit === 'jis') { setEditGrit(String(row.jis)); setEditGritMk('') }
-      else if (newUnit === 'mk') { setEditGrit(''); setEditGritMk(row.gost) }
+  function buildGritFields(src: GritSource | '', val: string, mk: string) {
+    if (!src) return {}
+    if (src === 'fepa'    && val) return fromFepa(Number(val))
+    if (src === 'jis'     && val) return fromJis(Number(val))
+    if (src === 'microns' && val) return fromMicrons(Number(val))
+    if (src === 'mk'      && mk)  return fromMk(mk)
+    return {}
+  }
+
+  function switchEditUnit(newSrc: GritSource | '') {
+    if (newSrc === editGritSource) return
+    // При смене единицы переводим текущее значение через таблицу
+    let row: typeof GRIT_TABLE[0] | undefined
+    if (editGritSource === 'fepa'    && editGritVal) row = GRIT_TABLE.find(r => r.fepa    === Number(editGritVal))
+    else if (editGritSource === 'jis'     && editGritVal) row = GRIT_TABLE.find(r => r.jis     === Number(editGritVal))
+    else if (editGritSource === 'microns' && editGritVal) row = GRIT_TABLE.find(r => r.microns === Number(editGritVal))
+    else if (editGritSource === 'mk'      && editGritMk)  row = GRIT_TABLE.find(r => r.gost    === editGritMk)
+    setEditGritSource(newSrc)
+    if (row && newSrc) {
+      if (newSrc === 'fepa')    { setEditGritVal(String(row.fepa));    setEditGritMk('') }
+      else if (newSrc === 'jis')     { setEditGritVal(String(row.jis));     setEditGritMk('') }
+      else if (newSrc === 'microns') { setEditGritVal(String(row.microns)); setEditGritMk('') }
+      else if (newSrc === 'mk')      { setEditGritVal(''); setEditGritMk(row.gost) }
     } else {
-      setEditGrit(''); setEditGritMk('')
+      setEditGritVal(''); setEditGritMk('')
     }
   }
 
@@ -593,8 +602,13 @@ function StonesTab({ search }: { search: string }) {
     if (!stone) return
     setEditingId(id)
     setEditBrand(stone.brand)
-    setEditGritUnit((stone.gritUnit as GritUnit | '') ?? '')
-    setEditGrit(stone.grit != null ? String(stone.grit) : '')
+    setEditGritSource(stone.gritSource ?? '')
+    const src = stone.gritSource
+    setEditGritVal(
+      src === 'fepa'    ? String(stone.gritFepa ?? '')    :
+      src === 'jis'     ? String(stone.gritJis  ?? '')    :
+      src === 'microns' ? String(stone.gritMicrons ?? '') : ''
+    )
     setEditGritMk(stone.gritMk ?? '')
     setEditType((stone.type as Stone['type'] | '') ?? '')
     setEditCoolant((stone.coolant as StoneCoolant | '') ?? '')
@@ -609,9 +623,7 @@ function StonesTab({ search }: { search: string }) {
     if (!editBrand.trim() || editingId === null) return
     await db.stones.update(editingId, {
       brand: editBrand.trim(),
-      grit: (editGritUnit === 'fepa' || editGritUnit === 'jis') && editGrit ? Number(editGrit) : undefined,
-      gritUnit: editGritUnit || undefined,
-      gritMk: editGritUnit === 'mk' && editGritMk ? editGritMk : undefined,
+      ...buildGritFields(editGritSource, editGritVal, editGritMk),
       type: editType || undefined,
       coolant: editCoolant || undefined,
       isCustom: true,
@@ -624,15 +636,13 @@ function StonesTab({ search }: { search: string }) {
     if (!brand.trim()) return
     await db.stones.add({
       brand: brand.trim(),
-      grit: (gritUnit === 'fepa' || gritUnit === 'jis') && grit ? Number(grit) : undefined,
-      gritUnit: gritUnit || undefined,
-      gritMk: gritUnit === 'mk' && gritMk ? gritMk : undefined,
+      ...buildGritFields(gritSource, gritVal, gritMk),
       type: type || undefined,
       coolant: coolant || undefined,
       isCustom: true,
       updatedAt: new Date(),
     })
-    setBrand(''); setGrit(''); setGritMk(''); setGritUnit(''); setType(''); setCoolant(''); setOpen(false)
+    setBrand(''); setGritVal(''); setGritMk(''); setGritSource(''); setType(''); setCoolant(''); setOpen(false)
   }
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -648,9 +658,15 @@ function StonesTab({ search }: { search: string }) {
     for (const p of parsed) {
       const isDup = existing.some(ex => {
         if (ex.brand.toLowerCase() !== p.brand.toLowerCase()) return false
-        if (p.gritUnit === 'mk') return ex.gritUnit === 'mk' && ex.gritMk === p.gritMk
-        if (p.gritUnit === 'fepa' || p.gritUnit === 'jis') return ex.gritUnit === p.gritUnit && ex.grit === p.grit
-        return ex.grit == null && ex.gritMk == null
+        // Считаем дублем совпадение по ЛЮБОЙ из заполненных шкал
+        if (p.gritFepa    != null && ex.gritFepa    === p.gritFepa)    return true
+        if (p.gritJis     != null && ex.gritJis     === p.gritJis)     return true
+        if (p.gritMicrons != null && ex.gritMicrons === p.gritMicrons) return true
+        if (p.gritMk      && ex.gritMk === p.gritMk)                   return true
+        // Камень без гритности — дубль если у обоих нет гритности
+        if (!p.gritFepa && !p.gritJis && !p.gritMicrons && !p.gritMk)
+          return !ex.gritFepa && !ex.gritJis && !ex.gritMicrons && !ex.gritMk
+        return false
       })
       if (isDup) skipped++
       else toAdd.push(p)
@@ -662,14 +678,16 @@ function StonesTab({ search }: { search: string }) {
     if (!importPreview) return
     const now = new Date()
     await db.stones.bulkAdd(importPreview.toAdd.map(p => ({
-      brand: p.brand,
-      grit: p.grit,
-      gritUnit: p.gritUnit,
-      gritMk: p.gritMk,
-      type: p.type,
-      coolant: p.coolant,
-      isCustom: true,
-      updatedAt: now,
+      brand:        p.brand,
+      gritFepa:     p.gritFepa,
+      gritJis:      p.gritJis,
+      gritMicrons:  p.gritMicrons,
+      gritMk:       p.gritMk,
+      gritSource:   p.gritSource,
+      type:         p.type,
+      coolant:      p.coolant,
+      isCustom:     true,
+      updatedAt:    now,
     })))
     setImportPreview(null)
   }
@@ -720,26 +738,26 @@ function StonesTab({ search }: { search: string }) {
             </div>
           )}
           <div className={s.gritUnitRow}>
-            {(['fepa', 'jis', 'mk'] as const).map(u => (
+            {(['fepa', 'jis', 'microns', 'mk'] as const).map(u => (
               <button
                 key={u}
-                className={`${s.gritUnitBtn} ${gritUnit === u ? s.gritUnitActive : ''}`}
-                onClick={() => { setGritUnit(u); setGrit(''); setGritMk('') }}
+                className={`${s.gritUnitBtn} ${gritSource === u ? s.gritUnitActive : ''}`}
+                onClick={() => { setGritSource(u); setGritVal(''); setGritMk('') }}
               >
-                {u === 'mk' ? 'мк' : u.toUpperCase()}
+                {u === 'mk' ? 'мк' : u === 'microns' ? 'мкм' : u.toUpperCase()}
               </button>
             ))}
           </div>
-          {(gritUnit === 'fepa' || gritUnit === 'jis') && (
+          {(gritSource === 'fepa' || gritSource === 'jis' || gritSource === 'microns') && (
             <input
-              value={grit}
-              onChange={e => setGrit(e.target.value)}
-              placeholder={`${gritUnit.toUpperCase()}, напр. 1000`}
+              value={gritVal}
+              onChange={e => setGritVal(e.target.value)}
+              placeholder={gritSource === 'microns' ? 'мкм, напр. 115' : `${gritSource.toUpperCase()}, напр. 1000`}
               type="number"
               min={1}
             />
           )}
-          {gritUnit === 'mk' && (
+          {gritSource === 'mk' && (
             <select className={s.select} value={gritMk} onChange={e => setGritMk(e.target.value)}>
               <option value="">Выбрать мк</option>
               {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
@@ -780,26 +798,26 @@ function StonesTab({ search }: { search: string }) {
           <span className={s.addTitle}>Редактировать камень</span>
           <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
           <div className={s.gritUnitRow}>
-            {(['fepa', 'jis', 'mk'] as const).map(u => (
+            {(['fepa', 'jis', 'microns', 'mk'] as const).map(u => (
               <button
                 key={u}
-                className={`${s.gritUnitBtn} ${editGritUnit === u ? s.gritUnitActive : ''}`}
+                className={`${s.gritUnitBtn} ${editGritSource === u ? s.gritUnitActive : ''}`}
                 onClick={() => switchEditUnit(u)}
               >
-                {u === 'mk' ? 'мк' : u.toUpperCase()}
+                {u === 'mk' ? 'мк' : u === 'microns' ? 'мкм' : u.toUpperCase()}
               </button>
             ))}
           </div>
-          {(editGritUnit === 'fepa' || editGritUnit === 'jis') && (
+          {(editGritSource === 'fepa' || editGritSource === 'jis' || editGritSource === 'microns') && (
             <input
-              value={editGrit}
-              onChange={e => setEditGrit(e.target.value)}
-              placeholder={`${editGritUnit.toUpperCase()}, напр. 1000`}
+              value={editGritVal}
+              onChange={e => setEditGritVal(e.target.value)}
+              placeholder={editGritSource === 'microns' ? 'мкм, напр. 115' : `${editGritSource.toUpperCase()}, напр. 1000`}
               type="number"
               min={1}
             />
           )}
-          {editGritUnit === 'mk' && (
+          {editGritSource === 'mk' && (
             <select className={s.select} value={editGritMk} onChange={e => setEditGritMk(e.target.value)}>
               <option value="">Выбрать мк</option>
               {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
@@ -880,7 +898,7 @@ function StonesTab({ search }: { search: string }) {
                 </div>
               </div>
               <div className={s.itemRight}>
-                {(st.grit != null || (st.gritUnit === 'mk' && st.gritMk)) && (() => {
+                {(st.gritFepa != null || st.gritJis != null || st.gritMicrons != null || st.gritMk) && (() => {
                   const { mainValue, mainUnit, alts } = getGritDisplay(st, displayUnit === 'alpha' ? 'native' : displayUnit)
                   return (
                     <div className={s.gritGroup}>
@@ -924,9 +942,13 @@ function StonesTab({ search }: { search: string }) {
                 {importPreview.toAdd.slice(0, 5).map((p, i) => (
                   <div key={i} className={s.importPreviewItem}>
                     <span className={s.importPreviewName}>{p.brand}</span>
-                    {(p.grit != null || p.gritMk) && (
+                    {(p.gritFepa != null || p.gritJis != null || p.gritMicrons != null || p.gritMk) && (
                       <span className={s.importPreviewGrit}>
-                        {p.gritUnit === 'mk' ? `${p.gritMk} мк` : `${p.grit} ${p.gritUnit?.toUpperCase()}`}
+                        {p.gritSource === 'mk'      ? `${p.gritMk} мк`          :
+                         p.gritSource === 'fepa'    ? `${p.gritFepa} FEPA`      :
+                         p.gritSource === 'jis'     ? `${p.gritJis} JIS`        :
+                         p.gritSource === 'microns' ? `${p.gritMicrons} мкм`    :
+                         p.gritMk ? `${p.gritMk} мк` : p.gritFepa != null ? `${p.gritFepa} FEPA` : ''}
                       </span>
                     )}
                   </div>

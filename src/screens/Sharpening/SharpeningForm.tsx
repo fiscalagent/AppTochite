@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type SharpeningStatus, type SharpeningStone, type Stone, type GritUnit, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
-import { getAltGrits } from '../../data/gritTable'
+import { db, type SharpeningStatus, type SharpeningStone, type Stone, type GritSource, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
+import { getAltGrits, fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
@@ -47,15 +47,15 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function parseStoneName(name: string): { brand: string; grit?: number; gritUnit?: GritUnit; gritMk?: string } {
+function parseStoneName(name: string): { brand: string } & Partial<ReturnType<typeof fromFepa>> {
   const mkMatch = name.match(/^(.*?)\s+(\d+\/\d+)мк$/)
-  if (mkMatch) return { brand: mkMatch[1], gritUnit: 'mk', gritMk: mkMatch[2] }
+  if (mkMatch) return { brand: mkMatch[1], ...fromMk(mkMatch[2]) }
   const fepaMatch = name.match(/^(.*?)\s+(\d+)\s+FEPA$/)
-  if (fepaMatch) return { brand: fepaMatch[1], grit: Number(fepaMatch[2]), gritUnit: 'fepa' }
+  if (fepaMatch) return { brand: fepaMatch[1], ...fromFepa(Number(fepaMatch[2])) }
   const jisMatch = name.match(/^(.*?)\s+(\d+)\s+JIS$/)
-  if (jisMatch) return { brand: jisMatch[1], grit: Number(jisMatch[2]), gritUnit: 'jis' }
+  if (jisMatch) return { brand: jisMatch[1], ...fromJis(Number(jisMatch[2])) }
   const numMatch = name.match(/^(.*?)\s+(\d+)$/)
-  if (numMatch) return { brand: numMatch[1], grit: Number(numMatch[2]) }
+  if (numMatch) return { brand: numMatch[1], ...fromJis(Number(numMatch[2])) }
   return { brand: name }
 }
 
@@ -466,8 +466,8 @@ export default function SharpeningForm() {
   }, [newStoneOpen])
 
   const [newStoneBrand, setNewStoneBrand] = useState('')
-  const [newStoneGritUnit, setNewStoneGritUnit] = useState<GritUnit | ''>('')
-  const [newStoneGrit, setNewStoneGrit] = useState('')
+  const [newStoneGritSource, setNewStoneGritSource] = useState<GritSource | ''>('')
+  const [newStoneGritVal, setNewStoneGritVal] = useState('')
   const [newStoneGritMk, setNewStoneGritMk] = useState('')
   const [newStoneType, setNewStoneType] = useState<Stone['type'] | ''>('')
 
@@ -549,18 +549,21 @@ export default function SharpeningForm() {
 
   async function saveNewStone() {
     if (!newStoneBrand.trim()) return
+    let gritFields = {}
+    if (newStoneGritSource === 'fepa' && newStoneGritVal) gritFields = fromFepa(Number(newStoneGritVal))
+    else if (newStoneGritSource === 'jis' && newStoneGritVal) gritFields = fromJis(Number(newStoneGritVal))
+    else if (newStoneGritSource === 'microns' && newStoneGritVal) gritFields = fromMicrons(Number(newStoneGritVal))
+    else if (newStoneGritSource === 'mk' && newStoneGritMk) gritFields = fromMk(newStoneGritMk)
     const stone: Stone = {
       brand: newStoneBrand.trim(),
-      grit: (newStoneGritUnit === 'fepa' || newStoneGritUnit === 'jis') && newStoneGrit ? Number(newStoneGrit) : undefined,
-      gritUnit: newStoneGritUnit || undefined,
-      gritMk: newStoneGritUnit === 'mk' && newStoneGritMk ? newStoneGritMk : undefined,
+      ...gritFields,
       type: newStoneType || undefined,
       isCustom: true,
       updatedAt: new Date(),
     }
     await db.stones.add(stone)
     addStone(stoneDisplayName(stone))
-    setNewStoneBrand(''); setNewStoneGritUnit(''); setNewStoneGrit(''); setNewStoneGritMk(''); setNewStoneType(''); setNewStoneOpen(false)
+    setNewStoneBrand(''); setNewStoneGritSource(''); setNewStoneGritVal(''); setNewStoneGritMk(''); setNewStoneType(''); setNewStoneOpen(false)
   }
 
   async function handleSave(opts: { markDoneOverride?: boolean; voiceTriggered?: boolean } = {}) {
@@ -616,16 +619,17 @@ export default function SharpeningForm() {
           if (selectedStones.length) {
             const existingStones = await db.stones.toArray()
             const existingKeys = new Set(existingStones.map(st => {
-              if (st.gritUnit === 'mk') return `${st.brand.toLowerCase()} mk:${st.gritMk ?? ''}`
-              return `${st.brand.toLowerCase()} ${st.grit ?? 0}`
+              if (st.gritMk) return `${st.brand.toLowerCase()} mk:${st.gritMk}`
+              return `${st.brand.toLowerCase()} ${st.gritMicrons ?? st.gritFepa ?? st.gritJis ?? 0}`
             }))
             for (const stone of selectedStones) {
               const parsed = parseStoneName(stone.name)
-              const key = parsed.gritUnit === 'mk'
-                ? `${parsed.brand.toLowerCase()} mk:${parsed.gritMk ?? ''}`
-                : `${parsed.brand.toLowerCase()} ${parsed.grit ?? 0}`
+              const key = parsed.gritMk
+                ? `${parsed.brand.toLowerCase()} mk:${parsed.gritMk}`
+                : `${parsed.brand.toLowerCase()} ${parsed.gritMicrons ?? parsed.gritFepa ?? parsed.gritJis ?? 0}`
               if (!existingKeys.has(key)) {
-                await db.stones.add({ brand: parsed.brand, grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk, type: 'ao', isCustom: true, updatedAt: now })
+                const { brand, ...gritFields } = parsed
+                await db.stones.add({ brand, ...gritFields, type: 'ao', isCustom: true, updatedAt: now })
                 existingKeys.add(key)
               }
             }
@@ -863,7 +867,7 @@ export default function SharpeningForm() {
               <div className={s.stoneTags}>
                 {selectedStones.map((ss, i) => {
                   const parsed = parseStoneName(ss.name)
-                  const alts = getAltGrits({ grit: parsed.grit, gritUnit: parsed.gritUnit, gritMk: parsed.gritMk })
+                  const alts = getAltGrits(parsed)
                   return (
                     <div key={i} className={s.stoneTag}>
                       <span className={s.stoneOrder}>{ss.order}.</span>
@@ -917,26 +921,26 @@ export default function SharpeningForm() {
                   autoFocus
                 />
                 <div className={s.gritUnitRow}>
-                  {(['', 'fepa', 'jis', 'mk'] as const).map(u => (
+                  {(['', 'fepa', 'jis', 'microns', 'mk'] as const).map(u => (
                     <button
                       key={u || 'none'}
-                      className={`${s.gritUnitBtn} ${newStoneGritUnit === u ? s.gritUnitActive : ''}`}
-                      onClick={() => { setNewStoneGritUnit(u); setNewStoneGrit(''); setNewStoneGritMk('') }}
+                      className={`${s.gritUnitBtn} ${newStoneGritSource === u ? s.gritUnitActive : ''}`}
+                      onClick={() => { setNewStoneGritSource(u); setNewStoneGritVal(''); setNewStoneGritMk('') }}
                     >
-                      {u === '' ? 'нет' : u === 'mk' ? 'мк' : u.toUpperCase()}
+                      {u === '' ? 'нет' : u === 'mk' ? 'мк' : u === 'microns' ? 'мкм' : u.toUpperCase()}
                     </button>
                   ))}
                 </div>
-                {(newStoneGritUnit === 'fepa' || newStoneGritUnit === 'jis') && (
+                {(newStoneGritSource === 'fepa' || newStoneGritSource === 'jis' || newStoneGritSource === 'microns') && (
                   <input
-                    value={newStoneGrit}
-                    onChange={e => setNewStoneGrit(e.target.value)}
-                    placeholder={`${newStoneGritUnit.toUpperCase()}, напр. 1000`}
+                    value={newStoneGritVal}
+                    onChange={e => setNewStoneGritVal(e.target.value)}
+                    placeholder={newStoneGritSource === 'microns' ? 'мкм, напр. 5' : `${newStoneGritSource.toUpperCase()}, напр. 1000`}
                     type="number"
                     min={1}
                   />
                 )}
-                {newStoneGritUnit === 'mk' && (
+                {newStoneGritSource === 'mk' && (
                   <select
                     className={s.select}
                     value={newStoneGritMk}

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { AppTochiteDB, stoneDisplayName, compareStonesForSort, MK_VALUES } from './db'
 import type { Stone } from './db'
+import { fromFepa, fromJis, fromMk, fromMicrons } from '../data/gritTable'
 
 function makeDB(): AppTochiteDB {
   return new AppTochiteDB(`test-${Math.random().toString(36).slice(2)}`)
@@ -374,78 +375,69 @@ describe('stoneDisplayName', () => {
     expect(stoneDisplayName(s({ brand: 'Притир', type: 'pritir' }))).toBe('Притир')
   })
 
-  it('бренд + числовая гритность (без единицы — по умолчанию)', () => {
-    expect(stoneDisplayName(s({ brand: 'King KW-65', type: 'ao', grit: 1000 }))).toBe('King KW-65 1000')
-  })
-
   it('бренд + гритность JIS', () => {
-    expect(stoneDisplayName(s({ brand: 'Shapton Glass', type: 'ao', grit: 2000, gritUnit: 'jis' }))).toBe('Shapton Glass 2000 JIS')
+    expect(stoneDisplayName(s({ brand: 'Shapton Glass', type: 'ao', ...fromJis(2000) }))).toBe('Shapton Glass 2000 JIS')
   })
 
   it('бренд + гритность FEPA', () => {
-    expect(stoneDisplayName(s({ brand: 'DMT Fine', type: 'galvanic', grit: 600, gritUnit: 'fepa' }))).toBe('DMT Fine 600 FEPA')
+    expect(stoneDisplayName(s({ brand: 'DMT Fine', type: 'galvanic', ...fromFepa(600) }))).toBe('DMT Fine 600 FEPA')
   })
 
   it('бренд + гритность МК', () => {
-    expect(stoneDisplayName(s({ brand: 'Эльбор', type: 'elbor', gritUnit: 'mk', gritMk: '7/5' }))).toBe('Эльбор 7/5мк')
+    expect(stoneDisplayName(s({ brand: 'Эльбор', type: 'elbor', ...fromMk('7/5') }))).toBe('Эльбор 7/5мк')
   })
 
   it('МК без gritMk — только бренд', () => {
-    expect(stoneDisplayName(s({ brand: 'Эльбор', type: 'elbor', gritUnit: 'mk' }))).toBe('Эльбор')
+    expect(stoneDisplayName(s({ brand: 'Эльбор', type: 'elbor', gritSource: 'mk' }))).toBe('Эльбор')
   })
 
-  it('grit = 0 отображается как 0', () => {
-    expect(stoneDisplayName(s({ brand: 'X', type: 'ao', grit: 0 }))).toBe('X 0')
+  it('бренд + гритность в мкм', () => {
+    expect(stoneDisplayName(s({ brand: 'X', type: 'ao', ...fromMicrons(5) }))).toBe('X 5 мкм')
   })
 })
 
 // ─── compareStonesForSort ────────────────────────────────────────────────────
 
-function sortStone(grit?: number, gritUnit?: Stone['gritUnit'], gritMk?: string): Stone {
-  return { brand: 'X', type: 'ao', isCustom: false, grit, gritUnit, gritMk }
+function sortStone(microns?: number, gritMk?: string): Stone {
+  if (gritMk) return { brand: 'X', type: 'ao', isCustom: false, ...fromMk(gritMk) }
+  if (microns != null) return { brand: 'X', type: 'ao', isCustom: false, gritMicrons: microns, gritSource: 'microns' }
+  return { brand: 'X', type: 'ao', isCustom: false }
 }
 
 describe('compareStonesForSort', () => {
   it('камни без гритности идут после камней с гритностью', () => {
-    expect(compareStonesForSort(sortStone(undefined), sortStone(1000))).toBeGreaterThan(0)
-    expect(compareStonesForSort(sortStone(1000), sortStone(undefined))).toBeLessThan(0)
+    expect(compareStonesForSort(sortStone(undefined), sortStone(12))).toBeGreaterThan(0)
+    expect(compareStonesForSort(sortStone(12), sortStone(undefined))).toBeLessThan(0)
   })
 
-  it('два камня без гритности — результат NaN (Infinity − Infinity)', () => {
-    // Infinity - Infinity = NaN; Array.sort обрабатывает это как 0 (порядок сохраняется)
-    expect(compareStonesForSort(sortStone(undefined), sortStone(undefined))).toBeNaN()
+  it('два камня без гритности — равны (результат 0)', () => {
+    expect(compareStonesForSort(sortStone(undefined), sortStone(undefined))).toBe(0)
   })
 
-  it('числовые камни сортируются по возрастанию', () => {
-    expect(compareStonesForSort(sortStone(500), sortStone(1000))).toBeLessThan(0)
-    expect(compareStonesForSort(sortStone(3000), sortStone(1000))).toBeGreaterThan(0)
-    expect(compareStonesForSort(sortStone(1000), sortStone(1000))).toBe(0)
+  it('камни сортируются по убыванию мкм (грубее первее)', () => {
+    expect(compareStonesForSort(sortStone(60), sortStone(12))).toBeLessThan(0)   // 60 мкм грубее
+    expect(compareStonesForSort(sortStone(3), sortStone(12))).toBeGreaterThan(0) // 3 мкм тоньше
+    expect(compareStonesForSort(sortStone(12), sortStone(12))).toBe(0)
   })
 
-  it('МК камни идут после числовых', () => {
-    const numeric = sortStone(1000)
-    const mk = sortStone(undefined, 'mk', '7/5')
-    expect(compareStonesForSort(numeric, mk)).toBeLessThan(0)
-    expect(compareStonesForSort(mk, numeric)).toBeGreaterThan(0)
-  })
-
-  it('МК камни сортируются по индексу в MK_VALUES (грубее → тоньше)', () => {
-    const coarse = sortStone(undefined, 'mk', MK_VALUES[0])   // 315/250 — самый грубый
-    const fine   = sortStone(undefined, 'mk', MK_VALUES[MK_VALUES.length - 1]) // 1/0 — самый тонкий
+  it('МК камни сортируются грубее → тоньше (по мкм из таблицы)', () => {
+    const coarse = sortStone(undefined, MK_VALUES[0])   // 315/250 — самый грубый
+    const fine   = sortStone(undefined, MK_VALUES[MK_VALUES.length - 1]) // 1/0 — самый тонкий
     expect(compareStonesForSort(coarse, fine)).toBeLessThan(0)
     expect(compareStonesForSort(fine, coarse)).toBeGreaterThan(0)
   })
 
   it('два МК камня с одинаковым значением равны', () => {
-    const a = sortStone(undefined, 'mk', '7/5')
-    const b = sortStone(undefined, 'mk', '7/5')
+    const a = sortStone(undefined, '7/5')
+    const b = sortStone(undefined, '7/5')
     expect(compareStonesForSort(a, b)).toBe(0)
   })
 
-  it('числовой камень и МК-камень без значения — числовой первее', () => {
-    // MK_VALUES.indexOf(undefined) = -1, числовой grit=500 → Infinity-based compare
-    const numeric = sortStone(500)
-    const mkNoVal = sortStone(undefined, 'mk', undefined)
-    expect(compareStonesForSort(numeric, mkNoVal)).toBeLessThan(0)
+  it('числовой камень и МК-камень: сортировка по мкм', () => {
+    // JIS 1000 = 12 мкм, MK '7/5' = 7 мкм → числовой грубее, идёт первым
+    const numeric = { brand: 'X', type: 'ao' as const, isCustom: false, ...fromJis(1000) }
+    const mk = sortStone(undefined, '7/5')
+    expect(compareStonesForSort(numeric, mk)).toBeLessThan(0)
+    expect(compareStonesForSort(mk, numeric)).toBeGreaterThan(0)
   })
 })

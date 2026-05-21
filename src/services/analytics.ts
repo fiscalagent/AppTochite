@@ -60,9 +60,11 @@ export async function trackSharpening(sharpening: Sharpening): Promise<void> {
     const stone = stoneMap.get(s.name.toLowerCase())
     return {
       name: s.name,
-      grit: stone?.grit ?? null,
-      gritUnit: stone?.gritUnit ?? null,
+      gritFepa: stone?.gritFepa ?? null,
+      gritJis: stone?.gritJis ?? null,
+      gritMicrons: stone?.gritMicrons ?? null,
       gritMk: stone?.gritMk ?? null,
+      gritSource: stone?.gritSource ?? null,
       type: stone?.type ?? null,
       isFin: s.order === maxOrder,
     }

@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie'
+import { GRIT_TABLE } from '../data/gritTable'
 
 export interface Meta {
   key: string
@@ -47,7 +48,8 @@ export interface Sharpening {
   updatedAt?: Date
 }
 
-export type GritUnit = 'fepa' | 'jis' | 'mk'
+// GritSource указывает, в какой шкале был введён камень (для режима «Своя» в UI).
+export type GritSource = 'fepa' | 'jis' | 'mk' | 'microns'
 
 export const MK_VALUES = [
   '315/250','250/200','200/160','160/125','125/100','100/80',
@@ -60,9 +62,11 @@ export type StoneCoolant = 'water' | 'oil' | 'both'
 export interface Stone {
   id?: number
   brand: string
-  grit?: number
-  gritUnit?: GritUnit
+  gritFepa?: number
+  gritJis?: number
+  gritMicrons?: number
   gritMk?: string
+  gritSource?: GritSource
   type?: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic' | 'other'
   coolant?: StoneCoolant
   category?: string
@@ -72,23 +76,27 @@ export interface Stone {
 }
 
 export function stoneDisplayName(stone: Stone): string {
-  if (stone.gritUnit === 'mk' && stone.gritMk) return `${stone.brand} ${stone.gritMk}мк`
-  if (stone.grit != null) {
-    if (stone.gritUnit === 'fepa') return `${stone.brand} ${stone.grit} FEPA`
-    if (stone.gritUnit === 'jis') return `${stone.brand} ${stone.grit} JIS`
-    return `${stone.brand} ${stone.grit}`
-  }
+  const src = stone.gritSource
+  if (src === 'mk' && stone.gritMk)          return `${stone.brand} ${stone.gritMk}мк`
+  if (src === 'fepa' && stone.gritFepa != null) return `${stone.brand} ${stone.gritFepa} FEPA`
+  if (src === 'jis'  && stone.gritJis  != null) return `${stone.brand} ${stone.gritJis} JIS`
+  if (src === 'microns' && stone.gritMicrons != null) return `${stone.brand} ${stone.gritMicrons} мкм`
+  // Fallback для камней без gritSource (старые данные до миграции)
+  if (stone.gritMk)             return `${stone.brand} ${stone.gritMk}мк`
+  if (stone.gritFepa  != null)  return `${stone.brand} ${stone.gritFepa} FEPA`
+  if (stone.gritJis   != null)  return `${stone.brand} ${stone.gritJis} JIS`
+  if (stone.gritMicrons != null) return `${stone.brand} ${stone.gritMicrons} мкм`
   return stone.brand
 }
 
+// Сортировка грубее→тоньше по мкм (большие мкм = грубее = первые)
 export function compareStonesForSort(a: Stone, b: Stone): number {
-  const isMkA = a.gritUnit === 'mk'
-  const isMkB = b.gritUnit === 'mk'
-  if (!isMkA && !isMkB) return (a.grit ?? Infinity) - (b.grit ?? Infinity)
-  if (isMkA && isMkB) {
-    return MK_VALUES.indexOf(a.gritMk ?? '') - MK_VALUES.indexOf(b.gritMk ?? '')
-  }
-  return isMkA ? 1 : -1
+  const ma = a.gritMicrons ?? (a.gritMk ? -MK_VALUES.indexOf(a.gritMk) : undefined)
+  const mb = b.gritMicrons ?? (b.gritMk ? -MK_VALUES.indexOf(b.gritMk) : undefined)
+  if (ma != null && mb != null) return mb - ma
+  if (ma != null) return -1
+  if (mb != null) return 1
+  return 0
 }
 
 export interface Steel {
@@ -186,6 +194,41 @@ export class AppTochiteDB extends Dexie {
     // v6: analyticsQueue for offline event buffering (not included in backups).
     this.version(6).stores({
       analyticsQueue: '++id, queuedAt',
+    })
+    // v7: все четыре шкалы гритности хранятся явно (gritFepa, gritJis, gritMicrons, gritMk).
+    // Старые поля grit/gritUnit конвертируются через GRIT_TABLE; gritMk остаётся как есть.
+    this.version(7).stores({
+      stones: '++id, brand, gritFepa, gritJis, gritMicrons, type, isCustom',
+    }).upgrade(async tx => {
+      await tx.table('stones').toCollection().modify((st: Record<string, unknown>) => {
+        const grit     = st['grit']     as number | undefined
+        const gritUnit = st['gritUnit'] as string | undefined
+        const gritMk   = st['gritMk']  as string | undefined
+
+        if (gritUnit === 'fepa' && grit != null) {
+          const row = GRIT_TABLE.find(r => r.fepa === grit)
+          st['gritFepa']    = grit
+          st['gritJis']     = row?.jis
+          st['gritMicrons'] = row?.microns
+          st['gritMk']      = row?.gost
+          st['gritSource']  = 'fepa'
+        } else if (gritUnit === 'jis' && grit != null) {
+          const row = GRIT_TABLE.find(r => r.jis === grit)
+          st['gritJis']     = grit
+          st['gritFepa']    = row?.fepa
+          st['gritMicrons'] = row?.microns
+          st['gritMk']      = row?.gost
+          st['gritSource']  = 'jis'
+        } else if (gritUnit === 'mk' && gritMk) {
+          const row = GRIT_TABLE.find(r => r.gost === gritMk)
+          st['gritMk']      = gritMk
+          st['gritFepa']    = row?.fepa
+          st['gritJis']     = row?.jis
+          st['gritMicrons'] = row?.microns
+          st['gritSource']  = 'mk'
+        }
+        // Старые поля оставляем в IndexedDB (они просто игнорируются TS-типом).
+      })
     })
   }
 }
