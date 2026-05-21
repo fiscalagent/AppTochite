@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.64.3',
+    date: '2026-05-21',
+    changes: [
+      'шаг 2 формы — кнопки «Принято» и «Готово» вместо чипов статуса',
+    ],
+  },
+  {
     version: '1.64.2',
     date: '2026-05-21',
     changes: [

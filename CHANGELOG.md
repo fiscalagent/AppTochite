@@ -1,3 +1,10 @@
+## [1.64.3](https://github.com/fiscalagent/AppTochite/compare/v1.64.2...v1.64.3) (2026-05-21)
+
+
+### fix
+
+* шаг 2 формы — кнопки «Принято» и «Готово» вместо чипов статуса ([](https://github.com/fiscalagent/AppTochite/commit/087173c74e0c430c081248b48a4838246a31e37f))
+
 ## [1.64.2](https://github.com/fiscalagent/AppTochite/compare/v1.64.1...v1.64.2) (2026-05-21)
 
 
