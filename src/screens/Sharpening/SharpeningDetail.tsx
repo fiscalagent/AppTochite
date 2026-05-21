@@ -5,12 +5,8 @@ import { db } from '../../db/instance'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
-import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
-import { useToast } from '../../components/Toast/ToastContext'
-import { useCamera } from '../../hooks/useCamera'
 import PhotoReportSheet from '../../components/PhotoReport/PhotoReportSheet'
 import PhotoShareSheet, { type SharePhoto } from '../../components/PhotoShare/PhotoShareSheet'
-import { trackSharpening } from '../../services/analytics'
 import s from './SharpeningDetail.module.css'
 
 const IconChevronLeft = () => (
@@ -76,46 +72,19 @@ function PhotoSection({
 export default function SharpeningDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { showToast } = useToast()
   const sharpeningId = Number(id)
 
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [photoModal, setPhotoModal] = useState(false)
-  const [photoPickerOpen, setPhotoPickerOpen] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const [photoReportOpen, setPhotoReportOpen] = useState(false)
   const [photoShareOpen, setPhotoShareOpen] = useState(false)
   const [shareMenuOpen, setShareMenuOpen] = useState(false)
-  const { openCamera, openGallery } = useCamera()
 
   const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
   const client = useLiveQuery(
     () => sh ? db.clients.get(sh.clientId) : undefined,
     [sh?.clientId]
   )
-  async function handleMarkDone() {
-    const doneAt = new Date()
-    try {
-      await db.sharpenings.update(sharpeningId, { status: 'done', doneAt })
-    } catch {
-      showToast('Ошибка при сохранении')
-      return
-    }
-    if (sh) trackSharpening({ ...sh, status: 'done', doneAt })
-    setPhotoModal(true)
-  }
-
-  function addAfterPhoto(pick: (cb: (b64: string) => void) => void) {
-    const existing = sh?.photosAfter ?? []
-    if (existing.length >= 5) {
-      showToast('Максимум 5 фото после заточки')
-      return
-    }
-    pick(async (b64) => {
-      await db.sharpenings.update(sharpeningId, { photosAfter: [...existing, b64] })
-    })
-  }
-
   async function handleRemovePhoto(field: 'photosBefore' | 'photosAfter', index: number) {
     const updated = (sh?.[field] ?? []).filter((_, i) => i !== index)
     const value = updated.length ? updated : undefined
@@ -267,7 +236,7 @@ export default function SharpeningDetail() {
       ) : null}
 
       {sh.status === 'accepted' && (
-        <button className={s.doneBtn} onClick={handleMarkDone}>
+        <button className={s.doneBtn} onClick={() => navigate(`/sharpenings/${sharpeningId}/edit?step=2`)}>
           ЗАТОЧИТЬ
         </button>
       )}
@@ -296,14 +265,6 @@ export default function SharpeningDetail() {
           photos={lightbox.photos}
           initialIndex={lightbox.index}
           onClose={() => setLightbox(null)}
-        />
-      )}
-
-      {photoPickerOpen && (
-        <PhotoSourceSheet
-          onCamera={() => addAfterPhoto(openCamera)}
-          onGallery={() => addAfterPhoto(openGallery)}
-          onClose={() => setPhotoPickerOpen(false)}
         />
       )}
 
@@ -352,26 +313,6 @@ export default function SharpeningDetail() {
         )
       })()}
 
-      {photoModal && (
-        <div className={s.photoModalOverlay} onClick={() => setPhotoModal(false)}>
-          <div className={s.photoModalSheet} onClick={e => e.stopPropagation()}>
-            <div className={s.photoModalTitle}>Добавить фото результата?</div>
-            {sh.photosAfter && sh.photosAfter.length > 0 && (
-              <div className={s.photoScroll} style={{ marginBottom: 12 }}>
-                {sh.photosAfter.map((src, i) => (
-                  <img key={i} src={src} className={s.photoImg} alt="" />
-                ))}
-              </div>
-            )}
-            <button className={s.photoModalAddBtn} onClick={() => setPhotoPickerOpen(true)}>
-              Добавить фото
-            </button>
-            <button className={s.photoModalSkipBtn} onClick={() => setPhotoModal(false)}>
-              {sh.photosAfter && sh.photosAfter.length > 0 ? 'Готово' : 'Пропустить'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

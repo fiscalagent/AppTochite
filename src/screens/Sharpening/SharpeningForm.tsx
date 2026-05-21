@@ -103,7 +103,8 @@ export default function SharpeningForm() {
 
   const repeat = !isEdit ? parseRepeatState(location.state) : undefined
 
-  const [step, setStep] = useState(1)
+  const initialStep = isEdit && searchParams.get('step') === '2' ? 2 : 1
+  const [step, setStep] = useState(initialStep)
   const [saving, setSaving] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
   const [pickerFor, setPickerFor] = useState<'before' | 'after' | null>(null)
