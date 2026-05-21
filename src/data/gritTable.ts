@@ -59,12 +59,18 @@ export interface GritFields {
 
 export function fromFepa(fepa: number): GritFields {
   const row = GRIT_TABLE.find(r => r.fepa === fepa)
-  return { gritFepa: fepa, gritJis: row?.jis, gritMicrons: row?.microns, gritMk: row?.gost, gritSource: 'fepa' }
+  if (row) return { gritFepa: fepa, gritJis: row.jis, gritMicrons: row.microns, gritMk: row.gost, gritSource: 'fepa' }
+  // Значение не в таблице (напр. FEPA 325, 8000) — берём мкм ближайшей строки для сортировки
+  const nearest = GRIT_TABLE.reduce((b, r) => Math.abs(r.fepa - fepa) < Math.abs(b.fepa - fepa) ? r : b)
+  return { gritFepa: fepa, gritMicrons: nearest.microns, gritSource: 'fepa' }
 }
 
 export function fromJis(jis: number): GritFields {
   const row = GRIT_TABLE.find(r => r.jis === jis)
-  return { gritJis: jis, gritFepa: row?.fepa, gritMicrons: row?.microns, gritMk: row?.gost, gritSource: 'jis' }
+  if (row) return { gritJis: jis, gritFepa: row.fepa, gritMicrons: row.microns, gritMk: row.gost, gritSource: 'jis' }
+  // Значение не в таблице (напр. JIS 5000, 16000) — берём мкм ближайшей строки для сортировки
+  const nearest = GRIT_TABLE.reduce((b, r) => Math.abs(r.jis - jis) < Math.abs(b.jis - jis) ? r : b)
+  return { gritJis: jis, gritMicrons: nearest.microns, gritSource: 'jis' }
 }
 
 export function fromMk(mk: string): GritFields {

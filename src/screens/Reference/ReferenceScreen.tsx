@@ -857,7 +857,7 @@ function StonesTab({ search }: { search: string }) {
           ['native', 'Своя'],
           ['fepa',   'FEPA'],
           ['jis',    'JIS'],
-          ['gost',   'мк'],
+          ['gost',   'ГОСТ'],
           ['alpha',  'А-Я'],
         ] as [GritDisplayMode | 'alpha', string][]).map(([unit, label]) => (
           <button

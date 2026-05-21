@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import { GRIT_TABLE } from '../data/gritTable'
+import { GRIT_TABLE, fromFepa, fromJis } from '../data/gritTable'
 
 export interface Meta {
   key: string
@@ -206,19 +206,11 @@ export class AppTochiteDB extends Dexie {
         const gritMk   = st['gritMk']  as string | undefined
 
         if (gritUnit === 'fepa' && grit != null) {
-          const row = GRIT_TABLE.find(r => r.fepa === grit)
-          st['gritFepa']    = grit
-          st['gritJis']     = row?.jis
-          st['gritMicrons'] = row?.microns
-          st['gritMk']      = row?.gost
-          st['gritSource']  = 'fepa'
+          const fields = fromFepa(grit)
+          Object.assign(st, fields)
         } else if (gritUnit === 'jis' && grit != null) {
-          const row = GRIT_TABLE.find(r => r.jis === grit)
-          st['gritJis']     = grit
-          st['gritFepa']    = row?.fepa
-          st['gritMicrons'] = row?.microns
-          st['gritMk']      = row?.gost
-          st['gritSource']  = 'jis'
+          const fields = fromJis(grit)
+          Object.assign(st, fields)
         } else if (gritUnit === 'mk' && gritMk) {
           const row = GRIT_TABLE.find(r => r.gost === gritMk)
           st['gritMk']      = gritMk
