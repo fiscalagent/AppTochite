@@ -5,6 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Stone, type StoneCoolant, type GritSource, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import { getGritDisplay, getGritSortValue, GRIT_TABLE, fromFepa, fromJis, fromMk, fromMicrons, type GritDisplayMode } from '../../data/gritTable'
+import { buildCSV } from '../../utils/backup'
 import { startBlur } from '../../utils/modalBlur'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
@@ -392,18 +393,18 @@ interface ParsedStoneRow {
 }
 
 function downloadStonesCSV(stones: Stone[]) {
-  const sep = ';'
-  const header = ['Название', 'мкм', 'FEPA', 'JIS', 'ГОСТ', 'тип', 'СОЖ'].join(sep)
-  const rows = stones.map(st => [
-    st.brand,
-    st.gritMicrons ?? '',
-    st.gritFepa    ?? '',
-    st.gritJis     ?? '',
-    st.gritMk      ?? '',
-    st.type    ? STONE_TYPE_LABELS[st.type]  : '',
-    st.coolant ? COOLANT_LABELS[st.coolant]  : '',
-  ].join(sep))
-  const csv = '﻿' + [header, ...rows].join('\r\n')
+  const csv = buildCSV([
+    ['Название', 'мкм', 'FEPA', 'JIS', 'ГОСТ', 'тип', 'СОЖ'],
+    ...stones.map(st => [
+      st.brand,
+      st.gritMicrons ?? null,
+      st.gritFepa    ?? null,
+      st.gritJis     ?? null,
+      st.gritMk      ?? null,
+      st.type    ? STONE_TYPE_LABELS[st.type]  : null,
+      st.coolant ? COOLANT_LABELS[st.coolant]  : null,
+    ]),
+  ])
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -431,10 +432,16 @@ function parseStonesCSV(text: string): ParsedStoneRow[] {
 
   if (cNazv === -1) return []
 
+  const unquote = (v: string) => {
+    const t = v.trim()
+    if (t.startsWith('"') && t.endsWith('"')) return t.slice(1, -1).replace(/""/g, '"')
+    return t
+  }
+
   const result: ParsedStoneRow[] = []
   for (let i = 1; i < lines.length; i++) {
     const cells = lines[i].split(sep)
-    const get = (c: number) => (c >= 0 ? (cells[c]?.trim() ?? '') : '')
+    const get = (c: number) => (c >= 0 ? unquote(cells[c] ?? '') : '')
 
     const brand = get(cNazv)
     if (!brand) continue
@@ -658,15 +665,14 @@ function StonesTab({ search }: { search: string }) {
     for (const p of parsed) {
       const isDup = existing.some(ex => {
         if (ex.brand.toLowerCase() !== p.brand.toLowerCase()) return false
-        // Считаем дублем совпадение по ЛЮБОЙ из заполненных шкал
-        if (p.gritFepa    != null && ex.gritFepa    === p.gritFepa)    return true
-        if (p.gritJis     != null && ex.gritJis     === p.gritJis)     return true
-        if (p.gritMicrons != null && ex.gritMicrons === p.gritMicrons) return true
-        if (p.gritMk      && ex.gritMk === p.gritMk)                   return true
+        // Сравниваем только по нативной шкале импортируемого камня,
+        // чтобы nearest-neighbour gritMicrons не давал ложных совпадений
+        if (p.gritSource === 'fepa'    && p.gritFepa    != null) return ex.gritFepa    === p.gritFepa
+        if (p.gritSource === 'jis'     && p.gritJis     != null) return ex.gritJis     === p.gritJis
+        if (p.gritSource === 'mk'      && p.gritMk)              return ex.gritMk      === p.gritMk
+        if (p.gritSource === 'microns' && p.gritMicrons != null) return ex.gritMicrons === p.gritMicrons
         // Камень без гритности — дубль если у обоих нет гритности
-        if (!p.gritFepa && !p.gritJis && !p.gritMicrons && !p.gritMk)
-          return !ex.gritFepa && !ex.gritJis && !ex.gritMicrons && !ex.gritMk
-        return false
+        return !ex.gritFepa && !ex.gritJis && !ex.gritMicrons && !ex.gritMk
       })
       if (isDup) skipped++
       else toAdd.push(p)
