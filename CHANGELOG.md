@@ -1,3 +1,10 @@
+## [1.62.2](https://github.com/fiscalagent/AppTochite/compare/v1.62.1...v1.62.2) (2026-05-21)
+
+
+### fix
+
+* сортировка А-Я включает все камни, не только пользовательские ([](https://github.com/fiscalagent/AppTochite/commit/d1598976013c476f28f1da1d3bb31697fdcf59db))
+
 ## [1.62.1](https://github.com/fiscalagent/AppTochite/compare/v1.62.0...v1.62.1) (2026-05-20)
 
 
