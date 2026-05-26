@@ -1,3 +1,10 @@
+## [1.64.4](https://github.com/fiscalagent/AppTochite/compare/v1.64.3...v1.64.4) (2026-05-26)
+
+
+### fix
+
+* кнопка «назад» — переключение вкладок больше не копит историю, выход из приложения за 1-2 нажатия ([](https://github.com/fiscalagent/AppTochite/commit/7a0dc74e65acc915ee89e53dcce95c9f0879ce78))
+
 ## [1.64.3](https://github.com/fiscalagent/AppTochite/compare/v1.64.2...v1.64.3) (2026-05-21)
 
 

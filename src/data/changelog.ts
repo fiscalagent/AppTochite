@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.64.4',
+    date: '2026-05-26',
+    changes: [
+      'кнопка «назад» — переключение вкладок больше не копит историю, выход из приложения за 1-2 нажатия',
+    ],
+  },
+  {
     version: '1.64.3',
     date: '2026-05-21',
     changes: [
