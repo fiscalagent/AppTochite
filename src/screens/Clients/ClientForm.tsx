@@ -56,7 +56,7 @@ export default function ClientForm() {
         avatar,
         updatedAt: new Date(),
       })
-      navigate(`/clients/${id}`)
+      navigate(-1)
     } else {
       const now = new Date()
       const newId = await db.clients.add({
@@ -68,7 +68,7 @@ export default function ClientForm() {
         createdAt: now,
         updatedAt: now,
       })
-      navigate(`/clients/${newId}`)
+      navigate(`/clients/${newId}`, { replace: true })
     }
   }
 

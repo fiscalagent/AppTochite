@@ -38,7 +38,7 @@ export default function BottomNav() {
 
   return (
     <nav className={s.nav}>
-      <NavLink to="/" end className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
+      <NavLink to="/" end replace className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
         <span className={s.tabIcon}><IconClients /></span>
         <span className={s.tabLabel}>Клиенты</span>
       </NavLink>
@@ -50,12 +50,12 @@ export default function BottomNav() {
         <span className={s.fabLabel}>Заточка</span>
       </div>
 
-      <NavLink to="/history" className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
+      <NavLink to="/history" replace className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
         <span className={s.tabIcon}><IconHistory /></span>
         <span className={s.tabLabel}>История</span>
       </NavLink>
 
-      <NavLink to="/reference/stones" className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
+      <NavLink to="/reference/stones" replace className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
         <span className={s.tabIcon}><IconReference /></span>
         <span className={s.tabLabel}>Справочник</span>
       </NavLink>

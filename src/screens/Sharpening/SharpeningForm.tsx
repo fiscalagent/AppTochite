@@ -663,7 +663,7 @@ export default function SharpeningForm() {
         navigate('/', { replace: true })
       } else {
         if (opts.voiceTriggered) showToast(step === 1 ? 'Приёмка сохранена' : 'Заточка создана')
-        navigate(`/sharpenings/${savedId}`)
+        navigate(`/sharpenings/${savedId}`, { replace: true })
       }
     } catch {
       showToast('Ошибка при сохранении')

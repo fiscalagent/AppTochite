@@ -65,7 +65,7 @@ export default function ClientCard() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.backBtn} onClick={() => navigate('/')}><IconChevronLeft /></button>
+        <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.headerTitle}>{client.name.toUpperCase()}</span>
         {!client.isSelf && (
           <Link to={`/clients/${clientId}/edit`}>
