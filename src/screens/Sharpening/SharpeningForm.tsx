@@ -1,16 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type SharpeningStatus, type SharpeningStone, type Stone, type GritSource, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
-import { getAltGrits, fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
+import { db, type SharpeningStone, stoneDisplayName, compareStonesForSort } from '../../db/instance'
+import { fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { trackSharpening } from '../../services/analytics'
-import { startBlur } from '../../utils/modalBlur'
 import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
 import { findClientMatch, findAllMatches, pickFromFiltered } from '../../utils/voiceMatch'
 import type { Command, CommandContext, FieldKey } from '../../utils/voiceCommand'
@@ -31,12 +29,6 @@ const IconCamera = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
     <circle cx="12" cy="13" r="4"/>
-  </svg>
-)
-
-const IconCheck = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12"/>
   </svg>
 )
 
@@ -103,13 +95,11 @@ export default function SharpeningForm() {
 
   const repeat = !isEdit ? parseRepeatState(location.state) : undefined
 
-  const initialStep = isEdit && searchParams.get('step') === '2' ? 2 : 1
-  const [step, setStep] = useState(initialStep)
   const [saving, setSaving] = useState(false)
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number } | null>(null)
-  const [pickerFor, setPickerFor] = useState<'before' | 'after' | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
-  // Step 1 — Приёмка
+  // Reception fields
   const [clientId, setClientId] = useState<number | null>(repeat?.clientId ?? prefilledClientId)
   const [knifeBrand, setKnifeBrand] = useState(repeat?.knifeBrand ?? '')
   const [steel, setSteel] = useState(repeat?.steel ?? '')
@@ -117,23 +107,21 @@ export default function SharpeningForm() {
   const [condition, setCondition] = useState<string[]>([])
   const [receivedAt, setReceivedAt] = useState(todayStr())
   const [photosBefore, setPhotosBefore] = useState<string[]>([])
+  const [price, setPrice] = useState(repeat?.price != null ? String(repeat.price) : '')
 
-  // Step 2 — Заточка
+  // Sharpening fields — kept in state for voice/repeat pre-fill, saved on acceptance
   const [angle, setAngle] = useState(repeat?.angle != null ? String(repeat.angle) : '')
-  const [selectedStones, setSelectedStones] = useState<SharpeningStone[]>(repeat?.stones ?? [])
+  const [selectedStones] = useState<SharpeningStone[]>(repeat?.stones ?? [])
   const [stoneInput, setStoneInput] = useState('')
   const [comment, setComment] = useState('')
-  const [price, setPrice] = useState(repeat?.price != null ? String(repeat.price) : '')
-  const [status, setStatus] = useState<SharpeningStatus>('accepted')
-  const [doneAt, setDoneAt] = useState<Date | undefined>(undefined)
-  const [photosAfter, setPhotosAfter] = useState<string[]>([])
 
   const dictation = useDictationMode()
 
-  // Dictation context — re-read on every recognition event via getContext().
   const [awaitingListField, setAwaitingListField] = useState<FieldKey | null>(null)
   const [awaitingCancelConfirm, setAwaitingCancelConfirm] = useState(false)
   const [dictationCandidates, setDictationCandidates] = useState<{ field: FieldKey; items: string[] } | null>(null)
+  // In new mode stones are not shown; in edit mode there are no stones either (they live on Z-2).
+  // stepRef stays at 1 to disable stone dictation commands on Z-1.
   const stepRef = useRef<1 | 2>(1)
   const awaitingListFieldRef = useRef<FieldKey | null>(null)
   const awaitingCancelConfirmRef = useRef(false)
@@ -141,7 +129,6 @@ export default function SharpeningForm() {
   const stoneInputRef = useRef('')
   const selectedStonesRef = useRef<SharpeningStone[]>([])
   const cancelTimerRef = useRef<number | null>(null)
-  useEffect(() => { stepRef.current = step as 1 | 2 }, [step])
   useEffect(() => { awaitingListFieldRef.current = awaitingListField }, [awaitingListField])
   useEffect(() => { awaitingCancelConfirmRef.current = awaitingCancelConfirm }, [awaitingCancelConfirm])
   useEffect(() => { stoneInputRef.current = stoneInput }, [stoneInput])
@@ -228,31 +215,24 @@ export default function SharpeningForm() {
     }
   }
 
-  function dispatchFuzzyField(
-    field: FieldKey,
-    value: string,
-    suggestions: string[],
-  ) {
+  function dispatchFuzzyField(field: FieldKey, value: string, suggestions: string[]) {
     if (!value.trim() || suggestions.length === 0) {
       showToast(`${fieldLabel(field)} не найдено`)
       return
     }
     const all = findAllMatches(value, suggestions, 30)
-
     if (all.length === 1) {
       applyByField(field, all[0])
       closeDictationList()
       showToast(`${fieldLabel(field)}: ${all[0]}`)
       return
     }
-
     if (all.length > 1) {
       setDictationCandidates({ field, items: all })
       setAwaitingListField(field)
       showToast(`Уточни ${fieldLabel(field).toLowerCase()}`)
       return
     }
-
     showToast(`${fieldLabel(field)} не найдено`)
   }
 
@@ -277,15 +257,9 @@ export default function SharpeningForm() {
 
   function applyFieldCommand(field: FieldKey, value: string) {
     switch (field) {
-      case 'client':
-        applyClientCommand(value)
-        return
-      case 'knife':
-        dispatchFuzzyField('knife', value, knifeSuggestions)
-        return
-      case 'steel':
-        dispatchFuzzyField('steel', value, steelSuggestions)
-        return
+      case 'client': applyClientCommand(value); return
+      case 'knife': dispatchFuzzyField('knife', value, knifeSuggestions); return
+      case 'steel': dispatchFuzzyField('steel', value, steelSuggestions); return
       case 'condition': {
         const chip = normalizeConditionValue(value)
         if (!chip) { showToast('Не понял требование'); return }
@@ -297,21 +271,10 @@ export default function SharpeningForm() {
         setComment(prev => prev ? `${prev} ${value}` : value)
         showToast('Дописано в примечание')
         return
-      case 'stone':
-        dispatchFuzzyField('stone', value, stoneSuggestions)
-        return
-      case 'angle':
-        setAngle(value)
-        showToast(`Угол: ${value}`)
-        return
-      case 'price':
-        setPrice(value)
-        showToast(`Цена: ${value}`)
-        return
-      case 'hrc':
-        setHrc(value)
-        showToast(`HRC: ${value}`)
-        return
+      case 'stone': dispatchFuzzyField('stone', value, stoneSuggestions); return
+      case 'angle': setAngle(value); showToast(`Угол: ${value}`); return
+      case 'price': setPrice(value); showToast(`Цена: ${value}`); return
+      case 'hrc': setHrc(value); showToast(`HRC: ${value}`); return
     }
   }
 
@@ -320,7 +283,7 @@ export default function SharpeningForm() {
     const field = awaitingListField
     if (!list || !field) return
     const picked = pickFromFiltered(hint, list.items)
-    if (!picked) return  // mismatch — list stays per β
+    if (!picked) return
     applyByField(field, picked)
     closeDictationList()
     showToast(`${fieldLabel(field)}: ${picked}`)
@@ -329,13 +292,10 @@ export default function SharpeningForm() {
   function handleDictationCommand(cmd: Command, raw: string) {
     lastRawRef.current = raw
 
-    // Variant β: any valid non-pick non-unknown command while list is hanging closes it first.
     if (awaitingListFieldRef.current && cmd.kind !== 'pickFromList' && cmd.kind !== 'unknown') {
-      // For same-field field command, dispatchFuzzyField/applyClientCommand will reopen the list as needed.
       closeDictationList()
     }
 
-    // DI-41: any recognized non-confirmCancel command resets the cancel-confirm window.
     if (awaitingCancelConfirmRef.current && cmd.kind !== 'confirmCancel' && cmd.kind !== 'unknown') {
       clearCancelConfirm(true)
     }
@@ -345,22 +305,8 @@ export default function SharpeningForm() {
         applyFieldCommand(cmd.field, cmd.value)
         return
       case 'addStone':
-        if (stepRef.current !== 2) {
-          showToast('Команда недоступна на этом шаге')
-          return
-        }
-        if (!stoneInputRef.current.trim()) {
-          showToast('Нет камня для добавления')
-          return
-        }
-        addStone(stoneInputRef.current)
-        showToast(`Камень добавлен: ${stoneInputRef.current}`)
-        return
       case 'removeLastStone':
-        if (stepRef.current !== 2) { showToast('Команда недоступна на этом шаге'); return }
-        if (selectedStonesRef.current.length === 0) { showToast('Нет камней для удаления'); return }
-        removeStone(selectedStonesRef.current.length - 1)
-        showToast('Последний камень удалён')
+        showToast('Камни — на экране заточки')
         return
       case 'clear':
         switch (cmd.field) {
@@ -378,18 +324,10 @@ export default function SharpeningForm() {
         showToast(`Очищено: ${fieldLabel(cmd.field)}`)
         return
       case 'nav':
-        if (cmd.action === 'next') {
-          if (stepRef.current === 2) { showToast('Вы уже на последнем шаге'); return }
-          if (!canProceed) { showToast('Заполни клиента и нож'); return }
-          setStep(2)
+        if (cmd.action === 'next' || cmd.action === 'prev') {
+          showToast('Нет шагов')
           return
         }
-        if (cmd.action === 'prev') {
-          if (stepRef.current === 1) { showToast('Это первый шаг'); return }
-          setStep(1)
-          return
-        }
-        // cancel
         armCancelConfirm()
         return
       case 'submit':
@@ -398,7 +336,7 @@ export default function SharpeningForm() {
           return
         }
         dictation.stop()
-        handleSave({ markDoneOverride: cmd.markDone, voiceTriggered: true })
+        handleSave({ voiceTriggered: true })
         return
       case 'stop':
         dictation.stop()
@@ -430,8 +368,6 @@ export default function SharpeningForm() {
     else if (reason === 'unavailable') showToast('Голосовой ввод недоступен офлайн')
   }
 
-  // Stable callback refs — recognition events fire with the closure captured at
-  // start() time, so we must read the latest handlers through a ref instead.
   const dictationCallbacksRef = useRef({
     onCommand: handleDictationCommand,
     onAutoStop: handleDictationAutoStop,
@@ -460,20 +396,6 @@ export default function SharpeningForm() {
     }
   }
 
-
-  const [newStoneOpen, setNewStoneOpen] = useState(false)
-
-  useEffect(() => {
-    if (!newStoneOpen) return
-    return startBlur()
-  }, [newStoneOpen])
-
-  const [newStoneBrand, setNewStoneBrand] = useState('')
-  const [newStoneGritSource, setNewStoneGritSource] = useState<GritSource | ''>('')
-  const [newStoneGritVal, setNewStoneGritVal] = useState('')
-  const [newStoneGritMk, setNewStoneGritMk] = useState('')
-  const [newStoneType, setNewStoneType] = useState<Stone['type'] | ''>('')
-
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
   const stoneSuggestions = useLiveQuery(async () => {
     const items = await db.stones.toArray().then(arr => arr.sort(compareStonesForSort))
@@ -490,8 +412,6 @@ export default function SharpeningForm() {
           freq.set(sh.knifeBrand, (freq.get(sh.knifeBrand) ?? 0) + 1)
         }
         const prior = [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([brand]) => brand)
-        // Client's prior knives ranked first, then rest of the dictionary so
-        // adding a brand the client hasn't used before still works via search.
         const seen = new Set(prior)
         return [...prior, ...allBrands.filter(b => !seen.has(b))]
       }
@@ -515,13 +435,7 @@ export default function SharpeningForm() {
       setCondition(sh.condition ?? [])
       setReceivedAt(new Date(sh.receivedAt).toISOString().slice(0, 10))
       setPhotosBefore(sh.photosBefore ?? [])
-      setAngle(sh.angle != null ? String(sh.angle) : '')
-      setSelectedStones(sh.stones ?? [])
-      setComment(sh.comment ?? '')
       setPrice(sh.price != null ? String(sh.price) : '')
-      setStatus(sh.status)
-      setDoneAt(sh.doneAt)
-      setPhotosAfter(sh.photosAfter ?? [])
     })
     return () => { cancelled = true }
   }, [id])
@@ -536,57 +450,15 @@ export default function SharpeningForm() {
     )
   }
 
-  function addStone(name: string) {
-    const trimmed = name.trim()
-    if (!trimmed) return
-    if (selectedStones.find(st => st.name.toLowerCase() === trimmed.toLowerCase())) return
-    setSelectedStones(prev => [...prev, { name: trimmed, order: prev.length + 1 }])
-    setStoneInput('')
-  }
-
-  function removeStone(index: number) {
-    setSelectedStones(prev =>
-      prev.filter((_, i) => i !== index).map((st, i) => ({ ...st, order: i + 1 }))
-    )
-  }
-
-  async function saveNewStone() {
-    if (!newStoneBrand.trim()) return
-    let gritFields: ReturnType<typeof fromFepa> | Record<string, never> = {}
-    if (newStoneGritSource === 'fepa' && newStoneGritVal) gritFields = fromFepa(Number(newStoneGritVal))
-    else if (newStoneGritSource === 'jis' && newStoneGritVal) gritFields = fromJis(Number(newStoneGritVal))
-    else if (newStoneGritSource === 'microns' && newStoneGritVal) gritFields = fromMicrons(Number(newStoneGritVal))
-    else if (newStoneGritSource === 'mk' && newStoneGritMk) gritFields = fromMk(newStoneGritMk)
-    const stone: Stone = {
-      brand: newStoneBrand.trim(),
-      ...gritFields,
-      type: newStoneType || undefined,
-      isCustom: true,
-      updatedAt: new Date(),
-    }
-    try {
-      await db.stones.add(stone)
-    } catch (e) {
-      showToast('Не удалось сохранить камень')
-      console.error(e)
-      return
-    }
-    const displayName = stoneDisplayName(stone)
-    addStone(displayName)
-    showToast(`Камень добавлен: ${displayName}`)
-    setNewStoneBrand(''); setNewStoneGritSource(''); setNewStoneGritVal(''); setNewStoneGritMk(''); setNewStoneType(''); setNewStoneOpen(false)
-  }
-
-  async function handleSave(opts: { markDoneOverride?: boolean; voiceTriggered?: boolean } = {}) {
+  async function handleSave(opts: { voiceTriggered?: boolean } = {}) {
     if (!clientId || !knifeBrand.trim() || saving) return
     setSaving(true)
 
-    const effectiveStatus: SharpeningStatus = opts.markDoneOverride ? 'done' : status
-    const effectiveDoneAt = effectiveStatus === 'done' ? (doneAt ?? new Date()) : undefined
-
     const now = new Date()
 
-    const data = {
+    // Edit mode saves only reception fields; sharpening details live on Z-2.
+    // New mode (acceptance) also saves repeat-state sharpening fields so they appear on Z-2.
+    const receptionFields = {
       clientId,
       knifeBrand: knifeBrand.trim(),
       steel: steel.trim() || undefined,
@@ -594,39 +466,51 @@ export default function SharpeningForm() {
       condition: condition.length ? condition : undefined,
       receivedAt: new Date(receivedAt),
       photosBefore: photosBefore.length ? photosBefore : undefined,
-      angle: angle ? Number(angle) : undefined,
-      stones: selectedStones.length ? selectedStones : undefined,
-      comment: comment.trim() || undefined,
       price: price ? Number(price) : undefined,
-      status: effectiveStatus,
-      doneAt: effectiveDoneAt,
-      photosAfter: photosAfter.length ? photosAfter : undefined,
       updatedAt: now,
     }
 
     try {
-      const savedId = await db.transaction(
-        'rw',
-        [db.knives, db.steels, db.stones, db.sharpenings],
-        async () => {
-          const addIfMissing = async <T,>(
-            value: string,
-            existing: string[],
-            add: (v: string) => Promise<T>,
-          ) => {
+      if (isEdit) {
+        await db.transaction('rw', [db.knives, db.steels, db.sharpenings], async () => {
+          const addIfMissing = async <T,>(value: string, existing: string[], add: (v: string) => Promise<T>) => {
             const v = value.trim()
             if (!v) return
             if (existing.some(e => e.toLowerCase() === v.toLowerCase())) return
             await add(v)
           }
-
           await addIfMissing(knifeBrand, knifeSuggestions, v =>
             db.knives.add({ brand: v, isCustom: true, updatedAt: now })
           )
           await addIfMissing(steel, steelSuggestions, v =>
             db.steels.add({ name: v, isCustom: true, updatedAt: now })
           )
-
+          await db.sharpenings.update(Number(id), receptionFields)
+        })
+        trackSharpening(receptionFields as Parameters<typeof trackSharpening>[0])
+        if (opts.voiceTriggered) showToast('Заточка сохранена')
+        navigate(`/sharpenings/${id}`, { replace: true })
+      } else {
+        const acceptanceData = {
+          ...receptionFields,
+          angle: angle ? Number(angle) : undefined,
+          stones: selectedStones.length ? selectedStones : undefined,
+          comment: comment.trim() || undefined,
+          status: 'accepted' as const,
+        }
+        const savedId = await db.transaction('rw', [db.knives, db.steels, db.stones, db.sharpenings], async () => {
+          const addIfMissing = async <T,>(value: string, existing: string[], add: (v: string) => Promise<T>) => {
+            const v = value.trim()
+            if (!v) return
+            if (existing.some(e => e.toLowerCase() === v.toLowerCase())) return
+            await add(v)
+          }
+          await addIfMissing(knifeBrand, knifeSuggestions, v =>
+            db.knives.add({ brand: v, isCustom: true, updatedAt: now })
+          )
+          await addIfMissing(steel, steelSuggestions, v =>
+            db.steels.add({ name: v, isCustom: true, updatedAt: now })
+          )
           if (selectedStones.length) {
             const existingStones = await db.stones.toArray()
             const existingKeys = new Set(existingStones.map(st => {
@@ -645,25 +529,12 @@ export default function SharpeningForm() {
               }
             }
           }
-
-          if (isEdit) {
-            await db.sharpenings.update(Number(id), data)
-            return Number(id)
-          }
-          return Number(await db.sharpenings.add(data))
-        }
-      )
-
-      trackSharpening(data)
-      if (isEdit) {
-        if (opts.voiceTriggered) showToast('Заточка сохранена')
-        navigate('/', { replace: true })
-      } else if (effectiveStatus === 'done') {
-        if (opts.voiceTriggered) showToast('Заточка завершена')
-        navigate('/', { replace: true })
-      } else {
-        if (opts.voiceTriggered) showToast(step === 1 ? 'Приёмка сохранена' : 'Заточка создана')
-        navigate(`/sharpenings/${savedId}`, { replace: true })
+          return Number(await db.sharpenings.add(acceptanceData))
+        })
+        trackSharpening(acceptanceData as Parameters<typeof trackSharpening>[0])
+        if (opts.voiceTriggered) showToast('Принято в заточку')
+        // fromAcceptance: на Z-2 «назад» (верхняя и аппаратная) ведёт обратно на Z-1 этой заточки
+        navigate(`/sharpenings/${savedId}`, { replace: true, state: { fromAcceptance: true } })
       }
     } catch {
       showToast('Ошибка при сохранении')
@@ -676,7 +547,7 @@ export default function SharpeningForm() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <button className={s.backBtn} onClick={() => step === 2 ? setStep(1) : navigate(-1)}><IconChevronLeft /></button>
+        <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>{isEdit ? 'РЕДАКТИРОВАТЬ' : 'НОВАЯ ЗАТОЧКА'}</span>
         {isVoiceEnabled() && (
           <div className={s.headerRight}>
@@ -706,375 +577,146 @@ export default function SharpeningForm() {
         />
       )}
 
-      {/* Stepper */}
-      <div className={s.stepper}>
-        <div className={s.stepItem}>
-          <div className={`${s.stepDot} ${step >= 1 ? (step > 1 ? s.done : s.active) : ''}`}>
-            {step > 1 ? <IconCheck /> : '1'}
+      <div className={s.form}>
+        {!prefilledClientId && (
+          <div className={`${s.field} ${s.fieldRequired}`}>
+            <label className={s.label}>Клиент <span className={s.req}>*</span></label>
+            <select
+              className={`${s.select} ${!clientId ? s.selectPlaceholder : ''}`}
+              value={clientId ?? ''}
+              onChange={e => setClientId(Number(e.target.value))}
+              autoFocus={!prefilledClientId}
+              required
+            >
+              <option value="">Выбрать клиента</option>
+              {sortedClients.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
-          <span className={`${s.stepLabel} ${step === 1 ? s.active : ''}`}>Приёмка</span>
+        )}
+
+        <div className={`${s.field} ${s.fieldRequired}`}>
+          <label className={s.label}>Нож / Бренд <span className={s.req}>*</span></label>
+          <Autocomplete
+            value={knifeBrand}
+            onChange={setKnifeBrand}
+            onSelect={setKnifeBrand}
+            suggestions={knifeSuggestions}
+            placeholder={dictation.isActive ? 'нож ...' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
+            autoFocus={Boolean(prefilledClientId)}
+          />
         </div>
-        <div className={s.stepLine} />
-        <div className={s.stepItem}>
-          <div className={`${s.stepDot} ${step === 2 ? s.active : ''}`}>2</div>
-          <span className={`${s.stepLabel} ${step === 2 ? s.active : ''}`}>Заточка</span>
+
+        <div className={s.field}>
+          <label className={s.label}>Сталь</label>
+          <Autocomplete
+            value={steel}
+            onChange={setSteel}
+            onSelect={setSteel}
+            suggestions={steelSuggestions}
+            placeholder={dictation.isActive ? 'сталь ...' : 'AUS-8, D2...'}
+          />
+        </div>
+
+        <div className={s.row}>
+          <div className={s.field}>
+            <label className={s.label}>HRC</label>
+            <input
+              value={hrc}
+              onChange={e => setHrc(e.target.value)}
+              placeholder={dictation.isActive ? 'твёрдость ...' : '58'}
+              type="number"
+              min={0}
+              max={70}
+            />
+          </div>
+          <div className={s.field}>
+            <label className={s.label}>Дата приёмки</label>
+            <input
+              value={receivedAt}
+              onChange={e => setReceivedAt(e.target.value)}
+              type="date"
+            />
+          </div>
+        </div>
+
+        <div className={s.field}>
+          <label className={s.label}>Требуется</label>
+          <div className={s.chips}>
+            {CONDITIONS.map(c => (
+              <button
+                key={c}
+                className={`${s.chip} ${condition.includes(c) ? s.selected : ''}`}
+                onClick={() => toggleCondition(c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={s.field}>
+          <label className={s.label}>Цена, ₽</label>
+          <input
+            value={price}
+            onChange={e => setPrice(e.target.value)}
+            placeholder={dictation.isActive ? 'цена ...' : '500'}
+            type="number"
+            min={0}
+          />
+        </div>
+
+        {/* Фото «До» */}
+        <div className={s.photoSection}>
+          <span className={s.photoTitle}>
+            Фото «До»{photosBefore.length > 0 ? ` · ${photosBefore.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
+          </span>
+          {photosBefore.length > 0 && (
+            <div className={s.photoThumbs}>
+              {photosBefore.map((src, i) => (
+                <div key={i} className={s.photoThumb}>
+                  <img
+                    src={src}
+                    alt=""
+                    onClick={() => setLightbox({ photos: photosBefore, index: i })}
+                  />
+                  <button
+                    className={s.photoRemove}
+                    onClick={() => setPhotosBefore(prev => prev.filter((_, j) => j !== i))}
+                  >×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            className={s.photoAddBtn}
+            disabled={photosBefore.length >= PHOTO_LIMIT}
+            onClick={() => setPickerOpen(true)}
+          >
+            <span className={s.photoAddIcon}><IconCamera /></span>
+            {photosBefore.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
+          </button>
+        </div>
+
+        <div className={s.actions}>
+          {isEdit ? (
+            <button className={s.primaryBtn} onClick={() => handleSave()} disabled={saving}>
+              {saving ? 'Сохранение…' : 'Сохранить'}
+            </button>
+          ) : (
+            <button className={s.primaryBtn} onClick={() => handleSave()} disabled={!canProceed || saving}>
+              {saving ? 'Сохранение…' : 'Принять в заточку'}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── Step 1 — Приёмка ── */}
-      {step === 1 && (
-        <div className={s.form}>
-          {!prefilledClientId && (
-            <div className={`${s.field} ${s.fieldRequired}`}>
-              <label className={s.label}>Клиент <span className={s.req}>*</span></label>
-              <select
-                  className={`${s.select} ${!clientId ? s.selectPlaceholder : ''}`}
-                  value={clientId ?? ''}
-                  onChange={e => setClientId(Number(e.target.value))}
-                  autoFocus={!prefilledClientId}
-                  required
-                >
-                  <option value="">Выбрать клиента</option>
-                  {sortedClients.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-            </div>
-          )}
-
-          <div className={`${s.field} ${s.fieldRequired}`}>
-            <label className={s.label}>Нож / Бренд <span className={s.req}>*</span></label>
-            <Autocomplete
-              value={knifeBrand}
-              onChange={setKnifeBrand}
-              onSelect={setKnifeBrand}
-              suggestions={knifeSuggestions}
-              placeholder={dictation.isActive ? 'нож ...' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
-              autoFocus={Boolean(prefilledClientId)}
-            />
-          </div>
-
-          <div className={s.field}>
-            <label className={s.label}>Сталь</label>
-            <Autocomplete
-              value={steel}
-              onChange={setSteel}
-              onSelect={setSteel}
-              suggestions={steelSuggestions}
-              placeholder={dictation.isActive ? 'сталь ...' : 'AUS-8, D2...'}
-            />
-          </div>
-
-          <div className={s.row}>
-            <div className={s.field}>
-              <label className={s.label}>HRC</label>
-              <input
-                  value={hrc}
-                  onChange={e => setHrc(e.target.value)}
-                  placeholder={dictation.isActive ? 'твёрдость ...' : '58'}
-                  type="number"
-                  min={0}
-                  max={70}
-                />
-            </div>
-            <div className={s.field}>
-              <label className={s.label}>Дата приёмки</label>
-              <input
-                value={receivedAt}
-                onChange={e => setReceivedAt(e.target.value)}
-                type="date"
-              />
-            </div>
-          </div>
-
-          <div className={s.field}>
-            <label className={s.label}>Требуется</label>
-            <div className={s.chips}>
-              {CONDITIONS.map(c => (
-                <button
-                  key={c}
-                  className={`${s.chip} ${condition.includes(c) ? s.selected : ''}`}
-                  onClick={() => toggleCondition(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Фото «До» */}
-          <div className={s.photoSection}>
-            <span className={s.photoTitle}>
-              Фото «До»{photosBefore.length > 0 ? ` · ${photosBefore.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
-            </span>
-            {photosBefore.length > 0 && (
-              <div className={s.photoThumbs}>
-                {photosBefore.map((src, i) => {
-                  const isCover = photosAfter.length === 0 && i === 0
-                  return (
-                    <div key={i} className={`${s.photoThumb} ${isCover ? s.photoThumbCover : ''}`}>
-                      <img
-                        src={src}
-                        alt=""
-                        onClick={() => setLightbox({ photos: photosBefore, index: i })}
-                      />
-                      {isCover && <span className={s.coverBadge}>обложка</span>}
-                      <button
-                        className={s.photoRemove}
-                        onClick={() => setPhotosBefore(prev => prev.filter((_, j) => j !== i))}
-                      >×</button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-            <button
-              className={s.photoAddBtn}
-              disabled={photosBefore.length >= PHOTO_LIMIT}
-              onClick={() => setPickerFor('before')}
-            >
-              <span className={s.photoAddIcon}><IconCamera /></span>
-              {photosBefore.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
-            </button>
-          </div>
-
-          <div className={s.actions}>
-            <button
-              className={s.primaryBtn}
-              onClick={() => setStep(2)}
-              disabled={!canProceed}
-            >
-              Заточить сейчас
-            </button>
-            <button
-              className={s.secondaryBtn}
-              onClick={() => handleSave()}
-              disabled={!canProceed || saving}
-            >
-              {saving ? 'Сохранение…' : 'Сохранить как принятый'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Step 2 — Заточка ── */}
-      {step === 2 && (
-        <div className={s.form}>
-          <div className={s.field}>
-            <label className={s.label}>Угол заточки, °</label>
-            <input
-              value={angle}
-              onChange={e => setAngle(e.target.value)}
-              placeholder={dictation.isActive ? 'угол ...' : '15'}
-              type="number"
-              min={1}
-              max={45}
-            />
-          </div>
-
-          <div className={s.field}>
-            <label className={s.label}>Камни</label>
-            {selectedStones.length > 0 && (
-              <div className={s.stoneTags}>
-                {selectedStones.map((ss, i) => {
-                  const parsed = parseStoneName(ss.name)
-                  const alts = getAltGrits(parsed)
-                  return (
-                    <div key={i} className={s.stoneTag}>
-                      <span className={s.stoneOrder}>{ss.order}.</span>
-                      <div className={s.stoneNameGroup}>
-                        <span>{ss.name}</span>
-                        {alts.length > 0 && (
-                          <span className={s.stoneGritAlt}>{alts.join(' · ')}</span>
-                        )}
-                      </div>
-                      {i === selectedStones.length - 1 && (
-                        <span className={s.stoneFinBadge}>FIN</span>
-                      )}
-                      <button className={s.stoneRemove} onClick={() => removeStone(i)}>×</button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-            <div className={s.stoneInputRow}>
-              <Autocomplete
-                value={stoneInput}
-                onChange={setStoneInput}
-                onSelect={addStone}
-                suggestions={stoneSuggestions}
-                placeholder={dictation.isActive ? 'камень ...' : 'Naniwa 1000, Shapton 2000...'}
-              />
-              <button
-                className={s.stoneAddBtn}
-                onClick={() => addStone(stoneInput)}
-                disabled={!stoneInput.trim()}
-              >+</button>
-            </div>
-            {!newStoneOpen && (
-              <button className={s.newStoneToggle} onClick={() => setNewStoneOpen(true)}>
-                + создать новый камень
-              </button>
-            )}
-            {newStoneOpen && createPortal(
-              <div
-                style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:'var(--space-4)' }}
-                onClick={() => setNewStoneOpen(false)}
-              >
-              <div style={{ width:'100%', background:'var(--bg-100)', borderRadius:'var(--radius-lg)', maxHeight:'92vh', overflowY:'auto', padding:'var(--space-4)', display:'flex', flexDirection:'column', gap:'var(--space-2)' }}
-                onClick={e => e.stopPropagation()}
-              >
-              <span className={s.newStoneTitle}>Новый камень в справочник</span>
-                <input
-                  value={newStoneBrand}
-                  onChange={e => setNewStoneBrand(e.target.value)}
-                  placeholder="Бренд (Suehiro, Naniwa...)"
-                  autoFocus
-                />
-                <div className={s.gritUnitRow}>
-                  {(['', 'fepa', 'jis', 'microns', 'mk'] as const).map(u => (
-                    <button
-                      key={u || 'none'}
-                      className={`${s.gritUnitBtn} ${newStoneGritSource === u ? s.gritUnitActive : ''}`}
-                      onClick={() => { setNewStoneGritSource(u); setNewStoneGritVal(''); setNewStoneGritMk('') }}
-                    >
-                      {u === '' ? 'нет' : u === 'mk' ? 'мк' : u === 'microns' ? 'мкм' : u.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-                {(newStoneGritSource === 'fepa' || newStoneGritSource === 'jis' || newStoneGritSource === 'microns') && (
-                  <input
-                    value={newStoneGritVal}
-                    onChange={e => setNewStoneGritVal(e.target.value)}
-                    placeholder={newStoneGritSource === 'microns' ? 'мкм, напр. 5' : `${newStoneGritSource.toUpperCase()}, напр. 1000`}
-                    type="number"
-                    min={1}
-                  />
-                )}
-                {newStoneGritSource === 'mk' && (
-                  <select
-                    className={s.select}
-                    value={newStoneGritMk}
-                    onChange={e => setNewStoneGritMk(e.target.value)}
-                  >
-                    <option value="">Выбрать мк</option>
-                    {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
-                  </select>
-                )}
-                <div className={s.newStoneRow}>
-                  <select
-                    className={s.select}
-                    value={newStoneType}
-                    onChange={e => setNewStoneType(e.target.value as Stone['type'] | '')}
-                  >
-                    <option value="" disabled>выберите тип абразива</option>
-                    <option value="galvanic">Гальваника</option>
-                    <option value="ao">ОА</option>
-                    <option value="kk">КК</option>
-                    <option value="diamond">Алмаз</option>
-                    <option value="elbor">Эльбор</option>
-                    <option value="natural">Природа</option>
-                    <option value="pritir">Притир</option>
-                    <option value="ceramic">Керамика</option>
-                    <option value="other">Другой тип абразива</option>
-                  </select>
-                </div>
-                <div className={s.newStoneRow}>
-                  <button className={s.newStoneSaveBtn} onClick={saveNewStone} disabled={!newStoneBrand.trim()}>Добавить</button>
-                  <button className={s.newStoneCancelBtn} onClick={() => setNewStoneOpen(false)}>Отмена</button>
-                </div>
-              </div>
-              </div>,
-              document.body
-            )}
-          </div>
-
-          <div className={s.field}>
-            <label className={s.label}>Комментарий</label>
-            <textarea
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              placeholder={dictation.isActive ? 'примечание ...' : 'Особенности, замечания...'}
-              rows={3}
-              style={{ resize: 'vertical' }}
-            />
-          </div>
-
-          <div className={s.row}>
-            <div className={s.field}>
-              <label className={s.label}>Цена, ₽</label>
-              <input
-                  value={price}
-                  onChange={e => setPrice(e.target.value)}
-                  placeholder={dictation.isActive ? 'цена ...' : '500'}
-                  type="number"
-                  min={0}
-                />
-            </div>
-          </div>
-
-          <div className={s.photoSection}>
-            <span className={s.photoTitle}>
-              Фото «После»{photosAfter.length > 0 ? ` · ${photosAfter.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
-            </span>
-            {photosAfter.length > 0 && (
-              <div className={s.photoThumbs}>
-                {photosAfter.map((src, i) => {
-                  const isCover = i === 0
-                  return (
-                    <div key={i} className={`${s.photoThumb} ${isCover ? s.photoThumbCover : ''}`}>
-                      <img
-                        src={src}
-                        alt=""
-                        onClick={() => setLightbox({ photos: photosAfter, index: i })}
-                      />
-                      {isCover && <span className={s.coverBadge}>обложка</span>}
-                      <button
-                        className={s.photoRemove}
-                        onClick={() => setPhotosAfter(prev => prev.filter((_, j) => j !== i))}
-                      >×</button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-            <button
-              className={s.photoAddBtn}
-              disabled={photosAfter.length >= PHOTO_LIMIT}
-              onClick={() => setPickerFor('after')}
-            >
-              <span className={s.photoAddIcon}><IconCamera /></span>
-              {photosAfter.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
-            </button>
-          </div>
-
-          <div className={s.actions}>
-            <div className={s.btnRow}>
-              <button className={s.primaryBtn} onClick={() => handleSave()} disabled={saving}>
-                {saving ? '…' : 'Принято'}
-              </button>
-              <button className={s.doneBtn} onClick={() => handleSave({ markDoneOverride: true })} disabled={saving}>
-                {saving ? '…' : 'Готово'}
-              </button>
-            </div>
-            <button className={s.secondaryBtn} onClick={() => setStep(1)}>
-              ← Назад к приёмке
-            </button>
-          </div>
-        </div>
-      )}
-
-      {pickerFor && (
+      {pickerOpen && (
         <PhotoSourceSheet
-          onCamera={() => {
-            if (pickerFor === 'before') openCamera(b64 => setPhotosBefore(prev => [...prev, b64]))
-            else openCamera(b64 => setPhotosAfter(prev => [...prev, b64]))
-          }}
-          onGallery={() => {
-            if (pickerFor === 'before') openGallery(b64 => setPhotosBefore(prev => [...prev, b64]))
-            else openGallery(b64 => setPhotosAfter(prev => [...prev, b64]))
-          }}
-          onClose={() => setPickerFor(null)}
+          onCamera={() => openCamera(b64 => setPhotosBefore(prev => [...prev, b64]))}
+          onGallery={() => openGallery(b64 => setPhotosBefore(prev => [...prev, b64]))}
+          onClose={() => setPickerOpen(false)}
         />
       )}
 

@@ -262,17 +262,321 @@
   z-index: 1;
 }
 
+/* Sharpening form section (inline editable Z-2 fields) */
+.sharpeningForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-300);
+}
+
+/* Stone picker */
+.stoneTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.stoneTag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-400);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-sm);
+  padding: 3px 9px;
+  font-size: 12px;
+  color: var(--text-200);
+}
+
+.stoneNameGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stoneGritAlt {
+  font-size: 10px;
+  color: var(--text-400);
+  line-height: 1.2;
+}
+
+.stoneFinBadge {
+  background: var(--status-done-bg);
+  color: var(--status-done);
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 1px 4px;
+  line-height: 14px;
+  flex-shrink: 0;
+}
+
+.stoneRemove {
+  color: var(--text-400);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.stoneInputRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.stoneInputRow > :first-child {
+  flex: 1;
+}
+
+.stoneAddBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stoneAddBtn:disabled {
+  opacity: 0.35;
+  border-color: var(--border-200);
+  color: var(--text-400);
+}
+
+.newStoneToggle {
+  font-size: 13px;
+  color: var(--accent);
+  font-family: var(--font-body);
+  padding: 4px 0;
+  text-align: left;
+}
+
+.newStoneTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-300);
+}
+
+.gritUnitRow {
+  display: flex;
+  gap: 4px;
+}
+
+.gritUnitBtn {
+  flex: 1;
+  padding: 7px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-200);
+  background: var(--bg-300);
+  color: var(--text-300);
+  cursor: pointer;
+  text-align: center;
+}
+
+.gritUnitActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.newStoneRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.newStoneRow input,
+.newStoneRow select {
+  flex: 1;
+}
+
+.newStoneSaveBtn {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 9px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.newStoneSaveBtn:disabled {
+  opacity: 0.5;
+}
+
+.newStoneCancelBtn {
+  flex: 1;
+  background: var(--bg-400);
+  color: var(--text-200);
+  border-radius: var(--radius-md);
+  padding: 9px 14px;
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+
+.select {
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--text-100);
+  font-size: 15px;
+  font-family: var(--font-body);
+  width: 100%;
+  appearance: none;
+}
+
+/* Photos after (editable) */
+.photoSectionEditable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+}
+
+.photoTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-200);
+}
+
+.photoThumbs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.photoThumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-200);
+  flex-shrink: 0;
+}
+
+.photoThumbCover {
+  border: 2px solid var(--accent);
+}
+
+.photoThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.photoRemoveSm {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.photoAddBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px dashed var(--border-200);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--text-300);
+  font-size: 14px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  width: fit-content;
+}
+
+.photoAddBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.photoAddIcon {
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+}
+
+/* Action buttons */
+.actionBtns {
+  padding-bottom: var(--space-2);
+}
+
+.btnRow {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.saveBtn {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 13px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  flex: 1;
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+}
+
 /* Actions */
 .doneBtn {
   background: var(--status-done);
   color: #fff;
-  font-family: var(--font-display);
-  font-size: 18px;
-  letter-spacing: 1px;
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  width: 100%;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 13px 20px;
+  border-radius: var(--radius-md);
+  flex: 1;
   text-align: center;
+}
+
+.doneBtn:disabled {
+  opacity: 0.5;
 }
 
 .repeatBtn {

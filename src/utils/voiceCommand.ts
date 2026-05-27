@@ -28,8 +28,9 @@ export interface CommandContext {
   awaitingCancelConfirm: boolean
 }
 
-const STEP1_FIELDS: ReadonlySet<FieldKey> = new Set(['client', 'knife', 'steel', 'hrc', 'condition', 'notes'])
-const STEP2_FIELDS: ReadonlySet<FieldKey> = new Set(['stone', 'angle', 'price', 'notes'])
+// step 1 = экран приёмки Z-1, step 2 = экран заточки Z-2
+const STEP1_FIELDS: ReadonlySet<FieldKey> = new Set(['client', 'knife', 'steel', 'hrc', 'condition', 'price'])
+const STEP2_FIELDS: ReadonlySet<FieldKey> = new Set(['stone', 'angle', 'notes'])
 
 const FIELD_BY_PREFIX: Record<string, FieldKey> = {
   'клиент': 'client',

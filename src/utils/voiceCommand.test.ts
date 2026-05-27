@@ -55,9 +55,9 @@ describe('Команды Приёмки (step=1)', () => {
     expect(parseCommand('требуется что-то непонятное', ctx())).toEqual({ kind: 'unknown' })
   })
 
-  it('примечание <текст> → весь хвост в value', () => {
-    expect(parseCommand('примечание ручка треснула возле обуха', ctx())).toEqual({
-      kind: 'field', field: 'notes', value: 'ручка треснула возле обуха',
+  it('цена 500 → number=500 (цена на экране приёмки Z-1)', () => {
+    expect(parseCommand('цена 500', ctx())).toEqual({
+      kind: 'field', field: 'price', value: '500',
     })
   })
 })
@@ -66,12 +66,6 @@ describe('Команды Заточки (step=2)', () => {
   it('угол 20 → number=20', () => {
     expect(parseCommand('угол 20', ctx({ step: 2 }))).toEqual({
       kind: 'field', field: 'angle', value: '20',
-    })
-  })
-
-  it('цена 500 → number=500', () => {
-    expect(parseCommand('цена 500', ctx({ step: 2 }))).toEqual({
-      kind: 'field', field: 'price', value: '500',
     })
   })
 
@@ -97,9 +91,9 @@ describe('Команды Заточки (step=2)', () => {
     })
   })
 
-  it('примечание на шаге 2 тоже работает', () => {
-    expect(parseCommand('примечание долгая правка', ctx({ step: 2 }))).toEqual({
-      kind: 'field', field: 'notes', value: 'долгая правка',
+  it('примечание <текст> → весь хвост в value (комментарий на экране заточки Z-2)', () => {
+    expect(parseCommand('примечание ручка треснула возле обуха', ctx({ step: 2 }))).toEqual({
+      kind: 'field', field: 'notes', value: 'ручка треснула возле обуха',
     })
   })
 })
@@ -117,8 +111,12 @@ describe('Strict по шагу', () => {
     expect(parseCommand('камень бельгийский', ctx({ step: 1 }))).toEqual({ kind: 'unknown' })
   })
 
-  it('цена 500 при step=1 → unknown', () => {
-    expect(parseCommand('цена 500', ctx({ step: 1 }))).toEqual({ kind: 'unknown' })
+  it('цена 500 при step=2 → unknown (цена только на Z-1)', () => {
+    expect(parseCommand('цена 500', ctx({ step: 2 }))).toEqual({ kind: 'unknown' })
+  })
+
+  it('примечание при step=1 → unknown (комментарий только на Z-2)', () => {
+    expect(parseCommand('примечание долгая правка', ctx({ step: 1 }))).toEqual({ kind: 'unknown' })
   })
 
   it('сталь d2 при step=2 → unknown', () => {
@@ -279,19 +277,19 @@ describe('Числа словами', () => {
   })
 
   it('цена пятьсот → 500', () => {
-    expect(parseCommand('цена пятьсот', ctx({ step: 2 }))).toEqual({
+    expect(parseCommand('цена пятьсот', ctx({ step: 1 }))).toEqual({
       kind: 'field', field: 'price', value: '500',
     })
   })
 
   it('цена пятьсот пятьдесят → 550', () => {
-    expect(parseCommand('цена пятьсот пятьдесят', ctx({ step: 2 }))).toEqual({
+    expect(parseCommand('цена пятьсот пятьдесят', ctx({ step: 1 }))).toEqual({
       kind: 'field', field: 'price', value: '550',
     })
   })
 
   it('цена один → 1', () => {
-    expect(parseCommand('цена один', ctx({ step: 2 }))).toEqual({
+    expect(parseCommand('цена один', ctx({ step: 1 }))).toEqual({
       kind: 'field', field: 'price', value: '1',
     })
   })
