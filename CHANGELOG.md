@@ -1,3 +1,10 @@
+# [1.65.0](https://github.com/fiscalagent/AppTochite/compare/v1.64.5...v1.65.0) (2026-05-27)
+
+
+### feat
+
+* форма заточки разделена на два экрана — приёмка и заточка с инлайн-редактированием ([](https://github.com/fiscalagent/AppTochite/commit/efb1d88aae5e6e8b84f24f704ba0d80143916f92))
+
 ## [1.64.5](https://github.com/fiscalagent/AppTochite/compare/v1.64.4...v1.64.5) (2026-05-27)
 
 
