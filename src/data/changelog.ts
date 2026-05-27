@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.64.5',
+    date: '2026-05-27',
+    changes: [
+      'краш Android WebView при фотографировании — input добавляется в DOM перед click()',
+    ],
+  },
+  {
     version: '1.64.4',
     date: '2026-05-26',
     changes: [

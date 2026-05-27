@@ -1,3 +1,10 @@
+## [1.64.5](https://github.com/fiscalagent/AppTochite/compare/v1.64.4...v1.64.5) (2026-05-27)
+
+
+### fix
+
+* краш Android WebView при фотографировании — input добавляется в DOM перед click() ([](https://github.com/fiscalagent/AppTochite/commit/df2889a4e5fd8f5899810d8cac54160320c42329))
+
 ## [1.64.4](https://github.com/fiscalagent/AppTochite/compare/v1.64.3...v1.64.4) (2026-05-26)
 
 
