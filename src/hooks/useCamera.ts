@@ -26,8 +26,14 @@ export function pickAvatarFile(capture: boolean, onDone: (b64: string) => void) 
   input.type = 'file'
   input.accept = 'image/*'
   if (capture) input.setAttribute('capture', 'environment')
+  input.style.display = 'none'
+  document.body.appendChild(input)
+  const cleanup = () => {
+    if (document.body.contains(input)) document.body.removeChild(input)
+  }
   input.onchange = () => {
     const file = input.files?.[0]
+    cleanup()
     if (!file) return
     resizeAvatar(file)
       .then(onDone)
@@ -37,6 +43,7 @@ export function pickAvatarFile(capture: boolean, onDone: (b64: string) => void) 
         reader.readAsDataURL(file)
       })
   }
+  input.addEventListener('cancel', cleanup)
   input.click()
 }
 
@@ -78,10 +85,19 @@ function pickFile(capture: boolean, onDone: (b64: string) => void) {
   input.type = 'file'
   input.accept = 'image/*'
   if (capture) input.setAttribute('capture', 'environment')
+  input.style.display = 'none'
+  // Must be in DOM for Android WebView to deliver the camera result without crashing.
+  document.body.appendChild(input)
+  const cleanup = () => {
+    if (document.body.contains(input)) document.body.removeChild(input)
+  }
   input.onchange = () => {
     const file = input.files?.[0]
+    cleanup()
     if (file) processFile(file, onDone)
   }
+  // Clean up if the user cancels without selecting a file.
+  input.addEventListener('cancel', cleanup)
   input.click()
 }
 
