@@ -1,3 +1,10 @@
+# [1.66.0](https://github.com/fiscalagent/AppTochite/compare/v1.65.0...v1.66.0) (2026-05-29)
+
+
+### feat
+
+* автобэкап теперь хранит снимок за прошлый день — на случай если свежий бэкап испорчен ([](https://github.com/fiscalagent/AppTochite/commit/638b9ab6696b8465123291e7f29f6fecfd1f99cf))
+
 # [1.65.0](https://github.com/fiscalagent/AppTochite/compare/v1.64.5...v1.65.0) (2026-05-27)
 
 
