@@ -27,9 +27,12 @@ import {
   updateLastBackupAt,
   getOPFSBackupMeta,
   readOPFSBackup,
+  getDailyBackupMeta,
+  readDailyBackup,
   type BackupFile,
   type MergeStats,
   type OPFSBackupMeta,
+  type DailyBackupMeta,
 } from '../../utils/backup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import s from './BackupScreen.module.css'
@@ -55,10 +58,12 @@ export default function BackupScreen() {
   )
   const [storageMb, setStorageMb] = useState<number | null>(null)
   const [opfsMeta, setOpfsMeta] = useState<OPFSBackupMeta | null | undefined>(undefined)
+  const [dailyMeta, setDailyMeta] = useState<DailyBackupMeta | null | undefined>(undefined)
   const { lastBackupTick } = useAutoBackup()
 
   const refreshOpfsMeta = useCallback(() => {
     getOPFSBackupMeta().then(setOpfsMeta)
+    getDailyBackupMeta(db).then(setDailyMeta)
   }, [])
 
   useEffect(() => {
@@ -249,6 +254,25 @@ export default function BackupScreen() {
           }}>
             Восстановить из авто-бэкапа
           </button>
+        )}
+
+        {dailyMeta && (
+          <>
+            <div className={s.autoBackupRow}>
+              <span className={s.autoBackupBadge}>За день</span>
+              <span className={s.autoBackupMeta}>
+                {`Снимок за ${new Date(dailyMeta.snapshotDate).toLocaleDateString('ru', { day: 'numeric', month: 'long' })} · ${(dailyMeta.size / 1024).toFixed(0)} КБ`}
+              </span>
+            </div>
+            <p className={s.desc}>Снимок за прошлый день — на случай, если свежий авто-бэкап испорчен.</p>
+            <button className={s.secondaryBtn} onClick={async () => {
+              const backup = await readDailyBackup(db)
+              if (!backup) { showToast('Бэкап за день не найден или повреждён'); return }
+              setPreview(backup)
+            }}>
+              Восстановить из бэкапа за день
+            </button>
+          </>
         )}
       </div>
 

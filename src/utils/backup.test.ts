@@ -10,6 +10,8 @@ import {
   performOPFSBackup,
   getOPFSBackupMeta,
   readOPFSBackup,
+  getDailyBackupMeta,
+  readDailyBackup,
   type BackupFile,
 } from './backup'
 import { AppTochiteDB } from '../db/db'
@@ -50,6 +52,10 @@ class MockOPFSRoot {
       else throw new DOMException('NotFoundError', 'NotFoundError')
     }
     return this.files.get(name)!
+  }
+
+  async removeEntry(name: string) {
+    if (!this.files.delete(name)) throw new DOMException('NotFoundError', 'NotFoundError')
   }
 }
 
@@ -623,5 +629,108 @@ describe('performOPFSBackup', () => {
 
     expect(names).toContain('Иванов')
     expect(names).toContain('Я')
+  })
+})
+
+// ─── Daily backup rotation ───────────────────────────────────────────────────
+
+describe('daily backup rotation', () => {
+  let db: AppTochiteDB
+
+  beforeEach(async () => { db = makeDB(); await db.open() })
+  afterEach(async () => { vi.unstubAllGlobals(); vi.useRealTimers(); db.close(); await db.delete() })
+
+  function ymd(d: Date) { return d.toISOString().slice(0, 10) }
+
+  it('первый прогон не создаёт daily (нет ещё auto)', async () => {
+    const root = mockOPFS()
+    await performOPFSBackup(db)
+    const dailyFiles = [...root.files.keys()].filter(n => n.startsWith('apptochite-daily-'))
+    expect(dailyFiles).toHaveLength(0)
+    expect(await getDailyBackupMeta(db)).toBeNull()
+  })
+
+  it('второй прогон в тот же день не создаёт daily', async () => {
+    const root = mockOPFS()
+    await performOPFSBackup(db)
+    await performOPFSBackup(db)
+    const dailyFiles = [...root.files.keys()].filter(n => n.startsWith('apptochite-daily-'))
+    expect(dailyFiles).toHaveLength(0)
+  })
+
+  it('повышает auto в daily при первом прогоне нового дня (имя — вчерашняя дата)', async () => {
+    const root = mockOPFS()
+    const day1 = new Date('2026-05-30T10:00:00Z')
+    const day2 = new Date('2026-05-31T10:00:00Z')
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(day1)
+
+    // День 1: запустили auto.
+    await db.clients.add({ name: 'День1', isSelf: false, createdAt: new Date() })
+    await performOPFSBackup(db)
+    const day1AutoContent = root.files.get('apptochite-auto.json')!.lastContent
+
+    // День 2: добавили клиента, запустили auto. Должен появиться daily с датой «День 1».
+    vi.setSystemTime(day2)
+    await db.clients.add({ name: 'День2', isSelf: false, createdAt: new Date() })
+    await performOPFSBackup(db)
+
+    const expectedDaily = `apptochite-daily-${ymd(day1)}.json`
+    expect(root.files.has(expectedDaily)).toBe(true)
+    expect(root.files.get(expectedDaily)!.lastContent).toBe(day1AutoContent)
+
+    const meta = await getDailyBackupMeta(db)
+    expect(meta?.snapshotDate).toBe(ymd(day1))
+
+    // А auto содержит уже свежее состояние с обоими клиентами.
+    const freshAuto = JSON.parse(root.files.get('apptochite-auto.json')!.lastContent) as BackupFile
+    expect(freshAuto.data.clients).toHaveLength(2)
+
+    // Восстановление из daily возвращает только клиента «День1».
+    const restored = await readDailyBackup(db)
+    expect(restored?.data.clients.map(c => c.name)).toEqual(['День1'])
+  })
+
+  it('в новый день старый daily заменяется свежим, дубликаты не копятся', async () => {
+    const root = mockOPFS()
+    const day1 = new Date('2026-05-30T10:00:00Z')
+    const day2 = new Date('2026-05-31T10:00:00Z')
+    const day3 = new Date('2026-06-01T10:00:00Z')
+    vi.useFakeTimers({ toFake: ['Date'] })
+
+    vi.setSystemTime(day1)
+    await performOPFSBackup(db)
+
+    vi.setSystemTime(day2)
+    await performOPFSBackup(db)
+    const day2Daily = [...root.files.keys()].filter(n => n.startsWith('apptochite-daily-'))
+    expect(day2Daily).toEqual([`apptochite-daily-${ymd(day1)}.json`])
+
+    vi.setSystemTime(day3)
+    await performOPFSBackup(db)
+    const day3Daily = [...root.files.keys()].filter(n => n.startsWith('apptochite-daily-'))
+    expect(day3Daily).toEqual([`apptochite-daily-${ymd(day2)}.json`])
+  })
+
+  it('integrity-check проваливается — auto удаляется, lastBackupAt не обновляется', async () => {
+    const root = mockOPFS()
+    // Подменяем createWritable так, чтобы запись auto.json молча провалилась.
+    await performOPFSBackup(db)  // первый успешный
+    const beforeMs = (await db.settings.get('lastBackupAt'))!.value as string
+
+    const autoHandle = root.files.get('apptochite-auto.json')!
+    const origCreateWritable = autoHandle.createWritable.bind(autoHandle)
+    autoHandle.createWritable = async () => {
+      const w = await origCreateWritable()
+      // ломаем содержимое: пишем заведомо невалидный JSON
+      const origWrite = w.write.bind(w)
+      w.write = async () => { await origWrite('}{not json') }
+      return w
+    }
+
+    await expect(performOPFSBackup(db)).rejects.toThrow(/integrity/)
+    expect(root.files.has('apptochite-auto.json')).toBe(false)
+    const after = (await db.settings.get('lastBackupAt'))!.value as string
+    expect(after).toBe(beforeMs)
   })
 })

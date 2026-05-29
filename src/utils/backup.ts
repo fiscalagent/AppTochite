@@ -52,15 +52,105 @@ export async function updateLastBackupAt(database: AppTochiteDB): Promise<void> 
 }
 
 const OPFS_FILENAME = 'apptochite-auto.json'
+const DAILY_PREFIX = 'apptochite-daily-'
+const DAILY_FILENAME_KEY = 'dailyBackupFilename'
+const LAST_AUTO_DATE_KEY = 'lastAutoBackupDate'
+
+function ymd(date: Date): string {
+  return date.toISOString().slice(0, 10)
+}
+
+function dailyFilename(snapshotDate: string): string {
+  return `${DAILY_PREFIX}${snapshotDate}.json`
+}
+
+function parseDailyDate(filename: string): string | null {
+  if (!filename.startsWith(DAILY_PREFIX) || !filename.endsWith('.json')) return null
+  const date = filename.slice(DAILY_PREFIX.length, -'.json'.length)
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null
+}
+
+async function getDailyFilename(database: AppTochiteDB): Promise<string | null> {
+  const entry = await database.settings.get(DAILY_FILENAME_KEY)
+  return entry ? (entry.value as string) : null
+}
+
+async function setDailyFilename(database: AppTochiteDB, name: string): Promise<void> {
+  await database.settings.put({ key: DAILY_FILENAME_KEY, value: name })
+}
+
+async function rotateDailyIfNeeded(
+  root: FileSystemDirectoryHandle,
+  database: AppTochiteDB,
+): Promise<void> {
+  const today = ymd(new Date())
+  const lastAutoEntry = await database.settings.get(LAST_AUTO_DATE_KEY)
+  const lastAutoDate = lastAutoEntry ? (lastAutoEntry.value as string) : null
+  if (lastAutoDate == null || lastAutoDate >= today) return
+
+  let autoContent: string | null = null
+  try {
+    const autoHandle = await root.getFileHandle(OPFS_FILENAME)
+    const file = await autoHandle.getFile()
+    if (file.size > 0) autoContent = await file.text()
+  } catch {
+    return
+  }
+  if (!autoContent) return
+
+  const newName = dailyFilename(lastAutoDate)
+  const newHandle = await root.getFileHandle(newName, { create: true })
+  const writable = await newHandle.createWritable()
+  await writable.write(autoContent)
+  await writable.close()
+
+  const currentName = await getDailyFilename(database)
+  if (currentName && currentName !== newName) {
+    try { await root.removeEntry(currentName) } catch { /* already gone */ }
+  }
+  await setDailyFilename(database, newName)
+}
+
+async function verifyAutoBackup(
+  root: FileSystemDirectoryHandle,
+  expected: BackupFile,
+): Promise<boolean> {
+  try {
+    const handle = await root.getFileHandle(OPFS_FILENAME)
+    const file = await handle.getFile()
+    const parsed = JSON.parse(await file.text(), reviveDates)
+    if (!isValidBackup(parsed)) return false
+    const e = expected.data
+    const p = parsed.data
+    return p.clients.length === e.clients.length
+      && p.sharpenings.length === e.sharpenings.length
+      && p.stones.length === e.stones.length
+      && p.steels.length === e.steels.length
+      && p.knives.length === e.knives.length
+  } catch {
+    return false
+  }
+}
 
 export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
   const root = await navigator.storage.getDirectory()
+
+  await rotateDailyIfNeeded(root, database)
+
   const backup = await exportBackup(database)
   const json = JSON.stringify(backup)
   const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
   const writable = await fileHandle.createWritable()
   await writable.write(json)
   await writable.close()
+
+  const ok = await verifyAutoBackup(root, backup)
+  if (!ok) {
+    try { await root.removeEntry(OPFS_FILENAME) } catch { /* ignore */ }
+    throw new Error('OPFS backup integrity check failed')
+  }
+
+  await database.settings.put({ key: LAST_AUTO_DATE_KEY, value: ymd(new Date()) })
   await updateLastBackupAt(database)
 }
 
@@ -85,6 +175,43 @@ export async function readOPFSBackup(): Promise<BackupFile | null> {
   try {
     const root = await navigator.storage.getDirectory()
     const fileHandle = await root.getFileHandle(OPFS_FILENAME)
+    const file = await fileHandle.getFile()
+    if (file.size === 0) return null
+    const parsed = JSON.parse(await file.text(), reviveDates)
+    return isValidBackup(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+export interface DailyBackupMeta {
+  date: Date
+  size: number
+  snapshotDate: string
+}
+
+export async function getDailyBackupMeta(database: AppTochiteDB): Promise<DailyBackupMeta | null> {
+  const name = await getDailyFilename(database)
+  if (!name) return null
+  const snapshotDate = parseDailyDate(name)
+  if (!snapshotDate) return null
+  try {
+    const root = await navigator.storage.getDirectory()
+    const fileHandle = await root.getFileHandle(name)
+    const file = await fileHandle.getFile()
+    if (file.size === 0) return null
+    return { date: new Date(file.lastModified), size: file.size, snapshotDate }
+  } catch {
+    return null
+  }
+}
+
+export async function readDailyBackup(database: AppTochiteDB): Promise<BackupFile | null> {
+  const name = await getDailyFilename(database)
+  if (!name) return null
+  try {
+    const root = await navigator.storage.getDirectory()
+    const fileHandle = await root.getFileHandle(name)
     const file = await fileHandle.getFile()
     if (file.size === 0) return null
     const parsed = JSON.parse(await file.text(), reviveDates)
