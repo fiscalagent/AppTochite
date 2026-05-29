@@ -1,3 +1,10 @@
+# [1.67.0](https://github.com/fiscalagent/AppTochite/compare/v1.66.0...v1.67.0) (2026-05-29)
+
+
+### feat
+
+* удалённые клиенты и заточки попадают в корзину — можно восстановить в течение 3 дней ([](https://github.com/fiscalagent/AppTochite/commit/b6bbc1e7412f43e1d00e14e406bd11176b5ed76f))
+
 # [1.66.0](https://github.com/fiscalagent/AppTochite/compare/v1.65.0...v1.66.0) (2026-05-29)
 
 
