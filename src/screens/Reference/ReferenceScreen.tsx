@@ -309,7 +309,7 @@ function heatColor(pct: number): string {
 }
 
 function StoneHeatmap() {
-  const sharpenings = useLiveQuery(() => db.sharpenings.toArray(), [])
+  const sharpenings = useLiveQuery(() => db.sharpenings.toArray().then(arr => arr.filter(s => !s.deletedAt)), [])
 
   if (!sharpenings) return null
 

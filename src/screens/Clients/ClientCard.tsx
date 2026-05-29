@@ -8,6 +8,7 @@ import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { useToast } from '../../components/Toast/ToastContext'
 import { pickAvatarFile } from '../../hooks/useCamera'
+import { softDeleteClient } from '../../utils/trash'
 import s from './ClientCard.module.css'
 
 const IconChevronLeft = () => (
@@ -42,7 +43,7 @@ export default function ClientCard() {
   const client = useLiveQuery(() => db.clients.get(clientId), [clientId])
   const sharpenings = useLiveQuery(
     () => db.sharpenings.where('clientId').equals(clientId).reverse().sortBy('receivedAt').then(arr =>
-      arr.map(sh => ({
+      arr.filter(sh => !sh.deletedAt).map(sh => ({
         ...sh,
         photosBefore: sh.photosBefore?.slice(0, 1),
         photosAfter: sh.photosAfter?.slice(0, 1),
@@ -52,15 +53,12 @@ export default function ClientCard() {
   )
 
   async function handleDelete() {
-    await db.transaction('rw', [db.sharpenings, db.clients], async () => {
-      await db.sharpenings.where('clientId').equals(clientId).delete()
-      await db.clients.delete(clientId)
-    })
+    await softDeleteClient(db, clientId)
     navigate('/')
   }
 
   if (client === undefined) return null
-  if (client === null) return <div style={{ padding: 16, color: 'var(--text-300)' }}>Клиент не найден</div>
+  if (client === null || client.deletedAt) return <div style={{ padding: 16, color: 'var(--text-300)' }}>Клиент не найден</div>
 
   return (
     <div className={s.screen}>
@@ -204,7 +202,7 @@ export default function ClientCard() {
       <ConfirmModal
         isOpen={confirmOpen}
         title={`Удалить клиента «${client.name}»?`}
-        message="Все его заточки также будут удалены. Это действие необратимо."
+        message="Клиент и его заточки попадут в корзину и будут удалены навсегда через 3 дня."
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />

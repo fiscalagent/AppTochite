@@ -106,10 +106,12 @@ export default function BackupScreen() {
   async function handleExportCSV() {
     setExporting(true)
     try {
-      const [clients, sharpenings] = await Promise.all([
+      const [allClients, allSharpenings] = await Promise.all([
         db.clients.toArray(),
         db.sharpenings.orderBy('receivedAt').toArray(),
       ])
+      const clients = allClients.filter(c => !c.deletedAt)
+      const sharpenings = allSharpenings.filter(s => !s.deletedAt)
       const clientMap = new Map(clients.map(c => [c.id!, c.name]))
       const csv = buildSharpeningCSV(sharpenings, clientMap)
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })

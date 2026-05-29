@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.67.0',
+    date: '2026-05-30',
+    changes: [
+      'удалённые клиенты и заточки теперь попадают в корзину — можно восстановить в течение 3 дней. Корзина — в разделе «О программе»',
+    ],
+  },
+  {
     version: '1.66.0',
     date: '2026-05-29',
     changes: [

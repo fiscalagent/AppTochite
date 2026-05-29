@@ -20,6 +20,8 @@ export interface Client {
   isSelf: boolean
   createdAt: Date
   updatedAt?: Date
+  deletedAt?: Date
+  deletedBatchId?: string
 }
 
 export interface SharpeningStone {
@@ -46,6 +48,8 @@ export interface Sharpening {
   photosBefore?: string[]
   photosAfter?: string[]
   updatedAt?: Date
+  deletedAt?: Date
+  deletedBatchId?: string
 }
 
 // GritSource указывает, в какой шкале был введён камень (для режима «Своя» в UI).
@@ -221,6 +225,12 @@ export class AppTochiteDB extends Dexie {
         }
         // Старые поля оставляем в IndexedDB (они просто игнорируются TS-типом).
       })
+    })
+    // v8: soft-delete для clients и sharpenings — 3 дня в корзине.
+    // Индексы deletedAt для быстрого purge и листинга корзины.
+    this.version(8).stores({
+      clients:     '++id, name, isSelf, deletedAt',
+      sharpenings: '++id, clientId, status, receivedAt, deletedAt',
     })
   }
 }

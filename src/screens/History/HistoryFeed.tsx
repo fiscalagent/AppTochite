@@ -45,8 +45,8 @@ export default function HistoryFeed() {
   }
 
   const data = useLiveQuery(async () => {
-    const sharpenings = await db.sharpenings.orderBy('receivedAt').reverse().toArray()
-    const clients = await db.clients.toArray()
+    const sharpenings = (await db.sharpenings.orderBy('receivedAt').reverse().toArray()).filter(s => !s.deletedAt)
+    const clients = (await db.clients.toArray()).filter(c => !c.deletedAt)
     const clientMap = Object.fromEntries(clients.map(c => [c.id!, c.name]))
     return sharpenings.map(sh => ({
       sh: {

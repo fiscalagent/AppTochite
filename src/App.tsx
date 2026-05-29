@@ -8,11 +8,28 @@ import StorageWarning from './components/StorageWarning/StorageWarning'
 import BrowserWarning from './components/BrowserWarning/BrowserWarning'
 import OnboardingSheet from './components/OnboardingSheet/OnboardingSheet'
 import { flushAnalyticsQueue } from './services/analytics'
+import { db } from './db/instance'
+import { purgeExpired } from './utils/trash'
+
+const PURGE_INTERVAL_MS = 12 * 60 * 60 * 1000
+
+async function runPurgeIfDue() {
+  try {
+    const entry = await db.settings.get('lastPurgeAt')
+    const last = entry ? new Date(entry.value as string).getTime() : 0
+    if (Date.now() - last < PURGE_INTERVAL_MS) return
+    await purgeExpired(db)
+    await db.settings.put({ key: 'lastPurgeAt', value: new Date().toISOString() })
+  } catch {
+    // не блокируем запуск приложения
+  }
+}
 
 export default function App() {
   useEffect(() => {
     flushAnalyticsQueue()
     window.addEventListener('online', flushAnalyticsQueue)
+    runPurgeIfDue()
     return () => window.removeEventListener('online', flushAnalyticsQueue)
   }, [])
 

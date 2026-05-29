@@ -110,8 +110,12 @@ describe('isValidBackup', () => {
     expect(isValidBackup({})).toBe(false)
   })
 
-  it('отклоняет если version не 1', () => {
-    expect(isValidBackup({ version: 2, exportedAt: '', data: { clients: [], sharpenings: [], stones: [], steels: [], knives: [] } })).toBe(false)
+  it('отклоняет если version не 1 и не 2', () => {
+    expect(isValidBackup({ version: 3, exportedAt: '2026-01-01T00:00:00.000Z', data: { clients: [], sharpenings: [], stones: [], steels: [], knives: [] } })).toBe(false)
+  })
+
+  it('принимает version 2 (с tombstones)', () => {
+    expect(isValidBackup({ version: 2, exportedAt: '2026-01-01T00:00:00.000Z', data: { clients: [], sharpenings: [], stones: [], steels: [], knives: [] } })).toBe(true)
   })
 
   it('отклоняет если data отсутствует', () => {
@@ -275,7 +279,7 @@ describe('exportBackup + restoreBackup', () => {
 
   it('экспортирует пустую БД с правильной структурой', async () => {
     const backup = await exportBackup(db)
-    expect(backup.version).toBe(1)
+    expect(backup.version).toBe(2)
     expect(backup.exportedAt).toBeTruthy()
     expect(Array.isArray(backup.data.clients)).toBe(true)
     expect(Array.isArray(backup.data.sharpenings)).toBe(true)
@@ -450,6 +454,22 @@ describe('mergeBackup', () => {
     const stats = await mergeBackup(db, backup)
     expect(stats.skipped).toBe(1)
     expect((await db.clients.get(1))!.name).toBe('Устройство')
+  })
+
+  it('tombstone из файла (deletedAt) побеждает активную запись на устройстве', async () => {
+    await db.clients.add({ id: 1, name: 'Активный', isSelf: false, createdAt: new Date(), updatedAt: new Date('2026-01-01') })
+    const backup = makeValidBackup({
+      clients: [{
+        id: 1, name: 'Активный', isSelf: false, createdAt: new Date(),
+        updatedAt: new Date('2026-06-01'),
+        deletedAt: new Date('2026-06-01'),
+        deletedBatchId: 'b-1',
+      }],
+    })
+    await mergeBackup(db, backup)
+    const c = await db.clients.get(1)
+    expect(c!.deletedAt).toBeDefined()
+    expect(c!.deletedBatchId).toBe('b-1')
   })
 
   it('мерж нескольких таблиц одновременно', async () => {

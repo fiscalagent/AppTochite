@@ -5,6 +5,7 @@ import Avatar from '../../components/Avatar/Avatar'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { pickAvatarFile } from '../../hooks/useCamera'
+import { softDeleteClient } from '../../utils/trash'
 import s from './ClientForm.module.css'
 
 const IconChevronLeft = () => (
@@ -30,7 +31,7 @@ export default function ClientForm() {
   useEffect(() => {
     if (!id) return
     db.clients.get(Number(id)).then(client => {
-      if (!client) return
+      if (!client || client.deletedAt) { navigate('/', { replace: true }); return }
       setName(client.name)
       setPhone(client.phone ?? '')
       setTelegram(client.telegram ?? '')
@@ -38,7 +39,7 @@ export default function ClientForm() {
       setIsSelf(client.isSelf)
       setLoading(false)
     })
-  }, [id])
+  }, [id, navigate])
 
   function normalizeTelegram(value: string): string | undefined {
     const t = value.trim()
@@ -74,10 +75,7 @@ export default function ClientForm() {
 
   async function handleDelete() {
     if (!id) return
-    await db.transaction('rw', [db.sharpenings, db.clients], async () => {
-      await db.sharpenings.where('clientId').equals(Number(id)).delete()
-      await db.clients.delete(Number(id))
-    })
+    await softDeleteClient(db, Number(id))
     navigate('/')
   }
 
@@ -146,7 +144,7 @@ export default function ClientForm() {
       <ConfirmModal
         isOpen={confirmOpen}
         title={`Удалить клиента «${name}»?`}
-        message="Все его заточки также будут удалены. Это действие необратимо."
+        message="Клиент и его заточки попадут в корзину и будут удалены навсегда через 3 дня."
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />

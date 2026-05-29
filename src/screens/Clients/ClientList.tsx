@@ -57,10 +57,12 @@ export default function ClientList() {
   const [query, setQuery] = useState('')
   const { hasUpdate } = useVersionCheck()
   const rows = useLiveQuery<ClientRow[]>(async () => {
-    const [clients, allSharpenings] = await Promise.all([
+    const [allClients, sharpenings] = await Promise.all([
       db.clients.orderBy('name').toArray(),
       db.sharpenings.toArray(),
     ])
+    const clients = allClients.filter(c => !c.deletedAt)
+    const allSharpenings = sharpenings.filter(s => !s.deletedAt)
 
     const counts = new Map<number, { count: number; accepted: number; done: number }>()
     for (const sh of allSharpenings) {

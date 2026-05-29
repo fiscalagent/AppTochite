@@ -222,7 +222,7 @@ export async function readDailyBackup(database: AppTochiteDB): Promise<BackupFil
 }
 
 export interface BackupFile {
-  version: 1
+  version: 1 | 2
   exportedAt: string
   data: {
     clients: Client[]
@@ -244,7 +244,7 @@ export function reviveDates(_key: string, value: unknown): unknown {
 export function isValidBackup(obj: unknown): obj is BackupFile {
   if (!obj || typeof obj !== 'object') return false
   const b = obj as Record<string, unknown>
-  if (b.version !== 1 || !b.exportedAt || !b.data || typeof b.data !== 'object') return false
+  if ((b.version !== 1 && b.version !== 2) || !b.exportedAt || !b.data || typeof b.data !== 'object') return false
   const d = b.data as Record<string, unknown>
   return ['clients', 'sharpenings', 'stones', 'steels', 'knives'].every(
     k => Array.isArray(d[k])
@@ -267,7 +267,7 @@ export async function exportBackup(database: AppTochiteDB): Promise<BackupFile> 
     database.meta.toArray(),
   ])
   return {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     data: { clients, sharpenings, stones, steels, knives, meta },
   }

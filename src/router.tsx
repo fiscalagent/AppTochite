@@ -9,6 +9,7 @@ import SharpeningDetail from './screens/Sharpening/SharpeningDetail'
 import ReferenceScreen from './screens/Reference/ReferenceScreen'
 import BackupScreen from './screens/Backup/BackupScreen'
 import AboutScreen from './screens/About/AboutScreen'
+import TrashScreen from './screens/Trash/TrashScreen'
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: '/reference/:tab',          element: <ReferenceScreen /> },
       { path: '/backup',                  element: <BackupScreen /> },
       { path: '/about',                   element: <AboutScreen /> },
+      { path: '/trash',                   element: <TrashScreen /> },
     ],
   },
 ], { basename: '/AppTochite' })

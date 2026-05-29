@@ -32,6 +32,14 @@ export default function AboutScreen() {
   const analyticsOptOut = useLiveQuery(() => db.settings.get('analyticsOptOut'), [])
   const analyticsOn = !analyticsOptOut?.value
 
+  const trashCount = useLiveQuery(async () => {
+    const [c, s] = await Promise.all([
+      db.clients.where('deletedAt').above(new Date(0)).count(),
+      db.sharpenings.where('deletedAt').above(new Date(0)).count(),
+    ])
+    return c + s
+  }, []) ?? 0
+
   const [voiceOn, setVoiceOn] = useState(() => isVoiceEnabled())
 
   function handleVoiceToggle(enabled: boolean) {
@@ -112,6 +120,14 @@ export default function AboutScreen() {
           >
             <span className={s.linkIcon}>📖</span>
             <span className={s.linkLabel}>Инструкция</span>
+            <span className={s.linkArrow}><IconChevronRight /></span>
+          </button>
+          <button
+            className={s.linkItem}
+            onClick={() => navigate('/trash')}
+          >
+            <span className={s.linkIcon}>🗑️</span>
+            <span className={s.linkLabel}>Корзина{trashCount > 0 ? ` (${trashCount})` : ''}</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </button>
           <a

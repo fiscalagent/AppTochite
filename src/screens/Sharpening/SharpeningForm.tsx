@@ -396,7 +396,7 @@ export default function SharpeningForm() {
     }
   }
 
-  const clients = useLiveQuery(() => db.clients.orderBy('name').toArray(), [])
+  const clients = useLiveQuery(() => db.clients.orderBy('name').toArray().then(arr => arr.filter(c => !c.deletedAt)), [])
   const stoneSuggestions = useLiveQuery(async () => {
     const items = await db.stones.toArray().then(arr => arr.sort(compareStonesForSort))
     return items.map(st => stoneDisplayName(st))
@@ -405,7 +405,7 @@ export default function SharpeningForm() {
     const items = await db.knives.orderBy('brand').toArray()
     const allBrands = [...new Set(items.map(k => k.brand))]
     if (clientId) {
-      const clientSharpenings = await db.sharpenings.where('clientId').equals(clientId).toArray()
+      const clientSharpenings = (await db.sharpenings.where('clientId').equals(clientId).toArray()).filter(s => !s.deletedAt)
       if (clientSharpenings.length > 0) {
         const freq = new Map<string, number>()
         for (const sh of clientSharpenings) {
@@ -428,6 +428,7 @@ export default function SharpeningForm() {
     let cancelled = false
     db.sharpenings.get(Number(id)).then(sh => {
       if (cancelled || !sh) return
+      if (sh.deletedAt) { navigate('/', { replace: true }); return }
       setClientId(sh.clientId)
       setKnifeBrand(sh.knifeBrand)
       setSteel(sh.steel ?? '')

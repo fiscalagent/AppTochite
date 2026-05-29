@@ -21,6 +21,7 @@ import DictationIndicator from '../../components/DictationIndicator/DictationInd
 import DictationCandidates from '../../components/DictationCandidates/DictationCandidates'
 import { isVoiceEnabled } from '../../config/features'
 import { startBlur } from '../../utils/modalBlur'
+import { softDeleteSharpening } from '../../utils/trash'
 import s from './SharpeningDetail.module.css'
 
 const IconChevronLeft = () => (
@@ -474,13 +475,13 @@ export default function SharpeningDetail() {
   }
 
   async function handleDelete() {
-    await db.sharpenings.delete(sharpeningId)
+    await softDeleteSharpening(db, sharpeningId)
     leavingRef.current = true
     navigate(-1)
   }
 
   if (sh === undefined) return null
-  if (sh === null) return (
+  if (sh === null || sh.deletedAt) return (
     <div style={{ padding: 16, color: 'var(--text-300)' }}>Запись не найдена</div>
   )
 
@@ -818,7 +819,7 @@ export default function SharpeningDetail() {
       <ConfirmModal
         isOpen={confirmOpen}
         title="Удалить эту заточку?"
-        message="Запись будет удалена безвозвратно."
+        message="Заточка попадёт в корзину и будет удалена навсегда через 3 дня."
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />
