@@ -1,3 +1,15 @@
+# [1.75.0](https://github.com/fiscalagent/AppTochite/compare/v1.74.0...v1.75.0) (2026-05-30)
+
+
+### feat
+
+* добавили небольшую пасхалку для внимательных ([](https://github.com/fiscalagent/AppTochite/commit/93bf942056866c5ace6da6c92fc42059a3123005))
+
+
+### fix
+
+* исправлен чёрный экран при первом запуске на чистом устройстве ([](https://github.com/fiscalagent/AppTochite/commit/c4d6ffe10b44480624456ff6a00fcd30a36888f7))
+
 # [1.74.0](https://github.com/fiscalagent/AppTochite/compare/v1.73.0...v1.74.0) (2026-05-30)
 
 
