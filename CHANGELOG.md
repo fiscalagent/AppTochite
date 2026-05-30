@@ -1,3 +1,10 @@
+# [1.69.0](https://github.com/fiscalagent/AppTochite/compare/v1.68.0...v1.69.0) (2026-05-30)
+
+
+### feat
+
+* эскалация напоминания о бэкапе — три уровня info/warn/critical ([](https://github.com/fiscalagent/AppTochite/commit/96c8776bbb6ba459ffb083e6edce5a4d3697aa31))
+
 # [1.68.0](https://github.com/fiscalagent/AppTochite/compare/v1.67.1...v1.68.0) (2026-05-30)
 
 
