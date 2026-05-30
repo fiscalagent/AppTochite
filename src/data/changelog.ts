@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.70.2',
+    date: '2026-05-30',
+    changes: [
+      'показывать настоящую ошибку шаринга в тосте — для диагностики',
+    ],
+  },
+  {
     version: '1.70.1',
     date: '2026-05-30',
     changes: [

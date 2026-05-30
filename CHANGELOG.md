@@ -1,3 +1,10 @@
+## [1.70.2](https://github.com/fiscalagent/AppTochite/compare/v1.70.1...v1.70.2) (2026-05-30)
+
+
+### fix
+
+* показывать настоящую ошибку шаринга в тосте — для диагностики ([](https://github.com/fiscalagent/AppTochite/commit/c914196620f1f49e655bd1a86606ab6c1728f829))
+
 ## [1.70.1](https://github.com/fiscalagent/AppTochite/compare/v1.70.0...v1.70.1) (2026-05-30)
 
 
