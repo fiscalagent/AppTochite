@@ -1,3 +1,10 @@
+# [1.72.0](https://github.com/fiscalagent/AppTochite/compare/v1.71.0...v1.72.0) (2026-05-30)
+
+
+### feat
+
+* справочник СОЖ — новое значение «сухой» (камни без СОЖ), ищется через *сухой и попадает в *вода/*масло с тегом ([](https://github.com/fiscalagent/AppTochite/commit/c48c0a4be5ecd33f90302eeed0390e514ef54922))
+
 # [1.71.0](https://github.com/fiscalagent/AppTochite/compare/v1.70.5...v1.71.0) (2026-05-30)
 
 
