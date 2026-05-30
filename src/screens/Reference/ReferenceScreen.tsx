@@ -51,12 +51,14 @@ const COOLANT_LABELS: Record<string, string> = {
   water: 'вода',
   oil:   'масло',
   both:  'вода+масло',
+  dry:   'сухой',
 }
 
 const COOLANT_BY_LABEL: Record<string, StoneCoolant> = {
   'вода':       'water',
   'масло':      'oil',
   'вода+масло': 'both',
+  'сухой':      'dry',
 }
 
 function SelectAllRow({
@@ -541,8 +543,9 @@ function StonesTab({ search }: { search: string }) {
         .filter(([label]) => label.includes(q))
         .map(([, t]) => t)
       if (matchedTypes.length > 0) return matchedTypes.includes(st.type as Stone['type'])
-      if ('вода'.includes(q)) return st.coolant === 'water' || st.coolant === 'both'
-      if ('масло'.includes(q)) return st.coolant === 'oil' || st.coolant === 'both'
+      if ('вода'.includes(q)) return st.coolant === 'water' || st.coolant === 'both' || st.coolant === 'dry'
+      if ('масло'.includes(q)) return st.coolant === 'oil' || st.coolant === 'both' || st.coolant === 'dry'
+      if ('сухой'.includes(q)) return st.coolant === 'dry'
       return false
     }
     const name = `${st.brand} ${st.gritFepa ?? ''} ${st.gritJis ?? ''} ${st.gritMicrons ?? ''} ${st.gritMk ?? ''}`.toLowerCase()
@@ -799,6 +802,7 @@ function StonesTab({ search }: { search: string }) {
               <option value="water">Вода</option>
               <option value="oil">Масло</option>
               <option value="both">Вода+масло</option>
+              <option value="dry">Сухой</option>
             </select>
           </div>
           <div className={s.addRow}>
@@ -859,6 +863,7 @@ function StonesTab({ search }: { search: string }) {
               <option value="water">Вода</option>
               <option value="oil">Масло</option>
               <option value="both">Вода+масло</option>
+              <option value="dry">Сухой</option>
             </select>
           </div>
           <div className={s.addRow}>

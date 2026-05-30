@@ -61,7 +61,7 @@ export const MK_VALUES = [
   '14/10','10/7','7/5','5/3','3/2','2/1','1/0',
 ]
 
-export type StoneCoolant = 'water' | 'oil' | 'both'
+export type StoneCoolant = 'water' | 'oil' | 'both' | 'dry'
 
 export interface Stone {
   id?: number
