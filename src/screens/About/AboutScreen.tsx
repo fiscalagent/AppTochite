@@ -6,11 +6,8 @@ import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
 import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
-import { useToast } from '../../components/Toast/ToastContext'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
-
-const CARD_NUMBER = '2200 7006 1338 5722'
 
 const IconChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -24,12 +21,6 @@ const IconChevronRight = () => (
   </svg>
 )
 
-const IconCopy = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-  </svg>
-)
 
 function isPwa(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches
@@ -37,7 +28,6 @@ function isPwa(): boolean {
 
 export default function AboutScreen() {
   const navigate = useNavigate()
-  const { showToast } = useToast()
   const { currentVersion, latestVersion, releaseUrl, hasUpdate, checking, checkNow, lastChecked } = useVersionCheck()
 
   const analyticsOptOut = useLiveQuery(() => db.settings.get('analyticsOptOut'), [])
@@ -56,15 +46,6 @@ export default function AboutScreen() {
   function handleVoiceToggle(enabled: boolean) {
     setVoiceEnabled(enabled)
     setVoiceOn(enabled)
-  }
-
-  async function handleCopyCard() {
-    try {
-      await navigator.clipboard.writeText(CARD_NUMBER.replace(/\s/g, ''))
-      showToast('Номер карты скопирован')
-    } catch {
-      showToast('Не удалось скопировать номер')
-    }
   }
 
   const checkedStr = lastChecked
@@ -160,17 +141,6 @@ export default function AboutScreen() {
             <span className={s.linkLabel}>Группа в Telegram AppTochite</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </a>
-          <button
-            className={s.linkItem}
-            onClick={handleCopyCard}
-          >
-            <span className={s.linkIcon}>💳</span>
-            <span className={s.donateLabel}>
-              <span>Поддержать развитие</span>
-              <span className={s.cardNumber}>{CARD_NUMBER}</span>
-            </span>
-            <span className={s.linkArrow}><IconCopy /></span>
-          </button>
           <div className={s.toggleItem}>
             <div className={s.toggleLabel}>
               <div className={s.toggleLabelTitle}>Анонимная статистика</div>

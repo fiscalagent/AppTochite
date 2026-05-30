@@ -12,6 +12,15 @@ const IconChevronRight = () => (
     <polyline points="9 18 15 12 9 6"/>
   </svg>
 )
+
+const IconCopy = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+)
+
+const CARD_NUMBER = '2200 7006 1338 5722'
 import { db } from '../../db/instance'
 import { useToast } from '../../components/Toast/ToastContext'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
@@ -195,6 +204,15 @@ export default function BackupScreen() {
     } catch {
       showToast('Ошибка при восстановлении')
       setRestoring(false)
+    }
+  }
+
+  async function handleCopyCard() {
+    try {
+      await navigator.clipboard.writeText(CARD_NUMBER.replace(/\s/g, ''))
+      showToast('Номер карты скопирован')
+    } catch {
+      showToast('Не удалось скопировать номер')
     }
   }
 
@@ -423,6 +441,21 @@ export default function BackupScreen() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className={s.divider} />
+
+      <div className={s.section}>
+        <p className={s.sectionTitle}>Поддержать проект</p>
+        <div className={s.donateCard}>
+          <p className={s.donateText}>
+            Если моё приложение вам помогает — поддержать его развитие можно переводом на карту. Спасибо! 🤝
+          </p>
+          <button className={s.donateBtn} onClick={handleCopyCard}>
+            <span className={s.donateNumber}>{CARD_NUMBER}</span>
+            <span className={s.donateCopy}><IconCopy /></span>
+          </button>
+        </div>
       </div>
 
       <div className={s.divider} />
