@@ -1,0 +1,109 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  background: radial-gradient(circle at 50% 42%, #181a1f 0%, var(--bg-100) 72%);
+  animation: fadeIn 0.28s ease both;
+}
+
+.closing {
+  animation: fadeOut 0.3s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.blade {
+  width: 96px;
+  height: auto;
+  opacity: 0.9;
+  animation: rise 0.5s ease both;
+}
+
+.word {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(56px, 17vw, 84px);
+  letter-spacing: 4px;
+  line-height: 1;
+  user-select: none;
+  animation: rise 0.5s ease both;
+}
+
+.app {
+  color: var(--text-200);
+}
+
+.toch {
+  color: var(--accent);
+  text-shadow: 0 0 24px rgba(74, 144, 217, 0.35);
+}
+
+/* световой блик: белая копия текста, видимая только сквозь узкую
+   диагональную полосу, которая едет поперёк надписи */
+.shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(108deg,
+      transparent 44%, rgba(0, 0, 0, 0.9) 49%, #000 50%, rgba(0, 0, 0, 0.9) 51%, transparent 56%);
+  mask-image: linear-gradient(108deg,
+      transparent 44%, rgba(0, 0, 0, 0.9) 49%, #000 50%, rgba(0, 0, 0, 0.9) 51%, transparent 56%);
+  -webkit-mask-size: 280% 100%;
+  mask-size: 280% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: sweep 1.8s cubic-bezier(0.5, 0, 0.2, 1) 0.35s 2 both;
+}
+
+.shineApp,
+.shineToch {
+  color: #fff;
+}
+
+.shineToch {
+  text-shadow: none;
+}
+
+@keyframes sweep {
+  0% { -webkit-mask-position: 150% 0; mask-position: 150% 0; }
+  55% { -webkit-mask-position: -120% 0; mask-position: -120% 0; }
+  100% { -webkit-mask-position: -120% 0; mask-position: -120% 0; }
+}
+
+.caption {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-300);
+  animation: rise 0.5s ease 0.1s both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .closing,
+  .blade,
+  .word,
+  .caption,
+  .shine {
+    animation: none;
+  }
+}

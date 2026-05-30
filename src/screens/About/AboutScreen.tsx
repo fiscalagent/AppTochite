@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
@@ -8,6 +8,7 @@ import { db } from '../../db/instance'
 import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
+import EasterEgg from '../../components/EasterEgg/EasterEgg'
 
 const IconChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,6 +49,18 @@ export default function AboutScreen() {
     setVoiceOn(enabled)
   }
 
+  // Пасхалка: 7 тапов по номеру версии
+  const eggTaps = useRef(0)
+  const [showEgg, setShowEgg] = useState(false)
+
+  function tapVersion() {
+    eggTaps.current += 1
+    if (eggTaps.current >= 7) {
+      eggTaps.current = 0
+      setShowEgg(true)
+    }
+  }
+
   const checkedStr = lastChecked
     ? new Date(lastChecked).toLocaleString('ru', {
         day: 'numeric',
@@ -69,7 +82,7 @@ export default function AboutScreen() {
         <div className={s.versionBlock}>
           <div className={s.versionRow}>
             <span className={s.appName}>AppTochite</span>
-            <span className={s.versionBadge}>v{currentVersion}</span>
+            <span className={s.versionBadge} onClick={tapVersion}>v{currentVersion}</span>
           </div>
           <p className={s.appDesc}>Журнал профессионального заточника</p>
         </div>
@@ -195,6 +208,8 @@ export default function AboutScreen() {
         </div>
       </div>
       <AppLogo />
+
+      {showEgg && <EasterEgg onClose={() => setShowEgg(false)} />}
     </div>
   )
 }
