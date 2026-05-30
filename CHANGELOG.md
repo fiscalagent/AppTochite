@@ -1,3 +1,10 @@
+# [1.68.0](https://github.com/fiscalagent/AppTochite/compare/v1.67.1...v1.68.0) (2026-05-30)
+
+
+### feat
+
+* автоматический снимок данных перед обновлением структуры базы — страховка на случай ошибок миграции ([](https://github.com/fiscalagent/AppTochite/commit/d5f0308bf53bd195b407745a92dd31d0eb576db1))
+
 ## [1.67.1](https://github.com/fiscalagent/AppTochite/compare/v1.67.0...v1.67.1) (2026-05-30)
 
 
