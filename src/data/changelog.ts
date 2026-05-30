@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.70.3',
+    date: '2026-05-30',
+    changes: [
+      '«Поделиться бэкапом» — готовим файл заранее, в клике только share() (Chrome требует transient activation)',
+    ],
+  },
+  {
     version: '1.70.2',
     date: '2026-05-30',
     changes: [

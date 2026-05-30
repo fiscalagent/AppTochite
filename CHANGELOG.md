@@ -1,3 +1,10 @@
+## [1.70.3](https://github.com/fiscalagent/AppTochite/compare/v1.70.2...v1.70.3) (2026-05-30)
+
+
+### fix
+
+* «Поделиться бэкапом» — готовим файл заранее, в клике только share() (Chrome требует transient activation) ([](https://github.com/fiscalagent/AppTochite/commit/ab62f93440a9eee044ec054d33d15b5c5e6bbc80))
+
 ## [1.70.2](https://github.com/fiscalagent/AppTochite/compare/v1.70.1...v1.70.2) (2026-05-30)
 
 
