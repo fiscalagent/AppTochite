@@ -285,6 +285,17 @@ function newerInFile<T extends { id?: number; updatedAt?: Date }>(device: T, fil
   return fileTs > deviceTs
 }
 
+// Для clients/sharpenings: tombstone устройства sticky — не воскрешаем удалённую
+// запись свежей версией из файла, если в файле нет deletedAt. Гарантирует 3-дневное
+// окно корзины: восстановление из неё возможно только вручную через TrashScreen.
+function shouldTakeFileSoftDeletable<T extends { updatedAt?: Date; deletedAt?: Date }>(
+  device: T,
+  file: T,
+): boolean {
+  if (device.deletedAt && !file.deletedAt) return false
+  return newerInFile(device, file)
+}
+
 export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): Promise<MergeStats> {
   const stats: MergeStats = { added: 0, updated: 0, skipped: 0 }
 
@@ -293,14 +304,14 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
     [database.clients, database.sharpenings, database.stones, database.steels, database.knives, database.meta],
     async () => {
       const tables = [
-        { table: database.clients,     records: backup.data.clients },
-        { table: database.sharpenings, records: backup.data.sharpenings },
-        { table: database.stones,      records: backup.data.stones },
-        { table: database.steels,      records: backup.data.steels },
-        { table: database.knives,      records: backup.data.knives },
+        { table: database.clients,     records: backup.data.clients,     softDelete: true  },
+        { table: database.sharpenings, records: backup.data.sharpenings, softDelete: true  },
+        { table: database.stones,      records: backup.data.stones,      softDelete: false },
+        { table: database.steels,      records: backup.data.steels,      softDelete: false },
+        { table: database.knives,      records: backup.data.knives,      softDelete: false },
       ] as const
 
-      for (const { table, records } of tables) {
+      for (const { table, records, softDelete } of tables) {
         for (const rawRecord of records) {
           if (!rawRecord.id) continue
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -311,12 +322,17 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (table as any).put(fileRecord)
             stats.added++
-          } else if (newerInFile(deviceRecord, fileRecord)) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (table as any).put(fileRecord)
-            stats.updated++
           } else {
-            stats.skipped++
+            const takeFile = softDelete
+              ? shouldTakeFileSoftDeletable(deviceRecord, fileRecord)
+              : newerInFile(deviceRecord, fileRecord)
+            if (takeFile) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (table as any).put(fileRecord)
+              stats.updated++
+            } else {
+              stats.skipped++
+            }
           }
         }
       }

@@ -472,6 +472,77 @@ describe('mergeBackup', () => {
     expect(c!.deletedBatchId).toBe('b-1')
   })
 
+  it('клиент в корзине: свежий файл без deletedAt НЕ воскрешает запись', async () => {
+    // Сценарий: на устройстве A клиент удалён, на другом устройстве B (с устаревшим
+    // знанием) клиента переименовали уже после момента удаления. Merge файла B
+    // не должен возвращать удалённого клиента до истечения 3-дневного окна.
+    await db.clients.add({
+      id: 1, name: 'Удалён на A', isSelf: false, createdAt: new Date(),
+      updatedAt: new Date('2026-05-10'),
+      deletedAt: new Date('2026-05-10'),
+      deletedBatchId: 'b-A',
+    })
+    const backup = makeValidBackup({
+      clients: [{
+        id: 1, name: 'Переименован на B', isSelf: false, createdAt: new Date(),
+        updatedAt: new Date('2026-05-20'),
+      }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.updated).toBe(0)
+    expect(stats.skipped).toBe(1)
+    const c = await db.clients.get(1)
+    expect(c!.name).toBe('Удалён на A')
+    expect(c!.deletedAt).toBeDefined()
+    expect(c!.deletedBatchId).toBe('b-A')
+  })
+
+  it('заточка в корзине: свежий файл без deletedAt НЕ воскрешает запись', async () => {
+    await db.sharpenings.add({
+      id: 1, clientId: 10, knifeBrand: 'Victorinox',
+      receivedAt: new Date('2026-05-01'), status: 'done',
+      updatedAt: new Date('2026-05-10'),
+      deletedAt: new Date('2026-05-10'),
+      deletedBatchId: 'b-A',
+    })
+    const backup = makeValidBackup({
+      sharpenings: [{
+        id: 1, clientId: 10, knifeBrand: 'Victorinox PRO',
+        receivedAt: new Date('2026-05-01'), status: 'done',
+        updatedAt: new Date('2026-05-20'),
+      }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.updated).toBe(0)
+    expect(stats.skipped).toBe(1)
+    const sh = await db.sharpenings.get(1)
+    expect(sh!.knifeBrand).toBe('Victorinox')
+    expect(sh!.deletedAt).toBeDefined()
+  })
+
+  it('оба с deletedAt: LWW по updatedAt продолжает работать (файл новее → файл побеждает)', async () => {
+    // Если на обоих устройствах запись в корзине, последнее удаление выигрывает —
+    // например, может смениться deletedBatchId на более позднем удалении.
+    await db.clients.add({
+      id: 1, name: 'X', isSelf: false, createdAt: new Date(),
+      updatedAt: new Date('2026-05-10'),
+      deletedAt: new Date('2026-05-10'),
+      deletedBatchId: 'b-old',
+    })
+    const backup = makeValidBackup({
+      clients: [{
+        id: 1, name: 'X', isSelf: false, createdAt: new Date(),
+        updatedAt: new Date('2026-05-15'),
+        deletedAt: new Date('2026-05-15'),
+        deletedBatchId: 'b-new',
+      }],
+    })
+    const stats = await mergeBackup(db, backup)
+    expect(stats.updated).toBe(1)
+    const c = await db.clients.get(1)
+    expect(c!.deletedBatchId).toBe('b-new')
+  })
+
   it('мерж нескольких таблиц одновременно', async () => {
     const backup = makeValidBackup({
       clients: [{ id: 1, name: 'Клиент', isSelf: false, createdAt: new Date() }],
