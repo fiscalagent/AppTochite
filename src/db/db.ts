@@ -133,6 +133,10 @@ export interface AnalyticsQueueItem {
   queuedAt: Date
 }
 
+// Текущая максимальная версия схемы. БАМПИТЬ при добавлении новой `this.version(N)`
+// в конструкторе ниже, иначе preMigrationSnapshot не сработает на новой миграции.
+export const CURRENT_SCHEMA_VERSION = 8
+
 export class AppTochiteDB extends Dexie {
   clients!: Table<Client>
   sharpenings!: Table<Sharpening>
