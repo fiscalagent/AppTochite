@@ -339,6 +339,9 @@ export default function BackupScreen() {
         <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting || preparingShare || !shareFile}>
           {preparingShare ? 'Подготовка…' : 'Поделиться бэкапом…'}
         </button>
+        <p className={s.desc} style={{ fontSize: 12, marginTop: 4 }}>
+          Откроет системное меню: Telegram, почта, облако. Файл уйдёт с расширением .txt — это особенность Android, при восстановлении приложение его примет.
+        </p>
       </div>
 
       <div className={s.divider} />
