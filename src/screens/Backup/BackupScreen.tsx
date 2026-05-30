@@ -103,6 +103,31 @@ export default function BackupScreen() {
     }
   }
 
+  async function handleShare() {
+    setExporting(true)
+    try {
+      const backup = await exportBackup(db)
+      const file = new File(
+        [JSON.stringify(backup)],
+        `apptochite-${todayStr()}.json`,
+        { type: 'application/json' }
+      )
+      if (!navigator.canShare?.({ files: [file] })) {
+        showToast('Шаринг не поддерживается — используйте «Сохранить бэкап»')
+        return
+      }
+      await navigator.share({ files: [file], title: 'Бэкап AppTochite' })
+      await updateLastBackupAt(db)
+      showToast('Бэкап отправлен')
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') {
+        showToast('Не удалось поделиться')
+      }
+    } finally {
+      setExporting(false)
+    }
+  }
+
   async function handleExportCSV() {
     setExporting(true)
     try {
@@ -288,6 +313,9 @@ export default function BackupScreen() {
         </p>
         <button className={s.primaryBtn} onClick={handleExport} disabled={exporting}>
           {exporting ? 'Сохранение…' : 'Сохранить бэкап (JSON)'}
+        </button>
+        <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting}>
+          Поделиться бэкапом…
         </button>
       </div>
 
