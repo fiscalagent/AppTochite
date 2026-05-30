@@ -124,7 +124,7 @@ export default function BackupScreen() {
       showToast('Бэкап отправлен')
     } catch (e) {
       if (e instanceof Error && e.name !== 'AbortError') {
-        showToast('Не удалось поделиться')
+        showToast(`Не удалось: ${e.name} — ${e.message}`)
       }
     } finally {
       setExporting(false)
