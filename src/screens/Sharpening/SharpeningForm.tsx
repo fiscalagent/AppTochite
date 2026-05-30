@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type SharpeningStone, stoneDisplayName, compareStonesForSort } from '../../db/instance'
+import { db, type SharpeningStone } from '../../db/instance'
 import { fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
@@ -109,10 +109,10 @@ export default function SharpeningForm() {
   const [photosBefore, setPhotosBefore] = useState<string[]>([])
   const [price, setPrice] = useState(repeat?.price != null ? String(repeat.price) : '')
 
-  // Sharpening fields — kept in state for voice/repeat pre-fill, saved on acceptance
+  // Z-2 поля — переносятся из repeat в acceptanceData при сохранении.
+  // Редактируются на Z-2, на Z-1 нет UI и нет голосовых команд для них (парсер отсекает по step=1).
   const [angle, setAngle] = useState(repeat?.angle != null ? String(repeat.angle) : '')
   const [selectedStones] = useState<SharpeningStone[]>(repeat?.stones ?? [])
-  const [stoneInput, setStoneInput] = useState('')
   const [comment, setComment] = useState('')
 
   const dictation = useDictationMode()
@@ -126,13 +126,9 @@ export default function SharpeningForm() {
   const awaitingListFieldRef = useRef<FieldKey | null>(null)
   const awaitingCancelConfirmRef = useRef(false)
   const lastRawRef = useRef('')
-  const stoneInputRef = useRef('')
-  const selectedStonesRef = useRef<SharpeningStone[]>([])
   const cancelTimerRef = useRef<number | null>(null)
   useEffect(() => { awaitingListFieldRef.current = awaitingListField }, [awaitingListField])
   useEffect(() => { awaitingCancelConfirmRef.current = awaitingCancelConfirm }, [awaitingCancelConfirm])
-  useEffect(() => { stoneInputRef.current = stoneInput }, [stoneInput])
-  useEffect(() => { selectedStonesRef.current = selectedStones }, [selectedStones])
   const getDictationContext = (): CommandContext => ({
     step: stepRef.current,
     awaitingListField: awaitingListFieldRef.current,
@@ -210,7 +206,6 @@ export default function SharpeningForm() {
       case 'client': applyClientByName(item); break
       case 'knife': setKnifeBrand(item); break
       case 'steel': setSteel(item); break
-      case 'stone': setStoneInput(item); break
       default: break
     }
   }
@@ -268,11 +263,12 @@ export default function SharpeningForm() {
         return
       }
       case 'notes':
-        setComment(prev => prev ? `${prev} ${value}` : value)
-        showToast('Дописано в примечание')
+      case 'stone':
+      case 'angle':
+        // На Z-1 этих полей нет. Парсер отсекает их по step=1 — сюда попасть нельзя,
+        // но оставлен явный отказ на случай рассогласования STEP1_FIELDS и UI.
+        showToast(`${fieldLabel(field)} — на экране заточки`)
         return
-      case 'stone': dispatchFuzzyField('stone', value, stoneSuggestions); return
-      case 'angle': setAngle(value); showToast(`Угол: ${value}`); return
       case 'price': setPrice(value); showToast(`Цена: ${value}`); return
       case 'hrc': setHrc(value); showToast(`HRC: ${value}`); return
     }
@@ -314,11 +310,10 @@ export default function SharpeningForm() {
           case 'knife': setKnifeBrand(''); break
           case 'steel': setSteel(''); break
           case 'condition': setCondition([]); break
-          case 'notes': setComment(''); break
-          case 'stone': setStoneInput(''); break
-          case 'angle': setAngle(''); break
           case 'price': setPrice(''); break
           case 'hrc': setHrc(''); break
+          // notes/stone/angle отсекаются парсером по step=1 — сюда не попадают.
+          default: return
         }
         closeDictationList()
         showToast(`Очищено: ${fieldLabel(cmd.field)}`)
@@ -397,10 +392,6 @@ export default function SharpeningForm() {
   }
 
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray().then(arr => arr.filter(c => !c.deletedAt)), [])
-  const stoneSuggestions = useLiveQuery(async () => {
-    const items = await db.stones.toArray().then(arr => arr.sort(compareStonesForSort))
-    return items.map(st => stoneDisplayName(st))
-  }, []) ?? []
   const knifeSuggestions = useLiveQuery(async () => {
     const items = await db.knives.orderBy('brand').toArray()
     const allBrands = [...new Set(items.map(k => k.brand))]

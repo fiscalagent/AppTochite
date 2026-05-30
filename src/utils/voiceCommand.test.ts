@@ -242,8 +242,8 @@ describe('Коррекции', () => {
     expect(parseCommand('сотри клиент', ctx())).toEqual({ kind: 'clear', field: 'client' })
   })
 
-  it('очисти примечание → clear:notes', () => {
-    expect(parseCommand('очисти примечание', ctx())).toEqual({ kind: 'clear', field: 'notes' })
+  it('очисти примечание на step=2 → clear:notes', () => {
+    expect(parseCommand('очисти примечание', ctx({ step: 2 }))).toEqual({ kind: 'clear', field: 'notes' })
   })
 
   it('сотри угол → clear:angle', () => {
@@ -260,6 +260,14 @@ describe('Коррекции', () => {
 
   it('сотри невалидное поле → unknown', () => {
     expect(parseCommand('сотри хрень', ctx())).toEqual({ kind: 'unknown' })
+  })
+
+  it('сотри камень на step=1 → unknown (поле чужого шага)', () => {
+    expect(parseCommand('сотри камень', ctx({ step: 1 }))).toEqual({ kind: 'unknown' })
+  })
+
+  it('очисти hrc на step=2 → unknown (поле чужого шага)', () => {
+    expect(parseCommand('очисти hrc', ctx({ step: 2 }))).toEqual({ kind: 'unknown' })
   })
 })
 

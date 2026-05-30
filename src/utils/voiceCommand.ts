@@ -179,7 +179,7 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
   if (lc.length >= 2 && (lc[0] === 'сотри' || lc[0] === 'очисти')) {
     const target = lc.slice(1).join(' ')
     const field = CLEAR_FIELD_MAP[target]
-    if (field) return { kind: 'clear', field }
+    if (field && isFieldAllowedAtStep(field, ctx.step)) return { kind: 'clear', field }
     return { kind: 'unknown' }
   }
 
