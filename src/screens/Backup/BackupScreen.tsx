@@ -107,10 +107,13 @@ export default function BackupScreen() {
     setExporting(true)
     try {
       const backup = await exportBackup(db)
+      // Web Share API на Chrome Android разрешает только белый список MIME —
+      // application/json в него не входит, поэтому используем text/plain.
+      // Расширение .json в имени сохраняется, импорт читает по содержимому.
       const file = new File(
         [JSON.stringify(backup)],
         `apptochite-${todayStr()}.json`,
-        { type: 'application/json' }
+        { type: 'text/plain' }
       )
       if (!navigator.canShare?.({ files: [file] })) {
         showToast('Шаринг не поддерживается — используйте «Сохранить бэкап»')
