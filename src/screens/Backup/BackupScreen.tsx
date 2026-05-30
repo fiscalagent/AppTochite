@@ -103,32 +103,48 @@ export default function BackupScreen() {
     }
   }
 
-  async function handleShare() {
-    setExporting(true)
-    try {
-      const backup = await exportBackup(db)
-      // Web Share API на Chrome Android разрешает только белый список MIME —
-      // application/json в него не входит, поэтому используем text/plain.
-      // Расширение .json в имени сохраняется, импорт читает по содержимому.
-      const file = new File(
-        [JSON.stringify(backup)],
-        `apptochite-${todayStr()}.json`,
-        { type: 'text/plain' }
-      )
-      if (!navigator.canShare?.({ files: [file] })) {
-        showToast('Шаринг не поддерживается — используйте «Сохранить бэкап»')
-        return
-      }
-      await navigator.share({ files: [file], title: 'Бэкап AppTochite' })
-      await updateLastBackupAt(db)
-      showToast('Бэкап отправлен')
-    } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') {
-        showToast(`Не удалось: ${e.name} — ${e.message}`)
-      }
-    } finally {
-      setExporting(false)
+  // Web Share API на Chrome Android требует transient activation — share()
+  // должен вызываться сразу после клика, без долгих await между ними. Иначе
+  // получаем NotAllowedError. Поэтому файл готовим заранее, при входе на экран,
+  // и в клике только вызываем share().
+  const [shareFile, setShareFile] = useState<File | null>(null)
+  const [preparingShare, setPreparingShare] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setPreparingShare(true)
+    exportBackup(db)
+      .then(backup => {
+        if (cancelled) return
+        // application/json не в белом списке Chrome Android — берём text/plain.
+        const file = new File(
+          [JSON.stringify(backup)],
+          `apptochite-${todayStr()}.json`,
+          { type: 'text/plain' }
+        )
+        setShareFile(file)
+      })
+      .catch(() => { /* кнопка останется недоступной, пользователь увидит «Сохранить бэкап» */ })
+      .finally(() => { if (!cancelled) setPreparingShare(false) })
+    return () => { cancelled = true }
+  }, [lastBackupTick])
+
+  function handleShare() {
+    if (!shareFile) return
+    if (!navigator.canShare?.({ files: [shareFile] })) {
+      showToast('Шаринг не поддерживается — используйте «Сохранить бэкап»')
+      return
     }
+    navigator.share({ files: [shareFile], title: 'Бэкап AppTochite' })
+      .then(async () => {
+        await updateLastBackupAt(db)
+        showToast('Бэкап отправлен')
+      })
+      .catch(e => {
+        if (e instanceof Error && e.name !== 'AbortError') {
+          showToast(`Не удалось: ${e.name} — ${e.message}`)
+        }
+      })
   }
 
   async function handleExportCSV() {
@@ -317,8 +333,8 @@ export default function BackupScreen() {
         <button className={s.primaryBtn} onClick={handleExport} disabled={exporting}>
           {exporting ? 'Сохранение…' : 'Сохранить бэкап (JSON)'}
         </button>
-        <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting}>
-          Поделиться бэкапом…
+        <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting || preparingShare || !shareFile}>
+          {preparingShare ? 'Подготовка…' : 'Поделиться бэкапом…'}
         </button>
       </div>
 
