@@ -129,10 +129,26 @@ export default function BackupScreen() {
     return () => { cancelled = true }
   }, [lastBackupTick])
 
+  function handleShareTest() {
+    const tiny = new File(['hello world'], 'test.txt', { type: 'text/plain' })
+    if (!navigator.canShare?.({ files: [tiny] })) {
+      showToast('canShare=false для крошечного файла')
+      return
+    }
+    navigator.share({ files: [tiny], title: 'Тест' })
+      .then(() => showToast('Тест прошёл — share работает'))
+      .catch(e => {
+        if (e instanceof Error && e.name !== 'AbortError') {
+          showToast(`Тест упал: ${e.name} — ${e.message}`)
+        }
+      })
+  }
+
   function handleShare() {
     if (!shareFile) return
+    const sizeKb = (shareFile.size / 1024).toFixed(0)
     if (!navigator.canShare?.({ files: [shareFile] })) {
-      showToast('Шаринг не поддерживается — используйте «Сохранить бэкап»')
+      showToast(`canShare=false (файл ${sizeKb} КБ)`)
       return
     }
     navigator.share({ files: [shareFile], title: 'Бэкап AppTochite' })
@@ -334,7 +350,10 @@ export default function BackupScreen() {
           {exporting ? 'Сохранение…' : 'Сохранить бэкап (JSON)'}
         </button>
         <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting || preparingShare || !shareFile}>
-          {preparingShare ? 'Подготовка…' : 'Поделиться бэкапом…'}
+          {preparingShare ? 'Подготовка…' : `Поделиться бэкапом… ${shareFile ? `(${(shareFile.size/1024).toFixed(0)} КБ)` : ''}`}
+        </button>
+        <button className={s.secondaryBtn} onClick={handleShareTest}>
+          🧪 Тест шаринга (крошечный файл)
         </button>
       </div>
 
