@@ -46,6 +46,10 @@
   color: var(--accent);
 }
 
+.iconDanger {
+  color: var(--danger);
+}
+
 .title {
   font-size: 17px;
   font-weight: 600;
@@ -58,6 +62,10 @@
   font-weight: 500;
   color: var(--accent);
   text-align: center;
+}
+
+.subtitleDanger {
+  color: var(--danger);
 }
 
 .desc {
@@ -90,6 +98,10 @@
 
 .primaryBtn:disabled {
   opacity: 0.6;
+}
+
+.primaryBtnDanger {
+  background: var(--danger);
 }
 
 .autoBtn {
