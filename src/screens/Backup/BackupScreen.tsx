@@ -117,9 +117,12 @@ export default function BackupScreen() {
       .then(backup => {
         if (cancelled) return
         // application/json не в белом списке Chrome Android — берём text/plain.
+        // Chrome Android фильтрует и MIME, и расширение: .json блокируется,
+        // .txt — в белом списке. Имя файла даём с .txt, импорт читает по
+        // содержимому (JSON.parse), так что расширение не важно.
         const file = new File(
           [JSON.stringify(backup)],
-          `apptochite-${todayStr()}.json`,
+          `apptochite-${todayStr()}.txt`,
           { type: 'text/plain' }
         )
         setShareFile(file)
@@ -129,26 +132,10 @@ export default function BackupScreen() {
     return () => { cancelled = true }
   }, [lastBackupTick])
 
-  function handleShareTest() {
-    const tiny = new File(['hello world'], 'test.txt', { type: 'text/plain' })
-    if (!navigator.canShare?.({ files: [tiny] })) {
-      showToast('canShare=false для крошечного файла')
-      return
-    }
-    navigator.share({ files: [tiny], title: 'Тест' })
-      .then(() => showToast('Тест прошёл — share работает'))
-      .catch(e => {
-        if (e instanceof Error && e.name !== 'AbortError') {
-          showToast(`Тест упал: ${e.name} — ${e.message}`)
-        }
-      })
-  }
-
   function handleShare() {
     if (!shareFile) return
-    const sizeKb = (shareFile.size / 1024).toFixed(0)
     if (!navigator.canShare?.({ files: [shareFile] })) {
-      showToast(`canShare=false (файл ${sizeKb} КБ)`)
+      showToast('Шаринг не поддерживается — используйте «Сохранить бэкап»')
       return
     }
     navigator.share({ files: [shareFile], title: 'Бэкап AppTochite' })
@@ -158,7 +145,7 @@ export default function BackupScreen() {
       })
       .catch(e => {
         if (e instanceof Error && e.name !== 'AbortError') {
-          showToast(`Не удалось: ${e.name} — ${e.message}`)
+          showToast('Не удалось поделиться')
         }
       })
   }
@@ -350,10 +337,7 @@ export default function BackupScreen() {
           {exporting ? 'Сохранение…' : 'Сохранить бэкап (JSON)'}
         </button>
         <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting || preparingShare || !shareFile}>
-          {preparingShare ? 'Подготовка…' : `Поделиться бэкапом… ${shareFile ? `(${(shareFile.size/1024).toFixed(0)} КБ)` : ''}`}
-        </button>
-        <button className={s.secondaryBtn} onClick={handleShareTest}>
-          🧪 Тест шаринга (крошечный файл)
+          {preparingShare ? 'Подготовка…' : 'Поделиться бэкапом…'}
         </button>
       </div>
 
@@ -397,7 +381,7 @@ export default function BackupScreen() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json,application/json"
+              accept=".json,.txt,application/json,text/plain"
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />
