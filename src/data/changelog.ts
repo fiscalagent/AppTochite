@@ -6,6 +6,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.70.1',
+    date: '2026-05-30',
+    changes: [
+      '«Поделиться бэкапом» — text/plain вместо application/json (Chrome Android не пускает JSON в share sheet)',
+      'кнопка «Поделиться бэкапом» — отправка JSON через системный share sheet (Telegram, почта, облако)',
+      'эскалация напоминания о бэкапе — три уровня info/warn/critical',
+      'автоматический снимок данных перед обновлением структуры базы — страховка на случай ошибок миграции',
+    ],
+  },
+  {
     version: '1.70.0',
     date: '2026-05-30',
     changes: [

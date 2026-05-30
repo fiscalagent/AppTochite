@@ -1,3 +1,10 @@
+## [1.70.1](https://github.com/fiscalagent/AppTochite/compare/v1.70.0...v1.70.1) (2026-05-30)
+
+
+### fix
+
+* «Поделиться бэкапом» — text/plain вместо application/json (Chrome Android не пускает JSON в share sheet) ([](https://github.com/fiscalagent/AppTochite/commit/df96efabd73679767ad6e407903cc25fa4950d6c))
+
 # [1.70.0](https://github.com/fiscalagent/AppTochite/compare/v1.69.0...v1.70.0) (2026-05-30)
 
 
