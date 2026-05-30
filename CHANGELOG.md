@@ -1,3 +1,10 @@
+## [1.67.1](https://github.com/fiscalagent/AppTochite/compare/v1.67.0...v1.67.1) (2026-05-30)
+
+
+### fix
+
+* объединение бэкапа больше не воскрешает удалённых клиентов и заточки из корзины ([](https://github.com/fiscalagent/AppTochite/commit/300c2645f6be51a003236458ff910c35a0825b9b))
+
 # [1.67.0](https://github.com/fiscalagent/AppTochite/compare/v1.66.0...v1.67.0) (2026-05-29)
 
 
