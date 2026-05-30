@@ -1,3 +1,10 @@
+# [1.71.0](https://github.com/fiscalagent/AppTochite/compare/v1.70.5...v1.71.0) (2026-05-30)
+
+
+### feat
+
+* подсказка под кнопкой шаринга — объяснение про расширение .txt ([](https://github.com/fiscalagent/AppTochite/commit/7a065ff00528bce4f93409f6524c825a52004ee6))
+
 ## [1.70.5](https://github.com/fiscalagent/AppTochite/compare/v1.70.4...v1.70.5) (2026-05-30)
 
 
