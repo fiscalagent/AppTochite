@@ -109,11 +109,10 @@ export default function SharpeningForm() {
   const [photosBefore, setPhotosBefore] = useState<string[]>([])
   const [price, setPrice] = useState(repeat?.price != null ? String(repeat.price) : '')
 
-  // Z-2 поля — переносятся из repeat в acceptanceData при сохранении.
-  // Редактируются на Z-2, на Z-1 нет UI и нет голосовых команд для них (парсер отсекает по step=1).
-  const [angle, setAngle] = useState(repeat?.angle != null ? String(repeat.angle) : '')
-  const [selectedStones] = useState<SharpeningStone[]>(repeat?.stones ?? [])
-  const [comment, setComment] = useState('')
+  // Z-2 поля — на Z-1 не редактируются и нет голосовых команд (парсер отсекает по step=1).
+  // Переносятся из repeat в acceptanceData при сохранении.
+  const repeatAngle = repeat?.angle
+  const repeatStones: SharpeningStone[] = repeat?.stones ?? []
 
   const dictation = useDictationMode()
 
@@ -485,9 +484,8 @@ export default function SharpeningForm() {
       } else {
         const acceptanceData = {
           ...receptionFields,
-          angle: angle ? Number(angle) : undefined,
-          stones: selectedStones.length ? selectedStones : undefined,
-          comment: comment.trim() || undefined,
+          angle: repeatAngle,
+          stones: repeatStones.length ? repeatStones : undefined,
           status: 'accepted' as const,
         }
         const savedId = await db.transaction('rw', [db.knives, db.steels, db.stones, db.sharpenings], async () => {
@@ -503,13 +501,13 @@ export default function SharpeningForm() {
           await addIfMissing(steel, steelSuggestions, v =>
             db.steels.add({ name: v, isCustom: true, updatedAt: now })
           )
-          if (selectedStones.length) {
+          if (repeatStones.length) {
             const existingStones = await db.stones.toArray()
             const existingKeys = new Set(existingStones.map(st => {
               if (st.gritMk) return `${st.brand.toLowerCase()} mk:${st.gritMk}`
               return `${st.brand.toLowerCase()} ${st.gritMicrons ?? st.gritFepa ?? st.gritJis ?? 0}`
             }))
-            for (const stone of selectedStones) {
+            for (const stone of repeatStones) {
               const parsed = parseStoneName(stone.name)
               const key = parsed.gritMk
                 ? `${parsed.brand.toLowerCase()} mk:${parsed.gritMk}`
