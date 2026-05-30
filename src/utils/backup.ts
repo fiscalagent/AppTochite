@@ -230,7 +230,8 @@ export interface BackupFile {
     stones: Stone[]
     steels: Steel[]
     knives: Knife[]
-    meta: Meta[]
+    // meta появилось во v2, в старых файлах отсутствует — isValidBackup такие принимает.
+    meta?: Meta[]
   }
 }
 
@@ -354,22 +355,27 @@ export async function restoreBackup(database: AppTochiteDB, backup: BackupFile):
     'rw',
     [database.clients, database.sharpenings, database.stones, database.steels, database.knives, database.meta],
     async () => {
-      await Promise.all([
+      // meta трогаем только если в файле он есть. Иначе старый бэкап без meta
+      // сбросит seedVersion → seed зальётся заново поверх восстановленных справочников.
+      const hasMeta = Array.isArray(backup.data.meta) && backup.data.meta.length > 0
+      const clearTasks = [
         database.clients.clear(),
         database.sharpenings.clear(),
         database.stones.clear(),
         database.steels.clear(),
         database.knives.clear(),
-        database.meta.clear(),
-      ])
-      await Promise.all([
+      ]
+      if (hasMeta) clearTasks.push(database.meta.clear())
+      await Promise.all(clearTasks)
+      const putTasks = [
         database.clients.bulkPut(backup.data.clients),
         database.sharpenings.bulkPut(backup.data.sharpenings),
         database.stones.bulkPut(backup.data.stones.map(normalizeStoneFromBackup)),
         database.steels.bulkPut(backup.data.steels),
         database.knives.bulkPut(backup.data.knives),
-        database.meta.bulkPut(backup.data.meta ?? []),
-      ])
+      ]
+      if (hasMeta) putTasks.push(database.meta.bulkPut(backup.data.meta!))
+      await Promise.all(putTasks)
     }
   )
 }

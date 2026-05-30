@@ -20,8 +20,10 @@ async function runPurgeIfDue() {
     if (Date.now() - last < PURGE_INTERVAL_MS) return
     await purgeExpired(db)
     await db.settings.put({ key: 'lastPurgeAt', value: new Date().toISOString() })
-  } catch {
-    // не блокируем запуск приложения
+  } catch (err) {
+    // Не блокируем запуск приложения, но логируем — иначе вечный сбой purge
+    // незаметно копит мусор в корзине.
+    console.warn('purgeExpired failed', err)
   }
 }
 

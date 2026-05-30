@@ -39,14 +39,23 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
     // Run on initial load (page starts visible, no visibilitychange fires)
     runBackup()
 
-    function onVisibilityChange() {
-      // Fire on both directions: visible (opened/returned from background)
-      // and hidden (closed/swiped to background) — covers users who don't reopen.
+    function onVisible() {
+      if (document.visibilityState === 'visible') runBackup()
+    }
+    // pagehide вместо visibilitychange='hidden': браузер гарантированно даёт
+    // ~1-2с на синхронную/коротко-асинхронную работу до выгрузки страницы.
+    // visibilitychange='hidden' такой гарантии не даёт — WebView Android может
+    // оборвать запись авто-бэкапа на полпути.
+    function onPageHide() {
       runBackup()
     }
 
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('pagehide', onPageHide)
+    }
   }, [])
 
   return (

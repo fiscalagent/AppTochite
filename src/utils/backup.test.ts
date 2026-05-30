@@ -387,6 +387,20 @@ describe('exportBackup + restoreBackup', () => {
     expect(clients.some(c => c.name === 'Оригинал')).toBe(true)
   })
 
+  it('старый бэкап без meta не сбрасывает meta устройства (seedVersion сохраняется)', async () => {
+    // Имитируем устройство, у которого seedVersion=1 уже стоит.
+    await db.meta.put({ key: 'seedVersion', value: 1 })
+    // Бэкап старого формата v1 — поле meta вообще отсутствует.
+    const oldBackup: BackupFile = {
+      version: 1,
+      exportedAt: '2026-01-01T00:00:00.000Z',
+      data: { clients: [], sharpenings: [], stones: [], steels: [], knives: [] },
+    }
+    await restoreBackup(db, oldBackup)
+    const seed = await db.meta.get('seedVersion')
+    expect(seed?.value).toBe(1)
+  })
+
   it('восстанавливает фото в base64', async () => {
     const clientId = await db.clients.add({ name: 'Клиент', isSelf: false, createdAt: new Date() })
     await db.sharpenings.add({
