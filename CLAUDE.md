@@ -3,7 +3,7 @@
 ## Что это за проект
 
 **AppTochite** — мобильное PWA-приложение для профессиональных заточников ножей.  
-Версия: **1.54.0** · Платформа: Android (90%), интерфейс полностью на **русском языке**.
+Версия: **1.66.0** · Платформа: Android (90%), интерфейс полностью на **русском языке**.
 
 Два сегмента пользователей через единый интерфейс:
 - Заточник как малый бизнес — клиенты, выручка, статусы
@@ -43,7 +43,7 @@ src/
     features.ts          # Feature flags: voiceInput (мастер-выключатель); isVoiceEnabled() читает localStorage
 
   db/
-    db.ts                # Dexie-схема (v6) и все TypeScript-типы
+    db.ts                # Dexie-схема (v8) и все TypeScript-типы
     seed.ts              # Предзаполненные справочники (101 камень, 219 сталей, 890 ножей)
     seed.test.ts         # Тесты seed-миграций (Vitest)
 
@@ -90,6 +90,8 @@ src/
     voiceCommand.test.ts # Тесты парсера команд (Vitest, 67 кейсов)
     voiceMatch.ts        # Fuzzy-матчинг для голосового ввода (транслитерация + bigram)
     voiceMatch.test.ts   # Тесты voiceMatch (Vitest)
+    trash.ts             # Soft-delete клиентов/заточек, корзина (batchId, TTL 3 дня), restoreBatch/purgeBatch/purgeExpired
+    trash.test.ts        # Тесты корзины (Vitest)
 
   screens/
     About/
@@ -103,10 +105,12 @@ src/
     History/
       HistoryFeed.tsx     # H-1 — лента заточек
     Sharpening/
-      SharpeningForm.tsx  # Z-1 — форма заточки (stepper: Приёмка → Заточка); голосовой ввод полей + диктовочный режим
-      SharpeningDetail.tsx# Z-2 — детальная запись (просмотр)
+      SharpeningForm.tsx  # Z-1 — приёмка (клиент, нож, сталь, HRC, требуется, цена, фото «До»); диктовочный режим
+      SharpeningDetail.tsx# Z-2 — экран заточки: инлайн-редактирование (угол, камни, комментарий, фото «После»), статус, удаление в корзину
     Reference/
       ReferenceScreen.tsx # S-1/2/3 — справочники (Камни / Стали / Ножи)
+    Trash/
+      TrashScreen.tsx     # Корзина — список soft-deleted записей, восстановление batch'а, удаление навсегда
 ```
 
 ---
@@ -115,7 +119,7 @@ src/
 
 Таблицы: `clients`, `sharpenings`, `stones`, `steels`, `knives`, `meta`, `settings`, `analyticsQueue`
 
-Схема версионирована (текущая **v6**). Новые изменения добавлять через `this.version(N)`.
+Схема версионирована (текущая **v8**). Новые изменения добавлять через `this.version(N)`.
 
 **История версий схемы:**
 - v1: начальная схема (clients, sharpenings, stones, steels, knives)
@@ -124,6 +128,8 @@ src/
 - v4: таблица `settings` — device-specific состояние, **не входит в бэкап**. `firstLaunchAt`, `lastBackupAt` перенесены из `meta`
 - v5: `updatedAt` у всех сущностей — last-write-wins для merge-бэкапа
 - v6: таблица `analyticsQueue` — офлайн-буфер событий аналитики, **не входит в бэкап**
+- v7: четыре шкалы гритности (`gritFepa`, `gritJis`, `gritMicrons`, `gritMk`) хранятся явно; старые `grit`/`gritUnit` конвертируются через `GRIT_TABLE`
+- v8: soft-delete для `clients` и `sharpenings` — 3 дня в корзине (`deletedAt`, `deletedBatchId`), индекс `deletedAt` для быстрого purge и листинга
 
 **Ключевые особенности схемы:**
 - `clients.isSelf = true` — нулевой клиент «Я», создаётся при первом запуске, не удаляется
@@ -135,6 +141,7 @@ src/
 - `meta` — служебная таблица (ключ-значение), хранит `seedVersion` для контроля seed-миграций
 - `settings` — device-specific (firstLaunchAt, lastBackupAt, автобэкап), **не включается в JSON-бэкап и не восстанавливается при импорте**
 - `analyticsQueue` — очередь событий аналитики для офлайн-буферизации; **не входит в бэкап**
+- `deletedAt?: Date` + `deletedBatchId?: string` у `Client` и `Sharpening` — soft-delete. Удаление клиента помечает все его заточки тем же `deletedBatchId` для группового восстановления. Записи с `deletedAt` исключаются из всех списков и фильтруются в CSV-экспорте, но **остаются в JSON-бэкапе** (чтобы удаления распространялись через merge). Покидают БД через `purgeExpired` (TTL 3 дня) или вручную через корзину
 - Фото хранятся как `base64[]` в полях `photosBefore` / `photosAfter`
 - `updatedAt?: Date` — есть у всех сущностей (`Client`, `Sharpening`, `Stone`, `Steel`, `Knife`). Проставляется при каждом create/update. Используется в `mergeBackup` для last-write-wins разрешения конфликтов
 
@@ -149,12 +156,13 @@ src/
 | `/clients/new` | C-3 Добавить клиента |
 | `/clients/:id/edit` | C-3 Редактировать клиента |
 | `/history` | H-1 Лента заточек |
-| `/sharpenings/new?clientId=X` | Z-1 Новая заточка (clientId предзаполняет клиента и скрывает поле) |
-| `/sharpenings/:id` | Z-2 Просмотр заточки |
-| `/sharpenings/:id/edit` | Z-1 Редактирование заточки |
+| `/sharpenings/new?clientId=X` | Z-1 Приёмка (clientId предзаполняет клиента и скрывает поле). После «Принять в заточку» → Z-2 |
+| `/sharpenings/:id` | Z-2 Экран заточки — инлайн-редактирование (угол, камни, комментарий, фото «После»), смена статуса |
+| `/sharpenings/:id/edit` | Z-1 Редактирование приёмки |
 | `/reference/:tab` | S-1/2/3 Справочники (tab: stones/steels/knives) |
 | `/backup` | BK-1 Бэкап и восстановление данных |
 | `/about` | A-1 «О программе» (версия, обновления, ченджлог, настройки) |
+| `/trash` | Корзина — soft-deleted клиенты и заточки (восстановление / удаление навсегда) |
 
 ---
 
