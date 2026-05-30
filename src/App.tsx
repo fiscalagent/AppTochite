@@ -7,6 +7,7 @@ import BackupReminder from './components/BackupReminder/BackupReminder'
 import StorageWarning from './components/StorageWarning/StorageWarning'
 import BrowserWarning from './components/BrowserWarning/BrowserWarning'
 import OnboardingSheet from './components/OnboardingSheet/OnboardingSheet'
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
 import { flushAnalyticsQueue } from './services/analytics'
 import { db } from './db/instance'
 import { purgeExpired } from './utils/trash'
@@ -38,11 +39,11 @@ export default function App() {
   return (
     <ToastProvider>
       <AutoBackupProvider>
-        <BrowserWarning />
+        <ErrorBoundary name="BrowserWarning"><BrowserWarning /></ErrorBoundary>
         <RouterProvider router={router} />
-        <BackupReminder />
-        <StorageWarning />
-        <OnboardingSheet />
+        <ErrorBoundary name="BackupReminder"><BackupReminder /></ErrorBoundary>
+        <ErrorBoundary name="StorageWarning"><StorageWarning /></ErrorBoundary>
+        <ErrorBoundary name="OnboardingSheet"><OnboardingSheet /></ErrorBoundary>
       </AutoBackupProvider>
     </ToastProvider>
   )
