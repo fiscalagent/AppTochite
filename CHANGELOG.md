@@ -1,3 +1,10 @@
+# [1.74.0](https://github.com/fiscalagent/AppTochite/compare/v1.73.0...v1.74.0) (2026-05-30)
+
+
+### feat
+
+* поддержать развитие — блок с номером карты на экране «Настройки», копирование по нажатию ([](https://github.com/fiscalagent/AppTochite/commit/314433602057825e357d489489e56ebf6fad72f0))
+
 # [1.73.0](https://github.com/fiscalagent/AppTochite/compare/v1.72.0...v1.73.0) (2026-05-30)
 
 
