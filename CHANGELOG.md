@@ -1,3 +1,10 @@
+# [1.70.0](https://github.com/fiscalagent/AppTochite/compare/v1.69.0...v1.70.0) (2026-05-30)
+
+
+### feat
+
+* кнопка «Поделиться бэкапом» — отправка JSON через системный share sheet (Telegram, почта, облако) ([](https://github.com/fiscalagent/AppTochite/commit/1af378878280ed504b36b2b8ddecf7990d8567d5))
+
 # [1.69.0](https://github.com/fiscalagent/AppTochite/compare/v1.68.0...v1.69.0) (2026-05-30)
 
 
