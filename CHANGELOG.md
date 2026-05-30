@@ -1,3 +1,10 @@
+## [1.70.5](https://github.com/fiscalagent/AppTochite/compare/v1.70.4...v1.70.5) (2026-05-30)
+
+
+### fix
+
+* «Поделиться бэкапом» — расширение .txt вместо .json (Chrome Android фильтрует по расширению), импорт принимает оба ([](https://github.com/fiscalagent/AppTochite/commit/76158025f86dbf99085a79f883a47eccfdd0e6a1))
+
 ## [1.70.4](https://github.com/fiscalagent/AppTochite/compare/v1.70.3...v1.70.4) (2026-05-30)
 
 ## [1.70.3](https://github.com/fiscalagent/AppTochite/compare/v1.70.2...v1.70.3) (2026-05-30)

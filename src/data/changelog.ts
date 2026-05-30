@@ -6,6 +6,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.70.5',
+    date: '2026-05-30',
+    changes: [
+      '«Поделиться бэкапом» — расширение .txt вместо .json (Chrome Android фильтрует по расширению), импорт принимает оба',
+    ],
+  },
+  {
     version: '1.70.4',
     date: '2026-05-30',
     changes: [
