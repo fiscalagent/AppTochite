@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/instance'
 import { listTrashGroups, restoreBatch, purgeBatch, type TrashGroup } from '../../utils/trash'
+import { pluralRu } from '../../utils/plural'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import { useToast } from '../../components/Toast/ToastContext'
 import s from './TrashScreen.module.css'
@@ -26,17 +27,18 @@ function daysLeft(expiresAt: Date): string {
   return `осталось ${days} дн.`
 }
 
+const SHARPENING_FORMS = ['заточка', 'заточки', 'заточек'] as const
+
 function groupTitle(g: TrashGroup): string {
   if (g.client) {
     const n = g.sharpenings.length
     if (n === 0) return g.client.name
-    return `${g.client.name} + ${n} ${n === 1 ? 'заточка' : n < 5 ? 'заточки' : 'заточек'}`
+    return `${g.client.name} + ${n} ${pluralRu(n, SHARPENING_FORMS)}`
   }
   if (g.sharpenings.length === 1) {
-    const sh = g.sharpenings[0]
-    return `Заточка: ${sh.knifeBrand}`
+    return `Заточка: ${g.sharpenings[0].knifeBrand}`
   }
-  return `${g.sharpenings.length} заточек`
+  return `${g.sharpenings.length} ${pluralRu(g.sharpenings.length, SHARPENING_FORMS)}`
 }
 
 export default function TrashScreen() {

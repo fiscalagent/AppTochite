@@ -260,6 +260,16 @@ describe('buildSharpeningCSV', () => {
     const csv = buildSharpeningCSV(sharpenings, new Map([[1, 'Клиент']]))
     expect(csv).toContain('Принят')
   })
+
+  it('удалённые заточки (deletedAt) не попадают в отчёт', async () => {
+    const sharpenings = [
+      { id: 1, clientId: 1, knifeBrand: 'Активная', receivedAt: new Date(), status: 'done' as const },
+      { id: 2, clientId: 1, knifeBrand: 'Удалённая', receivedAt: new Date(), status: 'done' as const, deletedAt: new Date() },
+    ]
+    const csv = buildSharpeningCSV(sharpenings, new Map([[1, 'Клиент']]))
+    expect(csv).toContain('Активная')
+    expect(csv).not.toContain('Удалённая')
+  })
 })
 
 // ─── exportBackup / restoreBackup (полный цикл) ──────────────────────────────

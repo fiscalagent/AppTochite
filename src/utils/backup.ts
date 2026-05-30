@@ -388,7 +388,8 @@ export function buildSharpeningCSV(
 
   const rows: (string | number | null | undefined)[][] = []
 
-  for (const sh of sharpenings) {
+  // Защита: даже если коллер забыл отфильтровать, удалённые заточки в отчёт не попадут.
+  for (const sh of sharpenings.filter(s => !s.deletedAt)) {
     const base = [
       sh.id,
       toDate(sh.receivedAt),

@@ -475,8 +475,10 @@ export default function SharpeningDetail() {
   }
 
   async function handleDelete() {
-    await softDeleteSharpening(db, sharpeningId)
+    if (leavingRef.current) return
     leavingRef.current = true
+    await softDeleteSharpening(db, sharpeningId)
+    showToast('Заточка перемещена в корзину')
     navigate(-1)
   }
 

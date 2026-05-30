@@ -54,6 +54,7 @@ export default function ClientCard() {
 
   async function handleDelete() {
     await softDeleteClient(db, clientId)
+    showToast('Клиент перемещён в корзину')
     navigate('/')
   }
 
