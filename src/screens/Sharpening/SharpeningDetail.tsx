@@ -170,7 +170,7 @@ export default function SharpeningDetail() {
   useEffect(() => {
     setRaisedMode(dictation.isActive)
     return () => setRaisedMode(false)
-  }, [dictation.isActive])
+  }, [dictation.isActive, setRaisedMode])
 
   useEffect(() => {
     return () => {

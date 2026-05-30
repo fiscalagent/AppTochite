@@ -193,7 +193,7 @@ export default function SharpeningForm() {
   useEffect(() => {
     setRaisedMode(dictation.isActive)
     return () => setRaisedMode(false)
-  }, [dictation.isActive])
+  }, [dictation.isActive, setRaisedMode])
 
   function applyClientByName(name: string) {
     const c = clients?.find(cl => cl.name === name)
