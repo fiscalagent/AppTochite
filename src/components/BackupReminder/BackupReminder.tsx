@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/instance'
 import { exportBackup, downloadBlob, getLastBackupAt, updateLastBackupAt } from '../../utils/backup'
@@ -52,10 +52,21 @@ interface BackupState {
 export default function BackupReminder() {
   const [dismissed, setDismissed] = useState(false)
 
+  // firstLaunchAt проставляем в обычном эффекте, а не внутри liveQuery:
+  // запись в read-only контексте liveQuery кидает ReadOnlyError и на чистой
+  // базе (первый запуск) роняет весь app в чёрный экран.
+  useEffect(() => {
+    db.settings.get('firstLaunchAt').then(entry => {
+      if (!entry) {
+        db.settings.put({ key: 'firstLaunchAt', value: new Date().toISOString() })
+      }
+    })
+  }, [])
+
   const state = useLiveQuery<BackupState | undefined>(async () => {
     const firstLaunchEntry = await db.settings.get('firstLaunchAt')
     if (!firstLaunchEntry) {
-      await db.settings.put({ key: 'firstLaunchAt', value: new Date().toISOString() })
+      // запись выполняет useEffect выше; здесь liveQuery только читает
       return { level: null, daysSince: null, newRecords: 0 }
     }
     const firstLaunchAt = new Date(firstLaunchEntry.value as string)
