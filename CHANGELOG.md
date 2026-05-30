@@ -1,3 +1,10 @@
+# [1.73.0](https://github.com/fiscalagent/AppTochite/compare/v1.72.0...v1.73.0) (2026-05-30)
+
+
+### feat
+
+* поддержать развитие — вместо ссылки на Boosty номер карты с копированием по тапу ([](https://github.com/fiscalagent/AppTochite/commit/37333d6fbf8c53f864913ec81b65be73d557c42e))
+
 # [1.72.0](https://github.com/fiscalagent/AppTochite/compare/v1.71.0...v1.72.0) (2026-05-30)
 
 
