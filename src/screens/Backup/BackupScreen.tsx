@@ -121,6 +121,8 @@ export default function BackupScreen() {
 
   useEffect(() => {
     let cancelled = false
+    // намеренно: при смене lastBackupTick заново готовим файл и показываем «готовлю…»
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreparingShare(true)
     exportBackup(db)
       .then(backup => {

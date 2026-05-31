@@ -420,7 +420,7 @@ function parseStonesCSV(text: string): ParsedStoneRow[] {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
   if (lines.length < 2) return []
 
-  const firstLine = lines[0].replace(/^﻿/, '')
+  const firstLine = lines[0].charCodeAt(0) === 0xFEFF ? lines[0].slice(1) : lines[0]
   const sep = firstLine.includes(';') ? ';' : ','
   const unquoteHeader = (h: string) => { const t = h.trim(); return (t.startsWith('"') && t.endsWith('"') ? t.slice(1, -1) : t).toLowerCase() }
   const headers = firstLine.split(sep).map(unquoteHeader)

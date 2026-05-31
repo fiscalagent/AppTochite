@@ -135,7 +135,7 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
     .trim()
   if (!cleaned) return { kind: 'unknown' }
 
-  let tokens = cleaned.split(' ')
+  const tokens = cleaned.split(' ')
   while (tokens.length > 0 && FILLERS.has(tokens[0].toLowerCase())) tokens.shift()
   if (tokens.length === 0) return { kind: 'unknown' }
 

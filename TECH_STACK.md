@@ -1,6 +1,6 @@
 # AppTochite — Технический стек
 
-**Версия:** 0.4 · Май 2026  
+**Версия:** 0.5 · Май 2026  
 **Тип:** PWA · Mobile-first · Android (90%)
 
 ---
@@ -91,7 +91,10 @@ apptochite/
 
 ---
 
-## Схема БД (Dexie, текущая версия v3)
+## Схема БД (Dexie, текущая версия v8)
+
+Таблицы: `clients`, `sharpenings`, `stones`, `steels`, `knives`, `meta`, `settings`, `analyticsQueue`.
+`updatedAt` есть у всех сущностей (last-write-wins для merge-бэкапа). `settings` и `analyticsQueue` — device-specific, **не входят в JSON-бэкап**.
 
 ```ts
 // src/db/db.ts
@@ -104,6 +107,9 @@ export interface Client {
   avatar?: string       // base64, фото из камеры/галереи
   isSelf: boolean       // нулевой клиент «Я»
   createdAt: Date
+  updatedAt?: Date
+  deletedAt?: Date      // soft-delete: запись в корзине (TTL 3 дня)
+  deletedBatchId?: string // группа для восстановления (клиент + его заточки)
 }
 
 export type SharpeningStatus = 'accepted' | 'done'
@@ -129,20 +135,29 @@ export interface Sharpening {
   doneAt?: Date
   photosBefore?: string[]     // base64[], до 5 фото
   photosAfter?: string[]      // base64[], до 5 фото
+  updatedAt?: Date
+  deletedAt?: Date            // soft-delete (корзина)
+  deletedBatchId?: string
 }
 
-export type GritUnit = 'fepa' | 'jis' | 'mk'
+// В какой шкале камень был введён (для режима «Своя» в UI)
+export type GritSource = 'fepa' | 'jis' | 'mk' | 'microns'
+export type StoneCoolant = 'water' | 'oil' | 'both' | 'dry'  // СОЖ; 'dry' = сухой
 
 export interface Stone {
   id?: number
   brand: string
-  grit?: number
-  gritUnit?: GritUnit   // единица зернистости
+  gritFepa?: number     // четыре шкалы гритности хранятся явно
+  gritJis?: number
+  gritMicrons?: number
   gritMk?: string       // значение для мкм (формат '315/250')
-  type?: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic'
+  gritSource?: GritSource
+  type?: 'galvanic' | 'ao' | 'kk' | 'diamond' | 'elbor' | 'natural' | 'pritir' | 'ceramic' | 'other'
+  coolant?: StoneCoolant
   category?: string
   description?: string
   isCustom: boolean
+  updatedAt?: Date
 }
 
 export interface Steel {
@@ -153,6 +168,7 @@ export interface Steel {
   category?: string
   description?: string
   isCustom: boolean
+  updatedAt?: Date
 }
 
 export interface Knife {
@@ -165,22 +181,45 @@ export interface Knife {
   category?: string
   description?: string
   isCustom: boolean
+  updatedAt?: Date
 }
 
-export interface Meta {
+export interface Meta {        // служебная: seedVersion и т.п.
   key: string
   value: number | string | boolean
 }
 
-// Версии схемы:
+export interface Setting {     // device-specific, вне бэкапа
+  key: string
+  value: unknown
+}
+
+export interface AnalyticsQueueItem { // офлайн-буфер аналитики, вне бэкапа
+  id?: number
+  payload: string
+  queuedAt: Date
+}
+
+// Версии схемы (CURRENT_SCHEMA_VERSION = 8):
 // v1 — initial: clients, sharpenings, stones, steels, knives
 // v2 — grit index on stones
 // v3 — meta table (seedVersion)
+// v4 — settings table; firstLaunchAt/lastBackupAt вынесены из meta (вне бэкапа)
+// v5 — updatedAt у всех сущностей (last-write-wins для merge)
+// v6 — analyticsQueue (офлайн-буфер аналитики)
+// v7 — четыре явные шкалы гритности (grit/gritUnit → конвертация через GRIT_TABLE)
+// v8 — soft-delete (deletedAt/deletedBatchId) для clients и sharpenings — корзина, TTL 3 дня
 ```
 
 ---
 
 ## Changelog
+
+**v0.5 (май 2026)** — синхронизация со схемой БД v8 (приложение v1.75):
+- Схема БД: v3 → v8 (settings, analyticsQueue, `updatedAt` у всех сущностей, четыре явные шкалы гритности, soft-delete/корзина)
+- `Stone`: поля `grit`/`gritUnit` заменены на `gritFepa`/`gritJis`/`gritMicrons`/`gritMk` + `gritSource`; добавлены `coolant` (СОЖ, вкл. «сухой») и тип `other`
+- Корзина (soft-delete клиентов и заточек, TTL 3 дня)
+- Удалён устаревший `docs/instruction.html` (Альфа 0.1); единственная пользовательская инструкция — `public/guide.html`
 
 **v0.4 (май 2026)** — обновление по итогам v1.15–v1.32:
 - Деплой: Vercel → GitHub Pages

@@ -192,6 +192,8 @@ export function useDictationMode(): UseDictationModeReturn {
       setTimeout(() => {
         if (mySession !== sessionIdRef.current) return
         if (!isActiveRef.current) return
+        // авто-перезапуск сессии: startSession намеренно ссылается на себя
+        // eslint-disable-next-line react-hooks/immutability
         startSession()
       }, 50)
     }

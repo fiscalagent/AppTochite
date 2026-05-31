@@ -429,7 +429,7 @@ export default function SharpeningForm() {
       setPrice(sh.price != null ? String(sh.price) : '')
     })
     return () => { cancelled = true }
-  }, [id])
+  }, [id, navigate])
 
   const sortedClients = clients
     ? [...clients.filter(c => c.isSelf), ...clients.filter(c => !c.isSelf)]

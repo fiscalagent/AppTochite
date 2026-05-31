@@ -54,6 +54,8 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
   const sessionRef = useRef(0)
   // Snapshot of state at start() time, so callbacks can read it without stale-closure issues.
   const stateRef = useRef<VoiceState>(state)
+  // паттерн «latest value ref»: держим актуальное значение для колбэков
+  // eslint-disable-next-line react-hooks/refs
   stateRef.current = state
   const cancel = useCallback(() => {
     sessionRef.current++
@@ -70,6 +72,8 @@ export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
     onError?: (code: VoiceErrorCode) => void,
   ) => void>(() => {})
 
+  // стабильная поверхность вызова с актуальным замыканием
+  // eslint-disable-next-line react-hooks/refs
   startRefineRef.current = (field, items, onSelect, onError) => {
     sessionRef.current++
     const session = sessionRef.current

@@ -336,5 +336,4 @@
 - [docs/AppTochite_spec_v0.4.md](AppTochite_spec_v0.4.md) — актуальная функциональная спецификация (v0.6)
 - [docs/TESTING.md](TESTING.md) — протокол тестирования
 - [docs/voice-input-plan.md](voice-input-plan.md) — план и статус голосового ввода
-- [docs/instruction.html](instruction.html) — инструкция по установке и использованию
-- [public/guide.html](../public/guide.html) — печатная версия инструкции (одна страница, для пилотов)
+- [public/guide.html](../public/guide.html) — инструкция для пользователей (открывается из приложения; `docs/guide.html` — копия для печати)

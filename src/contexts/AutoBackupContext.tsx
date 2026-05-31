@@ -10,6 +10,8 @@ const AutoBackupContext = createContext<AutoBackupContextValue>({ lastBackupTick
 
 const DEBOUNCE_MS = 2 * 60 * 1000
 
+// хук-аксессор живёт рядом с провайдером; выносить в отдельный файл ради HMR не оправдано
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAutoBackup() {
   return useContext(AutoBackupContext)
 }
@@ -37,6 +39,8 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     // Run on initial load (page starts visible, no visibilitychange fires)
+    // setState внутри runBackup — асинхронно, после await; намеренный kick-off
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     runBackup()
 
     function onVisible() {

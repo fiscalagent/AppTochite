@@ -315,7 +315,6 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
       for (const { table, records, softDelete } of tables) {
         for (const rawRecord of records) {
           if (!rawRecord.id) continue
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const fileRecord = table === database.stones ? normalizeStoneFromBackup(rawRecord as Stone) as typeof rawRecord : rawRecord
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const deviceRecord = await (table as any).get(fileRecord.id)
