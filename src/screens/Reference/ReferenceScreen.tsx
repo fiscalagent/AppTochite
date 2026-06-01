@@ -1,11 +1,14 @@
-import { useState, useRef, useEffect, Fragment } from 'react'
+import { useState, useRef, useEffect, useMemo, Fragment } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Stone, type StoneCoolant, type GritSource, MK_VALUES, compareStonesForSort } from '../../db/instance'
+import { db, type Stone, type StoneCoolant, type GritSource, type Steel, type Knife, MK_VALUES, compareStonesForSort } from '../../db/instance'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
+import { useToast } from '../../components/Toast/ToastContext'
 import { getGritDisplay, getGritSortValue, GRIT_TABLE, fromFepa, fromJis, fromMk, fromMicrons, type GritDisplayMode } from '../../data/gritTable'
 import { buildCSV } from '../../utils/backup'
+import { normSteel } from '../../utils/steelMatch'
+import { readSpreadsheet, detectColumns, extractRows, prepareImport, type ColumnMapping, type SkipReason, type PreparedKnife } from '../../utils/knifeImport'
 import { startBlur } from '../../utils/modalBlur'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
@@ -1123,6 +1126,214 @@ function SteelsTab({ search }: { search: string }) {
   )
 }
 
+// ─── Knife import preview ─────────────────────────────────────────────────────
+
+const SKIP_LABELS: Record<SkipReason, string> = {
+  'empty-name': 'пустое название',
+  'duplicate': 'уже в справочнике',
+}
+
+function colLabel(grid: string[][], idx: number, hasHeader: boolean): string {
+  if (hasHeader) {
+    const h = (grid[0]?.[idx] ?? '').trim()
+    if (h) return h
+  }
+  return `Колонка ${idx + 1}`
+}
+
+// Экран превью импорта ножей: маппинг колонок, разрешение сталей (точные —
+// связаны автоматически, остальные — с подсказкой ближайшей и ручным вводом),
+// сводка непрошедших строк. В БД ничего не пишется до «Импортировать».
+function KnifeImportPreview({ grid, knives, steels, onClose }: {
+  grid: string[][]
+  knives: Knife[]
+  steels: Steel[]
+  onClose: () => void
+}) {
+  const { showToast } = useToast()
+  const [mapping, setMapping] = useState<ColumnMapping>(() => detectColumns(grid))
+  // Только пользовательские правки, ключ — индекс строки в файле. Эффективное
+  // значение = override ?? дефолт. Так не нужен эффект-пересев при смене маппинга,
+  // а ручные правки переживают её (rowIndex стабилен).
+  const [overrides, setOverrides] = useState<Record<number, string>>({})
+
+  const steelNames = useMemo(() => steels.map(st => st.name), [steels])
+  const refByNorm = useMemo(() => {
+    const m = new Map<string, Steel>()
+    for (const st of steels) m.set(normSteel(st.name), st)
+    return m
+  }, [steels])
+
+  const prepared = useMemo(
+    () => prepareImport(extractRows(grid, mapping), knives, steels),
+    [grid, mapping, knives, steels],
+  )
+
+  useEffect(() => startBlur(), [])
+
+  // Дефолтное значение стали: exact → каноничное имя из справочника, остальные
+  // с указанной сталью → как в файле, без стали → пусто.
+  function defaultSteel(k: PreparedKnife): string {
+    if (k.match?.kind === 'exact') return k.match.steel?.name ?? ''
+    if (k.match) return k.rawSteel
+    return ''
+  }
+  const valueOf = (k: PreparedKnife) => overrides[k.rowIndex] ?? defaultSteel(k)
+
+  function classify(val: string): { kind: 'none' } | { kind: 'link'; ref: Steel } | { kind: 'create' } {
+    const t = val.trim()
+    if (!t) return { kind: 'none' }
+    const ref = refByNorm.get(normSteel(t))
+    return ref ? { kind: 'link', ref } : { kind: 'create' }
+  }
+
+  const cols = grid[0] ?? []
+
+  async function handleImport() {
+    const now = new Date()
+    const newSteels = new Map<string, string>()
+    for (const k of prepared.knives) {
+      const val = valueOf(k).trim()
+      if (val && !refByNorm.has(normSteel(val))) newSteels.set(normSteel(val), val)
+    }
+    await db.transaction('rw', db.steels, db.knives, async () => {
+      if (newSteels.size > 0) {
+        await db.steels.bulkAdd([...newSteels.values()].map(name => ({
+          name, isCustom: true, updatedAt: now,
+        })))
+      }
+      await db.knives.bulkAdd(prepared.knives.map(k => {
+        const val = valueOf(k).trim()
+        const c = classify(val)
+        const steel = c.kind === 'link' ? c.ref.name : c.kind === 'create' ? val : undefined
+        return { brand: k.name, steel, isCustom: true, updatedAt: now }
+      }))
+    })
+    const parts = [`Добавлено ножей: ${prepared.knives.length}`]
+    if (newSteels.size > 0) parts.push(`новых сталей: ${newSteels.size}`)
+    if (prepared.skipped.length > 0) parts.push(`пропущено строк: ${prepared.skipped.length}`)
+    showToast(parts.join(', '))
+    onClose()
+  }
+
+  return createPortal(
+    <div className={s.dialogOverlay} onClick={onClose}>
+      <div className={s.importSheet} onClick={e => e.stopPropagation()}>
+        <span className={s.addTitle}>Импорт ножей</span>
+
+        <div className={s.importMapping}>
+          <label className={s.importMapField}>
+            <span>Название</span>
+            <select
+              className={s.select}
+              value={mapping.nameCol}
+              onChange={e => setMapping(m => ({ ...m, nameCol: Number(e.target.value) }))}
+            >
+              {cols.map((_, i) => (
+                <option key={i} value={i}>{colLabel(grid, i, mapping.hasHeader)}</option>
+              ))}
+            </select>
+          </label>
+          <label className={s.importMapField}>
+            <span>Сталь</span>
+            <select
+              className={s.select}
+              value={mapping.steelCol ?? ''}
+              onChange={e => setMapping(m => ({ ...m, steelCol: e.target.value === '' ? null : Number(e.target.value) }))}
+            >
+              <option value="">— не указана —</option>
+              {cols.map((_, i) => (
+                <option key={i} value={i}>{colLabel(grid, i, mapping.hasHeader)}</option>
+              ))}
+            </select>
+          </label>
+          <label className={s.importHeaderToggle}>
+            <input
+              type="checkbox"
+              checked={mapping.hasHeader}
+              onChange={e => setMapping(m => ({ ...m, hasHeader: e.target.checked }))}
+            />
+            <span>первая строка — заголовок</span>
+          </label>
+        </div>
+
+        <div className={s.importStats}>
+          <span>Будет добавлено ножей: <strong>{prepared.knives.length}</strong></span>
+        </div>
+
+        <div className={s.importRows}>
+          {prepared.knives.length === 0 && (
+            <p className={s.importSkipped}>Нет строк для импорта</p>
+          )}
+          {prepared.knives.map(k => {
+            const val = valueOf(k)
+            const c = classify(val)
+            const suggestions = c.kind === 'link'
+              ? []
+              : (k.match?.suggestions ?? []).filter(sg => normSteel(sg.name) !== normSteel(val)).slice(0, 3)
+            return (
+              <div key={k.rowIndex} className={s.importRow}>
+                <div className={s.importRowName}>{k.name}</div>
+                <div className={s.importRowSteel}>
+                  <Autocomplete
+                    value={val}
+                    onChange={v => setOverrides(r => ({ ...r, [k.rowIndex]: v }))}
+                    suggestions={steelNames}
+                    placeholder="Сталь (необязательно)"
+                  />
+                  {c.kind === 'link' && <span className={s.steelBadgeLink}>✓ {c.ref.name}</span>}
+                  {c.kind === 'create' && <span className={s.steelBadgeNew}>+ новая сталь</span>}
+                </div>
+                {suggestions.length > 0 && (
+                  <div className={s.fuzzyChips}>
+                    <span className={s.fuzzyLabel}>похоже:</span>
+                    {suggestions.map(sg => (
+                      <button
+                        key={sg.name}
+                        className={s.fuzzyChip}
+                        onClick={() => setOverrides(r => ({ ...r, [k.rowIndex]: sg.name }))}
+                      >
+                        {sg.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {prepared.skipped.length > 0 && (
+          <div className={s.importSkippedBlock}>
+            <span className={s.importSkipped}>Пропущено строк: {prepared.skipped.length}</span>
+            <div className={s.importSkippedList}>
+              {prepared.skipped.map(sk => (
+                <div key={sk.rowIndex} className={s.importSkippedRow}>
+                  стр. {sk.rowIndex + 1}: {sk.name || '—'} ({SKIP_LABELS[sk.reason]})
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className={s.addRow}>
+          <button className={s.addBtn} onClick={handleImport} disabled={prepared.knives.length === 0}>
+            Импортировать {prepared.knives.length > 0 ? prepared.knives.length : ''}
+          </button>
+          <button
+            className={s.addBtn}
+            style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }}
+            onClick={onClose}
+          >
+            Отмена
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 // ─── Knives ──────────────────────────────────────────────────────────────────
 
 function KnivesTab({ search }: { search: string }) {
@@ -1131,6 +1342,9 @@ function KnivesTab({ search }: { search: string }) {
 
   const [knifeSteel, setKnifeSteel] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [importGrid, setImportGrid] = useState<string[][] | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { showToast } = useToast()
 
   useEffect(() => {
     if (!open) return
@@ -1138,7 +1352,24 @@ function KnivesTab({ search }: { search: string }) {
   }, [open])
 
   const knives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
-  const steelNames = useLiveQuery(() => db.steels.orderBy('name').toArray().then(arr => arr.map(st => st.name)), []) ?? []
+  const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), []) ?? []
+  const steelNames = steels.map(st => st.name)
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    try {
+      const grid = await readSpreadsheet(file)
+      if (grid.length === 0) {
+        showToast('Файл пустой или не распознан')
+        return
+      }
+      setImportGrid(grid)
+    } catch {
+      showToast('Не удалось прочитать файл')
+    }
+  }
 
   const filtered = knives?.filter(k =>
     `${k.brand} ${k.country ?? ''}`.toLowerCase().includes(search.toLowerCase())
@@ -1172,10 +1403,30 @@ function KnivesTab({ search }: { search: string }) {
 
   return (
     <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx,.csv"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
       {!open && selected.size === 0 && (
-        <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
-          + Добавить нож
-        </button>
+        <>
+          <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
+            + Добавить нож
+          </button>
+          <div className={s.csvActions}>
+            <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>⬆ Загрузить из файла (xlsx, csv)</button>
+          </div>
+        </>
+      )}
+      {importGrid && knives && (
+        <KnifeImportPreview
+          grid={importGrid}
+          knives={knives}
+          steels={steels}
+          onClose={() => setImportGrid(null)}
+        />
       )}
       {open && createPortal(
         <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
