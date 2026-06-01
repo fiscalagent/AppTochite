@@ -1,8 +1,11 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" translate="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Запрет авто-перевода: Google Translate подменяет текстовые узлы <font>-обёртками,
+         после чего React падает при удалении строк (removeChild на чужом узле). -->
+    <meta name="google" content="notranslate" />
     <title>AppTochite</title>
 
     <!-- PWA -->
