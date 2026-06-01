@@ -1,3 +1,10 @@
+## [1.78.1](https://github.com/fiscalagent/AppTochite/compare/v1.78.0...v1.78.1) (2026-06-01)
+
+
+### fix
+
+* краш при удалении из справочника после авто-перевода страницы браузером ([](https://github.com/fiscalagent/AppTochite/commit/5b020ac6e8d90c5d05c1422df073fa5f976a90a8))
+
 # [1.78.0](https://github.com/fiscalagent/AppTochite/compare/v1.77.1...v1.78.0) (2026-06-01)
 
 

@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.78.1',
+    date: '2026-06-01',
+    changes: [
+      'краш при удалении из справочника после авто-перевода страницы браузером',
+      'подсказка о формате файла под кнопкой импорта ножей',
+    ],
+  },
+  {
     version: '1.78.0',
     date: '2026-06-01',
     changes: [
