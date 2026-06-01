@@ -200,10 +200,23 @@ export default function SharpeningForm() {
     if (c?.id) setClientId(c.id)
   }
 
+  // Выбор ножа из справочника подставляет его сталь, если она в справочнике одна.
+  // При нескольких сталях у бренда не трогаем поле — пользователь укажет вручную.
+  // В любом случае подставленную сталь можно поменять для конкретной заточки.
+  function applyKnife(brand: string) {
+    setKnifeBrand(brand)
+    const steels = [...new Set(
+      allKnives
+        .filter(k => k.brand.toLowerCase() === brand.toLowerCase() && k.steel?.trim())
+        .map(k => k.steel!.trim())
+    )]
+    if (steels.length === 1) setSteel(steels[0])
+  }
+
   function applyByField(field: FieldKey, item: string) {
     switch (field) {
       case 'client': applyClientByName(item); break
-      case 'knife': setKnifeBrand(item); break
+      case 'knife': applyKnife(item); break
       case 'steel': setSteel(item); break
       default: break
     }
@@ -412,6 +425,8 @@ export default function SharpeningForm() {
     const items = await db.steels.orderBy('name').toArray()
     return [...new Set(items.map(st => st.name))]
   }, []) ?? []
+  // Полные записи ножей нужны для автоподстановки стали при выборе ножа.
+  const allKnives = useLiveQuery(() => db.knives.toArray(), []) ?? []
 
   useEffect(() => {
     if (!id) return
@@ -447,6 +462,23 @@ export default function SharpeningForm() {
 
     const now = new Date()
 
+    // Нож в справочнике уникален по паре «бренд + сталь»: один бренд может
+    // существовать с разными сталями. Существующие записи не перезаписываем —
+    // если пары ещё нет, добавляем новую. Вызывать только внутри rw-транзакции с db.knives.
+    const ensureKnifeInReference = async () => {
+      const brandV = knifeBrand.trim()
+      if (!brandV) return
+      const steelV = steel.trim()
+      const existing = await db.knives.toArray()
+      const exists = existing.some(k =>
+        k.brand.toLowerCase() === brandV.toLowerCase() &&
+        (k.steel ?? '').trim().toLowerCase() === steelV.toLowerCase()
+      )
+      if (!exists) {
+        await db.knives.add({ brand: brandV, steel: steelV || undefined, isCustom: true, updatedAt: now })
+      }
+    }
+
     // Edit mode saves only reception fields; sharpening details live on Z-2.
     // New mode (acceptance) also saves repeat-state sharpening fields so they appear on Z-2.
     const receptionFields = {
@@ -470,9 +502,7 @@ export default function SharpeningForm() {
             if (existing.some(e => e.toLowerCase() === v.toLowerCase())) return
             await add(v)
           }
-          await addIfMissing(knifeBrand, knifeSuggestions, v =>
-            db.knives.add({ brand: v, isCustom: true, updatedAt: now })
-          )
+          await ensureKnifeInReference()
           await addIfMissing(steel, steelSuggestions, v =>
             db.steels.add({ name: v, isCustom: true, updatedAt: now })
           )
@@ -495,9 +525,7 @@ export default function SharpeningForm() {
             if (existing.some(e => e.toLowerCase() === v.toLowerCase())) return
             await add(v)
           }
-          await addIfMissing(knifeBrand, knifeSuggestions, v =>
-            db.knives.add({ brand: v, isCustom: true, updatedAt: now })
-          )
+          await ensureKnifeInReference()
           await addIfMissing(steel, steelSuggestions, v =>
             db.steels.add({ name: v, isCustom: true, updatedAt: now })
           )
@@ -591,7 +619,7 @@ export default function SharpeningForm() {
           <Autocomplete
             value={knifeBrand}
             onChange={setKnifeBrand}
-            onSelect={setKnifeBrand}
+            onSelect={applyKnife}
             suggestions={knifeSuggestions}
             placeholder={dictation.isActive ? 'нож ...' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
             autoFocus={Boolean(prefilledClientId)}
