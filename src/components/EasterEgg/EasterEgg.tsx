@@ -7,9 +7,10 @@ interface Props {
 
 /**
  * Пасхалка: 7 тапов по номеру версии на экране «О программе».
- * Тёмный оверлей с вордмарком AppTochite, по которому пролетает световой
- * блик (как по заточенной кромке), и подписью «для острой памяти».
- * Гаснет сам после двух проходов блика или по тапу.
+ * Тёмный оверлей: по вордмарку AppTochite один раз проходит световой разрез
+ * (как невидимым ножом / лазером), и следом по той же диагонали две половины
+ * разъезжаются, будто разваливаясь. Внизу подпись «ваша острая память».
+ * Гаснет сам; тап не закрывает.
  */
 export default function EasterEgg({ onClose }: Props) {
   const [closing, setClosing] = useState(false)
@@ -39,7 +40,12 @@ export default function EasterEgg({ onClose }: Props) {
       </svg>
 
       <div className={s.word}>
-        <span className={s.app}>App</span><span className={s.toch}>Tochite</span>
+        <span className={`${s.half} ${s.top}`}>
+          <span className={s.app}>App</span><span className={s.toch}>Tochite</span>
+        </span>
+        <span className={`${s.half} ${s.bottom}`} aria-hidden="true">
+          <span className={s.app}>App</span><span className={s.toch}>Tochite</span>
+        </span>
         <span className={s.shine} aria-hidden="true">
           <span className={s.shineApp}>App</span><span className={s.shineToch}>Tochite</span>
         </span>

@@ -51,8 +51,41 @@
   text-shadow: 0 0 24px rgba(74, 144, 217, 0.35);
 }
 
-/* световой блик: белая копия текста, видимая только сквозь узкую
-   диагональную полосу, которая едет поперёк надписи */
+/* Две идентичные копии вордмарка, обрезанные по одной диагонали (под углом
+   кромки ножа). Верхняя живёт в потоке и задаёт размер .word, нижняя лежит
+   поверх, точно совпадая. Когда нож проходит, половины разъезжаются
+   перпендикулярно линии реза — текст «разваливается». */
+.half {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.top {
+  clip-path: polygon(0 0, 100% 0, 100% 38%, 0 62%);
+  animation: sliceTop 1.5s cubic-bezier(0.4, 0, 0.15, 1) 0.5s both;
+}
+
+.bottom {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 62%, 100% 38%, 100% 100%, 0 100%);
+  animation: sliceBottom 1.5s cubic-bezier(0.4, 0, 0.15, 1) 0.5s both;
+}
+
+/* держим целым, пока световая линия (блик) идёт насквозь, затем разводим
+   половины — раскол начинается, когда разрез прошёл всю надпись */
+@keyframes sliceTop {
+  0%, 45% { transform: translate(0, 0) rotate(0); }
+  100% { transform: translate(-5px, -16px) rotate(-1.5deg); }
+}
+
+@keyframes sliceBottom {
+  0%, 45% { transform: translate(0, 0) rotate(0); }
+  100% { transform: translate(5px, 16px) rotate(1.5deg); }
+}
+
+/* световой разрез: яркая копия текста, видимая сквозь узкую диагональную
+   полосу, которая проходит по надписи один раз — это и есть линия реза */
 .shine {
   position: absolute;
   inset: 0;
@@ -65,7 +98,7 @@
   mask-size: 280% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  animation: sweep 1.8s cubic-bezier(0.5, 0, 0.2, 1) 0.35s 2 both;
+  animation: glint 0.85s cubic-bezier(0.5, 0, 0.2, 1) 0.5s 1 both;
 }
 
 .shineApp,
@@ -77,10 +110,9 @@
   text-shadow: none;
 }
 
-@keyframes sweep {
-  0% { -webkit-mask-position: 150% 0; mask-position: 150% 0; }
-  55% { -webkit-mask-position: -120% 0; mask-position: -120% 0; }
-  100% { -webkit-mask-position: -120% 0; mask-position: -120% 0; }
+@keyframes glint {
+  from { -webkit-mask-position: 150% 0; mask-position: 150% 0; }
+  to { -webkit-mask-position: -120% 0; mask-position: -120% 0; }
 }
 
 .caption {
@@ -103,6 +135,8 @@
   .blade,
   .word,
   .caption,
+  .top,
+  .bottom,
   .shine {
     animation: none;
   }
