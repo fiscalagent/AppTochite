@@ -1343,13 +1343,16 @@ function KnivesTab({ search }: { search: string }) {
   const [knifeSteel, setKnifeSteel] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [importGrid, setImportGrid] = useState<string[][] | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editBrand, setEditBrand] = useState('')
+  const [editSteel, setEditSteel] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
 
   useEffect(() => {
-    if (!open) return
+    if (!open && editingId === null) return
     return startBlur()
-  }, [open])
+  }, [open, editingId])
 
   const knives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
   const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), []) ?? []
@@ -1390,6 +1393,31 @@ function KnivesTab({ search }: { search: string }) {
     setSelected(new Set())
   }
 
+  function startEdit() {
+    const id = [...selected][0]
+    const knife = knives?.find(k => k.id === id)
+    if (!knife) return
+    setEditingId(id)
+    setEditBrand(knife.brand)
+    setEditSteel(knife.steel ?? '')
+    setSelected(new Set())
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+  }
+
+  async function saveEdit() {
+    if (!editBrand.trim() || editingId === null) return
+    await db.knives.update(editingId, {
+      brand: editBrand.trim(),
+      steel: editSteel.trim() || undefined,
+      isCustom: true,
+      updatedAt: new Date(),
+    })
+    setEditingId(null)
+  }
+
   async function add() {
     if (!brand.trim()) return
     await db.knives.add({
@@ -1410,7 +1438,7 @@ function KnivesTab({ search }: { search: string }) {
         style={{ display: 'none' }}
         onChange={handleFileSelect}
       />
-      {!open && selected.size === 0 && (
+      {!open && selected.size === 0 && editingId === null && (
         <>
           <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
             + Добавить нож
@@ -1444,6 +1472,28 @@ function KnivesTab({ search }: { search: string }) {
           <div className={s.addRow}>
             <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
             <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
+          </div>
+        </div>
+        </div>,
+        document.body
+      )}
+
+      {editingId !== null && createPortal(
+        <div className={s.dialogOverlay} onClick={cancelEdit}>
+        <div className={s.dialog} onClick={e => e.stopPropagation()}>
+          <span className={s.addTitle}>Редактировать нож</span>
+          <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Mora, Victorinox...)" autoFocus />
+          <div className={s.addRow}>
+            <Autocomplete
+              value={editSteel}
+              onChange={setEditSteel}
+              suggestions={steelNames}
+              placeholder="Сталь"
+            />
+          </div>
+          <div className={s.addRow}>
+            <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>Отмена</button>
           </div>
         </div>
         </div>,
@@ -1490,6 +1540,7 @@ function KnivesTab({ search }: { search: string }) {
           count={selected.size}
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
+          onEdit={startEdit}
         />
       )}
     </>
