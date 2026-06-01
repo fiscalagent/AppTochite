@@ -171,7 +171,7 @@ export default function AboutScreen() {
           {FEATURES.voiceInput && (
             <div className={s.toggleItem}>
               <div className={s.toggleLabel}>
-                <div className={s.toggleLabelTitle}>Голосовой ввод <span className={s.betaBadge}>бета</span></div>
+                <div className={s.toggleLabelTitle}>Голосовой ввод</div>
                 <div className={s.toggleLabelDesc}>Заполняйте поля голосом при создании заточки. Требует подключения к сети.</div>
               </div>
               <label className={s.toggle}>
