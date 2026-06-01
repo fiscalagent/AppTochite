@@ -1,3 +1,10 @@
+# [1.77.0](https://github.com/fiscalagent/AppTochite/compare/v1.76.0...v1.77.0) (2026-06-01)
+
+
+### feat
+
+* импорт ножей из файла xlsx/csv с автоматическим распознаванием стали ([](https://github.com/fiscalagent/AppTochite/commit/52ec802d336f7cf2967856417863338f4e0771fb))
+
 # [1.76.0](https://github.com/fiscalagent/AppTochite/compare/v1.75.0...v1.76.0) (2026-06-01)
 
 
