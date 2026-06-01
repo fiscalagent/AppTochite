@@ -3,7 +3,7 @@
 ## Что это за проект
 
 **AppTochite** — мобильное PWA-приложение для профессиональных заточников ножей.  
-Версия: **1.75.0** · Платформа: Android (90%), интерфейс полностью на **русском языке**.
+Версия: **1.78.0** · Платформа: Android (90%), интерфейс полностью на **русском языке**.
 
 Два сегмента пользователей через единый интерфейс:
 - Заточник как малый бизнес — клиенты, выручка, статусы
@@ -90,6 +90,10 @@ src/
     voiceCommand.test.ts # Тесты парсера команд (Vitest, 67 кейсов)
     voiceMatch.ts        # Fuzzy-матчинг для голосового ввода (транслитерация + bigram)
     voiceMatch.test.ts   # Тесты voiceMatch (Vitest)
+    steelMatch.ts        # Матчинг марок стали при импорте: normSteel (визуальная свёртка х→x, а не фонетическая h) + exact/fuzzy/none. 95x18→95Х18, Д2→D2
+    steelMatch.test.ts   # Тесты steelMatch (Vitest)
+    knifeImport.ts       # Импорт ножей из xlsx/csv: readSpreadsheet (read-excel-file через динамический импорт), parseCsv, detectColumns, prepareImport
+    knifeImport.test.ts  # Тесты импорта ножей (Vitest)
     trash.ts             # Soft-delete клиентов/заточек, корзина (batchId, TTL 3 дня), restoreBatch/purgeBatch/purgeExpired
     trash.test.ts        # Тесты корзины (Vitest)
 
@@ -108,7 +112,7 @@ src/
       SharpeningForm.tsx  # Z-1 — приёмка (клиент, нож, сталь, HRC, требуется, цена, фото «До»); диктовочный режим
       SharpeningDetail.tsx# Z-2 — экран заточки: инлайн-редактирование (угол, камни, комментарий, фото «После»), статус, удаление в корзину
     Reference/
-      ReferenceScreen.tsx # S-1/2/3 — справочники (Камни / Стали / Ножи)
+      ReferenceScreen.tsx # S-1/2/3 — справочники (Камни / Стали / Ножи). Ножи: импорт из xlsx/csv с распознаванием стали (KnifeImportPreview), инлайн-редактирование ножа/камня по выделению
     Trash/
       TrashScreen.tsx     # Корзина — список soft-deleted записей, восстановление batch'а, удаление навсегда
 ```
