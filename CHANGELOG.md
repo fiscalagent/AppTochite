@@ -1,3 +1,10 @@
+## [1.77.1](https://github.com/fiscalagent/AppTochite/compare/v1.77.0...v1.77.1) (2026-06-01)
+
+
+### fix
+
+* редактирование ножа в справочнике — кнопка «Изменить» при выделении ([](https://github.com/fiscalagent/AppTochite/commit/f009f7a82c85de4ac35174e8805e970035a99c32))
+
 # [1.77.0](https://github.com/fiscalagent/AppTochite/compare/v1.76.0...v1.77.0) (2026-06-01)
 
 
