@@ -436,6 +436,13 @@
   background: var(--bg-400);
 }
 
+.importHint {
+  margin: 6px 2px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-400);
+}
+
 .importStats {
   display: flex;
   flex-direction: column;

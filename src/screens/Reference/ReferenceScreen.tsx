@@ -1446,6 +1446,7 @@ function KnivesTab({ search }: { search: string }) {
           <div className={s.csvActions}>
             <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>⬆ Загрузить из файла (xlsx, csv)</button>
           </div>
+          <p className={s.importHint}>2 колонки: название ножа и сталь (если знаете). Первая строка — заголовки.</p>
         </>
       )}
       {importGrid && knives && (
