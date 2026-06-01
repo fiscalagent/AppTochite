@@ -1,3 +1,10 @@
+# [1.79.0](https://github.com/fiscalagent/AppTochite/compare/v1.78.1...v1.79.0) (2026-06-01)
+
+
+### feat
+
+* голосовой ввод включён по умолчанию — отключается в настройках ([](https://github.com/fiscalagent/AppTochite/commit/1c7694fdbc3d0afad082b8e6a7c5d1f9c7f3afa7))
+
 ## [1.78.1](https://github.com/fiscalagent/AppTochite/compare/v1.78.0...v1.78.1) (2026-06-01)
 
 
