@@ -1,3 +1,10 @@
+# [1.76.0](https://github.com/fiscalagent/AppTochite/compare/v1.75.0...v1.76.0) (2026-06-01)
+
+
+### feat
+
+* при выборе ножа подставляется его сталь, а нож сохраняется с учётом стали ([](https://github.com/fiscalagent/AppTochite/commit/3b6d8a19f06d1a5e98b1b8581b9445de5ecf2c3f))
+
 # [1.75.0](https://github.com/fiscalagent/AppTochite/compare/v1.74.0...v1.75.0) (2026-05-30)
 
 
