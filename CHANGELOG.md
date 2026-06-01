@@ -1,3 +1,10 @@
+# [1.78.0](https://github.com/fiscalagent/AppTochite/compare/v1.77.1...v1.78.0) (2026-06-01)
+
+
+### feat
+
+* подсказка о формате файла под кнопкой импорта ножей ([](https://github.com/fiscalagent/AppTochite/commit/3b79fd7fc90432da12e5930a4ac5a3f0da241d08))
+
 ## [1.77.1](https://github.com/fiscalagent/AppTochite/compare/v1.77.0...v1.77.1) (2026-06-01)
 
 
