@@ -6,7 +6,7 @@ import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
 import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
-import { useLocale, fmtDateTimeLong } from '../../i18n'
+import { useLocale, fmtDateTimeLong, AVAILABLE_LOCALES, type Locale } from '../../i18n'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 import EasterEgg from '../../components/EasterEgg/EasterEgg'
@@ -30,7 +30,7 @@ function isPwa(): boolean {
 
 export default function AboutScreen() {
   const navigate = useNavigate()
-  const { t, locale } = useLocale()
+  const { t, locale, setLocale } = useLocale()
   const { currentVersion, latestVersion, releaseUrl, hasUpdate, checking, checkNow, lastChecked } = useVersionCheck()
 
   const analyticsOptOut = useLiveQuery(() => db.settings.get('analyticsOptOut'), [])
@@ -120,6 +120,21 @@ export default function AboutScreen() {
 
       <div className={s.section}>
         <p className={s.sectionTitle}>{t.about.settingsSection}</p>
+        <div className={s.langRow}>
+          <span className={s.langLabel}>{t.about.languageLabel}</span>
+          <div className={s.langSwitcher}>
+            {(AVAILABLE_LOCALES as readonly Locale[]).map(loc => (
+              <button
+                key={loc}
+                className={`${s.langBtn} ${locale === loc ? s.langBtnActive : ''}`}
+                onClick={() => setLocale(loc)}
+              >
+                {loc.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className={s.linkList}>
           <button
             className={s.linkItem}

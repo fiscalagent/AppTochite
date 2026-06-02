@@ -8,9 +8,7 @@ export type Locale = 'ru' | 'en'
 
 export const LOCALES: readonly Locale[] = ['ru', 'en']
 
-// На время Фазы 1 фундамента реально доступен только русский словарь.
-// Английский добавится в Фазе 2 — тогда расширим этот список.
-export const AVAILABLE_LOCALES: readonly Locale[] = ['ru']
+export const AVAILABLE_LOCALES: readonly Locale[] = ['ru', 'en']
 
 const STORAGE_KEY = 'apptochite-locale'
 

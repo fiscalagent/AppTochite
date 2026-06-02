@@ -4,14 +4,13 @@
 
 import type { Locale } from '../locale'
 import { ru } from './ru'
+import { en } from './en'
 
 export type Dict = typeof ru
 
-// На Фазе 1 доступен только русский. Английский добавится сюда как `en` после
-// перевода. dicts намеренно НЕ полный Record<Locale, Dict> — провайдер делает
-// фолбэк на ru для ещё не добавленных локалей.
 export const dicts: Partial<Record<Locale, Dict>> = {
   ru,
+  en,
 }
 
-export { ru }
+export { ru, en }
