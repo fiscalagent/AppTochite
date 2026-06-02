@@ -9,6 +9,7 @@ import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet
 import { useToast } from '../../components/Toast/ToastContext'
 import { pickAvatarFile } from '../../hooks/useCamera'
 import { softDeleteClient } from '../../utils/trash'
+import { useLocale, localeTag, fmtMoney, type Locale } from '../../i18n'
 import s from './ClientCard.module.css'
 
 const IconChevronLeft = () => (
@@ -23,14 +24,15 @@ const IconChevronRight = () => (
   </svg>
 )
 
-function formatDate(date: Date) {
-  return new Date(date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+function formatDate(date: Date, locale: Locale) {
+  return new Date(date).toLocaleDateString(localeTag(locale), { day: 'numeric', month: 'short' })
 }
 
 export default function ClientCard() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { t, locale } = useLocale()
   const clientId = Number(id)
 
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -54,12 +56,12 @@ export default function ClientCard() {
 
   async function handleDelete() {
     await softDeleteClient(db, clientId)
-    showToast('Клиент перемещён в корзину')
+    showToast(t.clients.movedToTrash)
     navigate('/')
   }
 
   if (client === undefined) return null
-  if (client === null || client.deletedAt) return <div style={{ padding: 16, color: 'var(--text-300)' }}>Клиент не найден</div>
+  if (client === null || client.deletedAt) return <div style={{ padding: 16, color: 'var(--text-300)' }}>{t.clients.notFoundClient}</div>
 
   return (
     <div className={s.screen}>
@@ -68,7 +70,7 @@ export default function ClientCard() {
         <span className={s.headerTitle}>{client.name.toUpperCase()}</span>
         {!client.isSelf && (
           <Link to={`/clients/${clientId}/edit`}>
-            <button className={s.editBtn}>Изменить</button>
+            <button className={s.editBtn}>{t.clients.edit}</button>
           </Link>
         )}
       </div>
@@ -89,7 +91,7 @@ export default function ClientCard() {
                 className={s.contactBtn}
                 onClick={() => {
                   navigator.clipboard.writeText(client.phone!)
-                  showToast('Телефон скопирован в буфер')
+                  showToast(t.clients.phoneCopied)
                 }}
               >
                 {client.phone}
@@ -106,7 +108,7 @@ export default function ClientCard() {
               </a>
             )}
             {!client.phone && !client.telegram && (
-              <span>Нет контактов</span>
+              <span>{t.clients.noContacts}</span>
             )}
           </div>
         </div>
@@ -114,9 +116,9 @@ export default function ClientCard() {
 
       <div>
         <div className={s.sectionHeader}>
-          <span className={s.sectionTitle}>Заточки</span>
+          <span className={s.sectionTitle}>{t.clients.sharpeningsSection}</span>
           <Link to={`/sharpenings/new?clientId=${clientId}`}>
-            <button className={s.newBtn}>+ Заточка</button>
+            <button className={s.newBtn}>{t.clients.newSharpening}</button>
           </Link>
         </div>
       </div>
@@ -130,7 +132,7 @@ export default function ClientCard() {
               className={`${s.knifeChip} ${knifeFilter === null ? s.knifeChipActive : ''}`}
               onClick={() => { setKnifeFilter(null); setPage(0) }}
             >
-              Все
+              {t.clients.allKnives}
             </button>
             {knives.map(knife => (
               <button
@@ -155,13 +157,13 @@ export default function ClientCard() {
         return (
           <div className={s.sharpeningList}>
             {filtered.length === 0 && (
-              <p className={s.empty}>Заточек пока нет</p>
+              <p className={s.empty}>{t.clients.noSharpenings}</p>
             )}
             {pageItems.map(sh => (
               <Link key={sh.id} to={`/sharpenings/${sh.id}`} className={s.sharpeningRow}>
                 <div className={s.sharpeningInfo}>
                   <div className={s.knifeName}>{sh.knifeBrand}</div>
-                  <div className={s.sharpeningMeta}>{formatDate(sh.receivedAt)}</div>
+                  <div className={s.sharpeningMeta}>{formatDate(sh.receivedAt, locale)}</div>
                 </div>
                 {(() => {
                   const thumb = sh.photosAfter?.[0] ?? sh.photosBefore?.[0]
@@ -169,7 +171,7 @@ export default function ClientCard() {
                 })()}
                 <div className={s.sharpeningRight}>
                   {sh.price != null && (
-                    <span className={s.price}>{sh.price} ₽</span>
+                    <span className={s.price}>{fmtMoney(locale, sh.price)}</span>
                   )}
                   <StatusPill status={sh.status} />
                 </div>
@@ -196,14 +198,14 @@ export default function ClientCard() {
 
       {!client.isSelf && (
         <button className={s.deleteBtn} onClick={() => setConfirmOpen(true)}>
-          Удалить клиента
+          {t.clients.deleteClient}
         </button>
       )}
 
       <ConfirmModal
         isOpen={confirmOpen}
-        title={`Удалить клиента «${client.name}»?`}
-        message="Клиент и его заточки попадут в корзину и будут удалены навсегда через 3 дня."
+        title={t.clients.deleteTitle(client.name)}
+        message={t.clients.deleteMessage}
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />

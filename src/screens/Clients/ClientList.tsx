@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
+import { useT } from '../../i18n'
 import type { Client } from '../../db/instance'
 import s from './ClientList.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
@@ -56,6 +57,7 @@ function matchesQuery(client: Client, q: string): boolean {
 export default function ClientList() {
   const [query, setQuery] = useState('')
   const { hasUpdate } = useVersionCheck()
+  const t = useT()
   const rows = useLiveQuery<ClientRow[]>(async () => {
     const [allClients, sharpenings] = await Promise.all([
       db.clients.orderBy('name').toArray(),
@@ -95,7 +97,7 @@ export default function ClientList() {
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <span className={s.title}>КЛИЕНТЫ</span>
+        <span className={s.title}>{t.clients.title}</span>
         <div className={s.headerRight}>
           <Link to="/backup" className={s.backupLink}>
             <span className={s.iconWrap}>
@@ -104,7 +106,7 @@ export default function ClientList() {
             </span>
           </Link>
           <Link to="/clients/new">
-            <button className={s.addBtn}>+ Клиент</button>
+            <button className={s.addBtn}>{t.clients.addClient}</button>
           </Link>
         </div>
       </div>
@@ -113,7 +115,7 @@ export default function ClientList() {
         <input
           className={s.search}
           type="search"
-          placeholder="Поиск по имени, телефону или телеграм"
+          placeholder={t.clients.searchPlaceholder}
           value={query}
           onChange={e => setQuery(e.target.value)}
         />
@@ -121,7 +123,7 @@ export default function ClientList() {
 
       <div className={s.list}>
         {rows !== undefined && visible.length === 0 && (
-          <p className={s.empty}>{trimmed ? 'Ничего не найдено' : 'Нет клиентов'}</p>
+          <p className={s.empty}>{trimmed ? t.clients.notFound : t.clients.empty}</p>
         )}
         {visible.map(({ client, count, acceptedCount, doneCount }) => (
           <Link key={client.id} to={`/clients/${client.id}`} className={s.card}>
@@ -137,10 +139,10 @@ export default function ClientList() {
               {count > 0 && (
                 <div className={s.statusCounts}>
                   {acceptedCount > 0 && (
-                    <span className={s.statusBadgeAccepted}>{acceptedCount} принят</span>
+                    <span className={s.statusBadgeAccepted}>{t.clients.acceptedCount(acceptedCount)}</span>
                   )}
                   {doneCount > 0 && (
-                    <span className={s.statusBadgeDone}>{doneCount} готов</span>
+                    <span className={s.statusBadgeDone}>{t.clients.doneCount(doneCount)}</span>
                   )}
                 </div>
               )}
@@ -150,20 +152,20 @@ export default function ClientList() {
 
         {isNewUser && (
           <div className={s.onboarding}>
-            <p className={s.onboardingTitle}>С чего начать</p>
+            <p className={s.onboardingTitle}>{t.clients.onboarding.title}</p>
             <ul className={s.onboardingList}>
               <li>
                 <span className={s.onboardingIcon}><IconUser /></span>
-                <span>Раздел <strong>«Я»</strong> — личный журнал: записывайте заточки своих ножей без клиентов</span>
+                <span>{t.clients.onboarding.selfPrefix}<strong>{t.clients.onboarding.selfStrong}</strong>{t.clients.onboarding.selfSuffix}</span>
               </li>
               <li>
                 <span className={s.onboardingIcon}><IconPlus /></span>
-                <span>Нажмите <strong>«+ Клиент»</strong>, чтобы добавить первого клиента и принять нож в работу</span>
+                <span>{t.clients.onboarding.addPrefix}<strong>{t.clients.onboarding.addStrong}</strong>{t.clients.onboarding.addSuffix}</span>
               </li>
               <li>
                 <span className={s.onboardingIcon}><IconDatabase /></span>
-                <Link to="/backup" className={s.onboardingLink}>Настройте бэкап</Link>
-                <span>, чтобы не потерять данные</span>
+                <Link to="/backup" className={s.onboardingLink}>{t.clients.onboarding.backupLink}</Link>
+                <span>{t.clients.onboarding.backupSuffix}</span>
               </li>
             </ul>
           </div>
