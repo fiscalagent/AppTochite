@@ -128,7 +128,7 @@ export default function SharpeningDetail() {
   const [newStoneType, setNewStoneType] = useState<Stone['type'] | ''>('')
 
   // Dictation (Z-2: angle / stones / comment)
-  const dictation = useDictationMode()
+  const dictation = useDictationMode(locale)
   const [awaitingListField, setAwaitingListField] = useState<FieldKey | null>(null)
   const [awaitingCancelConfirm, setAwaitingCancelConfirm] = useState(false)
   const [dictationCandidates, setDictationCandidates] = useState<{ field: FieldKey; items: string[] } | null>(null)

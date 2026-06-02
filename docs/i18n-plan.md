@@ -102,13 +102,22 @@ restore **не затрагиваются**, и данные пользоват�
   `languageLabel` добавлен в оба словаря.
 - ⏳ QA на обоих языках (UI, CSV, бэкап/восстановление, смена языка на лету)
 
-## Фаза 3 — Голос (отдельный крупный этап, опционально/позже)
+## Фаза 3 — Голос ✅
 
-Английский выпускается в Фазе 2 **без голоса** (он opt-in, по умолчанию выключен).
-
-- ⏳ Языковой профиль голоса: грамматика команд, числительные, fuzzy-матчинг — англ. вариант
-- ⏳ `recognition.lang` по локали (`useVoiceInput`)
-- ⏳ condition-парсер возвращает канонический ключ, а не русскую строку
+- ✅ `recognition.lang` по локали: `useVoiceInput(locale)`, `useDictationMode(locale)`,
+  `useTwoPhaseVoice(locale)` — `'ru'` → `'ru-RU'`, `'en'` → `'en-US'`. Callers передают
+  локаль из `useLocale()`. Существующие RU-пользователи: поведение идентично (locale='ru').
+- ✅ Компоненты голоса i18n: `DictationButton`, `DictationIndicator`, `DictationCandidates`,
+  `MicButton` — все строки через `useT()` (`components.voice.*` в словарях).
+- ✅ `parseCommand(rawText, ctx, locale)` — EN-грамматика: префиксы полей, однословные
+  команды, числительные (one/two/…/hundred), clear/erase, "what did you hear".
+- ✅ condition-маппинг: EN-слова (`sharpening`/`edge`/`repair`) → канонический RU-ключ
+  в БД (`'заточка'`/`'правка РК'`/`'ремонт'`). RU-голос тоже теперь пишет каноник
+  (`'правка'` → `'правка РК'`), что исправило старый баг (lowercase ≠ key enumLabel).
+- ✅ `voiceMatch` EN-режим: `normForMatchEn` (без транслитерации), `extractNumber` с locale,
+  `narrowFromFiltered`/`pickFromFiltered`/`findAllMatches`/`findBestMatch` — locale-aware.
+  EN числа: EN_NUM (zero…thousand + ординалы first…tenth).
+- ✅ 363 теста зелёные (+55 EN-кейсов в voiceCommand.test.ts).
 
 ## Фаза 4 — Контент и витрина ✅ (частично)
 

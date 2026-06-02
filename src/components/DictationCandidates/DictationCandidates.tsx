@@ -1,3 +1,4 @@
+import { useT } from '../../i18n'
 import s from './DictationCandidates.module.css'
 
 interface Props {
@@ -8,11 +9,12 @@ interface Props {
 }
 
 export default function DictationCandidates({ label, items, onPick, onClose }: Props) {
+  const t = useT()
   return (
     <div className={s.panel}>
       <div className={s.header}>
-        <span className={s.title}>Уточни: {label}</span>
-        <button className={s.close} type="button" onClick={onClose} aria-label="Закрыть">×</button>
+        <span className={s.title}>{t.components.voiceClarify(label)}</span>
+        <button className={s.close} type="button" onClick={onClose} aria-label={t.components.voiceClose}>×</button>
       </div>
       <ol className={s.list}>
         {items.map((item, i) => (

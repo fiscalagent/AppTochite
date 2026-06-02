@@ -13,6 +13,11 @@ export function normForMatch(text: string): string {
   return transliterate(text).replace(/[^a-z0-9]/g, '')
 }
 
+// EN mode: skip transliteration, just lowercase + strip non-alnum
+export function normForMatchEn(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 export function bigramSim(a: string, b: string): number {
   if (!a || !b) return 0
   if (a === b) return 1
@@ -101,35 +106,51 @@ function scoreCandidate(vNorm: string, vNormW: string, voiceGrit: string | undef
   return score
 }
 
-export function findAllMatches(voiceText: string, suggestions: string[], minScore = 30): string[] {
-  const vLow = voiceText.toLowerCase()
-  const vNorm = normForMatch(vLow)
+function normVoice(text: string, en: boolean): { vNorm: string; vNormW: string } {
+  const vLow = text.toLowerCase()
+  const vNorm = en ? normForMatchEn(vLow) : normForMatch(vLow)
   const vNormW = vNorm.replace(/v/g, 'w')
+  return { vNorm, vNormW }
+}
+
+export function findAllMatches(voiceText: string, suggestions: string[], minScore = 30, locale = 'ru'): string[] {
+  const vLow = voiceText.toLowerCase()
+  const { vNorm, vNormW } = normVoice(vLow, locale === 'en')
   const gritMatch = vLow.match(/\b(\d{3,5})\b/)
   const voiceGrit = gritMatch?.[1]
 
   const scored: { name: string; score: number }[] = []
   for (const sug of suggestions) {
-    const score = scoreCandidate(vNorm, vNormW, voiceGrit,sug)
+    const score = scoreCandidate(vNorm, vNormW, voiceGrit, sug)
     if (score >= minScore) scored.push({ name: sug, score })
   }
   scored.sort((a, b) => b.score - a.score)
   return scored.slice(0, 8).map(x => x.name)
 }
 
-export function findBestMatch(voiceText: string, suggestions: string[], minScore = 28): string | null {
+export function findBestMatch(voiceText: string, suggestions: string[], minScore = 28, locale = 'ru'): string | null {
   const vLow = voiceText.toLowerCase()
-  const vNorm = normForMatch(vLow)
-  const vNormW = vNorm.replace(/v/g, 'w')
+  const { vNorm, vNormW } = normVoice(vLow, locale === 'en')
   const gritMatch = vLow.match(/\b(\d{3,5})\b/)
   const voiceGrit = gritMatch?.[1]
 
   let best: { name: string; score: number } | null = null
   for (const s of suggestions) {
-    const score = scoreCandidate(vNorm, vNormW, voiceGrit,s)
+    const score = scoreCandidate(vNorm, vNormW, voiceGrit, s)
     if (!best || score > best.score) best = { name: s, score }
   }
   return best && best.score >= minScore ? best.name : null
+}
+
+const EN_NUM: Record<string, number> = {
+  'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+  'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+  'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15,
+  'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20,
+  'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+  'hundred': 100, 'thousand': 1000,
+  'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
+  'sixth': 6, 'seventh': 7, 'eighth': 8, 'ninth': 9, 'tenth': 10,
 }
 
 const RU_NUM: Record<string, number> = {
@@ -154,7 +175,26 @@ const RU_NUM: Record<string, number> = {
 
 // Parse a Russian/digit number from speech, supports compound numerals like "сто пятьдесят".
 // Returns string (so callers can keep input type=number raw) or '' if not found.
-export function extractNumber(text: string): string {
+export function extractNumber(text: string, locale = 'ru'): string {
+  if (locale === 'en') return extractNumberEn(text)
+  return extractNumberRu(text)
+}
+
+function extractNumberEn(text: string): string {
+  const lower = text.toLowerCase()
+  const digitMatch = lower.match(/\d+(?:[.,]\d+)?/)
+  if (digitMatch) return digitMatch[0].replace(',', '.')
+  const words = lower.split(/[^a-z]+/).filter(Boolean)
+  let sum = 0
+  let hasAny = false
+  for (const w of words) {
+    const v = EN_NUM[w]
+    if (v !== undefined) { sum += v; hasAny = true }
+  }
+  return hasAny ? String(sum) : ''
+}
+
+function extractNumberRu(text: string): string {
   const lower = text.toLowerCase()
   const digitMatch = lower.match(/\d+(?:[.,]\d+)?/)
   if (digitMatch) return digitMatch[0].replace(',', '.')
@@ -190,13 +230,12 @@ export function extractNumber(text: string): string {
 //      item names, or falls back to ordinal index when no name has that digit.
 //   2. Plain digit ("120") matches whole-word digit in item names.
 //   3. Fuzzy fallback — drop-in findAllMatches against the filtered list.
-export function narrowFromFiltered(text: string, items: string[]): string[] {
+export function narrowFromFiltered(text: string, items: string[], locale = 'ru'): string[] {
   if (items.length === 0) return []
   const tokens = tokenize(text)
+  const numMap = locale === 'en' ? EN_NUM : RU_NUM
 
-  // Russian numerals first — for "сто двадцать" / "двадцать пять" we get the
-  // composed number via extractNumber and match by content.
-  const composedNum = extractNumber(text)
+  const composedNum = extractNumber(text, locale)
   if (composedNum) {
     const byContent = items.filter(it => hasWholeWord(it, composedNum))
     if (byContent.length > 0) return byContent
@@ -204,8 +243,7 @@ export function narrowFromFiltered(text: string, items: string[]): string[] {
     if (n >= 1 && n <= items.length) return [items[n - 1]]
   }
 
-  // Single-word ordinal/cardinal (covers "первый", "второй", … as ordinal index).
-  for (const [word, num] of Object.entries(RU_NUM)) {
+  for (const [word, num] of Object.entries(numMap)) {
     if (tokens.includes(word)) {
       const numStr = String(num)
       const byContent = items.filter(it => hasWholeWord(it, numStr))
@@ -214,18 +252,17 @@ export function narrowFromFiltered(text: string, items: string[]): string[] {
     }
   }
 
-  // Fuzzy substring narrowing
-  return findAllMatches(text, items)
+  return findAllMatches(text, items, 30, locale)
 }
 
 // Pick an item from a pre-filtered list by ordinal/number/fuzzy.
 // Used in phase 2 of two-phase voice flow.
-export function pickFromFiltered(text: string, items: string[]): string | null {
+export function pickFromFiltered(text: string, items: string[], locale = 'ru'): string | null {
   if (items.length === 0) return null
   const tokens = tokenize(text)
+  const numMap = locale === 'en' ? EN_NUM : RU_NUM
 
-  // Russian ordinal/cardinal word → index
-  for (const [word, num] of Object.entries(RU_NUM)) {
+  for (const [word, num] of Object.entries(numMap)) {
     if (tokens.includes(word)) {
       const numStr = String(num)
       const byContent = items.find(it => hasWholeWord(it, numStr))
@@ -234,7 +271,6 @@ export function pickFromFiltered(text: string, items: string[]): string | null {
     }
   }
 
-  // Digit (digits work with native \b since they're ASCII word chars)
   const digitMatch = text.match(/\b(\d+)\b/)
   if (digitMatch) {
     const num = Number(digitMatch[1])
@@ -243,7 +279,7 @@ export function pickFromFiltered(text: string, items: string[]): string | null {
     if (num >= 1 && num <= items.length) return items[num - 1]
   }
 
-  return findBestMatch(text, items)
+  return findBestMatch(text, items, 28, locale)
 }
 
 // Fuzzy match for client names (handles "Я", short nicknames, partial speech).

@@ -118,7 +118,7 @@ export default function SharpeningForm() {
   const repeatAngle = repeat?.angle
   const repeatStones: SharpeningStone[] = repeat?.stones ?? []
 
-  const dictation = useDictationMode()
+  const dictation = useDictationMode(locale)
 
   const [awaitingListField, setAwaitingListField] = useState<FieldKey | null>(null)
   const [awaitingCancelConfirm, setAwaitingCancelConfirm] = useState(false)

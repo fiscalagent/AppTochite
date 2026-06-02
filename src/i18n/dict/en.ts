@@ -492,5 +492,16 @@ export const en = {
 
     easterCaption: 'your sharp memory',
     easterAriaLabel: 'AppTochite — your sharp memory',
+
+    voiceOffline: 'Voice input unavailable offline',
+    voiceStopDictation: 'Stop dictation',
+    voiceStartDictation: 'Start dictation',
+    voiceListening: 'Listening',
+    voiceDictation: 'Dictation',
+    voiceHearing: 'Heard:',
+    voiceClarify: (label: string) => `Clarify: ${label}`,
+    voiceClose: 'Close',
+    voiceStop: 'Stop',
+    voiceInput: 'Voice input',
   },
 } as const

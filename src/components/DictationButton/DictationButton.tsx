@@ -1,3 +1,4 @@
+import { useT } from '../../i18n'
 import s from './DictationButton.module.css'
 
 const IconMic = () => (
@@ -16,16 +17,18 @@ interface Props {
 }
 
 export default function DictationButton({ isAvailable, isActive, onToggle }: Props) {
+  const t = useT()
+
   if (!isAvailable) {
     return (
       <button
         className={`${s.btn} ${s.disabled}`}
         disabled
-        title="Голосовой ввод недоступен офлайн"
+        title={t.components.voiceOffline}
         type="button"
       >
         <IconMic />
-        <span>Диктовка</span>
+        <span>{t.components.voiceDictation}</span>
       </button>
     )
   }
@@ -34,11 +37,11 @@ export default function DictationButton({ isAvailable, isActive, onToggle }: Pro
     <button
       className={`${s.btn} ${isActive ? s.active : ''}`}
       onClick={onToggle}
-      title={isActive ? 'Остановить диктовку' : 'Включить диктовку'}
+      title={isActive ? t.components.voiceStopDictation : t.components.voiceStartDictation}
       type="button"
     >
       <IconMic />
-      <span>{isActive ? 'Слушаю' : 'Диктовка'}</span>
+      <span>{isActive ? t.components.voiceListening : t.components.voiceDictation}</span>
     </button>
   )
 }

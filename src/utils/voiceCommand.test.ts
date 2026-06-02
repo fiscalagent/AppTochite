@@ -35,13 +35,13 @@ describe('Команды Приёмки (step=1)', () => {
 
   it('требуется правка → chip', () => {
     expect(parseCommand('требуется правка', ctx())).toEqual({
-      kind: 'field', field: 'condition', value: 'правка',
+      kind: 'field', field: 'condition', value: 'правка РК',
     })
   })
 
   it('требуется правка рк → chip', () => {
     expect(parseCommand('требуется правка рк', ctx())).toEqual({
-      kind: 'field', field: 'condition', value: 'правка рк',
+      kind: 'field', field: 'condition', value: 'правка РК',
     })
   })
 
@@ -368,5 +368,191 @@ describe('Пустой / мусорный ввод', () => {
 
   it('префикс без значения (один токен "сталь") → unknown', () => {
     expect(parseCommand('сталь', ctx())).toEqual({ kind: 'unknown' })
+  })
+})
+
+// ── English grammar ──────────────────────────────────────────────────────────
+
+const en = (over: Partial<CommandContext> = {}): CommandContext => ({
+  step: 1,
+  awaitingListField: null,
+  awaitingCancelConfirm: false,
+  ...over,
+})
+
+describe('EN: field commands (step=1)', () => {
+  it('client <name> → field:client', () => {
+    expect(parseCommand('client John', en(), 'en')).toEqual({ kind: 'field', field: 'client', value: 'John' })
+  })
+  it('knife <name> → field:knife', () => {
+    expect(parseCommand('knife Mora', en(), 'en')).toEqual({ kind: 'field', field: 'knife', value: 'Mora' })
+  })
+  it('steel <name> → field:steel', () => {
+    expect(parseCommand('steel D2', en(), 'en')).toEqual({ kind: 'field', field: 'steel', value: 'D2' })
+  })
+  it('hardness <n> → field:hrc', () => {
+    expect(parseCommand('hardness 58', en(), 'en')).toEqual({ kind: 'field', field: 'hrc', value: '58' })
+  })
+  it('hrc <n> → field:hrc', () => {
+    expect(parseCommand('hrc 60', en(), 'en')).toEqual({ kind: 'field', field: 'hrc', value: '60' })
+  })
+  it('price <n> → field:price', () => {
+    expect(parseCommand('price 50', en(), 'en')).toEqual({ kind: 'field', field: 'price', value: '50' })
+  })
+  it('price twenty → field:price 20', () => {
+    expect(parseCommand('price twenty', en(), 'en')).toEqual({ kind: 'field', field: 'price', value: '20' })
+  })
+})
+
+describe('EN: condition → canonical RU key', () => {
+  it('condition sharpening → заточка', () => {
+    expect(parseCommand('condition sharpening', en(), 'en')).toEqual({ kind: 'field', field: 'condition', value: 'заточка' })
+  })
+  it('condition edge → правка РК', () => {
+    expect(parseCommand('condition edge', en(), 'en')).toEqual({ kind: 'field', field: 'condition', value: 'правка РК' })
+  })
+  it('condition repair → ремонт', () => {
+    expect(parseCommand('condition repair', en(), 'en')).toEqual({ kind: 'field', field: 'condition', value: 'ремонт' })
+  })
+  it('condition unknown → unknown', () => {
+    expect(parseCommand('condition something weird', en(), 'en')).toEqual({ kind: 'unknown' })
+  })
+})
+
+describe('EN: step=2 fields', () => {
+  it('stone <name> → field:stone', () => {
+    expect(parseCommand('stone Shapton 1000', en({ step: 2 }), 'en')).toEqual({ kind: 'field', field: 'stone', value: 'Shapton 1000' })
+  })
+  it('angle 15 → field:angle', () => {
+    expect(parseCommand('angle 15', en({ step: 2 }), 'en')).toEqual({ kind: 'field', field: 'angle', value: '15' })
+  })
+  it('angle fifteen → field:angle 15', () => {
+    expect(parseCommand('angle fifteen', en({ step: 2 }), 'en')).toEqual({ kind: 'field', field: 'angle', value: '15' })
+  })
+  it('note <text> → field:notes', () => {
+    expect(parseCommand('note handle cracked', en({ step: 2 }), 'en')).toEqual({ kind: 'field', field: 'notes', value: 'handle cracked' })
+  })
+  it('comment <text> → field:notes', () => {
+    expect(parseCommand('comment long process', en({ step: 2 }), 'en')).toEqual({ kind: 'field', field: 'notes', value: 'long process' })
+  })
+})
+
+describe('EN: wrong step → unknown', () => {
+  it('angle on step=1 → unknown', () => {
+    expect(parseCommand('angle 20', en({ step: 1 }), 'en')).toEqual({ kind: 'unknown' })
+  })
+  it('client on step=2 → unknown', () => {
+    expect(parseCommand('client John', en({ step: 2 }), 'en')).toEqual({ kind: 'unknown' })
+  })
+})
+
+describe('EN: single-word commands', () => {
+  it('add → addStone', () => {
+    expect(parseCommand('add', en({ step: 2 }), 'en')).toEqual({ kind: 'addStone' })
+  })
+  it('stop → stop', () => {
+    expect(parseCommand('stop', en(), 'en')).toEqual({ kind: 'stop' })
+  })
+  it('pause → stop', () => {
+    expect(parseCommand('pause', en(), 'en')).toEqual({ kind: 'stop' })
+  })
+  it('next → nav:next', () => {
+    expect(parseCommand('next', en(), 'en')).toEqual({ kind: 'nav', action: 'next' })
+  })
+  it('back → nav:prev', () => {
+    expect(parseCommand('back', en(), 'en')).toEqual({ kind: 'nav', action: 'prev' })
+  })
+  it('previous → nav:prev', () => {
+    expect(parseCommand('previous', en(), 'en')).toEqual({ kind: 'nav', action: 'prev' })
+  })
+  it('cancel → nav:cancel', () => {
+    expect(parseCommand('cancel', en(), 'en')).toEqual({ kind: 'nav', action: 'cancel' })
+  })
+  it('save → submit markDone=false', () => {
+    expect(parseCommand('save', en(), 'en')).toEqual({ kind: 'submit', markDone: false })
+  })
+  it('done → submit markDone=true', () => {
+    expect(parseCommand('done', en(), 'en')).toEqual({ kind: 'submit', markDone: true })
+  })
+  it('repeat → repeat', () => {
+    expect(parseCommand('repeat', en(), 'en')).toEqual({ kind: 'repeat' })
+  })
+})
+
+describe('EN: multi-word commands', () => {
+  it('"what did you hear" → repeat', () => {
+    expect(parseCommand('what did you hear', en(), 'en')).toEqual({ kind: 'repeat' })
+  })
+  it('"remove last stone" → removeLastStone', () => {
+    expect(parseCommand('remove last stone', en({ step: 2 }), 'en')).toEqual({ kind: 'removeLastStone' })
+  })
+  it('"delete last stone" → removeLastStone', () => {
+    expect(parseCommand('delete last stone', en({ step: 2 }), 'en')).toEqual({ kind: 'removeLastStone' })
+  })
+})
+
+describe('EN: clear commands', () => {
+  it('"clear steel" → clear:steel', () => {
+    expect(parseCommand('clear steel', en(), 'en')).toEqual({ kind: 'clear', field: 'steel' })
+  })
+  it('"erase knife" → clear:knife', () => {
+    expect(parseCommand('erase knife', en(), 'en')).toEqual({ kind: 'clear', field: 'knife' })
+  })
+  it('"clear angle" on step=2 → clear:angle', () => {
+    expect(parseCommand('clear angle', en({ step: 2 }), 'en')).toEqual({ kind: 'clear', field: 'angle' })
+  })
+  it('"clear angle" on step=1 → unknown (wrong step)', () => {
+    expect(parseCommand('clear angle', en({ step: 1 }), 'en')).toEqual({ kind: 'unknown' })
+  })
+})
+
+describe('EN: cancel confirm', () => {
+  it('"yes" while awaitingCancelConfirm → confirmCancel', () => {
+    expect(parseCommand('yes', en({ awaitingCancelConfirm: true }), 'en')).toEqual({ kind: 'confirmCancel' })
+  })
+  it('"yes" without awaiting → unknown', () => {
+    expect(parseCommand('yes', en(), 'en')).toEqual({ kind: 'unknown' })
+  })
+})
+
+describe('EN: list picking', () => {
+  const listCtx = (f: FieldKey, step: 1 | 2 = 1): CommandContext =>
+    en({ awaitingListField: f, step })
+
+  it('"first" → pickFromList', () => {
+    expect(parseCommand('first', listCtx('steel'), 'en')).toEqual({ kind: 'pickFromList', hint: 'first' })
+  })
+  it('"one" → pickFromList', () => {
+    expect(parseCommand('one', listCtx('steel'), 'en')).toEqual({ kind: 'pickFromList', hint: 'one' })
+  })
+  it('"3" → pickFromList', () => {
+    expect(parseCommand('3', listCtx('steel'), 'en')).toEqual({ kind: 'pickFromList', hint: '3' })
+  })
+  it('"stop" overrides list picking', () => {
+    expect(parseCommand('stop', listCtx('steel'), 'en')).toEqual({ kind: 'stop' })
+  })
+})
+
+describe('EN: fillers stripped', () => {
+  it('"um steel D2" → field:steel D2', () => {
+    expect(parseCommand('um steel D2', en(), 'en')).toEqual({ kind: 'field', field: 'steel', value: 'D2' })
+  })
+  it('"uh next" → nav:next', () => {
+    expect(parseCommand('uh next', en(), 'en')).toEqual({ kind: 'nav', action: 'next' })
+  })
+})
+
+describe('EN: edge cases', () => {
+  it('empty → unknown', () => {
+    expect(parseCommand('', en(), 'en')).toEqual({ kind: 'unknown' })
+  })
+  it('unknown word → unknown', () => {
+    expect(parseCommand('foobar', en(), 'en')).toEqual({ kind: 'unknown' })
+  })
+  it('prefix only "steel" → unknown', () => {
+    expect(parseCommand('steel', en(), 'en')).toEqual({ kind: 'unknown' })
+  })
+  it('UPPERCASE "CLIENT John" → field:client', () => {
+    expect(parseCommand('CLIENT John', en(), 'en')).toEqual({ kind: 'field', field: 'client', value: 'John' })
   })
 })

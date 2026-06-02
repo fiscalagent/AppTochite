@@ -467,5 +467,16 @@ export const ru = {
 
     easterCaption: 'ваша острая память',
     easterAriaLabel: 'AppTochite — ваша острая память',
+
+    voiceOffline: 'Голосовой ввод недоступен офлайн',
+    voiceStopDictation: 'Остановить диктовку',
+    voiceStartDictation: 'Включить диктовку',
+    voiceListening: 'Слушаю',
+    voiceDictation: 'Диктовка',
+    voiceHearing: 'Слышу:',
+    voiceClarify: (label: string) => `Уточни: ${label}`,
+    voiceClose: 'Закрыть',
+    voiceStop: 'Остановить',
+    voiceInput: 'Голосовой ввод',
   },
 } as const

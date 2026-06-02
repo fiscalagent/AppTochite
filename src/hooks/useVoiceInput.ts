@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import type { Locale } from '../i18n'
 
 interface ISpeechRecognitionEvent {
   readonly results: { readonly 0: { readonly 0: { readonly transcript: string } } }
@@ -59,10 +60,16 @@ interface UseVoiceInputReturn {
   stop: () => void
 }
 
-export function useVoiceInput(): UseVoiceInputReturn {
+function recognitionLang(locale: Locale): string {
+  return locale === 'en' ? 'en-US' : 'ru-RU'
+}
+
+export function useVoiceInput(locale: Locale = 'ru'): UseVoiceInputReturn {
   const [isAvailable, setIsAvailable] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
+  const localeRef = useRef(locale)
+  localeRef.current = locale
   // Each session gets a unique id; callbacks check it to ignore late events
   // from a previous recognition that was replaced by a quick re-start.
   const sessionIdRef = useRef(0)
@@ -106,7 +113,7 @@ export function useVoiceInput(): UseVoiceInputReturn {
     }
 
     const recognition = new SR()
-    recognition.lang = 'ru-RU'
+    recognition.lang = recognitionLang(localeRef.current)
     recognition.interimResults = false
     recognition.maxAlternatives = 1
     recognition.continuous = false

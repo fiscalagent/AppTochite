@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { parseCommand, type Command, type CommandContext } from '../utils/voiceCommand'
+import type { Locale } from '../i18n'
 
 interface ISpeechRecognitionResult {
   readonly isFinal: boolean
@@ -72,7 +73,11 @@ export interface UseDictationModeReturn {
 
 const MAX_CONSECUTIVE_ERRORS = 3
 
-export function useDictationMode(): UseDictationModeReturn {
+function recognitionLang(locale: Locale): string {
+  return locale === 'en' ? 'en-US' : 'ru-RU'
+}
+
+export function useDictationMode(locale: Locale = 'ru'): UseDictationModeReturn {
   const [isAvailable, setIsAvailable] = useState(false)
   const [isActive, setIsActive] = useState(false)
   const [lastTranscript, setLastTranscript] = useState('')
@@ -82,6 +87,8 @@ export function useDictationMode(): UseDictationModeReturn {
   const sessionIdRef = useRef(0)
   const consecutiveErrorsRef = useRef(0)
   const optsRef = useRef<DictationStartOptions | null>(null)
+  const localeRef = useRef(locale)
+  localeRef.current = locale
 
   useEffect(() => {
     const SR = getSR()
@@ -129,7 +136,7 @@ export function useDictationMode(): UseDictationModeReturn {
     }
 
     const recognition = new SR()
-    recognition.lang = 'ru-RU'
+    recognition.lang = recognitionLang(localeRef.current)
     recognition.interimResults = false
     recognition.maxAlternatives = 1
     recognition.continuous = true
@@ -147,7 +154,7 @@ export function useDictationMode(): UseDictationModeReturn {
         if (!raw) continue
         consecutiveErrorsRef.current = 0
         setLastTranscript(raw)
-        const cmd = parseCommand(raw, current.getContext())
+        const cmd = parseCommand(raw, current.getContext(), localeRef.current)
         current.onCommand(cmd, raw)
       }
     }

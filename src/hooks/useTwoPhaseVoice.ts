@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { useVoiceInput, type VoiceErrorCode } from './useVoiceInput'
 import { findAllMatches, narrowFromFiltered } from '../utils/voiceMatch'
+import type { Locale } from '../i18n'
 
 type VoiceState =
   | { kind: 'idle' }
@@ -46,8 +47,8 @@ interface UseTwoPhaseVoiceReturn {
 // (no explicit refine timer — we rely on Web Speech's natural no-speech
 // timeout, ~5s on Chrome. Each successful refine cycle restarts the mic.)
 
-export function useTwoPhaseVoice(): UseTwoPhaseVoiceReturn {
-  const voice = useVoiceInput()
+export function useTwoPhaseVoice(locale: Locale = 'ru'): UseTwoPhaseVoiceReturn {
+  const voice = useVoiceInput(locale)
   const [state, setState] = useState<VoiceState>({ kind: 'idle' })
   // Increments on every cancel/new-start. Pending callbacks bail if their session
   // id no longer matches — protects against late onresult firing after cancel.

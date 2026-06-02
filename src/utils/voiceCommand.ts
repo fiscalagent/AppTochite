@@ -1,3 +1,5 @@
+import type { Locale } from '../i18n'
+
 export type FieldKey =
   | 'client'
   | 'knife'
@@ -32,7 +34,9 @@ export interface CommandContext {
 const STEP1_FIELDS: ReadonlySet<FieldKey> = new Set(['client', 'knife', 'steel', 'hrc', 'condition', 'price'])
 const STEP2_FIELDS: ReadonlySet<FieldKey> = new Set(['stone', 'angle', 'notes'])
 
-const FIELD_BY_PREFIX: Record<string, FieldKey> = {
+// ── Russian grammar ──────────────────────────────────────────────────────────
+
+const RU_FIELD_BY_PREFIX: Record<string, FieldKey> = {
   'клиент': 'client',
   'нож': 'knife',
   'сталь': 'steel',
@@ -50,7 +54,7 @@ const FIELD_BY_PREFIX: Record<string, FieldKey> = {
   'хрц': 'hrc',
 }
 
-const CLEAR_FIELD_MAP: Record<string, FieldKey> = {
+const RU_CLEAR_FIELD_MAP: Record<string, FieldKey> = {
   'клиент': 'client',
   'клиента': 'client',
   'нож': 'knife',
@@ -71,21 +75,30 @@ const CLEAR_FIELD_MAP: Record<string, FieldKey> = {
   'хрц': 'hrc',
 }
 
-const CONDITION_VALUES: ReadonlySet<string> = new Set(['заточка', 'правка', 'правка рк', 'ремонт'])
+// Canonical DB keys for condition (Russian strings stored in DB)
+const RU_CONDITION_VALUES: ReadonlySet<string> = new Set(['заточка', 'правка', 'правка рк', 'ремонт'])
 
-const FILLERS: ReadonlySet<string> = new Set(['эм', 'ээ', 'эээ', 'мм', 'ммм', 'ну'])
+// Maps voice-heard value → canonical DB key
+const RU_CONDITION_CANONICAL: Record<string, string> = {
+  'заточка': 'заточка',
+  'правка': 'правка РК',
+  'правка рк': 'правка РК',
+  'ремонт': 'ремонт',
+}
 
-const ORDINALS: ReadonlySet<string> = new Set([
+const RU_FILLERS: ReadonlySet<string> = new Set(['эм', 'ээ', 'эээ', 'мм', 'ммм', 'ну'])
+
+const RU_ORDINALS: ReadonlySet<string> = new Set([
   'первый', 'второй', 'третий', 'четвёртый', 'четвертый',
   'пятый', 'шестой', 'седьмой', 'восьмой', 'девятый', 'десятый',
 ])
 
-const PICK_NUM_WORDS: ReadonlySet<string> = new Set([
+const RU_PICK_NUM_WORDS: ReadonlySet<string> = new Set([
   'один', 'два', 'три', 'четыре', 'пять',
   'шесть', 'семь', 'восемь', 'девять', 'десять',
 ])
 
-const NUMBER_WORDS: Record<string, number> = {
+const RU_NUMBER_WORDS: Record<string, number> = {
   'ноль': 0, 'один': 1, 'одна': 1, 'два': 2, 'две': 2, 'три': 3, 'четыре': 4,
   'пять': 5, 'шесть': 6, 'семь': 7, 'восемь': 8, 'девять': 9, 'десять': 10,
   'одиннадцать': 11, 'двенадцать': 12, 'тринадцать': 13, 'четырнадцать': 14,
@@ -97,11 +110,78 @@ const NUMBER_WORDS: Record<string, number> = {
   'тысяча': 1000, 'тысячу': 1000, 'тысячи': 1000,
 }
 
+// ── English grammar ──────────────────────────────────────────────────────────
+
+const EN_FIELD_BY_PREFIX: Record<string, FieldKey> = {
+  'client': 'client',
+  'knife': 'knife',
+  'steel': 'steel',
+  'stone': 'stone',
+  'condition': 'condition',
+  'required': 'condition',
+  'note': 'notes',
+  'notes': 'notes',
+  'comment': 'notes',
+  'angle': 'angle',
+  'price': 'price',
+  'hardness': 'hrc',
+  'hrc': 'hrc',
+}
+
+const EN_CLEAR_FIELD_MAP: Record<string, FieldKey> = {
+  'client': 'client',
+  'knife': 'knife',
+  'steel': 'steel',
+  'condition': 'condition',
+  'required': 'condition',
+  'note': 'notes',
+  'notes': 'notes',
+  'comment': 'notes',
+  'stone': 'stone',
+  'angle': 'angle',
+  'price': 'price',
+  'hardness': 'hrc',
+  'hrc': 'hrc',
+}
+
+// EN voice → canonical Russian DB key (condition values are stored in Russian)
+const EN_CONDITION_TO_CANONICAL: Record<string, string> = {
+  'sharpening': 'заточка',
+  'edge': 'правка РК',
+  'edge touch-up': 'правка РК',
+  'touch-up': 'правка РК',
+  'repair': 'ремонт',
+}
+
+const EN_FILLERS: ReadonlySet<string> = new Set(['um', 'uh', 'er', 'hmm'])
+
+const EN_ORDINALS: ReadonlySet<string> = new Set([
+  'first', 'second', 'third', 'fourth', 'fifth',
+  'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
+])
+
+const EN_PICK_NUM_WORDS: ReadonlySet<string> = new Set([
+  'one', 'two', 'three', 'four', 'five',
+  'six', 'seven', 'eight', 'nine', 'ten',
+])
+
+const EN_NUMBER_WORDS: Record<string, number> = {
+  'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+  'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+  'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14,
+  'fifteen': 15, 'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19,
+  'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50,
+  'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+  'hundred': 100, 'thousand': 1000,
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 function isFieldAllowedAtStep(field: FieldKey, step: 1 | 2): boolean {
   return (step === 1 ? STEP1_FIELDS : STEP2_FIELDS).has(field)
 }
 
-function parseNumber(text: string): number | null {
+function parseNumber(text: string, numberWords: Record<string, number>): number | null {
   const t = text.trim().toLowerCase()
   if (!t) return null
   if (/^\d+$/.test(t)) return parseInt(t, 10)
@@ -110,8 +190,8 @@ function parseNumber(text: string): number | null {
   for (const p of parts) {
     if (/^\d+$/.test(p)) {
       sum += parseInt(p, 10)
-    } else if (p in NUMBER_WORDS) {
-      sum += NUMBER_WORDS[p]
+    } else if (p in numberWords) {
+      sum += numberWords[p]
     } else {
       return null
     }
@@ -119,16 +199,22 @@ function parseNumber(text: string): number | null {
   return sum
 }
 
-function isPickHint(lcTokens: string[]): boolean {
+function isPickHint(
+  lcTokens: string[],
+  ordinals: ReadonlySet<string>,
+  pickNumWords: ReadonlySet<string>,
+): boolean {
   if (lcTokens.length !== 1) return false
   const t = lcTokens[0]
   if (/^\d+$/.test(t)) return true
-  if (ORDINALS.has(t)) return true
-  if (PICK_NUM_WORDS.has(t)) return true
+  if (ordinals.has(t)) return true
+  if (pickNumWords.has(t)) return true
   return false
 }
 
-export function parseCommand(rawText: string, ctx: CommandContext): Command {
+// ── Main parser ──────────────────────────────────────────────────────────────
+
+export function parseCommand(rawText: string, ctx: CommandContext, locale: Locale = 'ru'): Command {
   const cleaned = (rawText ?? '')
     .replace(/[.,!?;:"'«»]+$/g, '')
     .replace(/\s+/g, ' ')
@@ -136,7 +222,16 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
   if (!cleaned) return { kind: 'unknown' }
 
   const tokens = cleaned.split(' ')
-  while (tokens.length > 0 && FILLERS.has(tokens[0].toLowerCase())) tokens.shift()
+
+  const isEn = locale === 'en'
+  const fillers = isEn ? EN_FILLERS : RU_FILLERS
+  const fieldByPrefix = isEn ? EN_FIELD_BY_PREFIX : RU_FIELD_BY_PREFIX
+  const clearFieldMap = isEn ? EN_CLEAR_FIELD_MAP : RU_CLEAR_FIELD_MAP
+  const numberWords = isEn ? EN_NUMBER_WORDS : RU_NUMBER_WORDS
+  const ordinals = isEn ? EN_ORDINALS : RU_ORDINALS
+  const pickNumWords = isEn ? EN_PICK_NUM_WORDS : RU_PICK_NUM_WORDS
+
+  while (tokens.length > 0 && fillers.has(tokens[0].toLowerCase())) tokens.shift()
   if (tokens.length === 0) return { kind: 'unknown' }
 
   const lc = tokens.map((t) => t.toLowerCase())
@@ -145,25 +240,49 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
   if (ctx.awaitingCancelConfirm && lc.length === 1 && first === 'да') {
     return { kind: 'confirmCancel' }
   }
+  if (isEn && ctx.awaitingCancelConfirm && lc.length === 1 && first === 'yes') {
+    return { kind: 'confirmCancel' }
+  }
 
   if (lc.length === 1) {
-    switch (first) {
-      case 'добавить': return { kind: 'addStone' }
-      case 'повтори':
-      case 'повтор': return { kind: 'repeat' }
-      case 'стоп':
-      case 'пауза': return { kind: 'stop' }
-      case 'отмена': return { kind: 'nav', action: 'cancel' }
-      case 'дальше':
-      case 'далее':
-      case 'следующее': return { kind: 'nav', action: 'next' }
-      case 'назад': return { kind: 'nav', action: 'prev' }
-      case 'сохранить': return { kind: 'submit', markDone: false }
-      case 'готово': return { kind: 'submit', markDone: true }
+    if (!isEn) {
+      switch (first) {
+        case 'добавить': return { kind: 'addStone' }
+        case 'повтори':
+        case 'повтор': return { kind: 'repeat' }
+        case 'стоп':
+        case 'пауза': return { kind: 'stop' }
+        case 'отмена': return { kind: 'nav', action: 'cancel' }
+        case 'дальше':
+        case 'далее':
+        case 'следующее': return { kind: 'nav', action: 'next' }
+        case 'назад': return { kind: 'nav', action: 'prev' }
+        case 'сохранить': return { kind: 'submit', markDone: false }
+        case 'готово': return { kind: 'submit', markDone: true }
+      }
+    } else {
+      switch (first) {
+        case 'add': return { kind: 'addStone' }
+        case 'repeat': return { kind: 'repeat' }
+        case 'stop':
+        case 'pause': return { kind: 'stop' }
+        case 'cancel': return { kind: 'nav', action: 'cancel' }
+        case 'next': return { kind: 'nav', action: 'next' }
+        case 'back':
+        case 'previous': return { kind: 'nav', action: 'prev' }
+        case 'save': return { kind: 'submit', markDone: false }
+        case 'done': return { kind: 'submit', markDone: true }
+      }
     }
   }
 
-  if (lc.length === 2 && lc[0] === 'что' && lc[1] === 'услышал') {
+  if (!isEn && lc.length === 2 && lc[0] === 'что' && lc[1] === 'услышал') {
+    return { kind: 'repeat' }
+  }
+  if (isEn && lc.length === 3 && lc[0] === 'what' && lc[1] === 'did' && lc[2] === 'you') {
+    return { kind: 'repeat' }
+  }
+  if (isEn && lc.length === 4 && lc[0] === 'what' && lc[1] === 'did' && lc[2] === 'you' && lc[3] === 'hear') {
     return { kind: 'repeat' }
   }
 
@@ -175,15 +294,30 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
   ) {
     return { kind: 'removeLastStone' }
   }
+  if (
+    isEn &&
+    lc.length === 3 &&
+    (lc[0] === 'remove' || lc[0] === 'delete') &&
+    lc[1] === 'last' &&
+    lc[2] === 'stone'
+  ) {
+    return { kind: 'removeLastStone' }
+  }
 
-  if (lc.length >= 2 && (lc[0] === 'сотри' || lc[0] === 'очисти')) {
+  if (!isEn && lc.length >= 2 && (lc[0] === 'сотри' || lc[0] === 'очисти')) {
     const target = lc.slice(1).join(' ')
-    const field = CLEAR_FIELD_MAP[target]
+    const field = clearFieldMap[target]
+    if (field && isFieldAllowedAtStep(field, ctx.step)) return { kind: 'clear', field }
+    return { kind: 'unknown' }
+  }
+  if (isEn && lc.length >= 2 && (lc[0] === 'clear' || lc[0] === 'erase')) {
+    const target = lc.slice(1).join(' ')
+    const field = clearFieldMap[target]
     if (field && isFieldAllowedAtStep(field, ctx.step)) return { kind: 'clear', field }
     return { kind: 'unknown' }
   }
 
-  const field = FIELD_BY_PREFIX[first]
+  const field = fieldByPrefix[first]
   if (field && tokens.length >= 2) {
     if (!isFieldAllowedAtStep(field, ctx.step)) return { kind: 'unknown' }
 
@@ -191,14 +325,19 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
     const restLc = lc.slice(1).join(' ')
 
     if (field === 'condition') {
-      if (CONDITION_VALUES.has(restLc)) {
-        return { kind: 'field', field, value: restLc }
+      if (!isEn) {
+        if (RU_CONDITION_VALUES.has(restLc)) {
+          return { kind: 'field', field, value: RU_CONDITION_CANONICAL[restLc] ?? restLc }
+        }
+      } else {
+        const canonical = EN_CONDITION_TO_CANONICAL[restLc]
+        if (canonical) return { kind: 'field', field, value: canonical }
       }
       return { kind: 'unknown' }
     }
 
     if (field === 'angle' || field === 'price' || field === 'hrc') {
-      const n = parseNumber(restLc)
+      const n = parseNumber(restLc, numberWords)
       if (n === null) return { kind: 'unknown' }
       return { kind: 'field', field, value: String(n) }
     }
@@ -206,7 +345,7 @@ export function parseCommand(rawText: string, ctx: CommandContext): Command {
     return { kind: 'field', field, value: restOriginal }
   }
 
-  if (ctx.awaitingListField && isPickHint(lc)) {
+  if (ctx.awaitingListField && isPickHint(lc, ordinals, pickNumWords)) {
     return { kind: 'pickFromList', hint: lc.join(' ') }
   }
 

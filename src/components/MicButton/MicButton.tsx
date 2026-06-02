@@ -1,3 +1,4 @@
+import { useT } from '../../i18n'
 import s from './MicButton.module.css'
 
 const IconMic = () => (
@@ -16,12 +17,14 @@ interface Props {
 }
 
 export default function MicButton({ isAvailable, isListening, onToggle }: Props) {
+  const t = useT()
+
   if (!isAvailable) {
     return (
       <button
         className={`${s.btn} ${s.disabled}`}
         disabled
-        title="Голосовой ввод недоступен офлайн"
+        title={t.components.voiceOffline}
         type="button"
       >
         <IconMic />
@@ -33,7 +36,7 @@ export default function MicButton({ isAvailable, isListening, onToggle }: Props)
     <button
       className={`${s.btn} ${isListening ? s.listening : ''}`}
       onClick={onToggle}
-      title={isListening ? 'Остановить' : 'Голосовой ввод'}
+      title={isListening ? t.components.voiceStop : t.components.voiceInput}
       type="button"
     >
       <IconMic />
