@@ -1,3 +1,10 @@
+# [1.80.0](https://github.com/fiscalagent/AppTochite/compare/v1.79.0...v1.80.0) (2026-06-02)
+
+
+### feat
+
+* i18n фаза 2 — английский язык (en.ts) и переключатель языка ([](https://github.com/fiscalagent/AppTochite/commit/098b8e75dd62017c4d780ac473c3403a7f0e258f))
+
 # [1.79.0](https://github.com/fiscalagent/AppTochite/compare/v1.78.1...v1.79.0) (2026-06-01)
 
 
