@@ -244,4 +244,25 @@ export const ru = {
     saved: 'Сохранено',
     saveError: 'Ошибка при сохранении',
   },
+
+  // Справочники (S-1/2/3). Заполняется по под-батчам 7a/7b/7c.
+  reference: {
+    title: 'СПРАВОЧНИК',
+    tabs: { stones: 'Камни', steels: 'Стали', knives: 'Ножи' } as Record<string, string>,
+    gritConverter: 'Конвертер гритности',
+    topStones: 'Топ камней по позициям',
+    searchStones: 'Поиск... или *алмаз по типу',
+    search: 'Поиск...',
+    selectAll: 'Выбрать все',
+    deselectAll: 'Снять все',
+    count: (n: number) => `${n} шт.`,
+    selected: (n: number) => `Выбрано: ${n}`,
+    edit: 'Изменить',
+    deleteN: (n: number) => `Удалить (${n})`,
+    confirmDelete: 'Точно хотите удалить?',
+    no: 'Нет',
+    yes: 'Да',
+    heatmapEmpty: 'Нет данных — добавьте заточки с камнями',
+    posFin: 'Фин',
+  },
 } as const

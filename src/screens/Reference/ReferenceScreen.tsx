@@ -22,11 +22,7 @@ const IconCheck = () => (
 
 type Tab = 'stones' | 'steels' | 'knives'
 
-const TABS: { value: Tab; label: string }[] = [
-  { value: 'stones', label: 'Камни' },
-  { value: 'steels', label: 'Стали' },
-  { value: 'knives', label: 'Ножи' },
-]
+const TAB_VALUES: Tab[] = ['stones', 'steels', 'knives']
 
 // Подписи типов абразива и СОЖ живут в словаре i18n (ru.enums) — единый источник.
 // Здесь строим обратные карты «подпись → канонический ключ» для разбора русского
@@ -58,6 +54,7 @@ function SelectAllRow({
 }) {
   const allSelected = total > 0 && selected === total
   const someSelected = selected > 0 && selected < total
+  const t = useT()
 
   return (
     <div
@@ -69,9 +66,9 @@ function SelectAllRow({
         {someSelected && <span className={s.checkmark}>–</span>}
       </div>
       <span className={s.selectAllLabel}>
-        {allSelected ? 'Снять все' : 'Выбрать все'}
+        {allSelected ? t.reference.deselectAll : t.reference.selectAll}
       </span>
-      <span className={s.selectAllCount}>{total} шт.</span>
+      <span className={s.selectAllCount}>{t.reference.count(total)}</span>
     </div>
   )
 }
@@ -88,25 +85,26 @@ function SelectionBar({
   onEdit?: () => void
 }) {
   const [confirm, setConfirm] = useState(false)
+  const t = useT()
 
   return (
     <div className={s.selectionBar}>
       {!confirm ? (
         <>
-          <span className={s.selectionCount}>Выбрано: {count}</span>
-          <button className={s.cancelSelBtn} onClick={onCancel}>Отмена</button>
+          <span className={s.selectionCount}>{t.reference.selected(count)}</span>
+          <button className={s.cancelSelBtn} onClick={onCancel}>{t.common.cancel}</button>
           {count === 1 && onEdit && (
-            <button className={s.editSelBtn} onClick={onEdit}>Изменить</button>
+            <button className={s.editSelBtn} onClick={onEdit}>{t.reference.edit}</button>
           )}
           <button className={s.deleteSelBtn} onClick={() => setConfirm(true)}>
-            Удалить ({count})
+            {t.reference.deleteN(count)}
           </button>
         </>
       ) : (
         <>
-          <span className={s.selectionCount}>Точно хотите удалить?</span>
-          <button className={s.cancelSelBtn} onClick={() => setConfirm(false)}>Нет</button>
-          <button className={s.deleteSelBtn} onClick={onDelete}>Да</button>
+          <span className={s.selectionCount}>{t.reference.confirmDelete}</span>
+          <button className={s.cancelSelBtn} onClick={() => setConfirm(false)}>{t.reference.no}</button>
+          <button className={s.deleteSelBtn} onClick={onDelete}>{t.reference.yes}</button>
         </>
       )}
     </div>
@@ -271,7 +269,6 @@ const IconHeatmap = () => (
 )
 
 const HEATMAP_POSITIONS = [1, 2, 3, 4, 5] as const
-const POS_LABELS: Record<number, string> = { 1: '1', 2: '2', 3: '3', 4: '4', 5: 'Фин' }
 
 function heatColor(pct: number): string {
   if (pct <= 0) return ''
@@ -295,6 +292,7 @@ function heatColor(pct: number): string {
 }
 
 function StoneHeatmap() {
+  const t = useT()
   const sharpenings = useLiveQuery(() => db.sharpenings.toArray().then(arr => arr.filter(s => !s.deletedAt)), [])
 
   if (!sharpenings) return null
@@ -325,7 +323,7 @@ function StoneHeatmap() {
     .map(([name]) => name)
 
   if (top10.length === 0) {
-    return <p className={s.heatmapEmpty}>Нет данных — добавьте заточки с камнями</p>
+    return <p className={s.heatmapEmpty}>{t.reference.heatmapEmpty}</p>
   }
 
   const posTotals: Record<number, number> = {}
@@ -337,7 +335,7 @@ function StoneHeatmap() {
     <div className={s.heatmap}>
       <div className={s.heatmapCorner} />
       {HEATMAP_POSITIONS.map(p => (
-        <div key={p} className={s.heatmapPosHeader}>{POS_LABELS[p]}</div>
+        <div key={p} className={s.heatmapPosHeader}>{p === 5 ? t.reference.posFin : String(p)}</div>
       ))}
       {top10.map(name => (
         <Fragment key={name}>
@@ -1523,6 +1521,7 @@ export default function ReferenceScreen() {
   const { tab } = useParams<{ tab: Tab }>()
   const navigate = useNavigate()
   const activeTab: Tab = (tab as Tab) || 'stones'
+  const t = useT()
   const [search, setSearch] = useState('')
   const [showHeatmap, setShowHeatmap] = useState(false)
   const [showConverter, setShowConverter] = useState(false)
@@ -1532,15 +1531,15 @@ export default function ReferenceScreen() {
     return startBlur()
   }, [showConverter, showHeatmap])
 
-  function goTab(t: Tab) {
+  function goTab(next: Tab) {
     setSearch('')
-    navigate(`/reference/${t}`, { replace: true })
+    navigate(`/reference/${next}`, { replace: true })
   }
 
   return (
     <div className={s.screen}>
       <div className={s.header}>
-        <span className={s.title}>СПРАВОЧНИК</span>
+        <span className={s.title}>{t.reference.title}</span>
         {activeTab === 'stones' && (
           <>
             <button className={s.iconBtn} onClick={() => setShowConverter(true)}>
@@ -1557,7 +1556,7 @@ export default function ReferenceScreen() {
         <div className={s.overlay} onClick={() => setShowConverter(false)}>
           <div className={s.sheet} onClick={e => e.stopPropagation()}>
             <div className={s.sheetHeader}>
-              <span className={s.sheetTitle}>Конвертер гритности</span>
+              <span className={s.sheetTitle}>{t.reference.gritConverter}</span>
               <button className={s.sheetClose} onClick={() => setShowConverter(false)}>✕</button>
             </div>
             <GritConverter />
@@ -1570,7 +1569,7 @@ export default function ReferenceScreen() {
         <div className={s.overlay} onClick={() => setShowHeatmap(false)}>
           <div className={s.sheet} onClick={e => e.stopPropagation()}>
             <div className={s.sheetHeader}>
-              <span className={s.sheetTitle}>Топ камней по позициям</span>
+              <span className={s.sheetTitle}>{t.reference.topStones}</span>
               <button className={s.sheetClose} onClick={() => setShowHeatmap(false)}>✕</button>
             </div>
             <StoneHeatmap />
@@ -1580,13 +1579,13 @@ export default function ReferenceScreen() {
       )}
 
       <div className={s.tabs}>
-        {TABS.map(t => (
+        {TAB_VALUES.map(tabVal => (
           <button
-            key={t.value}
-            className={`${s.tab} ${activeTab === t.value ? s.active : ''}`}
-            onClick={() => goTab(t.value)}
+            key={tabVal}
+            className={`${s.tab} ${activeTab === tabVal ? s.active : ''}`}
+            onClick={() => goTab(tabVal)}
           >
-            {t.label}
+            {t.reference.tabs[tabVal]}
           </button>
         ))}
       </div>
@@ -1598,7 +1597,7 @@ export default function ReferenceScreen() {
             className={s.searchInput}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={activeTab === 'stones' ? 'Поиск... или *алмаз по типу' : 'Поиск...'}
+            placeholder={activeTab === 'stones' ? t.reference.searchStones : t.reference.search}
           />
         </div>
 
