@@ -570,7 +570,7 @@ export default function SharpeningForm() {
     <div className={s.screen}>
       <div className={s.header}>
         <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
-        <span className={s.title}>{isEdit ? 'РЕДАКТИРОВАТЬ' : 'НОВАЯ ЗАТОЧКА'}</span>
+        <span className={s.title}>{isEdit ? t.sharpening.editTitle : t.sharpening.newTitle}</span>
         {isVoiceEnabled() && (
           <div className={s.headerRight}>
             <DictationButton
@@ -602,7 +602,7 @@ export default function SharpeningForm() {
       <div className={s.form}>
         {!prefilledClientId && (
           <div className={`${s.field} ${s.fieldRequired}`}>
-            <label className={s.label}>Клиент <span className={s.req}>*</span></label>
+            <label className={s.label}>{t.sharpening.clientLabel} <span className={s.req}>*</span></label>
             <select
               className={`${s.select} ${!clientId ? s.selectPlaceholder : ''}`}
               value={clientId ?? ''}
@@ -610,7 +610,7 @@ export default function SharpeningForm() {
               autoFocus={!prefilledClientId}
               required
             >
-              <option value="">Выбрать клиента</option>
+              <option value="">{t.sharpening.selectClient}</option>
               {sortedClients.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -619,25 +619,25 @@ export default function SharpeningForm() {
         )}
 
         <div className={`${s.field} ${s.fieldRequired}`}>
-          <label className={s.label}>Нож / Бренд <span className={s.req}>*</span></label>
+          <label className={s.label}>{t.sharpening.knifeLabel} <span className={s.req}>*</span></label>
           <Autocomplete
             value={knifeBrand}
             onChange={setKnifeBrand}
             onSelect={applyKnife}
             suggestions={knifeSuggestions}
-            placeholder={dictation.isActive ? 'нож ...' : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : 'Mora, Victorinox, самодел...')}
+            placeholder={dictation.isActive ? t.sharpening.knifeDictation : (knifeSuggestions.length > 0 ? knifeSuggestions.slice(0, 3).join(', ') + '...' : t.sharpening.knifePlaceholder)}
             autoFocus={Boolean(prefilledClientId)}
           />
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Сталь</label>
+          <label className={s.label}>{t.sharpening.steelLabel}</label>
           <Autocomplete
             value={steel}
             onChange={setSteel}
             onSelect={setSteel}
             suggestions={steelSuggestions}
-            placeholder={dictation.isActive ? 'сталь ...' : 'AUS-8, D2...'}
+            placeholder={dictation.isActive ? t.sharpening.steelDictation : t.sharpening.steelPlaceholder}
           />
         </div>
 
@@ -647,14 +647,14 @@ export default function SharpeningForm() {
             <input
               value={hrc}
               onChange={e => setHrc(e.target.value)}
-              placeholder={dictation.isActive ? 'твёрдость ...' : '58'}
+              placeholder={dictation.isActive ? t.sharpening.hardnessDictation : t.sharpening.hardnessPlaceholder}
               type="number"
               min={0}
               max={70}
             />
           </div>
           <div className={s.field}>
-            <label className={s.label}>Дата приёмки</label>
+            <label className={s.label}>{t.sharpening.receivedDateLabel}</label>
             <input
               value={receivedAt}
               onChange={e => setReceivedAt(e.target.value)}
@@ -664,7 +664,7 @@ export default function SharpeningForm() {
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Требуется</label>
+          <label className={s.label}>{t.sharpening.conditionLabel}</label>
           <div className={s.chips}>
             {CONDITIONS.map(c => (
               <button
@@ -679,11 +679,11 @@ export default function SharpeningForm() {
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Цена, ₽</label>
+          <label className={s.label}>{t.sharpening.priceLabel}</label>
           <input
             value={price}
             onChange={e => setPrice(e.target.value)}
-            placeholder={dictation.isActive ? 'цена ...' : '500'}
+            placeholder={dictation.isActive ? t.sharpening.priceDictation : t.sharpening.pricePlaceholder}
             type="number"
             min={0}
           />
@@ -692,7 +692,7 @@ export default function SharpeningForm() {
         {/* Фото «До» */}
         <div className={s.photoSection}>
           <span className={s.photoTitle}>
-            Фото «До»{photosBefore.length > 0 ? ` · ${photosBefore.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
+            {t.sharpening.photoBefore}{photosBefore.length > 0 ? t.sharpening.photoCount(photosBefore.length, PHOTO_LIMIT) : t.sharpening.photoOptional}
           </span>
           {photosBefore.length > 0 && (
             <div className={s.photoThumbs}>
@@ -717,18 +717,18 @@ export default function SharpeningForm() {
             onClick={() => setPickerOpen(true)}
           >
             <span className={s.photoAddIcon}><IconCamera /></span>
-            {photosBefore.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
+            {photosBefore.length >= PHOTO_LIMIT ? t.sharpening.photoLimit : t.sharpening.addPhoto}
           </button>
         </div>
 
         <div className={s.actions}>
           {isEdit ? (
             <button className={s.primaryBtn} onClick={() => handleSave()} disabled={saving}>
-              {saving ? 'Сохранение…' : 'Сохранить'}
+              {saving ? t.sharpening.saving : t.common.save}
             </button>
           ) : (
             <button className={s.primaryBtn} onClick={() => handleSave()} disabled={!canProceed || saving}>
-              {saving ? 'Сохранение…' : 'Принять в заточку'}
+              {saving ? t.sharpening.saving : t.sharpening.accept}
             </button>
           )}
         </div>
