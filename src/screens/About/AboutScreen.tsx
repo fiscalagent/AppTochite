@@ -138,7 +138,7 @@ export default function AboutScreen() {
         <div className={s.linkList}>
           <button
             className={s.linkItem}
-            onClick={() => window.open('/AppTochite/guide.html', '_blank')}
+            onClick={() => window.open(`/AppTochite/guide${locale === 'en' ? '_en' : ''}.html`, '_blank')}
           >
             <span className={s.linkIcon}>📖</span>
             <span className={s.linkLabel}>{t.about.guide}</span>
@@ -207,7 +207,7 @@ export default function AboutScreen() {
                 <span className={s.changelogDate}>{entry.date}</span>
               </div>
               <ul className={s.changelogList}>
-                {entry.changes.map((change, i) => (
+                {(locale === 'en' && entry.changesEn ? entry.changesEn : entry.changes).map((change, i) => (
                   <li key={i}>{change}</li>
                 ))}
               </ul>

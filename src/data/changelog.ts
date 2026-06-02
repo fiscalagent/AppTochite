@@ -2,6 +2,7 @@ export interface ChangelogEntry {
   version: string
   date: string
   changes: string[]
+  changesEn?: string[]
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
@@ -18,6 +19,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'голосовой ввод теперь включён по умолчанию — отключается в настройках',
     ],
+    changesEn: [
+      'voice input is now enabled by default — can be turned off in settings',
+    ],
   },
   {
     version: '1.78.1',
@@ -26,12 +30,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'краш при удалении из справочника после авто-перевода страницы браузером',
       'подсказка о формате файла под кнопкой импорта ножей',
     ],
+    changesEn: [
+      'crash when deleting from the reference after browser auto-translation',
+      'hint about the file format below the knife import button',
+    ],
   },
   {
     version: '1.78.0',
     date: '2026-06-01',
     changes: [
       'подсказка под кнопкой импорта ножей — какой формат файла загружать',
+    ],
+    changesEn: [
+      'hint below the knife import button — which file format to upload',
     ],
   },
   {
@@ -42,6 +53,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       'импорт ножей из файла xlsx/csv с автоматическим распознаванием стали',
       'при выборе ножа подставляется его сталь, а нож сохраняется с учётом стали',
     ],
+    changesEn: [
+      'knife editing in the reference — "Edit" button on selection',
+      'knife import from xlsx/csv with automatic steel recognition',
+      'when a knife is selected its steel is filled in, and the knife is saved with steel information',
+    ],
   },
   {
     version: '1.77.0',
@@ -49,12 +65,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'Исправления и улучшения',
     ],
+    changesEn: [
+      'Bug fixes and improvements',
+    ],
   },
   {
     version: '1.76.0',
     date: '2026-06-01',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -64,12 +86,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'исправлен чёрный экран, который мог появиться при первом запуске на новом устройстве',
       'спрятали небольшую пасхалку — найдёте сами 🙂',
     ],
+    changesEn: [
+      'fixed black screen that could appear on first launch on a new device',
+      'added a small easter egg — find it yourself 🙂',
+    ],
   },
   {
     version: '1.74.0',
     date: '2026-05-30',
     changes: [
       'поддержать развитие приложения теперь можно переводом на карту — блок с номером в «Настройках», нажатие копирует номер',
+    ],
+    changesEn: [
+      'you can now support the app by card transfer — the number is in Settings, tap to copy',
     ],
   },
   {
@@ -78,12 +107,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'в справочнике камней — значение СОЖ «сухой» для камней без охлаждающей жидкости, находится по запросу *сухой',
     ],
+    changesEn: [
+      'in the stone reference — coolant value "dry" for stones without coolant, searchable via *dry',
+    ],
   },
   {
     version: '1.71.0',
     date: '2026-05-30',
     changes: [
       'под кнопкой «Поделиться бэкапом» — пояснение, почему файл сохраняется с расширением .txt',
+    ],
+    changesEn: [
+      'added a note below the Share Backup button explaining why the file is saved as .txt',
     ],
   },
   {
@@ -92,12 +127,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       '«Поделиться бэкапом» — расширение .txt вместо .json (Chrome Android фильтрует по расширению), импорт принимает оба',
     ],
+    changesEn: [
+      '"Share Backup" — .txt extension instead of .json (Chrome Android filters by extension), import accepts both',
+    ],
   },
   {
     version: '1.70.4',
     date: '2026-05-30',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -106,12 +147,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'исправлена кнопка «Поделиться бэкапом» — теперь надёжно открывает системное меню «Поделиться»',
     ],
+    changesEn: [
+      'fixed the Share Backup button — now reliably opens the system share sheet',
+    ],
   },
   {
     version: '1.70.2',
     date: '2026-05-30',
     changes: [
       'показывать настоящую ошибку шаринга в тосте — для диагностики',
+    ],
+    changesEn: [
+      'show the real share error in a toast — for diagnostics',
     ],
   },
   {
@@ -120,12 +167,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'кнопка «Поделиться бэкапом» — отправка через системное меню (Telegram, почта, облако)',
     ],
+    changesEn: [
+      '"Share Backup" button — send via system share sheet (Telegram, email, cloud)',
+    ],
   },
   {
     version: '1.70.0',
     date: '2026-05-30',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -134,6 +187,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'напоминание о бэкапе теперь нарастает: чем дольше не было бэкапа, тем заметнее подсказка — вплоть до постоянной плашки внизу экрана',
     ],
+    changesEn: [
+      'backup reminder now escalates: the longer since last backup, the more prominent the hint — up to a persistent banner at the bottom of the screen',
+    ],
   },
   {
     version: '1.68.0',
@@ -141,6 +197,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'перед обновлением структуры базы приложение делает резервный снимок данных — страховка на случай сбоя',
       'улучшена надёжность авто-бэкапа и работа корзины',
+    ],
+    changesEn: [
+      'before a database upgrade the app saves a safety snapshot — protection against failed migration',
+      'improved auto-backup reliability and trash behavior',
     ],
   },
   {
@@ -152,12 +212,21 @@ export const CHANGELOG: ChangelogEntry[] = [
       'автобэкап теперь хранит снимок за прошлый день — на случай если свежий бэкап испорчен',
       'форма заточки разделена на два экрана — приёмка и заточка с инлайн-редактированием',
     ],
+    changesEn: [
+      'merge backup no longer resurrects deleted clients and sharpenings from the trash',
+      'deleted clients and sharpenings go to the trash — can be restored within 3 days',
+      'auto-backup now keeps a snapshot from the previous day — in case the latest backup is corrupted',
+      'sharpening form split into two screens — intake and sharpening with inline editing',
+    ],
   },
   {
     version: '1.67.0',
     date: '2026-05-30',
     changes: [
       'удалённые клиенты и заточки теперь попадают в корзину — можно восстановить в течение 3 дней. Корзина — в разделе «О программе»',
+    ],
+    changesEn: [
+      'deleted clients and sharpenings now go to the trash — can be restored within 3 days. Trash is in the About section',
     ],
   },
   {
@@ -166,12 +235,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'Исправления и улучшения',
     ],
+    changesEn: [
+      'Bug fixes and improvements',
+    ],
   },
   {
     version: '1.65.0',
     date: '2026-05-27',
     changes: [
       'форма заточки разделена на два экрана — приёмка и заточка с редактированием прямо в списке',
+    ],
+    changesEn: [
+      'sharpening form split into two screens — intake and sharpening with inline editing',
     ],
   },
   {
@@ -180,12 +255,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'исправлен сбой при фотографировании на Android',
     ],
+    changesEn: [
+      'fixed a crash when taking photos on Android',
+    ],
   },
   {
     version: '1.64.4',
     date: '2026-05-26',
     changes: [
       'кнопка «назад» — выход из приложения за 1-2 нажатия',
+    ],
+    changesEn: [
+      '"back" button — exit the app in 1–2 taps',
     ],
   },
   {
@@ -194,12 +275,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'на шаге заточки — кнопки «Принято» и «Готово» вместо переключателя статуса',
     ],
+    changesEn: [
+      'on the sharpening step — "Accepted" and "Done" buttons instead of a status toggle',
+    ],
   },
   {
     version: '1.64.2',
     date: '2026-05-21',
     changes: [
       'кнопка «ЗАТОЧИТЬ» открывает шаг заточки',
+    ],
+    changesEn: [
+      '"SHARPEN" button opens the sharpening step',
     ],
   },
   {
@@ -210,12 +297,20 @@ export const CHANGELOG: ChangelogEntry[] = [
       'добавлена шкала гритности ГОСТ в справочнике камней',
       'корректное восстановление камней из старых бэкапов',
     ],
+    changesEn: [
+      'export and import of stone reference in CSV format',
+      'added GOST grit scale in the stone reference',
+      'correct restoration of stones from old backups',
+    ],
   },
   {
     version: '1.64.0',
     date: '2026-05-21',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -224,12 +319,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'Исправления и улучшения',
     ],
+    changesEn: [
+      'Bug fixes and improvements',
+    ],
   },
   {
     version: '1.62.2',
     date: '2026-05-21',
     changes: [
       'сортировка А-Я включает все камни, не только пользовательские',
+    ],
+    changesEn: [
+      'A–Z sort includes all stones, not just user-added ones',
     ],
   },
   {
@@ -239,12 +340,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'уведомления о сохранении показываются только при голосовом вводе',
       'после «Готово» — возврат к списку клиентов',
     ],
+    changesEn: [
+      'save notifications shown only during voice input',
+      'after "Done" — return to the client list',
+    ],
   },
   {
     version: '1.62.0',
     date: '2026-05-20',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -255,6 +363,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       'импорт камней из CSV и скачивание шаблона в справочнике',
       'сортировка камней по алфавиту (А-Я) в справочнике',
     ],
+    changesEn: [
+      'header buttons unavailable on iPhone in portrait orientation',
+      'stone import from CSV and template download in the reference',
+      'alphabetical stone sorting (A–Z) in the reference',
+    ],
   },
   {
     version: '1.61.0',
@@ -262,12 +375,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'Исправления и улучшения',
     ],
+    changesEn: [
+      'Bug fixes and improvements',
+    ],
   },
   {
     version: '1.60.0',
     date: '2026-05-20',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -277,12 +396,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'автобэкап запускается при старте приложения, а не только при возврате',
       'автобэкап больше не запрашивает разрешения',
     ],
+    changesEn: [
+      'auto-backup runs on app start, not only on return',
+      'auto-backup no longer asks for permissions',
+    ],
   },
   {
     version: '1.59.0',
     date: '2026-05-20',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -291,6 +417,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'исправлено поведение баннера бэкапа; ежедневный бэкап при восстановлении связи',
     ],
+    changesEn: [
+      'fixed backup banner behavior; daily backup on network reconnect',
+    ],
   },
   {
     version: '1.58.3',
@@ -298,12 +427,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'автобэкап без лишних запросов разрешений; ошибка записи показывает уведомление',
     ],
+    changesEn: [
+      'auto-backup without unnecessary permission prompts; write error shows a notification',
+    ],
   },
   {
     version: '1.58.2',
     date: '2026-05-20',
     changes: [
       'автобэкап запускается при возврате в приложение, а не при сворачивании',
+    ],
+    changesEn: [
+      'auto-backup runs on app resume, not on minimise',
     ],
   },
   {
@@ -315,12 +450,21 @@ export const CHANGELOG: ChangelogEntry[] = [
       'подсказки на полях формы при активной диктовке',
       'подсказка ввода твёрдости стала понятнее',
     ],
+    changesEn: [
+      'auto-backup without extra permission prompts',
+      '"Save as accepted" button on the intake step',
+      'field hints while dictation is active',
+      'hardness input hint made clearer',
+    ],
   },
   {
     version: '1.58.0',
     date: '2026-05-19',
     changes: [
       'Исправления и улучшения',
+    ],
+    changesEn: [
+      'Bug fixes and improvements',
     ],
   },
   {
@@ -329,6 +473,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'Исправления и улучшения',
     ],
+    changesEn: [
+      'Bug fixes and improvements',
+    ],
   },
   {
     version: '1.56.3',
@@ -336,12 +483,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'диктовка показывает список совпадений, когда их несколько (раньше применяла первое)',
     ],
+    changesEn: [
+      'dictation shows a match list when there are multiple matches (previously applied the first one)',
+    ],
   },
   {
     version: '1.56.2',
     date: '2026-05-18',
     changes: [
       'курсор сразу в поле клиента; серый цвет подсказки в выпадающем списке',
+    ],
+    changesEn: [
+      'cursor auto-focuses the client field; grey placeholder color in the dropdown',
     ],
   },
   {
@@ -351,6 +504,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       'диктовка распознаёт поля «твёрдость», «камни», «комментарий»',
       'поиск находит названия и на русском, и на латинице — «Grinderman» и «Гриндерман»',
     ],
+    changesEn: [
+      'dictation recognises "hardness", "stones", "comment" fields',
+      'search finds names in both Russian and Latin script — "Grinderman" and "Гриндерман"',
+    ],
   },
   {
     version: '1.56.0',
@@ -358,12 +515,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'Исправления и улучшения',
     ],
+    changesEn: [
+      'Bug fixes and improvements',
+    ],
   },
   {
     version: '1.55.2',
     date: '2026-05-18',
     changes: [
       'список клиентов открывается быстрее',
+    ],
+    changesEn: [
+      'client list opens faster',
     ],
   },
   {
@@ -376,6 +539,13 @@ export const CHANGELOG: ChangelogEntry[] = [
       'коррекции: очистить поле, удалить последний камень, стоп, повтори',
       'навигация, сохранение и подтверждение отмены голосом',
     ],
+    changesEn: [
+      'dictation mode in the sharpening form — toggle button and "I hear" indicator in the header',
+      'continuous speech recognition, works alongside per-field voice input',
+      'voice commands for intake and sharpening, adding stones, selecting from match list',
+      'corrections: clear field, delete last stone, stop, repeat',
+      'navigation, saving and cancellation by voice',
+    ],
   },
   {
     version: '1.54.1',
@@ -384,12 +554,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'исправлена работа аналитики',
       'голосовой довыбор сужает список и слушает продолжение — grinderman → 120 → FEPA',
     ],
+    changesEn: [
+      'fixed analytics',
+      'voice narrowing narrows the list and keeps listening — grinderman → 120 → FEPA',
+    ],
   },
   {
     version: '1.53.2',
     date: '2026-05-17',
     changes: [
       'автодополнение ножа дополняет историю клиента полным справочником, а не заменяет его',
+    ],
+    changesEn: [
+      'knife autocomplete merges the client\'s history with the full reference instead of replacing it',
     ],
   },
   {
@@ -398,6 +575,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'довыбор из списка совпадений голосом — «8» выбирает AUS-8',
       'после списка микрофон сам слушает уточнение, не закрываясь между поиском и довыбором',
+    ],
+    changesEn: [
+      'voice selection from a match list — "8" selects AUS-8',
+      'after the list the mic keeps listening for a refinement without closing between search and selection',
     ],
   },
   {
@@ -408,6 +589,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       'голосовой ввод клиента и твёрдости, лучше распознаёт русское произношение',
       'список совпадений выбирается нажатием',
     ],
+    changesEn: [
+      'voice search via a separate match list below the field',
+      'voice input for client and hardness, better Russian pronunciation recognition',
+      'match list items selectable by tap',
+    ],
   },
   {
     version: '1.49.1',
@@ -415,6 +601,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'голосовой ввод сталей, ножей и камней — выбор из справочника',
       'распознаёт неточно произнесённые названия',
+    ],
+    changesEn: [
+      'voice input for steels, knives and stones — select from reference',
+      'recognises imprecisely pronounced names',
     ],
   },
   {
@@ -424,6 +614,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       'голосовой ввод полей формы заточки (бета, включается в настройках)',
       'два автобэкапа — при закрытии и ежедневный с датой в имени файла',
     ],
+    changesEn: [
+      'voice input for sharpening form fields (beta, enable in settings)',
+      'two auto-backups — on close and daily with date in the file name',
+    ],
   },
   {
     version: '1.45.7',
@@ -431,6 +625,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'формы добавления камня, стали и ножа — по центру экрана с затемнением фона',
       'аналитика работает офлайн — данные отправляются при восстановлении сети',
+    ],
+    changesEn: [
+      'stone, steel and knife add forms — centered on screen with background dimming',
+      'analytics works offline — data is sent when the network is restored',
     ],
   },
   {
@@ -440,6 +638,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       'выравнивание пунктов в секции «Настройки» в «О программе»',
       'подсказки похожих названий при добавлении камня',
     ],
+    changesEn: [
+      'alignment of items in the Settings section in About',
+      'similar-name hints when adding a stone',
+    ],
   },
   {
     version: '1.43.5',
@@ -447,12 +649,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'пробел между гритностью и единицей измерения (1000 FEPA, 2000 JIS)',
     ],
+    changesEn: [
+      'space between grit value and unit (1000 FEPA, 2000 JIS)',
+    ],
   },
   {
     version: '1.43.3',
     date: '2026-05-15',
     changes: [
       'точный поиск по пробелу — «120 » больше не находит 1200',
+    ],
+    changesEn: [
+      'exact search with a trailing space — "120 " no longer finds 1200',
     ],
   },
   {
@@ -465,6 +673,13 @@ export const CHANGELOG: ChangelogEntry[] = [
       'аналитика использования (можно отключить в «О программе»)',
       'единая кнопка «Поделиться» с выбором источника',
     ],
+    changesEn: [
+      'welcome screen on first launch and link to guide in About',
+      'multi-word search — "GRIN 120" finds Grinderman OA CLR 120',
+      'backup merge on import, "other" stone type',
+      'usage analytics (can be disabled in About)',
+      'unified Share button with source selection',
+    ],
   },
   {
     version: '1.39.1',
@@ -474,12 +689,20 @@ export const CHANGELOG: ChangelogEntry[] = [
       'тепловая карта камней — шире колонка названия',
       'справочник камней расширен до 101 позиции',
     ],
+    changesEn: [
+      'coolant field (water/oil) for stones + search *water / *oil',
+      'stone heatmap — wider name column',
+      'stone reference expanded to 101 entries',
+    ],
   },
   {
     version: '1.37.1',
     date: '2026-05-14',
     changes: [
       'поделиться фото «до/после» с водяным знаком @AppTochite',
+    ],
+    changesEn: [
+      'share before/after photo with @AppTochite watermark',
     ],
   },
   {
@@ -488,6 +711,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'имя заказчика вынесено под название ножа на экране заточки',
     ],
+    changesEn: [
+      'customer name shown below the knife name on the sharpening screen',
+    ],
   },
   {
     version: '1.36.4',
@@ -495,12 +721,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'иконка тепловой карты — график вместо сетки',
     ],
+    changesEn: [
+      'heatmap icon — chart instead of grid',
+    ],
   },
   {
     version: '1.36.3',
     date: '2026-05-14',
     changes: [
       'тепловая карта показывает число использований вместо процентов',
+    ],
+    changesEn: [
+      'heatmap shows usage count instead of percentages',
     ],
   },
   {
@@ -510,6 +742,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       'автобэкап в выбранную папку',
       'кнопка «Включить автобэкап» прямо в напоминалке о бэкапе',
     ],
+    changesEn: [
+      'auto-backup to a chosen folder',
+      '"Enable auto-backup" button directly in the backup reminder',
+    ],
   },
   {
     version: '1.34.4',
@@ -518,12 +754,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'выбор ножа, стали и камня в форме заточки — одно нажатие, прокрутка списка не приводит к случайному выбору',
       'название ножа подстраивается по ширине угла',
     ],
+    changesEn: [
+      'knife, steel and stone selection in the sharpening form — single tap, scrolling the list does not trigger accidental selection',
+      'knife name adjusts to the width of the angle',
+    ],
   },
   {
     version: '1.34.2',
     date: '2026-05-13',
     changes: [
       'камни оборачиваются в пределах тёмного угла, правое выравнивание для правого тёмного угла',
+    ],
+    changesEn: [
+      'stones wrap within the dark angle area, right-aligned for the right dark angle',
     ],
   },
   {
@@ -534,6 +777,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       'аккуратное размещение текста и тонкий шрифт в фото-отчёте',
       'градиент фото-отчёта затемняет оба верхних угла',
     ],
+    changesEn: [
+      'photo report — sharpening angle in the top right corner',
+      'neat text layout and thin font in the photo report',
+      'photo report gradient dims both top corners',
+    ],
   },
   {
     version: '1.32.1',
@@ -542,12 +790,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'превью фото-отчёта не обрезает нижний блок камней на портретных фото',
       'убрана кнопка отправки заточки клиенту в Telegram',
     ],
+    changesEn: [
+      'photo report preview does not crop the bottom stone block on portrait photos',
+      'removed the button to send a sharpening to the client via Telegram',
+    ],
   },
   {
     version: '1.31.2',
     date: '2026-05-12',
     changes: [
       'фото-отчёт — финишный камень не обрезается',
+    ],
+    changesEn: [
+      'photo report — finish stone no longer cropped',
     ],
   },
   {
@@ -557,12 +812,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'фото-отчёт заточки с подписями камней и стали',
       'отправка заточки клиенту в Telegram из карточки записи',
     ],
+    changesEn: [
+      'sharpening photo report with stone and steel labels',
+      'send sharpening to client via Telegram from the record card',
+    ],
   },
   {
     version: '1.29.6',
     date: '2026-05-11',
     changes: [
       'двойной тап для выбора из выпадающего списка в форме заточки',
+    ],
+    changesEn: [
+      'double-tap to select from the dropdown in the sharpening form',
     ],
   },
   {
@@ -571,12 +833,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'конвертер гритностей — удобнее на ПК, шкала мкм, прокрутка колёсиком и касанием',
     ],
+    changesEn: [
+      'grit converter — better on desktop, µm scale, scroll wheel and touch',
+    ],
   },
   {
     version: '1.29.0',
     date: '2026-05-07',
     changes: [
       'ссылки на Telegram-группу и Boosty в разделе «Настройки»',
+    ],
+    changesEn: [
+      'links to Telegram group and Boosty in the Settings section',
     ],
   },
   {
@@ -585,12 +853,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'аватарки клиентов — фото из камеры или галереи',
     ],
+    changesEn: [
+      'client avatars — photo from camera or gallery',
+    ],
   },
   {
     version: '1.27.3',
     date: '2026-05-06',
     changes: [
       'в справочнике камней — бейдж «Мой» при редактировании стандартного камня',
+    ],
+    changesEn: [
+      'in the stone reference — "Mine" badge when editing a standard stone',
     ],
   },
   {
@@ -599,12 +873,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'двуцветная эмблема AppTochite на основных экранах',
     ],
+    changesEn: [
+      'two-colour AppTochite logo on main screens',
+    ],
   },
   {
     version: '1.26.8',
     date: '2026-05-06',
     changes: [
       'таблица гритностей обновлена: 33 строки с микронами, добавлены FEPA 90 и 180',
+    ],
+    changesEn: [
+      'grit table updated: 33 rows with microns, added FEPA 90 and 180',
     ],
   },
   {
@@ -613,12 +893,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'в конвертере гритностей добавлена шкала мкм (D50)',
     ],
+    changesEn: [
+      'µm (D50) scale added to the grit converter',
+    ],
   },
   {
     version: '1.25.6',
     date: '2026-05-05',
     changes: [
       'таблица гритностей дополнена: JIS 320 / 1200 / 6000 с соответствиями FEPA и ГОСТ',
+    ],
+    changesEn: [
+      'grit table extended: JIS 320 / 1200 / 6000 with FEPA and GOST equivalents',
     ],
   },
   {
@@ -627,12 +913,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'конвертер гритностей в справочнике камней: барабаны FEPA / JIS / мкм',
     ],
+    changesEn: [
+      'grit converter in the stone reference: FEPA / JIS / µm drums',
+    ],
   },
   {
     version: '1.24.0',
     date: '2026-05-05',
     changes: [
       'в списке камней — ближайшие значения гритности выше и ниже основного',
+    ],
+    changesEn: [
+      'in the stone list — nearest grit values above and below the main one',
     ],
   },
   {
@@ -641,12 +933,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'в форме редактирования камня — ручное переопределение гритности в каждой шкале отдельно',
     ],
+    changesEn: [
+      'in the stone edit form — manual grit override for each scale separately',
+    ],
   },
   {
     version: '1.22.0',
     date: '2026-05-05',
     changes: [
       'при смене шкалы гритности в форме редактирования — значение конвертируется автоматически',
+    ],
+    changesEn: [
+      'when changing the grit scale in the edit form — value is converted automatically',
     ],
   },
   {
@@ -656,12 +954,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'в справочнике камней — конвертер гритности: переключение между FEPA, JIS и ГОСТ',
       'личные камни идут первыми и сортируются по выбранной шкале',
     ],
+    changesEn: [
+      'in the stone reference — grit converter: switch between FEPA, JIS and GOST',
+      'personal stones listed first, sorted by the selected scale',
+    ],
   },
   {
     version: '1.20.0',
     date: '2026-05-03',
     changes: [
       'в форме заточки — поле «Нож» подсказывает ножи из истории клиента',
+    ],
+    changesEn: [
+      'in the sharpening form — the Knife field suggests knives from the client\'s history',
     ],
   },
   {
@@ -670,12 +975,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'в справочнике камней — редактирование записи: выберите камень и нажмите «Изменить»',
     ],
+    changesEn: [
+      'in the stone reference — record editing: select a stone and press "Edit"',
+    ],
   },
   {
     version: '1.18.0',
     date: '2026-05-03',
     changes: [
       'подсказки ножей в форме заточки сортируются по частоте использования',
+    ],
+    changesEn: [
+      'knife suggestions in the sharpening form sorted by usage frequency',
     ],
   },
   {
@@ -685,12 +996,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'в справочнике камней — поиск по типу абразива через * (например, *алмаз)',
       'исправлен тип абразива у камня TSPROF Alpha (был «гальваника», стал «алмаз»)',
     ],
+    changesEn: [
+      'in the stone reference — search by abrasive type via * (e.g. *diamond)',
+      'fixed the abrasive type of TSPROF Alpha stone (was "galvanic", now "diamond")',
+    ],
   },
   {
     version: '1.16.0',
     date: '2026-05-03',
     changes: [
       'в справочнике сталей убран рекомендуемый угол заточки',
+    ],
+    changesEn: [
+      'removed the recommended sharpening angle from the steel reference',
     ],
   },
   {
@@ -699,12 +1017,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'на экране заточки фото ножа выделено как обложка',
     ],
+    changesEn: [
+      'on the sharpening screen the knife photo is shown as a cover image',
+    ],
   },
   {
     version: '1.14.0',
     date: '2026-04-29',
     changes: [
       'в карточке клиента заточки разбиты на страницы по 10',
+    ],
+    changesEn: [
+      'client card shows sharpenings paginated by 10',
     ],
   },
   {
@@ -714,12 +1038,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'кнопка «Повторить заточку» в карточке клиента',
       'добавлены камни из каталога TSPROF',
     ],
+    changesEn: [
+      '"Repeat sharpening" button in the client card',
+      'added stones from the TSPROF catalogue',
+    ],
   },
   {
     version: '1.12.0',
     date: '2026-04-29',
     changes: [
       'финишный камень — плашка FIN и учёт в тепловой карте',
+    ],
+    changesEn: [
+      'finishing stone — FIN label and counted in the heatmap',
     ],
   },
   {
@@ -730,12 +1061,20 @@ export const CHANGELOG: ChangelogEntry[] = [
       'в карточке клиента — фильтр по ножу (появляется при двух и более разных ножах)',
       'в справочнике ножей — поле «Сталь» с автодополнением',
     ],
+    changesEn: [
+      'in the history feed — knife photo on the card',
+      'in the client card — filter by knife (appears when there are two or more different knives)',
+      'in the knife reference — Steel field with autocomplete',
+    ],
   },
   {
     version: '1.9.1',
     date: '2026-04-29',
     changes: [
       'прогресс-бар занятого хранилища в настройках',
+    ],
+    changesEn: [
+      'storage usage progress bar in settings',
     ],
   },
   {
@@ -745,6 +1084,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       'справочники расширены: 890 ножей, 219 сталей, 450+ камней',
       'добавлен тип абразива «керамика»',
     ],
+    changesEn: [
+      'references expanded: 890 knives, 219 steels, 450+ stones',
+      'added "ceramic" abrasive type',
+    ],
   },
   {
     version: '1.6.0',
@@ -753,12 +1096,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       'тепловая карта камней перенесена в иконку в шапке, открывается отдельным экраном',
       'лимит при импорте бэкапа увеличен с 50 до 200 МБ',
     ],
+    changesEn: [
+      'stone heatmap moved to the header icon, opens as a separate screen',
+      'backup import limit increased from 50 to 200 MB',
+    ],
   },
   {
     version: '1.5.0',
     date: '2026-04-27',
     changes: [
       'в справочнике камней — тепловая карта: наглядно видно, какие камни используются чаще',
+    ],
+    changesEn: [
+      'in the stone reference — heatmap: visually shows which stones are used most',
     ],
   },
   {
@@ -767,6 +1117,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'поиск по комментарию в истории — в строке видно фрагмент с найденным словом',
     ],
+    changesEn: [
+      'search by comment in history — the matching fragment is shown in the row',
+    ],
   },
   {
     version: '1.3.0',
@@ -774,12 +1127,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     changes: [
       'добавлен тип абразива «иное»',
     ],
+    changesEn: [
+      'added abrasive type "other"',
+    ],
   },
   {
     version: '1.1.0',
     date: '2026-04-26',
     changes: [
       'предупреждение при открытии в Telegram и других встроенных браузерах',
+    ],
+    changesEn: [
+      'warning when opening in Telegram and other in-app browsers',
     ],
   },
   {
@@ -803,6 +1162,25 @@ export const CHANGELOG: ChangelogEntry[] = [
       'предупреждение при заполнении хранилища',
       'экспорт бэкапа в JSON и CSV, восстановление из файла',
       'экран «О программе» с версией и ченджлогом',
+    ],
+    changesEn: [
+      'first public release',
+      'client and sharpening log with before/after photos',
+      'select photo from gallery or camera, limit of 5 photos per sharpening',
+      'full-screen photo viewer',
+      'sharpening statuses: Accepted / Done',
+      'references: stones, steels, knives (300+ entries)',
+      'grit units: FEPA / JIS / µm, optional field',
+      'abrasive type: 7 values instead of a free-text field',
+      'job type in the intake form',
+      'add a new stone directly from the sharpening form',
+      'multi-select and delete in references, "Select all" button',
+      'search clients and history, clickable contacts',
+      'status counters in the client list',
+      'backup reminder every 7 days',
+      'storage warning when full',
+      'backup export to JSON and CSV, restore from file',
+      'About screen with version and changelog',
     ],
   },
 ]

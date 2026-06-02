@@ -110,8 +110,11 @@ restore **не затрагиваются**, и данные пользоват�
 - ⏳ `recognition.lang` по локали (`useVoiceInput`)
 - ⏳ condition-парсер возвращает канонический ключ, а не русскую строку
 
-## Фаза 4 — Контент и витрина
+## Фаза 4 — Контент и витрина ✅ (частично)
 
-- ⏳ changelog — отдельная en-лента (историю не переводим)
-- ⏳ presentation/*.html, docs/guide.html, onepager — локализация маркетинга
+- ✅ changelog — поле `changesEn?: string[]` в `ChangelogEntry`; все 58 записей переведены.
+  `AboutScreen` показывает `changesEn` при `locale === 'en'`, `changes` иначе.
+- ✅ `docs/guide_en.html` — полный перевод гайда на английский (2 страницы A4, та же структура).
+  Ссылка в About адаптирована: `guide_en.html` для EN, `guide.html` для RU.
+- ⏳ `presentation/*.html`, `onepager.html` — при необходимости
 - ⏳ store-листинги
