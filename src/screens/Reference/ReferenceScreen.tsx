@@ -10,6 +10,7 @@ import { buildCSV } from '../../utils/backup'
 import { normSteel } from '../../utils/steelMatch'
 import { readSpreadsheet, detectColumns, extractRows, prepareImport, type ColumnMapping, type SkipReason, type PreparedKnife } from '../../utils/knifeImport'
 import { startBlur } from '../../utils/modalBlur'
+import { enumLabel, useT, ru } from '../../i18n'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -27,42 +28,22 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'knives', label: 'Ножи' },
 ]
 
-const STONE_TYPE_LABELS: Record<string, string> = {
-  galvanic: 'гальваника',
-  ao: 'ОА',
-  kk: 'КК',
-  diamond: 'алмаз',
-  elbor: 'эльбор',
-  natural: 'природа',
-  pritir: 'притир',
-  ceramic: 'керамика',
-  other: 'другой тип',
+// Подписи типов абразива и СОЖ живут в словаре i18n (ru.enums) — единый источник.
+// Здесь строим обратные карты «подпись → канонический ключ» для разбора русского
+// CSV-формата и поиска по типу через `*`. CSV-формат и `*`-поиск завязаны на
+// русские подписи независимо от языка интерфейса, поэтому источник — статический ru.
+function invertLabels(map: Record<string, string>, exclude: readonly string[] = []): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const [key, label] of Object.entries(map)) {
+    if (exclude.includes(key)) continue
+    out[label.toLowerCase()] = key
+  }
+  return out
 }
 
-const STONE_TYPE_BY_LABEL: Record<string, Stone['type']> = {
-  'гальваника': 'galvanic',
-  'оа':         'ao',
-  'кк':         'kk',
-  'алмаз':      'diamond',
-  'эльбор':     'elbor',
-  'природа':    'natural',
-  'притир':     'pritir',
-  'керамика':   'ceramic',
-}
-
-const COOLANT_LABELS: Record<string, string> = {
-  water: 'вода',
-  oil:   'масло',
-  both:  'вода+масло',
-  dry:   'сухой',
-}
-
-const COOLANT_BY_LABEL: Record<string, StoneCoolant> = {
-  'вода':       'water',
-  'масло':      'oil',
-  'вода+масло': 'both',
-  'сухой':      'dry',
-}
+// 'other' исключён намеренно — как и в прежней карте, «другой тип» из CSV не парсится.
+const STONE_TYPE_BY_LABEL = invertLabels(ru.enums.stoneType, ['other'])
+const COOLANT_BY_LABEL = invertLabels(ru.enums.coolant)
 
 function SelectAllRow({
   total,
@@ -406,8 +387,8 @@ function downloadStonesCSV(stones: Stone[]) {
       st.gritFepa    ?? null,
       st.gritJis     ?? null,
       st.gritMk ? `\t${st.gritMk}` : null,
-      st.type    ? STONE_TYPE_LABELS[st.type]  : null,
-      st.coolant ? COOLANT_LABELS[st.coolant]  : null,
+      st.type    ? enumLabel(ru.enums.stoneType, st.type) : null,
+      st.coolant ? enumLabel(ru.enums.coolant, st.coolant) : null,
     ]),
   ])
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
@@ -476,8 +457,8 @@ function parseStonesCSV(text: string): ParsedStoneRow[] {
     result.push({
       brand,
       ...gritFields,
-      type:    typeLabel    ? STONE_TYPE_BY_LABEL[typeLabel]  : undefined,
-      coolant: coolantLabel ? COOLANT_BY_LABEL[coolantLabel]  : undefined,
+      type:    (typeLabel    ? STONE_TYPE_BY_LABEL[typeLabel]  : undefined) as Stone['type'] | undefined,
+      coolant: (coolantLabel ? COOLANT_BY_LABEL[coolantLabel]  : undefined) as StoneCoolant | undefined,
     })
   }
 
@@ -509,6 +490,7 @@ function fuzzyScore(query: string, target: string): number {
 // ─── Stones ──────────────────────────────────────────────────────────────────
 
 function StonesTab({ search }: { search: string }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [brand, setBrand] = useState('')
   const [gritSource, setGritSource] = useState<GritSource | ''>('')
@@ -544,8 +526,8 @@ function StonesTab({ search }: { search: string }) {
       if (!q) return true
       const matchedTypes = Object.entries(STONE_TYPE_BY_LABEL)
         .filter(([label]) => label.includes(q))
-        .map(([, t]) => t)
-      if (matchedTypes.length > 0) return matchedTypes.includes(st.type as Stone['type'])
+        .map(([, key]) => key)
+      if (matchedTypes.length > 0) return st.type != null && matchedTypes.includes(st.type)
       if ('вода'.includes(q)) return st.coolant === 'water' || st.coolant === 'both' || st.coolant === 'dry'
       if ('масло'.includes(q)) return st.coolant === 'oil' || st.coolant === 'both' || st.coolant === 'dry'
       if ('сухой'.includes(q)) return st.coolant === 'dry'
@@ -920,7 +902,7 @@ function StonesTab({ search }: { search: string }) {
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{st.brand}</div>
                 <div className={s.itemMeta}>
-                  {[st.type ? STONE_TYPE_LABELS[st.type] : '', st.coolant ? COOLANT_LABELS[st.coolant] : ''].filter(Boolean).join(' · ')}
+                  {[enumLabel(t.enums.stoneType, st.type), enumLabel(t.enums.coolant, st.coolant)].filter(Boolean).join(' · ')}
                 </div>
               </div>
               <div className={s.itemRight}>
