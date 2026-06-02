@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
 import { ToastProvider } from './components/Toast/ToastContext'
 import { AutoBackupProvider } from './contexts/AutoBackupContext'
+import { LocaleProvider } from './i18n'
 import BackupReminder from './components/BackupReminder/BackupReminder'
 import StorageWarning from './components/StorageWarning/StorageWarning'
 import BrowserWarning from './components/BrowserWarning/BrowserWarning'
@@ -37,14 +38,16 @@ export default function App() {
   }, [])
 
   return (
-    <ToastProvider>
-      <AutoBackupProvider>
-        <ErrorBoundary name="BrowserWarning"><BrowserWarning /></ErrorBoundary>
-        <RouterProvider router={router} />
-        <ErrorBoundary name="BackupReminder"><BackupReminder /></ErrorBoundary>
-        <ErrorBoundary name="StorageWarning"><StorageWarning /></ErrorBoundary>
-        <ErrorBoundary name="OnboardingSheet"><OnboardingSheet /></ErrorBoundary>
-      </AutoBackupProvider>
-    </ToastProvider>
+    <LocaleProvider>
+      <ToastProvider>
+        <AutoBackupProvider>
+          <ErrorBoundary name="BrowserWarning"><BrowserWarning /></ErrorBoundary>
+          <RouterProvider router={router} />
+          <ErrorBoundary name="BackupReminder"><BackupReminder /></ErrorBoundary>
+          <ErrorBoundary name="StorageWarning"><StorageWarning /></ErrorBoundary>
+          <ErrorBoundary name="OnboardingSheet"><OnboardingSheet /></ErrorBoundary>
+        </AutoBackupProvider>
+      </ToastProvider>
+    </LocaleProvider>
   )
 }
