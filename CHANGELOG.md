@@ -1,3 +1,10 @@
+# [1.81.0](https://github.com/fiscalagent/AppTochite/compare/v1.80.0...v1.81.0) (2026-06-02)
+
+
+### feat
+
+* Фаза 3 i18n — голосовой ввод на двух языках ([](https://github.com/fiscalagent/AppTochite/commit/e92b3f3b6400366c29ba37a1b57090783995e7ea))
+
 # [1.80.0](https://github.com/fiscalagent/AppTochite/compare/v1.79.0...v1.80.0) (2026-06-02)
 
 
