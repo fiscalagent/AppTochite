@@ -718,22 +718,22 @@ function StonesTab({ search }: { search: string }) {
       {!open && selected.size === 0 && editingId === null && (
         <>
           <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
-            + Добавить камень
+            {t.reference.addStone}
           </button>
           <div className={s.csvActions}>
-            <button className={s.csvBtn} onClick={() => downloadStonesCSV(stones ?? [])}>⬇ Экспорт CSV</button>
-            <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>⬆ Загрузить CSV</button>
+            <button className={s.csvBtn} onClick={() => downloadStonesCSV(stones ?? [])}>{t.reference.exportCsv}</button>
+            <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>{t.reference.importCsv}</button>
           </div>
         </>
       )}
       {open && createPortal(
         <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
         <div className={s.dialog} onClick={e => e.stopPropagation()}>
-          <span className={s.addTitle}>Новый камень</span>
-          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
+          <span className={s.addTitle}>{t.reference.newStone}</span>
+          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder={t.reference.brandPlaceholder} autoFocus />
           {addBrandSuggestions.length > 0 && (
             <div className={s.fuzzySuggestions}>
-              <span className={s.fuzzyLabel}>Похожее в словаре:</span>
+              <span className={s.fuzzyLabel}>{t.reference.similarInDict}</span>
               <div className={s.fuzzyChips}>
                 {addBrandSuggestions.map(b => (
                   <button key={b} className={s.fuzzyChip} onClick={() => setBrand(b)}>{b}</button>
@@ -756,34 +756,34 @@ function StonesTab({ search }: { search: string }) {
             <input
               value={gritVal}
               onChange={e => setGritVal(e.target.value)}
-              placeholder={gritSource === 'microns' ? 'мкм, напр. 115' : `${gritSource.toUpperCase()}, напр. 1000`}
+              placeholder={gritSource === 'microns' ? t.reference.micronsHint : t.reference.gritHint(gritSource.toUpperCase())}
               type="number"
               min={1}
             />
           )}
           {gritSource === 'mk' && (
             <select className={s.select} value={gritMk} onChange={e => setGritMk(e.target.value)}>
-              <option value="">Выбрать мк</option>
+              <option value="">{t.reference.selectMk}</option>
               {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
             </select>
           )}
           <div className={s.addRow}>
             <select className={s.select} value={type} onChange={e => setType(e.target.value as Stone['type'] | '')}>
-              <option value="" disabled>выберите тип абразива</option>
+              <option value="" disabled>{t.reference.selectTypePlaceholder}</option>
               {Object.entries(t.enums.stoneType).map(([val, label]) => (
                 <option key={val} value={val}>{label}</option>
               ))}
             </select>
             <select className={s.select} value={coolant} onChange={e => setCoolant(e.target.value as StoneCoolant | '')}>
-              <option value="">СОЖ</option>
+              <option value="">{t.reference.coolantPlaceholder}</option>
               {Object.entries(t.enums.coolant).map(([val, label]) => (
                 <option key={val} value={val}>{label}</option>
               ))}
             </select>
           </div>
           <div className={s.addRow}>
-            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
+            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>{t.common.add}</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>{t.common.cancel}</button>
           </div>
         </div>
         </div>,
@@ -793,8 +793,8 @@ function StonesTab({ search }: { search: string }) {
       {editingId !== null && createPortal(
         <div className={s.dialogOverlay} onClick={cancelEdit}>
         <div className={s.dialog} onClick={e => e.stopPropagation()}>
-          <span className={s.addTitle}>Редактировать камень</span>
-          <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Suehiro, Naniwa...)" autoFocus />
+          <span className={s.addTitle}>{t.reference.editStone}</span>
+          <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder={t.reference.brandPlaceholder} autoFocus />
           <div className={s.gritUnitRow}>
             {(['fepa', 'jis', 'microns', 'mk'] as const).map(u => (
               <button
@@ -810,34 +810,34 @@ function StonesTab({ search }: { search: string }) {
             <input
               value={editGritVal}
               onChange={e => setEditGritVal(e.target.value)}
-              placeholder={editGritSource === 'microns' ? 'мкм, напр. 115' : `${editGritSource.toUpperCase()}, напр. 1000`}
+              placeholder={editGritSource === 'microns' ? t.reference.micronsHint : t.reference.gritHint(editGritSource.toUpperCase())}
               type="number"
               min={1}
             />
           )}
           {editGritSource === 'mk' && (
             <select className={s.select} value={editGritMk} onChange={e => setEditGritMk(e.target.value)}>
-              <option value="">Выбрать мк</option>
+              <option value="">{t.reference.selectMk}</option>
               {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
             </select>
           )}
           <div className={s.addRow}>
             <select className={s.select} value={editType} onChange={e => setEditType(e.target.value as Stone['type'] | '')}>
-              <option value="" disabled>выберите тип абразива</option>
+              <option value="" disabled>{t.reference.selectTypePlaceholder}</option>
               {Object.entries(t.enums.stoneType).map(([val, label]) => (
                 <option key={val} value={val}>{label}</option>
               ))}
             </select>
             <select className={s.select} value={editCoolant} onChange={e => setEditCoolant(e.target.value as StoneCoolant | '')}>
-              <option value="">СОЖ</option>
+              <option value="">{t.reference.coolantPlaceholder}</option>
               {Object.entries(t.enums.coolant).map(([val, label]) => (
                 <option key={val} value={val}>{label}</option>
               ))}
             </select>
           </div>
           <div className={s.addRow}>
-            <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>Отмена</button>
+            <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>{t.common.save}</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>{t.common.cancel}</button>
           </div>
         </div>
         </div>,
@@ -846,11 +846,11 @@ function StonesTab({ search }: { search: string }) {
 
       <div className={s.displayUnitRow}>
         {([
-          ['native', 'Своя'],
+          ['native', t.reference.unitNative],
           ['fepa',   'FEPA'],
           ['jis',    'JIS'],
-          ['gost',   'ГОСТ'],
-          ['alpha',  'А-Я'],
+          ['gost',   t.reference.unitGost],
+          ['alpha',  t.reference.unitAlpha],
         ] as [GritDisplayMode | 'alpha', string][]).map(([unit, label]) => (
           <button
             key={unit}
@@ -863,7 +863,7 @@ function StonesTab({ search }: { search: string }) {
       </div>
 
       <div className={s.list}>
-        {filtered.length === 0 && <p className={s.empty}>Камней нет</p>}
+        {filtered.length === 0 && <p className={s.empty}>{t.reference.stonesEmpty}</p>}
         {filtered.length > 0 && (
           <SelectAllRow
             total={filtered.length}
@@ -903,7 +903,7 @@ function StonesTab({ search }: { search: string }) {
                     </div>
                   )
                 })()}
-                {st.isCustom && <span className={s.customBadge}>мой</span>}
+                {st.isCustom && <span className={s.customBadge}>{t.reference.mineM}</span>}
               </div>
             </div>
           )
@@ -922,11 +922,11 @@ function StonesTab({ search }: { search: string }) {
       {importPreview !== null && createPortal(
         <div className={s.dialogOverlay} onClick={() => setImportPreview(null)}>
           <div className={s.dialog} onClick={e => e.stopPropagation()}>
-            <span className={s.addTitle}>Импорт камней</span>
+            <span className={s.addTitle}>{t.reference.importStones}</span>
             <div className={s.importStats}>
-              <span>Будет добавлено: <strong>{importPreview.toAdd.length}</strong></span>
+              <span>{t.reference.willAdd} <strong>{importPreview.toAdd.length}</strong></span>
               {importPreview.skipped > 0 && (
-                <span className={s.importSkipped}>Дубли пропущены: {importPreview.skipped}</span>
+                <span className={s.importSkipped}>{t.reference.dupSkipped(importPreview.skipped)}</span>
               )}
             </div>
             {importPreview.toAdd.length > 0 && (
@@ -946,12 +946,12 @@ function StonesTab({ search }: { search: string }) {
                   </div>
                 ))}
                 {importPreview.toAdd.length > 5 && (
-                  <div className={s.importPreviewMore}>...и ещё {importPreview.toAdd.length - 5}</div>
+                  <div className={s.importPreviewMore}>{t.reference.andMore(importPreview.toAdd.length - 5)}</div>
                 )}
               </div>
             )}
             {importPreview.toAdd.length === 0 && (
-              <p className={s.importSkipped}>Все камни уже есть в справочнике</p>
+              <p className={s.importSkipped}>{t.reference.allStonesExist}</p>
             )}
             <div className={s.addRow}>
               <button
@@ -959,14 +959,14 @@ function StonesTab({ search }: { search: string }) {
                 onClick={handleConfirmImport}
                 disabled={importPreview.toAdd.length === 0}
               >
-                Добавить {importPreview.toAdd.length > 0 ? importPreview.toAdd.length : ''}
+                {t.reference.addCount(importPreview.toAdd.length)}
               </button>
               <button
                 className={s.addBtn}
                 style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }}
                 onClick={() => setImportPreview(null)}
               >
-                Отмена
+                {t.common.cancel}
               </button>
             </div>
           </div>
