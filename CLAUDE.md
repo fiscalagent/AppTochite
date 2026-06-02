@@ -42,6 +42,15 @@ src/
   config/
     features.ts          # Feature flags: voiceInput (мастер-выключатель); isVoiceEnabled() читает localStorage
 
+  i18n/                  # Слой мультиязычности (см. docs/i18n-plan.md). Фаза 1: ru остаётся
+    locale.ts            # Тип Locale, чтение/запись языка в localStorage (вне бэкапа), <html lang>
+    plural.ts            # Универсальный plural() на Intl.PluralRules (ru + en)
+    format.ts            # fmtDate/fmtDateTime/fmtMoney/fmtNumber на Intl
+    dict/ru.ts           # Русский словарь — источник истины формы; Dict = typeof ru
+    dict/index.ts        # Карта dicts по локали (пока только ru)
+    LocaleProvider.tsx   # Провайдер + хуки useLocale/useT + тотальный enumLabel
+    index.ts             # Barrel — единая точка импорта
+
   db/
     db.ts                # Dexie-схема (v8) и все TypeScript-типы
     seed.ts              # Предзаполненные справочники (101 камень, 219 сталей, 890 ножей)
@@ -199,6 +208,27 @@ src/
 ```
 
 Стили — CSS Modules (`ComponentName.module.css` рядом с компонентом).
+
+---
+
+## Мультиязычность (i18n) — в работе
+
+Идёт поэтапный переход на мультиязычность (ru → ru/en). Полный план и статус: **`docs/i18n-plan.md`**.
+
+**Главный принцип (соблюдать строго):** локализация — ТОЛЬКО на границе отображения, **хранимые
+данные не мигрируются**. Каноническое значение в БД остаётся как есть; перевод через тотальные
+функции `value → label[locale]` с фолбэком на `raw`. Поэтому схема БД, формат бэкапа, merge и restore
+**не затрагиваются** — данные пользователя не страдают. Язык хранится в `localStorage` (вне бэкапа).
+
+Практика:
+- Текст в UI — через `useT()` (`import { useT } from '../i18n'`), а не хардкод-строкой
+- enum-подписи (тип камня, СОЖ, status, condition, country) — через `enumLabel(t.enums.X, value)`;
+  **дропдауны пишут в БД канонический ключ, а не подпись**
+- Даты/деньги — через `fmtDate`/`fmtMoney` по локали (не `toLocaleDateString('ru')`)
+- Словарь-эталон — `src/i18n/dict/ru.ts`; английский (`en.ts`) добавится в Фазе 2, TS заставит
+  заполнить все ключи
+- ⚠️ Валюта (символ ₽) и форма некоторых подписей (`status`: плашка `готов` vs CSV `Готово`) —
+  открытые решения, см. план
 
 ---
 
