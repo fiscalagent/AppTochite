@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useT } from '../../i18n'
 import s from './BottomNav.module.css'
 
 const IconClients = () => (
@@ -35,29 +36,30 @@ const IconPlus = () => (
 
 export default function BottomNav() {
   const navigate = useNavigate()
+  const t = useT()
 
   return (
     <nav className={s.nav}>
       <NavLink to="/" end replace className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
         <span className={s.tabIcon}><IconClients /></span>
-        <span className={s.tabLabel}>Клиенты</span>
+        <span className={s.tabLabel}>{t.nav.clients}</span>
       </NavLink>
 
       <div className={s.fabSlot}>
-        <button className={s.fab} onClick={() => navigate('/sharpenings/new')} aria-label="Новая заточка">
+        <button className={s.fab} onClick={() => navigate('/sharpenings/new')} aria-label={t.nav.newSharpening}>
           <IconPlus />
         </button>
-        <span className={s.fabLabel}>Заточка</span>
+        <span className={s.fabLabel}>{t.nav.sharpening}</span>
       </div>
 
       <NavLink to="/history" replace className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
         <span className={s.tabIcon}><IconHistory /></span>
-        <span className={s.tabLabel}>История</span>
+        <span className={s.tabLabel}>{t.nav.history}</span>
       </NavLink>
 
       <NavLink to="/reference/stones" replace className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
         <span className={s.tabIcon}><IconReference /></span>
-        <span className={s.tabLabel}>Справочник</span>
+        <span className={s.tabLabel}>{t.nav.reference}</span>
       </NavLink>
     </nav>
   )

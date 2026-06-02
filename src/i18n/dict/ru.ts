@@ -24,6 +24,15 @@ export const ru = {
     back: 'Назад',
   },
 
+  // Нижняя навигация (BottomNav)
+  nav: {
+    clients: 'Клиенты',
+    sharpening: 'Заточка',
+    newSharpening: 'Новая заточка',
+    history: 'История',
+    reference: 'Справочник',
+  },
+
   // enum-карты: канонический ключ из БД → подпись. Формулировки переиспользуют
   // существующие STONE_TYPE_LABELS / COOLANT_LABELS из ReferenceScreen.
   enums: {
