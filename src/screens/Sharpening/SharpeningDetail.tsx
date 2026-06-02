@@ -22,6 +22,7 @@ import DictationCandidates from '../../components/DictationCandidates/DictationC
 import { isVoiceEnabled } from '../../config/features'
 import { startBlur } from '../../utils/modalBlur'
 import { softDeleteSharpening } from '../../utils/trash'
+import { useLocale, enumLabel, localeTag, fmtMoney, type Locale } from '../../i18n'
 import s from './SharpeningDetail.module.css'
 
 const IconChevronLeft = () => (
@@ -66,8 +67,8 @@ function parseStoneName(name: string): { brand: string } & Partial<ReturnType<ty
 
 const PHOTO_LIMIT = 5
 
-function formatDate(date: Date | string) {
-  return new Date(date).toLocaleDateString('ru-RU', {
+function formatDate(date: Date | string, locale: Locale) {
+  return new Date(date).toLocaleDateString(localeTag(locale), {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 }
@@ -78,6 +79,7 @@ export default function SharpeningDetail() {
   const location = useLocation()
   const sharpeningId = Number(id)
   const { showToast, setRaisedMode } = useToast()
+  const { t, locale } = useLocale()
   const { openCamera, openGallery } = useCamera()
 
   // Пришли сюда сразу после «Принять в заточку» (Z-1 → Z-2)?
@@ -438,9 +440,9 @@ export default function SharpeningDetail() {
         photosAfter: photosAfter.length ? photosAfter : undefined,
         updatedAt: new Date(),
       })
-      showToast('Сохранено')
+      showToast(t.sharpening.saved)
     } catch {
-      showToast('Ошибка при сохранении')
+      showToast(t.sharpening.saveError)
     } finally {
       setSaving(false)
     }
@@ -461,7 +463,7 @@ export default function SharpeningDetail() {
       })
       navigate('/')
     } catch {
-      showToast('Ошибка при сохранении')
+      showToast(t.sharpening.saveError)
       setSaving(false)
     }
   }
@@ -478,19 +480,19 @@ export default function SharpeningDetail() {
     if (leavingRef.current) return
     leavingRef.current = true
     await softDeleteSharpening(db, sharpeningId)
-    showToast('Заточка перемещена в корзину')
+    showToast(t.sharpening.movedToTrash)
     navigate(-1)
   }
 
   if (sh === undefined) return null
   if (sh === null || sh.deletedAt) return (
-    <div style={{ padding: 16, color: 'var(--text-300)' }}>Запись не найдена</div>
+    <div style={{ padding: 16, color: 'var(--text-300)' }}>{t.sharpening.notFound}</div>
   )
 
   const isCoverAfter = photosAfter.length > 0
   const sharePhotos: SharePhoto[] = [
-    ...(sh.photosBefore ?? []).map(b64 => ({ b64, label: 'До' })),
-    ...photosAfter.map(b64 => ({ b64, label: 'После' })),
+    ...(sh.photosBefore ?? []).map(b64 => ({ b64, label: t.sharpening.photoBeforeBadge })),
+    ...photosAfter.map(b64 => ({ b64, label: t.sharpening.photoAfterBadge })),
   ]
   const hasPhotos = (sh.photosBefore?.length ?? 0) > 0 || photosAfter.length > 0
 
@@ -508,7 +510,7 @@ export default function SharpeningDetail() {
           />
         )}
         <Link to={`/sharpenings/${sharpeningId}/edit`}>
-          <button className={s.editBtn}>Изменить</button>
+          <button className={s.editBtn}>{t.sharpening.editBtn}</button>
         </Link>
       </div>
 
@@ -534,12 +536,12 @@ export default function SharpeningDetail() {
         <div className={s.statusInfo}>
           <StatusPill status={sh.status} />
           <span className={s.statusDate}>
-            принят {formatDate(sh.receivedAt)}
-            {sh.doneAt && ` · готов ${formatDate(sh.doneAt)}`}
+            {t.sharpening.acceptedAt(formatDate(sh.receivedAt, locale))}
+            {sh.doneAt && t.sharpening.doneAtSuffix(formatDate(sh.doneAt, locale))}
           </span>
         </div>
         {sh.price != null && (
-          <span className={s.price}>{sh.price} ₽</span>
+          <span className={s.price}>{fmtMoney(locale, sh.price)}</span>
         )}
       </div>
 
@@ -554,14 +556,14 @@ export default function SharpeningDetail() {
 
       {/* Knife info — read-only */}
       <div className={s.card}>
-        <div className={s.sectionTitle}>Нож</div>
+        <div className={s.sectionTitle}>{t.sharpening.knifeSection}</div>
         <div className={s.row}>
-          <span className={s.rowLabel}>Бренд</span>
+          <span className={s.rowLabel}>{t.sharpening.brandLabel}</span>
           <span className={s.rowValue}>{sh.knifeBrand}</span>
         </div>
         {sh.steel && (
           <div className={s.row}>
-            <span className={s.rowLabel}>Сталь</span>
+            <span className={s.rowLabel}>{t.sharpening.steelLabel}</span>
             <span className={s.rowValue}>{sh.steel}{sh.hrc ? ` · ${sh.hrc} HRC` : ''}</span>
           </div>
         )}
@@ -569,10 +571,10 @@ export default function SharpeningDetail() {
           <>
             <div className={s.divider} />
             <div>
-              <div className={s.sectionTitle}>Состояние</div>
+              <div className={s.sectionTitle}>{t.sharpening.conditionSection}</div>
               <div className={s.chips}>
                 {sh.condition.map(c => (
-                  <span key={c} className={s.chip}>{c}</span>
+                  <span key={c} className={s.chip}>{enumLabel(t.enums.condition, c)}</span>
                 ))}
               </div>
             </div>
@@ -584,7 +586,7 @@ export default function SharpeningDetail() {
       {sh.photosBefore && sh.photosBefore.length > 0 && (
         <div className={s.card}>
           <div className={s.photoSection}>
-            <div className={s.photoSectionTitle}>Фото «До»</div>
+            <div className={s.photoSectionTitle}>{t.sharpening.photoBefore}</div>
             <div className={s.photoScroll}>
               {sh.photosBefore.map((src, i) => {
                 const isCover = !isCoverAfter && i === 0
@@ -596,7 +598,7 @@ export default function SharpeningDetail() {
                       alt=""
                       onClick={() => setLightbox({ photos: sh.photosBefore!, index: i })}
                     />
-                    {isCover && <span className={s.coverBadge}>обложка</span>}
+                    {isCover && <span className={s.coverBadge}>{t.sharpening.cover}</span>}
                     <button className={s.photoRemove} onClick={() => handleRemovePhotoBefore(i)}>×</button>
                   </div>
                 )
@@ -609,11 +611,11 @@ export default function SharpeningDetail() {
       {/* Sharpening fields — inline editable */}
       <div className={s.sharpeningForm}>
         <div className={s.field}>
-          <label className={s.fieldLabel}>Угол заточки, °</label>
+          <label className={s.fieldLabel}>{t.sharpening.angleLabel}</label>
           <input
             value={angle}
             onChange={e => setAngle(e.target.value)}
-            placeholder="15"
+            placeholder={t.sharpening.anglePlaceholder}
             type="number"
             min={1}
             max={45}
@@ -621,7 +623,7 @@ export default function SharpeningDetail() {
         </div>
 
         <div className={s.field}>
-          <label className={s.fieldLabel}>Камни</label>
+          <label className={s.fieldLabel}>{t.sharpening.stonesLabel}</label>
           {selectedStones.length > 0 && (
             <div className={s.stoneTags}>
               {selectedStones.map((ss, i) => {
@@ -651,7 +653,7 @@ export default function SharpeningDetail() {
               onChange={setStoneInput}
               onSelect={addStone}
               suggestions={stoneSuggestions}
-              placeholder="Naniwa 1000, Shapton 2000..."
+              placeholder={t.sharpening.stonePlaceholder}
             />
             <button
               className={s.stoneAddBtn}
@@ -661,7 +663,7 @@ export default function SharpeningDetail() {
           </div>
           {!newStoneOpen && (
             <button className={s.newStoneToggle} onClick={() => setNewStoneOpen(true)}>
-              + создать новый камень
+              {t.sharpening.createNewStone}
             </button>
           )}
           {newStoneOpen && createPortal(
@@ -672,11 +674,11 @@ export default function SharpeningDetail() {
             <div style={{ width:'100%', background:'var(--bg-100)', borderRadius:'var(--radius-lg)', maxHeight:'92vh', overflowY:'auto', padding:'var(--space-4)', display:'flex', flexDirection:'column', gap:'var(--space-2)' }}
               onClick={e => e.stopPropagation()}
             >
-            <span className={s.newStoneTitle}>Новый камень в справочник</span>
+            <span className={s.newStoneTitle}>{t.sharpening.newStoneTitle}</span>
               <input
                 value={newStoneBrand}
                 onChange={e => setNewStoneBrand(e.target.value)}
-                placeholder="Бренд (Suehiro, Naniwa...)"
+                placeholder={t.sharpening.brandPlaceholder}
                 autoFocus
               />
               <div className={s.gritUnitRow}>
@@ -686,7 +688,7 @@ export default function SharpeningDetail() {
                     className={`${s.gritUnitBtn} ${newStoneGritSource === u ? s.gritUnitActive : ''}`}
                     onClick={() => { setNewStoneGritSource(u); setNewStoneGritVal(''); setNewStoneGritMk('') }}
                   >
-                    {u === '' ? 'нет' : u === 'mk' ? 'мк' : u === 'microns' ? 'мкм' : u.toUpperCase()}
+                    {u === '' ? t.sharpening.gritNone : u === 'mk' ? 'мк' : u === 'microns' ? 'мкм' : u.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -694,7 +696,7 @@ export default function SharpeningDetail() {
                 <input
                   value={newStoneGritVal}
                   onChange={e => setNewStoneGritVal(e.target.value)}
-                  placeholder={newStoneGritSource === 'microns' ? 'мкм, напр. 5' : `${newStoneGritSource.toUpperCase()}, напр. 1000`}
+                  placeholder={newStoneGritSource === 'microns' ? t.sharpening.micronsHint : t.sharpening.gritHint(newStoneGritSource.toUpperCase())}
                   type="number"
                   min={1}
                 />
@@ -705,7 +707,7 @@ export default function SharpeningDetail() {
                   value={newStoneGritMk}
                   onChange={e => setNewStoneGritMk(e.target.value)}
                 >
-                  <option value="">Выбрать мк</option>
+                  <option value="">{t.sharpening.selectMk}</option>
                   {MK_VALUES.map(v => <option key={v} value={v}>{v} мк</option>)}
                 </select>
               )}
@@ -716,20 +718,14 @@ export default function SharpeningDetail() {
                   onChange={e => setNewStoneType(e.target.value as Stone['type'] | '')}
                 >
                   <option value="" disabled>выберите тип абразива</option>
-                  <option value="galvanic">Гальваника</option>
-                  <option value="ao">ОА</option>
-                  <option value="kk">КК</option>
-                  <option value="diamond">Алмаз</option>
-                  <option value="elbor">Эльбор</option>
-                  <option value="natural">Природа</option>
-                  <option value="pritir">Притир</option>
-                  <option value="ceramic">Керамика</option>
-                  <option value="other">Другой тип абразива</option>
+                  {Object.entries(t.enums.stoneType).map(([val, label]) => (
+                    <option key={val} value={val}>{label}</option>
+                  ))}
                 </select>
               </div>
               <div className={s.newStoneRow}>
-                <button className={s.newStoneSaveBtn} onClick={saveNewStone} disabled={!newStoneBrand.trim()}>Добавить</button>
-                <button className={s.newStoneCancelBtn} onClick={() => setNewStoneOpen(false)}>Отмена</button>
+                <button className={s.newStoneSaveBtn} onClick={saveNewStone} disabled={!newStoneBrand.trim()}>{t.common.add}</button>
+                <button className={s.newStoneCancelBtn} onClick={() => setNewStoneOpen(false)}>{t.common.cancel}</button>
               </div>
             </div>
             </div>,
@@ -738,11 +734,11 @@ export default function SharpeningDetail() {
         </div>
 
         <div className={s.field}>
-          <label className={s.fieldLabel}>Комментарий</label>
+          <label className={s.fieldLabel}>{t.sharpening.commentLabel}</label>
           <textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
-            placeholder="Особенности, замечания..."
+            placeholder={t.sharpening.commentPlaceholder}
             rows={3}
             style={{ resize: 'vertical' }}
           />
@@ -751,7 +747,7 @@ export default function SharpeningDetail() {
         {/* Photos after */}
         <div className={s.photoSectionEditable}>
           <span className={s.photoTitle}>
-            Фото «После»{photosAfter.length > 0 ? ` · ${photosAfter.length} / ${PHOTO_LIMIT}` : ' (необязательно)'}
+            {t.sharpening.photoAfter}{photosAfter.length > 0 ? t.sharpening.photoCount(photosAfter.length, PHOTO_LIMIT) : t.sharpening.photoOptional}
           </span>
           {photosAfter.length > 0 && (
             <div className={s.photoThumbs}>
@@ -762,7 +758,7 @@ export default function SharpeningDetail() {
                     alt=""
                     onClick={() => setLightbox({ photos: photosAfter, index: i })}
                   />
-                  {i === 0 && <span className={s.coverBadge}>обложка</span>}
+                  {i === 0 && <span className={s.coverBadge}>{t.sharpening.cover}</span>}
                   <button
                     className={s.photoRemoveSm}
                     onClick={() => setPhotosAfter(prev => prev.filter((_, j) => j !== i))}
@@ -777,7 +773,7 @@ export default function SharpeningDetail() {
             onClick={() => setPickerOpen(true)}
           >
             <span className={s.photoAddIcon}><IconCamera /></span>
-            {photosAfter.length >= PHOTO_LIMIT ? 'Лимит 5 фото достигнут' : 'Добавить фото'}
+            {photosAfter.length >= PHOTO_LIMIT ? t.sharpening.photoLimit : t.sharpening.addPhoto}
           </button>
         </div>
 
@@ -786,15 +782,15 @@ export default function SharpeningDetail() {
           {sh.status === 'accepted' ? (
             <div className={s.btnRow}>
               <button className={s.saveBtn} onClick={handleSave} disabled={saving}>
-                {saving ? '…' : 'Сохранить'}
+                {saving ? '…' : t.common.save}
               </button>
               <button className={s.doneBtn} onClick={handleMarkDone} disabled={saving}>
-                {saving ? '…' : 'Готово'}
+                {saving ? '…' : t.sharpening.markDone}
               </button>
             </div>
           ) : (
             <button className={s.saveBtn} onClick={handleSave} disabled={saving} style={{ width: '100%' }}>
-              {saving ? 'Сохранение…' : 'Сохранить'}
+              {saving ? t.sharpening.saving : t.common.save}
             </button>
           )}
         </div>
@@ -803,7 +799,7 @@ export default function SharpeningDetail() {
       {/* Share */}
       {hasPhotos && (
         <button className={s.reportBtn} onClick={() => setShareMenuOpen(true)}>
-          Поделиться фото
+          {t.sharpening.sharePhoto}
         </button>
       )}
 
@@ -811,17 +807,17 @@ export default function SharpeningDetail() {
         className={s.repeatBtn}
         onClick={() => navigate('/sharpenings/new', { state: { repeat: sh } })}
       >
-        Повторить заточку
+        {t.sharpening.repeat}
       </button>
 
       <button className={s.deleteBtn} onClick={() => setConfirmOpen(true)}>
-        Удалить заточку
+        {t.sharpening.deleteSharpening}
       </button>
 
       <ConfirmModal
         isOpen={confirmOpen}
-        title="Удалить эту заточку?"
-        message="Заточка попадёт в корзину и будет удалена навсегда через 3 дня."
+        title={t.sharpening.deleteTitle}
+        message={t.sharpening.deleteMessage}
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />
@@ -850,17 +846,17 @@ export default function SharpeningDetail() {
               className={s.shareOption}
               onClick={() => { setShareMenuOpen(false); setPhotoShareOpen(true) }}
             >
-              Отправить фотографии
+              {t.sharpening.sendPhotos}
             </button>
             <button
               className={`${s.shareOption} ${!photosAfter.length ? s.shareOptionDisabled : ''}`}
               disabled={!photosAfter.length}
               onClick={() => { setShareMenuOpen(false); setPhotoReportOpen(true) }}
             >
-              Фотоотчёт
+              {t.sharpening.photoReport}
             </button>
             <button className={s.photoModalSkipBtn} onClick={() => setShareMenuOpen(false)}>
-              Отмена
+              {t.common.cancel}
             </button>
           </div>
         </div>
