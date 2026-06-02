@@ -44,6 +44,7 @@ import {
   type DailyBackupMeta,
 } from '../../utils/backup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
+import { useLocale, localeTag } from '../../i18n'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -54,6 +55,7 @@ function todayStr() {
 export default function BackupScreen() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { t, locale } = useLocale()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { currentVersion, hasUpdate } = useVersionCheck()
 
@@ -96,7 +98,7 @@ export default function BackupScreen() {
       localStorage.removeItem(PHOTO_COMPRESS_KEY)
     }
     setCompressed(next)
-    showToast(next ? 'Сжатие фото включено' : 'Сжатие фото отключено')
+    showToast(next ? t.backup.compressionOn : t.backup.compressionOff)
   }
 
   async function handleExport() {
@@ -106,7 +108,7 @@ export default function BackupScreen() {
       const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
       downloadBlob(blob, `apptochite-${todayStr()}.json`)
       await updateLastBackupAt(db)
-      showToast('Бэкап сохранён')
+      showToast(t.backup.backupSaved)
     } finally {
       setExporting(false)
     }
@@ -146,17 +148,17 @@ export default function BackupScreen() {
   function handleShare() {
     if (!shareFile) return
     if (!navigator.canShare?.({ files: [shareFile] })) {
-      showToast('Шаринг не поддерживается — используйте «Сохранить бэкап»')
+      showToast(t.backup.shareUnsupported)
       return
     }
-    navigator.share({ files: [shareFile], title: 'Бэкап AppTochite' })
+    navigator.share({ files: [shareFile], title: t.backup.shareTitle })
       .then(async () => {
         await updateLastBackupAt(db)
-        showToast('Бэкап отправлен')
+        showToast(t.backup.backupShared)
       })
       .catch(e => {
         if (e instanceof Error && e.name !== 'AbortError') {
-          showToast('Не удалось поделиться')
+          showToast(t.backup.shareFailed)
         }
       })
   }
@@ -174,7 +176,7 @@ export default function BackupScreen() {
       const csv = buildSharpeningCSV(sharpenings, clientMap)
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
       downloadBlob(blob, `apptochite-sharpenings-${todayStr()}.csv`)
-      showToast('CSV сохранён')
+      showToast(t.backup.csvSaved)
     } finally {
       setExporting(false)
     }
@@ -184,15 +186,15 @@ export default function BackupScreen() {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 200 * 1024 * 1024) {
-      showToast('Файл слишком большой (> 200 МБ)')
+      showToast(t.backup.fileTooLarge)
       return
     }
     try {
       const parsed = JSON.parse(await file.text(), reviveDates)
-      if (!isValidBackup(parsed)) { showToast('Неверный формат файла'); return }
+      if (!isValidBackup(parsed)) { showToast(t.backup.invalidFormat); return }
       setPreview(parsed)
     } catch {
-      showToast('Не удалось прочитать файл')
+      showToast(t.backup.fileReadError)
     }
   }
 
@@ -201,10 +203,10 @@ export default function BackupScreen() {
     setRestoring(true)
     try {
       await restoreBackup(db, preview)
-      showToast('Данные восстановлены')
+      showToast(t.backup.restored)
       navigate('/')
     } catch {
-      showToast('Ошибка при восстановлении')
+      showToast(t.backup.restoreError)
       setRestoring(false)
     }
   }
@@ -212,9 +214,9 @@ export default function BackupScreen() {
   async function handleCopyCard() {
     try {
       await navigator.clipboard.writeText(CARD_NUMBER.replace(/\s/g, ''))
-      showToast('Номер карты скопирован')
+      showToast(t.backup.cardCopied)
     } catch {
-      showToast('Не удалось скопировать номер')
+      showToast(t.backup.cardCopyError)
     }
   }
 
@@ -227,7 +229,7 @@ export default function BackupScreen() {
       setPreview(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
     } catch {
-      showToast('Ошибка при объединении')
+      showToast(t.backup.mergeError)
       setMerging(false)
     }
   }
@@ -236,11 +238,11 @@ export default function BackupScreen() {
     <div className={s.screen}>
       <div className={s.header}>
         <button className={s.back} onClick={() => navigate(-1)}><IconChevronLeft /></button>
-        <span className={s.title}>НАСТРОЙКИ</span>
+        <span className={s.title}>{t.backup.title}</span>
       </div>
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>База данных</p>
+        <p className={s.sectionTitle}>{t.backup.dbSection}</p>
         {(() => {
           const MAX_MB = 200
           const WARN_MB = 100
@@ -251,17 +253,17 @@ export default function BackupScreen() {
             : storageMb < 160 ? '#F5A623'
             : 'var(--danger)'
           const hint =
-            storageMb == null ? 'Вычисляется…'
-            : storageMb < WARN_MB ? 'Размер базы в норме'
-            : storageMb < 160 ? 'База данных увеличена — включите сжатие фото'
-            : 'База почти заполнена — удалите заточки с фото'
+            storageMb == null ? t.backup.computing
+            : storageMb < WARN_MB ? t.backup.dbNormal
+            : storageMb < 160 ? t.backup.dbIncreaseCompress
+            : t.backup.dbAlmostFull
           return (
             <div className={s.dbCard}>
               <div className={s.dbHeader}>
-                <span className={s.dbLabel}>Размер хранилища</span>
+                <span className={s.dbLabel}>{t.backup.storageSize}</span>
                 {storageMb != null && (
                   <span className={s.dbSize}>
-                    {storageMb < 0.1 ? '< 0.1' : storageMb.toFixed(1)} / 200 МБ
+                    {t.backup.dbSizeOf(storageMb < 0.1 ? '< 0.1' : storageMb.toFixed(1))}
                   </span>
                 )}
               </div>
@@ -273,7 +275,7 @@ export default function BackupScreen() {
                 <span className={s.dbHint} style={{ color: fillColor === 'var(--bg-400)' ? 'var(--text-300)' : fillColor }}>
                   {hint}
                 </span>
-                <span className={s.dbMarkLabel}>100 МБ</span>
+                <span className={s.dbMarkLabel}>{t.backup.mb100}</span>
               </div>
             </div>
           )
@@ -283,7 +285,7 @@ export default function BackupScreen() {
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Фото</p>
+        <p className={s.sectionTitle}>{t.backup.photoSection}</p>
         <button
           role="switch"
           aria-checked={compressed}
@@ -291,8 +293,8 @@ export default function BackupScreen() {
           onClick={toggleCompression}
         >
           <div className={s.toggleInfo}>
-            <span className={s.toggleLabel}>Сжатие новых фото</span>
-            <span className={s.toggleDesc}>JPEG 65%, 1280 пкс — в 3–5 раз меньше</span>
+            <span className={s.toggleLabel}>{t.backup.compressNewPhotos}</span>
+            <span className={s.toggleDesc}>{t.backup.compressDesc}</span>
           </div>
           <div className={`${s.toggle} ${compressed ? s.toggleOn : ''}`}>
             <div className={s.toggleThumb} />
@@ -303,43 +305,43 @@ export default function BackupScreen() {
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Автобэкап</p>
+        <p className={s.sectionTitle}>{t.backup.autoBackupSection}</p>
         <div className={s.autoBackupRow}>
-          <span className={s.autoBackupBadge}>Активен</span>
+          <span className={s.autoBackupBadge}>{t.backup.active}</span>
           <span className={s.autoBackupMeta}>
             {opfsMeta === undefined
-              ? 'Загрузка…'
+              ? t.backup.loading
               : opfsMeta === null
-                ? 'Ещё не создавался'
-                : `${new Date(opfsMeta.date).toLocaleString('ru', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} · ${(opfsMeta.size / 1024).toFixed(0)} КБ`}
+                ? t.backup.neverCreated
+                : `${new Date(opfsMeta.date).toLocaleString(localeTag(locale), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} · ${t.backup.kb((opfsMeta.size / 1024).toFixed(0))}`}
           </span>
         </div>
-        <p className={s.desc}>Сохраняется автоматически при каждом открытии приложения. Без диалогов и разрешений.</p>
+        <p className={s.desc}>{t.backup.autoBackupDesc}</p>
         {opfsMeta !== null && (
           <button className={s.secondaryBtn} onClick={async () => {
             const backup = await readOPFSBackup()
-            if (!backup) { showToast('Авто-бэкап не найден или повреждён'); return }
+            if (!backup) { showToast(t.backup.autoNotFound); return }
             setPreview(backup)
           }}>
-            Восстановить из авто-бэкапа
+            {t.backup.restoreFromAuto}
           </button>
         )}
 
         {dailyMeta && (
           <>
             <div className={s.autoBackupRow}>
-              <span className={s.autoBackupBadge}>За день</span>
+              <span className={s.autoBackupBadge}>{t.backup.perDay}</span>
               <span className={s.autoBackupMeta}>
-                {`Снимок за ${new Date(dailyMeta.snapshotDate).toLocaleDateString('ru', { day: 'numeric', month: 'long' })} · ${(dailyMeta.size / 1024).toFixed(0)} КБ`}
+                {t.backup.snapshotFor(new Date(dailyMeta.snapshotDate).toLocaleDateString(localeTag(locale), { day: 'numeric', month: 'long' }))} · {t.backup.kb((dailyMeta.size / 1024).toFixed(0))}
               </span>
             </div>
-            <p className={s.desc}>Снимок за прошлый день — на случай, если свежий авто-бэкап испорчен.</p>
+            <p className={s.desc}>{t.backup.dailyDesc}</p>
             <button className={s.secondaryBtn} onClick={async () => {
               const backup = await readDailyBackup(db)
-              if (!backup) { showToast('Бэкап за день не найден или повреждён'); return }
+              if (!backup) { showToast(t.backup.dailyNotFound); return }
               setPreview(backup)
             }}>
-              Восстановить из бэкапа за день
+              {t.backup.restoreFromDaily}
             </button>
           </>
         )}
@@ -348,58 +350,49 @@ export default function BackupScreen() {
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Экспорт</p>
-        <p className={s.desc}>
-          Сохраняет всех клиентов, заточки и справочники в JSON-файл.
-          Файл попадёт в папку «Загрузки». Бэкап с фотографиями может занимать несколько МБ.
-        </p>
+        <p className={s.sectionTitle}>{t.backup.exportSection}</p>
+        <p className={s.desc}>{t.backup.exportDesc}</p>
         <button className={s.primaryBtn} onClick={handleExport} disabled={exporting}>
-          {exporting ? 'Сохранение…' : 'Сохранить бэкап (JSON)'}
+          {exporting ? t.backup.saving : t.backup.saveBackupJson}
         </button>
         <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting || preparingShare || !shareFile}>
-          {preparingShare ? 'Подготовка…' : 'Поделиться бэкапом…'}
+          {preparingShare ? t.backup.preparing : t.backup.shareBackup}
         </button>
-        <p className={s.desc} style={{ fontSize: 12, marginTop: 4 }}>
-          Откроет системное меню: Telegram, почта, облако. Файл уйдёт с расширением .txt — это особенность Android, при восстановлении приложение его примет.
-        </p>
+        <p className={s.desc} style={{ fontSize: 12, marginTop: 4 }}>{t.backup.shareDesc}</p>
       </div>
 
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Экспорт в Excel / CSV</p>
-        <p className={s.desc}>
-          Выгружает все заточки в CSV-файл с именами клиентов. Открывается в Excel, Google Таблицах и Numbers без дополнительных настроек.
-        </p>
+        <p className={s.sectionTitle}>{t.backup.csvSection}</p>
+        <p className={s.desc}>{t.backup.csvDesc}</p>
         <button className={s.secondaryBtn} onClick={handleExportCSV} disabled={exporting}>
-          {exporting ? 'Сохранение…' : 'Скачать CSV'}
+          {exporting ? t.backup.saving : t.backup.downloadCsv}
         </button>
       </div>
 
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Восстановление</p>
-        <p className={s.desc}>
-          Выберите ранее сохранённый файл бэкапа.
-        </p>
+        <p className={s.sectionTitle}>{t.backup.restoreSection}</p>
+        <p className={s.desc}>{t.backup.restoreDesc}</p>
 
         {mergeStats ? (
           <div className={s.preview}>
-            <p className={s.previewDate}>Объединение завершено</p>
+            <p className={s.previewDate}>{t.backup.mergeDone}</p>
             <div className={s.previewRows}>
-              <div className={s.previewRow}><span>Добавлено новых</span><span>{mergeStats.added}</span></div>
-              <div className={s.previewRow}><span>Обновлено (файл новее)</span><span>{mergeStats.updated}</span></div>
-              <div className={s.previewRow}><span>Оставлено без изменений</span><span>{mergeStats.skipped}</span></div>
+              <div className={s.previewRow}><span>{t.backup.addedNew}</span><span>{mergeStats.added}</span></div>
+              <div className={s.previewRow}><span>{t.backup.updatedNewer}</span><span>{mergeStats.updated}</span></div>
+              <div className={s.previewRow}><span>{t.backup.keptUnchanged}</span><span>{mergeStats.skipped}</span></div>
             </div>
             <div className={s.previewActions}>
-              <button className={s.secondaryBtn} onClick={() => setMergeStats(null)}>Закрыть</button>
+              <button className={s.secondaryBtn} onClick={() => setMergeStats(null)}>{t.backup.close}</button>
             </div>
           </div>
         ) : !preview ? (
           <>
             <button className={s.secondaryBtn} onClick={() => fileInputRef.current?.click()}>
-              Выбрать файл…
+              {t.backup.chooseFile}
             </button>
             <input
               ref={fileInputRef}
@@ -412,33 +405,33 @@ export default function BackupScreen() {
         ) : (
           <div className={s.preview}>
             <p className={s.previewDate}>
-              Дата бэкапа: {new Date(preview.exportedAt).toLocaleDateString('ru')}
+              {t.backup.backupDate(new Date(preview.exportedAt).toLocaleDateString(localeTag(locale)))}
             </p>
             <div className={s.previewRows}>
-              <div className={s.previewRow}><span>Клиенты</span><span>{preview.data.clients.length}</span></div>
-              <div className={s.previewRow}><span>Заточки</span><span>{preview.data.sharpenings.length}</span></div>
-              <div className={s.previewRow}><span>Камни</span><span>{preview.data.stones.length}</span></div>
-              <div className={s.previewRow}><span>Стали</span><span>{preview.data.steels.length}</span></div>
-              <div className={s.previewRow}><span>Ножи</span><span>{preview.data.knives.length}</span></div>
+              <div className={s.previewRow}><span>{t.backup.rowClients}</span><span>{preview.data.clients.length}</span></div>
+              <div className={s.previewRow}><span>{t.backup.rowSharpenings}</span><span>{preview.data.sharpenings.length}</span></div>
+              <div className={s.previewRow}><span>{t.backup.rowStones}</span><span>{preview.data.stones.length}</span></div>
+              <div className={s.previewRow}><span>{t.backup.rowSteels}</span><span>{preview.data.steels.length}</span></div>
+              <div className={s.previewRow}><span>{t.backup.rowKnives}</span><span>{preview.data.knives.length}</span></div>
             </div>
             <div className={s.warning}>
-              <strong>Объединить</strong> — добавит новые записи из файла и обновит те, что новее в файле. Данные на устройстве не исчезнут.
+              <strong>{t.backup.mergeStrong}</strong>{t.backup.mergeWarningText}
             </div>
             <div className={s.warningDanger}>
-              <strong>Заменить всё</strong> — удалит все текущие данные и заменит данными из файла.
+              <strong>{t.backup.replaceStrong}</strong>{t.backup.replaceWarningText}
             </div>
             <div className={s.previewActions}>
               <button className={s.primaryBtn} onClick={handleMerge} disabled={merging || restoring}>
-                {merging ? 'Объединение…' : 'Объединить'}
+                {merging ? t.backup.merging : t.backup.merge}
               </button>
               <button className={s.dangerBtn} onClick={handleRestore} disabled={restoring || merging}>
-                {restoring ? 'Восстановление…' : 'Заменить всё'}
+                {restoring ? t.backup.restoring : t.backup.replaceAll}
               </button>
               <button className={s.secondaryBtn} onClick={() => {
                 setPreview(null)
                 if (fileInputRef.current) fileInputRef.current.value = ''
               }}>
-                Отмена
+                {t.common.cancel}
               </button>
             </div>
           </div>
@@ -448,11 +441,9 @@ export default function BackupScreen() {
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Поддержать проект</p>
+        <p className={s.sectionTitle}>{t.backup.donateSection}</p>
         <div className={s.donateCard}>
-          <p className={s.donateText}>
-            Если моё приложение вам помогает — поддержать его развитие можно переводом на карту. Спасибо! 🤝
-          </p>
+          <p className={s.donateText}>{t.backup.donateText}</p>
           <button className={s.donateBtn} onClick={handleCopyCard}>
             <span className={s.donateNumber}>{CARD_NUMBER}</span>
             <span className={s.donateCopy}><IconCopy /></span>
@@ -465,7 +456,7 @@ export default function BackupScreen() {
       <div className={s.section}>
         <Link to="/about" className={s.aboutRow}>
           <div className={s.aboutLeft}>
-            <span className={s.aboutLabel}>О программе</span>
+            <span className={s.aboutLabel}>{t.backup.aboutLabel}</span>
             <span className={s.aboutVersion}>v{currentVersion}</span>
           </div>
           <div className={s.aboutRight}>
