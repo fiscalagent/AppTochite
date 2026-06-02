@@ -47,8 +47,8 @@ export const ru = {
     } as Record<string, string>,
 
     status: {
-      accepted: 'Принят',
-      done: 'Готово',
+      accepted: 'принят',
+      done: 'готов',
     } as Record<string, string>,
 
     // Канонические значения == русские подписи (так хранится в БД) → тождество.

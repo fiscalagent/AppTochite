@@ -1,5 +1,6 @@
 import type { AppTochiteDB, Client, Sharpening, Stone, Steel, Knife, Meta } from '../db/instance'
 import { GRIT_TABLE } from '../data/gritTable'
+import { ru } from '../i18n/dict'
 
 function normalizeStoneFromBackup(raw: Stone): Stone {
   if (raw.gritSource != null) return raw
@@ -406,7 +407,7 @@ export function buildSharpeningCSV(
       sh.condition?.join(', ') ?? '',
       sh.angle ?? '',
     ]
-    const suffix = [sh.comment ?? '', sh.price ?? '', sh.status === 'done' ? 'Готово' : 'Принят']
+    const suffix = [sh.comment ?? '', sh.price ?? '', ru.enums.status[sh.status] ?? sh.status]
 
     if (sh.stones && sh.stones.length > 0) {
       for (const st of sh.stones) {

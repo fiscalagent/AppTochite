@@ -230,7 +230,7 @@ describe('buildSharpeningCSV', () => {
     expect(lines).toHaveLength(2) // заголовок + 1 строка
     expect(lines[1]).toContain('Иванов')
     expect(lines[1]).toContain('Victorinox')
-    expect(lines[1]).toContain('Готово')
+    expect(lines[1]).toContain('готов')
   })
 
   it('заточка с 2 камнями — 2 строки данных', () => {
@@ -252,13 +252,13 @@ describe('buildSharpeningCSV', () => {
     expect(lines[2]).toContain('Shapton 3000')
   })
 
-  it('статус accepted → "Принят"', () => {
+  it('статус accepted → "принят"', () => {
     const sharpenings = [{
       id: 3, clientId: 1, knifeBrand: 'X',
       receivedAt: new Date(), status: 'accepted' as const,
     }]
     const csv = buildSharpeningCSV(sharpenings, new Map([[1, 'Клиент']]))
-    expect(csv).toContain('Принят')
+    expect(csv).toContain('принят')
   })
 
   it('удалённые заточки (deletedAt) не попадают в отчёт', async () => {

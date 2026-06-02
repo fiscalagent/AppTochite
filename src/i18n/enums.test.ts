@@ -6,7 +6,7 @@ describe('enumLabel — тотальность (гарантия безопас�
   it('известный ключ → подпись', () => {
     expect(enumLabel(ru.enums.stoneType, 'ao')).toBe('ОА')
     expect(enumLabel(ru.enums.coolant, 'water')).toBe('вода')
-    expect(enumLabel(ru.enums.status, 'done')).toBe('Готово')
+    expect(enumLabel(ru.enums.status, 'done')).toBe('готов')
   })
 
   it('НЕИЗВЕСТНЫЙ ключ возвращается как есть (raw) — данные не теряются', () => {
