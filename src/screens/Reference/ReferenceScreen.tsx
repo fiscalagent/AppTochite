@@ -1330,6 +1330,7 @@ function KnivesTab({ search }: { search: string }) {
   const [editSteel, setEditSteel] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
+  const t = useT()
 
   useEffect(() => {
     if (!open && editingId === null) return
@@ -1507,7 +1508,7 @@ function KnivesTab({ search }: { search: string }) {
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{k.brand}</div>
                 <div className={s.itemMeta}>
-                  {[k.country, k.steel].filter(Boolean).join(' · ') || 'нет данных'}
+                  {[enumLabel(t.enums.country, k.country), k.steel].filter(Boolean).join(' · ') || 'нет данных'}
                 </div>
               </div>
               <div className={s.itemRight}>

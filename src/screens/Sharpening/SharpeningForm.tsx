@@ -16,6 +16,7 @@ import DictationButton from '../../components/DictationButton/DictationButton'
 import DictationIndicator from '../../components/DictationIndicator/DictationIndicator'
 import DictationCandidates from '../../components/DictationCandidates/DictationCandidates'
 import { isVoiceEnabled } from '../../config/features'
+import { useT, enumLabel, ru } from '../../i18n'
 import s from './SharpeningForm.module.css'
 
 
@@ -32,7 +33,9 @@ const IconCamera = () => (
   </svg>
 )
 
-const CONDITIONS = ['заточка', 'правка РК', 'ремонт']
+// Канонические значения «требуется» = ключи словаря (хранятся в БД как есть).
+// Подпись локализуется через enumLabel; в ru она тождественна ключу.
+const CONDITIONS = Object.keys(ru.enums.condition)
 const PHOTO_LIMIT = 5
 
 function todayStr() {
@@ -86,6 +89,7 @@ export default function SharpeningForm() {
   const navigate = useNavigate()
   const location = useLocation()
   const { showToast, setRaisedMode } = useToast()
+  const t = useT()
   const { openCamera, openGallery } = useCamera()
   const isEdit = Boolean(id)
 
@@ -668,7 +672,7 @@ export default function SharpeningForm() {
                 className={`${s.chip} ${condition.includes(c) ? s.selected : ''}`}
                 onClick={() => toggleCondition(c)}
               >
-                {c}
+                {enumLabel(t.enums.condition, c)}
               </button>
             ))}
           </div>
