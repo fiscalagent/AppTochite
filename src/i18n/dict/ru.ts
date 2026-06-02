@@ -73,10 +73,27 @@ export const ru = {
     country: {} as Record<string, string>,
   },
 
-  // Пример plural-листа — валидирует машинерию (см. plural.test.ts). Локаль 'ru'
-  // зашита, потому что лист живёт в русском словаре.
+  // plural-листы. Локаль 'ru' зашита, потому что лист живёт в русском словаре.
   units: {
     sharpenings: (n: number) =>
       plural('ru', n, { one: 'заточка', few: 'заточки', many: 'заточек', other: 'заточек' }),
+  },
+
+  // Корзина (TrashScreen)
+  trash: {
+    title: 'КОРЗИНА',
+    hint: 'Удалённые записи хранятся 3 дня, после чего удаляются навсегда.',
+    empty: 'Корзина пуста',
+    deletedAt: (when: string) => `Удалено ${when}`,
+    restore: 'Восстановить',
+    purge: 'Удалить навсегда',
+    restored: 'Восстановлено',
+    purged: 'Удалено навсегда',
+    confirmTitle: 'Удалить навсегда?',
+    confirmMessage: 'Это действие необратимо. Восстановить будет нельзя.',
+    expiring: 'удаляется…',
+    hoursLeft: (h: number) => `осталось ${h} ч`,
+    daysLeft: (d: number) => `осталось ${d} дн.`,
+    groupSharpening: (knife: string) => `Заточка: ${knife}`,
   },
 } as const

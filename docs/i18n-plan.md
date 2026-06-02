@@ -63,7 +63,7 @@ restore **не затрагиваются**, и данные пользоват�
 - ⏳ Reference (S-1/2/3) + дропдауны (см. 1.1)
 - ⏳ Backup (BK-1)
 - ⏳ About (A-1)
-- ⏳ Trash
+- ✅ Trash — `trash.*` в словаре; даты через `localeTag`, плюрал через `units.sharpenings`
 - ⏳ Компоненты: модалки (ConfirmModal), шаблоны тостов, BackupReminder, StorageWarning,
   OnboardingSheet, BrowserWarning, PhotoReport/PhotoShare вотермарки и т.д.
 
