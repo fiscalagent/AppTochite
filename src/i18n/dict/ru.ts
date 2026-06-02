@@ -170,4 +170,14 @@ export const ru = {
     telegramPlaceholder: '@username',
     addClientBtn: 'Добавить клиента',
   },
+
+  // Лента заточек (H-1)
+  history: {
+    title: 'ИСТОРИЯ',
+    searchPlaceholder: 'Поиск по ножу, клиенту, стали, комментарию...',
+    filters: { all: 'Все', accepted: 'Принят', done: 'Готов' } as Record<string, string>,
+    notFound: 'Ничего не найдено',
+    empty: 'Заточек пока нет',
+    loadMore: (n: number, rest: number) => `Ещё ${n} из ${rest}`,
+  },
 } as const
