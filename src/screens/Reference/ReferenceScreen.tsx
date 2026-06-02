@@ -980,6 +980,7 @@ function StonesTab({ search }: { search: string }) {
 // ─── Steels ──────────────────────────────────────────────────────────────────
 
 function SteelsTab({ search }: { search: string }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [hrc, setHrc] = useState('')
@@ -1026,20 +1027,20 @@ function SteelsTab({ search }: { search: string }) {
     <>
       {!open && selected.size === 0 && (
         <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
-          + Добавить сталь
+          {t.reference.addSteel}
         </button>
       )}
       {open && createPortal(
         <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
         <div className={s.dialog} onClick={e => e.stopPropagation()}>
-          <span className={s.addTitle}>Новая сталь</span>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Название (AUS-8, D2, VG-10...)" autoFocus />
+          <span className={s.addTitle}>{t.reference.newSteel}</span>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder={t.reference.steelNamePlaceholder} autoFocus />
           <div className={s.addRow}>
             <input value={hrc} onChange={e => setHrc(e.target.value)} placeholder="HRC" type="number" />
           </div>
           <div className={s.addRow}>
-            <button className={s.addBtn} onClick={add} disabled={!name.trim()}>Добавить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
+            <button className={s.addBtn} onClick={add} disabled={!name.trim()}>{t.common.add}</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>{t.common.cancel}</button>
           </div>
         </div>
         </div>,
@@ -1047,7 +1048,7 @@ function SteelsTab({ search }: { search: string }) {
       )}
 
       <div className={s.list}>
-        {filtered.length === 0 && <p className={s.empty}>Сталей нет</p>}
+        {filtered.length === 0 && <p className={s.empty}>{t.reference.steelsEmpty}</p>}
         {filtered.length > 0 && (
           <SelectAllRow
             total={filtered.length}
@@ -1070,11 +1071,11 @@ function SteelsTab({ search }: { search: string }) {
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{st.name}</div>
                 <div className={s.itemMeta}>
-                  {st.hrc ? `${st.hrc} HRC` : 'нет данных'}
+                  {st.hrc ? `${st.hrc} HRC` : t.reference.noData}
                 </div>
               </div>
               <div className={s.itemRight}>
-                {st.isCustom && <span className={s.customBadge}>моя</span>}
+                {st.isCustom && <span className={s.customBadge}>{t.reference.mineF}</span>}
               </div>
             </div>
           )
@@ -1094,17 +1095,12 @@ function SteelsTab({ search }: { search: string }) {
 
 // ─── Knife import preview ─────────────────────────────────────────────────────
 
-const SKIP_LABELS: Record<SkipReason, string> = {
-  'empty-name': 'пустое название',
-  'duplicate': 'уже в справочнике',
-}
-
-function colLabel(grid: string[][], idx: number, hasHeader: boolean): string {
+function colLabel(grid: string[][], idx: number, hasHeader: boolean, columnN: (n: number) => string): string {
   if (hasHeader) {
     const h = (grid[0]?.[idx] ?? '').trim()
     if (h) return h
   }
-  return `Колонка ${idx + 1}`
+  return columnN(idx + 1)
 }
 
 // Экран превью импорта ножей: маппинг колонок, разрешение сталей (точные —
@@ -1117,6 +1113,8 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
   onClose: () => void
 }) {
   const { showToast } = useToast()
+  const t = useT()
+  const skipLabel = (r: SkipReason) => (r === 'empty-name' ? t.reference.skipEmptyName : t.reference.skipDuplicate)
   const [mapping, setMapping] = useState<ColumnMapping>(() => detectColumns(grid))
   // Только пользовательские правки, ключ — индекс строки в файле. Эффективное
   // значение = override ?? дефолт. Так не нужен эффект-пересев при смене маппинга,
@@ -1175,9 +1173,9 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
         return { brand: k.name, steel, isCustom: true, updatedAt: now }
       }))
     })
-    const parts = [`Добавлено ножей: ${prepared.knives.length}`]
-    if (newSteels.size > 0) parts.push(`новых сталей: ${newSteels.size}`)
-    if (prepared.skipped.length > 0) parts.push(`пропущено строк: ${prepared.skipped.length}`)
+    const parts = [t.reference.importedKnives(prepared.knives.length)]
+    if (newSteels.size > 0) parts.push(t.reference.newSteelsN(newSteels.size))
+    if (prepared.skipped.length > 0) parts.push(t.reference.skippedN(prepared.skipped.length))
     showToast(parts.join(', '))
     onClose()
   }
@@ -1185,31 +1183,31 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
   return createPortal(
     <div className={s.dialogOverlay} onClick={onClose}>
       <div className={s.importSheet} onClick={e => e.stopPropagation()}>
-        <span className={s.addTitle}>Импорт ножей</span>
+        <span className={s.addTitle}>{t.reference.importKnives}</span>
 
         <div className={s.importMapping}>
           <label className={s.importMapField}>
-            <span>Название</span>
+            <span>{t.reference.colName}</span>
             <select
               className={s.select}
               value={mapping.nameCol}
               onChange={e => setMapping(m => ({ ...m, nameCol: Number(e.target.value) }))}
             >
               {cols.map((_, i) => (
-                <option key={i} value={i}>{colLabel(grid, i, mapping.hasHeader)}</option>
+                <option key={i} value={i}>{colLabel(grid, i, mapping.hasHeader, t.reference.columnN)}</option>
               ))}
             </select>
           </label>
           <label className={s.importMapField}>
-            <span>Сталь</span>
+            <span>{t.reference.colSteel}</span>
             <select
               className={s.select}
               value={mapping.steelCol ?? ''}
               onChange={e => setMapping(m => ({ ...m, steelCol: e.target.value === '' ? null : Number(e.target.value) }))}
             >
-              <option value="">— не указана —</option>
+              <option value="">{t.reference.notSpecified}</option>
               {cols.map((_, i) => (
-                <option key={i} value={i}>{colLabel(grid, i, mapping.hasHeader)}</option>
+                <option key={i} value={i}>{colLabel(grid, i, mapping.hasHeader, t.reference.columnN)}</option>
               ))}
             </select>
           </label>
@@ -1219,17 +1217,17 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
               checked={mapping.hasHeader}
               onChange={e => setMapping(m => ({ ...m, hasHeader: e.target.checked }))}
             />
-            <span>первая строка — заголовок</span>
+            <span>{t.reference.firstRowHeader}</span>
           </label>
         </div>
 
         <div className={s.importStats}>
-          <span>Будет добавлено ножей: <strong>{prepared.knives.length}</strong></span>
+          <span>{t.reference.willAddKnives} <strong>{prepared.knives.length}</strong></span>
         </div>
 
         <div className={s.importRows}>
           {prepared.knives.length === 0 && (
-            <p className={s.importSkipped}>Нет строк для импорта</p>
+            <p className={s.importSkipped}>{t.reference.noRowsToImport}</p>
           )}
           {prepared.knives.map(k => {
             const val = valueOf(k)
@@ -1245,14 +1243,14 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
                     value={val}
                     onChange={v => setOverrides(r => ({ ...r, [k.rowIndex]: v }))}
                     suggestions={steelNames}
-                    placeholder="Сталь (необязательно)"
+                    placeholder={t.reference.steelOptionalPlaceholder}
                   />
                   {c.kind === 'link' && <span className={s.steelBadgeLink}>✓ {c.ref.name}</span>}
-                  {c.kind === 'create' && <span className={s.steelBadgeNew}>+ новая сталь</span>}
+                  {c.kind === 'create' && <span className={s.steelBadgeNew}>{t.reference.newSteelBadge}</span>}
                 </div>
                 {suggestions.length > 0 && (
                   <div className={s.fuzzyChips}>
-                    <span className={s.fuzzyLabel}>похоже:</span>
+                    <span className={s.fuzzyLabel}>{t.reference.similarShort}</span>
                     {suggestions.map(sg => (
                       <button
                         key={sg.name}
@@ -1271,11 +1269,11 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
 
         {prepared.skipped.length > 0 && (
           <div className={s.importSkippedBlock}>
-            <span className={s.importSkipped}>Пропущено строк: {prepared.skipped.length}</span>
+            <span className={s.importSkipped}>{t.reference.skippedRows(prepared.skipped.length)}</span>
             <div className={s.importSkippedList}>
               {prepared.skipped.map(sk => (
                 <div key={sk.rowIndex} className={s.importSkippedRow}>
-                  стр. {sk.rowIndex + 1}: {sk.name || '—'} ({SKIP_LABELS[sk.reason]})
+                  {t.reference.rowLine(sk.rowIndex + 1, sk.name || '—', skipLabel(sk.reason))}
                 </div>
               ))}
             </div>
@@ -1284,14 +1282,14 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
 
         <div className={s.addRow}>
           <button className={s.addBtn} onClick={handleImport} disabled={prepared.knives.length === 0}>
-            Импортировать {prepared.knives.length > 0 ? prepared.knives.length : ''}
+            {t.reference.importBtn(prepared.knives.length)}
           </button>
           <button
             className={s.addBtn}
             style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }}
             onClick={onClose}
           >
-            Отмена
+            {t.common.cancel}
           </button>
         </div>
       </div>
@@ -1332,12 +1330,12 @@ function KnivesTab({ search }: { search: string }) {
     try {
       const grid = await readSpreadsheet(file)
       if (grid.length === 0) {
-        showToast('Файл пустой или не распознан')
+        showToast(t.reference.fileEmpty)
         return
       }
       setImportGrid(grid)
     } catch {
-      showToast('Не удалось прочитать файл')
+      showToast(t.reference.fileReadError)
     }
   }
 
@@ -1408,12 +1406,12 @@ function KnivesTab({ search }: { search: string }) {
       {!open && selected.size === 0 && editingId === null && (
         <>
           <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
-            + Добавить нож
+            {t.reference.addKnife}
           </button>
           <div className={s.csvActions}>
-            <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>⬆ Загрузить из файла (xlsx, csv)</button>
+            <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>{t.reference.loadFromFile}</button>
           </div>
-          <p className={s.importHint}>2 колонки: название ножа и сталь (если знаете). Первая строка — заголовки.</p>
+          <p className={s.importHint}>{t.reference.knivesImportHint}</p>
         </>
       )}
       {importGrid && knives && (
@@ -1427,19 +1425,19 @@ function KnivesTab({ search }: { search: string }) {
       {open && createPortal(
         <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
         <div className={s.dialog} onClick={e => e.stopPropagation()}>
-          <span className={s.addTitle}>Новый нож</span>
-          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Бренд (Mora, Victorinox...)" autoFocus />
+          <span className={s.addTitle}>{t.reference.newKnife}</span>
+          <input value={brand} onChange={e => setBrand(e.target.value)} placeholder={t.reference.knifeBrandPlaceholder} autoFocus />
           <div className={s.addRow}>
             <Autocomplete
               value={knifeSteel}
               onChange={setKnifeSteel}
               suggestions={steelNames}
-              placeholder="Сталь"
+              placeholder={t.reference.steelPlaceholder}
             />
           </div>
           <div className={s.addRow}>
-            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>Добавить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>Отмена</button>
+            <button className={s.addBtn} onClick={add} disabled={!brand.trim()}>{t.common.add}</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={() => setOpen(false)}>{t.common.cancel}</button>
           </div>
         </div>
         </div>,
@@ -1449,19 +1447,19 @@ function KnivesTab({ search }: { search: string }) {
       {editingId !== null && createPortal(
         <div className={s.dialogOverlay} onClick={cancelEdit}>
         <div className={s.dialog} onClick={e => e.stopPropagation()}>
-          <span className={s.addTitle}>Редактировать нож</span>
-          <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder="Бренд (Mora, Victorinox...)" autoFocus />
+          <span className={s.addTitle}>{t.reference.editKnife}</span>
+          <input value={editBrand} onChange={e => setEditBrand(e.target.value)} placeholder={t.reference.knifeBrandPlaceholder} autoFocus />
           <div className={s.addRow}>
             <Autocomplete
               value={editSteel}
               onChange={setEditSteel}
               suggestions={steelNames}
-              placeholder="Сталь"
+              placeholder={t.reference.steelPlaceholder}
             />
           </div>
           <div className={s.addRow}>
-            <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>Сохранить</button>
-            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>Отмена</button>
+            <button className={s.addBtn} onClick={saveEdit} disabled={!editBrand.trim()}>{t.common.save}</button>
+            <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={cancelEdit}>{t.common.cancel}</button>
           </div>
         </div>
         </div>,
@@ -1469,7 +1467,7 @@ function KnivesTab({ search }: { search: string }) {
       )}
 
       <div className={s.list}>
-        {filtered.length === 0 && <p className={s.empty}>Ножей нет</p>}
+        {filtered.length === 0 && <p className={s.empty}>{t.reference.knivesEmpty}</p>}
         {filtered.length > 0 && (
           <SelectAllRow
             total={filtered.length}
@@ -1492,11 +1490,11 @@ function KnivesTab({ search }: { search: string }) {
               <div className={s.itemInfo}>
                 <div className={s.itemName}>{k.brand}</div>
                 <div className={s.itemMeta}>
-                  {[enumLabel(t.enums.country, k.country), k.steel].filter(Boolean).join(' · ') || 'нет данных'}
+                  {[enumLabel(t.enums.country, k.country), k.steel].filter(Boolean).join(' · ') || t.reference.noData}
                 </div>
               </div>
               <div className={s.itemRight}>
-                {k.isCustom && <span className={s.customBadge}>мой</span>}
+                {k.isCustom && <span className={s.customBadge}>{t.reference.mineM}</span>}
               </div>
             </div>
           )
