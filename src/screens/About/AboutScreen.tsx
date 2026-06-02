@@ -6,6 +6,7 @@ import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
 import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
+import { useLocale, localeTag } from '../../i18n'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 import EasterEgg from '../../components/EasterEgg/EasterEgg'
@@ -29,6 +30,7 @@ function isPwa(): boolean {
 
 export default function AboutScreen() {
   const navigate = useNavigate()
+  const { t, locale } = useLocale()
   const { currentVersion, latestVersion, releaseUrl, hasUpdate, checking, checkNow, lastChecked } = useVersionCheck()
 
   const analyticsOptOut = useLiveQuery(() => db.settings.get('analyticsOptOut'), [])
@@ -62,7 +64,7 @@ export default function AboutScreen() {
   }
 
   const checkedStr = lastChecked
-    ? new Date(lastChecked).toLocaleString('ru', {
+    ? new Date(lastChecked).toLocaleString(localeTag(locale), {
         day: 'numeric',
         month: 'long',
         hour: '2-digit',
@@ -74,31 +76,29 @@ export default function AboutScreen() {
     <div className={s.screen}>
       <div className={s.header}>
         <button className={s.back} onClick={() => navigate(-1)}><IconChevronLeft /></button>
-        <span className={s.title}>О ПРОГРАММЕ</span>
+        <span className={s.title}>{t.about.title}</span>
       </div>
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Версия</p>
+        <p className={s.sectionTitle}>{t.about.versionSection}</p>
         <div className={s.versionBlock}>
           <div className={s.versionRow}>
             <span className={s.appName}>AppTochite</span>
             <span className={s.versionBadge} onClick={tapVersion}>v{currentVersion}</span>
           </div>
-          <p className={s.appDesc}>Журнал профессионального заточника</p>
+          <p className={s.appDesc}>{t.about.appDesc}</p>
         </div>
 
         {hasUpdate && latestVersion && (
           <div className={s.updateBanner}>
             <div className={s.updateBannerText}>
-              <span className={s.updateTitle}>Доступно обновление</span>
+              <span className={s.updateTitle}>{t.about.updateAvailable}</span>
               <span className={s.updateVersion}>
                 v{currentVersion} → v{latestVersion}
               </span>
             </div>
             <span className={s.updateHint}>
-              {isPwa()
-                ? 'Закройте и откройте приложение для установки'
-                : 'Нажмите Ctrl+Shift+R для обновления страницы'}
+              {isPwa() ? t.about.updateHintPwa : t.about.updateHintBrowser}
             </span>
             {releaseUrl && (
               <a
@@ -107,7 +107,7 @@ export default function AboutScreen() {
                 rel="noopener noreferrer"
                 className={s.releaseLink}
               >
-                Что нового в v{latestVersion} →
+                {t.about.whatsNewIn(latestVersion)}
               </a>
             )}
           </div>
@@ -115,10 +115,10 @@ export default function AboutScreen() {
 
         <div className={s.checkRow}>
           <span className={s.checkMeta}>
-            {checkedStr ? `Проверено: ${checkedStr}` : 'Ещё не проверялось'}
+            {checkedStr ? t.about.checkedAt(checkedStr) : t.about.neverChecked}
           </span>
           <button className={s.checkBtn} onClick={() => checkNow()} disabled={checking}>
-            {checking ? 'Проверка…' : 'Проверить'}
+            {checking ? t.about.checking : t.about.check}
           </button>
         </div>
       </div>
@@ -126,14 +126,14 @@ export default function AboutScreen() {
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Настройки</p>
+        <p className={s.sectionTitle}>{t.about.settingsSection}</p>
         <div className={s.linkList}>
           <button
             className={s.linkItem}
             onClick={() => window.open('/AppTochite/guide.html', '_blank')}
           >
             <span className={s.linkIcon}>📖</span>
-            <span className={s.linkLabel}>Инструкция</span>
+            <span className={s.linkLabel}>{t.about.guide}</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </button>
           <button
@@ -141,7 +141,7 @@ export default function AboutScreen() {
             onClick={() => navigate('/trash')}
           >
             <span className={s.linkIcon}>🗑️</span>
-            <span className={s.linkLabel}>Корзина{trashCount > 0 ? ` (${trashCount})` : ''}</span>
+            <span className={s.linkLabel}>{trashCount > 0 ? t.about.trashCount(trashCount) : t.about.trash}</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </button>
           <a
@@ -151,13 +151,13 @@ export default function AboutScreen() {
             className={s.linkItem}
           >
             <span className={s.linkIcon}>✈️</span>
-            <span className={s.linkLabel}>Группа в Telegram AppTochite</span>
+            <span className={s.linkLabel}>{t.about.telegramGroup}</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </a>
           <div className={s.toggleItem}>
             <div className={s.toggleLabel}>
-              <div className={s.toggleLabelTitle}>Анонимная статистика</div>
-              <div className={s.toggleLabelDesc}>Камни и ножи без личных данных — помогает улучшить справочник</div>
+              <div className={s.toggleLabelTitle}>{t.about.analyticsTitle}</div>
+              <div className={s.toggleLabelDesc}>{t.about.analyticsDesc}</div>
             </div>
             <label className={s.toggle}>
               <input
@@ -171,8 +171,8 @@ export default function AboutScreen() {
           {FEATURES.voiceInput && (
             <div className={s.toggleItem}>
               <div className={s.toggleLabel}>
-                <div className={s.toggleLabelTitle}>Голосовой ввод</div>
-                <div className={s.toggleLabelDesc}>Заполняйте поля голосом при создании заточки. Требует подключения к сети.</div>
+                <div className={s.toggleLabelTitle}>{t.about.voiceTitle}</div>
+                <div className={s.toggleLabelDesc}>{t.about.voiceDesc}</div>
               </div>
               <label className={s.toggle}>
                 <input
@@ -190,7 +190,7 @@ export default function AboutScreen() {
       <div className={s.divider} />
 
       <div className={s.section}>
-        <p className={s.sectionTitle}>Что нового</p>
+        <p className={s.sectionTitle}>{t.about.whatsNewSection}</p>
         <div className={s.changelog}>
           {CHANGELOG.map((entry) => (
             <div key={entry.version} className={s.changelogEntry}>
