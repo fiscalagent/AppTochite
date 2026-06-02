@@ -74,13 +74,17 @@ restore **не затрагиваются**, и данные пользоват�
   Пропущено намеренно (Фаза 3/голос): DictationButton, DictationCandidates,
   DictationIndicator, MicButton.
 
-### 1.3 Форматирование
+### 1.3 Форматирование ✅
 
-- ⏳ Заменить `toLocaleDateString('ru')` и подобное на `fmtDate`/`fmtDateTime` по локали
-  (buildSharpeningCSV и др.)
-- ✅ **Валюта** — решение: **en → USD ($)**, ru → RUB (₽). Дефолт уже в `format.ts`
-  (`DEFAULT_CURRENCY`). Осталось заменить захардкоженный символ ₽ (напр. «Цена, ₽» в Z-1) на
-  `fmtMoney` в текстовом проходе.
+- ✅ Добавлены именованные хелперы в `format.ts`: `fmtDateShort`, `fmtDateLong`, `fmtDateDayMonth`,
+  `fmtDateMonthYear`, `fmtDateTimeLong`, `fmtCurrencySymbol`. Все экспортированы через `index.ts`.
+- ✅ Все `toLocaleDateString`/`toLocaleString` в экранах заменены именованными функциями
+  (Trash, About, ClientCard, Backup, HistoryFeed, SharpeningDetail). `localeTag` убран из
+  компонентных импортов там, где использовался только для форматирования дат.
+- ✅ **Валюта** — `priceLabel: 'Цена, ₽'` → `'Цена'` в словаре; в Z-1 лейбл составной:
+  `{t.sharpening.priceLabel}, {fmtCurrencySymbol(locale)}`. При добавлении en будет автоматически
+  показывать «Price, $».
+- ✅ `buildSharpeningCSV` (backup.ts) — намеренно оставлен с `'ru'`; CSV-формат русскоязычный.
 
 ### 1.4 Документ-уровень
 

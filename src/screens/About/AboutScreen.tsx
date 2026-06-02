@@ -6,7 +6,7 @@ import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
 import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
-import { useLocale, localeTag } from '../../i18n'
+import { useLocale, fmtDateTimeLong } from '../../i18n'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 import EasterEgg from '../../components/EasterEgg/EasterEgg'
@@ -63,14 +63,7 @@ export default function AboutScreen() {
     }
   }
 
-  const checkedStr = lastChecked
-    ? new Date(lastChecked).toLocaleString(localeTag(locale), {
-        day: 'numeric',
-        month: 'long',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : null
+  const checkedStr = lastChecked ? fmtDateTimeLong(locale, lastChecked) : null
 
   return (
     <div className={s.screen}>

@@ -3,7 +3,11 @@
 
 export { LocaleProvider, useLocale, useT, enumLabel } from './LocaleProvider'
 export { plural } from './plural'
-export { fmtDate, fmtDateTime, fmtMoney, fmtNumber } from './format'
+export {
+  fmtDate, fmtDateTime, fmtMoney, fmtNumber,
+  fmtDateShort, fmtDateLong, fmtDateDayMonth, fmtDateMonthYear,
+  fmtDateTimeLong, fmtCurrencySymbol,
+} from './format'
 export {
   type Locale,
   LOCALES,

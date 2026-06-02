@@ -44,7 +44,7 @@ import {
   type DailyBackupMeta,
 } from '../../utils/backup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
-import { useLocale, localeTag } from '../../i18n'
+import { useLocale, fmtDate, fmtDateDayMonth, fmtDateTimeLong } from '../../i18n'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -313,7 +313,7 @@ export default function BackupScreen() {
               ? t.backup.loading
               : opfsMeta === null
                 ? t.backup.neverCreated
-                : `${new Date(opfsMeta.date).toLocaleString(localeTag(locale), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} · ${t.backup.kb((opfsMeta.size / 1024).toFixed(0))}`}
+                : `${fmtDateTimeLong(locale, opfsMeta.date)} · ${t.backup.kb((opfsMeta.size / 1024).toFixed(0))}`}
           </span>
         </div>
         <p className={s.desc}>{t.backup.autoBackupDesc}</p>
@@ -332,7 +332,7 @@ export default function BackupScreen() {
             <div className={s.autoBackupRow}>
               <span className={s.autoBackupBadge}>{t.backup.perDay}</span>
               <span className={s.autoBackupMeta}>
-                {t.backup.snapshotFor(new Date(dailyMeta.snapshotDate).toLocaleDateString(localeTag(locale), { day: 'numeric', month: 'long' }))} · {t.backup.kb((dailyMeta.size / 1024).toFixed(0))}
+                {t.backup.snapshotFor(fmtDateDayMonth(locale, dailyMeta.snapshotDate))} · {t.backup.kb((dailyMeta.size / 1024).toFixed(0))}
               </span>
             </div>
             <p className={s.desc}>{t.backup.dailyDesc}</p>
@@ -405,7 +405,7 @@ export default function BackupScreen() {
         ) : (
           <div className={s.preview}>
             <p className={s.previewDate}>
-              {t.backup.backupDate(new Date(preview.exportedAt).toLocaleDateString(localeTag(locale)))}
+              {t.backup.backupDate(fmtDate(locale, preview.exportedAt))}
             </p>
             <div className={s.previewRows}>
               <div className={s.previewRow}><span>{t.backup.rowClients}</span><span>{preview.data.clients.length}</span></div>

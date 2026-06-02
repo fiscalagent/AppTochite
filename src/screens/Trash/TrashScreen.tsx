@@ -5,7 +5,7 @@ import { db } from '../../db/instance'
 import { listTrashGroups, restoreBatch, purgeBatch, type TrashGroup } from '../../utils/trash'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import { useToast } from '../../components/Toast/ToastContext'
-import { useLocale, localeTag, type Dict, type Locale } from '../../i18n'
+import { useLocale, fmtDateTimeLong, type Dict, type Locale } from '../../i18n'
 import s from './TrashScreen.module.css'
 
 const IconChevronLeft = () => (
@@ -15,7 +15,7 @@ const IconChevronLeft = () => (
 )
 
 function formatDate(date: Date, locale: Locale): string {
-  return new Date(date).toLocaleString(localeTag(locale), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+  return fmtDateTimeLong(locale, date)
 }
 
 function daysLeft(expiresAt: Date, t: Dict): string {

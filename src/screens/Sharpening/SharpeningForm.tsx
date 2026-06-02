@@ -16,7 +16,7 @@ import DictationButton from '../../components/DictationButton/DictationButton'
 import DictationIndicator from '../../components/DictationIndicator/DictationIndicator'
 import DictationCandidates from '../../components/DictationCandidates/DictationCandidates'
 import { isVoiceEnabled } from '../../config/features'
-import { useT, enumLabel, ru } from '../../i18n'
+import { useLocale, enumLabel, fmtCurrencySymbol, ru } from '../../i18n'
 import s from './SharpeningForm.module.css'
 
 
@@ -89,7 +89,7 @@ export default function SharpeningForm() {
   const navigate = useNavigate()
   const location = useLocation()
   const { showToast, setRaisedMode } = useToast()
-  const t = useT()
+  const { t, locale } = useLocale()
   const { openCamera, openGallery } = useCamera()
   const isEdit = Boolean(id)
 
@@ -679,7 +679,7 @@ export default function SharpeningForm() {
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>{t.sharpening.priceLabel}</label>
+          <label className={s.label}>{t.sharpening.priceLabel}, {fmtCurrencySymbol(locale)}</label>
           <input
             value={price}
             onChange={e => setPrice(e.target.value)}

@@ -9,7 +9,7 @@ import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet
 import { useToast } from '../../components/Toast/ToastContext'
 import { pickAvatarFile } from '../../hooks/useCamera'
 import { softDeleteClient } from '../../utils/trash'
-import { useLocale, localeTag, fmtMoney, type Locale } from '../../i18n'
+import { useLocale, fmtMoney, fmtDateShort, type Locale } from '../../i18n'
 import s from './ClientCard.module.css'
 
 const IconChevronLeft = () => (
@@ -25,7 +25,7 @@ const IconChevronRight = () => (
 )
 
 function formatDate(date: Date, locale: Locale) {
-  return new Date(date).toLocaleDateString(localeTag(locale), { day: 'numeric', month: 'short' })
+  return fmtDateShort(locale, date)
 }
 
 export default function ClientCard() {

@@ -38,3 +38,33 @@ export function fmtMoney(locale: Locale, amount: number, currency?: string): str
 export function fmtNumber(locale: Locale, n: number): string {
   return new Intl.NumberFormat(localeTag(locale)).format(n)
 }
+
+export function fmtDateShort(locale: Locale, d: Date | string | number): string {
+  return new Intl.DateTimeFormat(localeTag(locale), { day: 'numeric', month: 'short' }).format(toDate(d))
+}
+
+export function fmtDateLong(locale: Locale, d: Date | string | number): string {
+  return new Intl.DateTimeFormat(localeTag(locale), { day: 'numeric', month: 'long', year: 'numeric' }).format(toDate(d))
+}
+
+export function fmtDateDayMonth(locale: Locale, d: Date | string | number): string {
+  return new Intl.DateTimeFormat(localeTag(locale), { day: 'numeric', month: 'long' }).format(toDate(d))
+}
+
+export function fmtDateMonthYear(locale: Locale, d: Date | string | number): string {
+  return new Intl.DateTimeFormat(localeTag(locale), { month: 'long', year: 'numeric' }).format(toDate(d))
+}
+
+export function fmtDateTimeLong(locale: Locale, d: Date | string | number): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+  }).format(toDate(d))
+}
+
+export function fmtCurrencySymbol(locale: Locale): string {
+  const currency = DEFAULT_CURRENCY[locale] ?? 'RUB'
+  const parts = new Intl.NumberFormat(localeTag(locale), {
+    style: 'currency', currency, maximumFractionDigits: 0,
+  }).formatToParts(0)
+  return parts.find(p => p.type === 'currency')?.value ?? currency
+}

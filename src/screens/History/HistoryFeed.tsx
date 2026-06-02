@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStatus } from '../../db/instance'
 import StatusPill from '../../components/StatusPill/StatusPill'
-import { useLocale, localeTag, fmtMoney, type Locale } from '../../i18n'
+import { useLocale, fmtMoney, fmtDateShort, fmtDateMonthYear, type Locale } from '../../i18n'
 import s from './HistoryFeed.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -22,12 +22,12 @@ function monthKey(date: Date | string) {
 function monthLabel(key: string, locale: Locale) {
   const [year, month] = key.split('-')
   const d = new Date(Number(year), Number(month) - 1, 1)
-  const label = d.toLocaleDateString(localeTag(locale), { month: 'long', year: 'numeric' })
+  const label = fmtDateMonthYear(locale, d)
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 function dayLabel(date: Date | string, locale: Locale) {
-  return new Date(date).toLocaleDateString(localeTag(locale), { day: 'numeric', month: 'short' })
+  return fmtDateShort(locale, date)
 }
 
 export default function HistoryFeed() {

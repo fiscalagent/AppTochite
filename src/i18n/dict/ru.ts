@@ -197,7 +197,7 @@ export const ru = {
     hardnessPlaceholder: '58',
     receivedDateLabel: 'Дата приёмки',
     conditionLabel: 'Требуется',
-    priceLabel: 'Цена, ₽',
+    priceLabel: 'Цена',
     priceDictation: 'цена ...',
     pricePlaceholder: '500',
     photoBefore: 'Фото «До»',

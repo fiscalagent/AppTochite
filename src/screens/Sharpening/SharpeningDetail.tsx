@@ -22,7 +22,7 @@ import DictationCandidates from '../../components/DictationCandidates/DictationC
 import { isVoiceEnabled } from '../../config/features'
 import { startBlur } from '../../utils/modalBlur'
 import { softDeleteSharpening } from '../../utils/trash'
-import { useLocale, enumLabel, localeTag, fmtMoney, type Locale } from '../../i18n'
+import { useLocale, enumLabel, fmtMoney, fmtDateLong, type Locale } from '../../i18n'
 import s from './SharpeningDetail.module.css'
 
 const IconChevronLeft = () => (
@@ -68,9 +68,7 @@ function parseStoneName(name: string): { brand: string } & Partial<ReturnType<ty
 const PHOTO_LIMIT = 5
 
 function formatDate(date: Date | string, locale: Locale) {
-  return new Date(date).toLocaleDateString(localeTag(locale), {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
+  return fmtDateLong(locale, date)
 }
 
 export default function SharpeningDetail() {
