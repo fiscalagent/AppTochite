@@ -1,3 +1,4 @@
+import { useT } from '../../i18n'
 import s from './BackupCriticalBanner.module.css'
 
 interface Props {
@@ -5,14 +6,15 @@ interface Props {
 }
 
 export default function BackupCriticalBanner({ daysSince }: Props) {
+  const t = useT()
   // BackupReminder монтируется снаружи RouterProvider, поэтому useNavigate/useLocation недоступны.
   // location.pathname читаем напрямую и сравниваем без basename.
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   if (pathname.endsWith('/backup')) return null
 
   const text = daysSince === null
-    ? 'Бэкап ни разу не делался. Высокий риск потери данных.'
-    : `Бэкап не делался ${daysSince} ${daysWord(daysSince)}. Высокий риск потери данных.`
+    ? t.components.backupNeverDone
+    : t.components.backupNotDoneFor(daysSince)
 
   const href = `${import.meta.env.BASE_URL}backup`
 
@@ -24,15 +26,7 @@ export default function BackupCriticalBanner({ daysSince }: Props) {
         <line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
       <span className={s.text}>{text}</span>
-      <span className={s.cta}>Открыть</span>
+      <span className={s.cta}>{t.components.bannerOpen}</span>
     </a>
   )
-}
-
-function daysWord(n: number): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'день'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня'
-  return 'дней'
 }

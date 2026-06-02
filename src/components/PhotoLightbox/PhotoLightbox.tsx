@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type TouchEvent } from 'react'
+import { useT } from '../../i18n'
 import s from './PhotoLightbox.module.css'
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function PhotoLightbox({ photos, initialIndex = 0, onClose }: Props) {
+  const t = useT()
   const [index, setIndex] = useState(initialIndex)
   const [scale, setScale] = useState(1)
   const [translate, setTranslate] = useState({ x: 0, y: 0 })
@@ -113,7 +115,7 @@ export default function PhotoLightbox({ photos, initialIndex = 0, onClose }: Pro
       <button
         className={s.closeBtn}
         onClick={e => { e.stopPropagation(); onClose() }}
-        aria-label="Закрыть"
+        aria-label={t.components.closeLightbox}
       >
         ×
       </button>

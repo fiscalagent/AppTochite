@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
+import { useT } from '../../i18n'
 import s from './ConfirmModal.module.css'
 
 interface Props {
@@ -13,8 +14,9 @@ interface Props {
 }
 
 export default function ConfirmModal({
-  isOpen, title, message, confirmLabel = 'Удалить', onConfirm, onCancel,
+  isOpen, title, message, confirmLabel, onConfirm, onCancel,
 }: Props) {
+  const t = useT()
   useEffect(() => {
     if (!isOpen) return
     return startBlur()
@@ -29,8 +31,8 @@ export default function ConfirmModal({
         <p className={s.title}>{title}</p>
         {message && <p className={s.message}>{message}</p>}
         <div className={s.actions}>
-          <button className={s.confirmBtn} onClick={onConfirm}>{confirmLabel}</button>
-          <button className={s.cancelBtn} onClick={onCancel}>Отмена</button>
+          <button className={s.confirmBtn} onClick={onConfirm}>{confirmLabel ?? t.components.confirmDelete}</button>
+          <button className={s.cancelBtn} onClick={onCancel}>{t.common.cancel}</button>
         </div>
       </div>
     </div>,

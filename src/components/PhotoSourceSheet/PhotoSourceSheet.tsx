@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
+import { useT } from '../../i18n'
 import s from './PhotoSourceSheet.module.css'
 
 const IconCamera = () => (
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function PhotoSourceSheet({ onCamera, onGallery, onClose }: Props) {
+  const t = useT()
   useEffect(() => startBlur(), [])
 
   return createPortal(
@@ -33,13 +35,13 @@ export default function PhotoSourceSheet({ onCamera, onGallery, onClose }: Props
         <div className={s.handle} />
         <button className={s.option} onClick={() => { onCamera(); onClose() }}>
           <span className={s.icon}><IconCamera /></span>
-          Сфотографировать
+          {t.components.takePhoto}
         </button>
         <button className={s.option} onClick={() => { onGallery(); onClose() }}>
           <span className={s.icon}><IconGallery /></span>
-          Выбрать из галереи
+          {t.components.chooseFromGallery}
         </button>
-        <button className={s.cancel} onClick={onClose}>Отмена</button>
+        <button className={s.cancel} onClick={onClose}>{t.common.cancel}</button>
       </div>
     </div>,
     document.body

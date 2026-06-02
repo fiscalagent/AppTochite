@@ -414,4 +414,57 @@ export const ru = {
     donateText: 'Если моё приложение вам помогает — поддержать его развитие можно переводом на карту. Спасибо! 🤝',
     aboutLabel: 'О программе',
   },
+
+  // Переиспользуемые компоненты
+  components: {
+    confirmDelete: 'Удалить',
+
+    onboardingTitle: 'Добро пожаловать!',
+    onboardingSubtitle: 'Прочитайте инструкцию — она поможет быстро разобраться в приложении.',
+    onboardingOpen: 'Открыть инструкцию',
+    onboardingSkip: 'Пропустить',
+
+    takePhoto: 'Сфотографировать',
+    chooseFromGallery: 'Выбрать из галереи',
+
+    closeLightbox: 'Закрыть',
+
+    storageTitle: 'Хранилище заполняется',
+    storageEnableCompress: 'Включить сжатие',
+    storageSnooze: 'Напомнить через неделю',
+    storagePhotoHint: 'Фотографии занимают больше всего места. Включите сжатие — новые фото будут уменьшены до 1280 пкс с качеством 65%. Разница практически незаметна, но размер снизится в 3–5 раз.',
+    storageCompressEnabled: 'Сжатие включено — новые фото будут меньше',
+
+    browserWarning: 'Встроенный браузер Telegram не поддерживает установку приложения. Откройте в Chrome.',
+    openInChrome: 'Открыть в Chrome',
+    continueAnyway: 'Продолжить',
+
+    backupNeverDone: 'Бэкап ни разу не делался. Высокий риск потери данных.',
+    backupNotDoneFor: (n: number) =>
+      `Бэкап не делался ${n} ${plural('ru', n, { one: 'день', few: 'дня', many: 'дней', other: 'дней' })}. Высокий риск потери данных.`,
+    bannerOpen: 'Открыть',
+
+    reminderTitleWarn: 'Пора сделать бэкап',
+    reminderTitleInfo: 'Напоминание о бэкапе',
+    reminderBodyAndroid: 'Android может удалить данные при очистке кэша или нехватке места. Сохраните бэкап, чтобы не потерять историю заточек.',
+    reminderDoBackup: 'Сделать бэкап',
+    reminderSnooze: 'Напомнить завтра',
+    reminderNeverDone: 'Вы ещё ни разу не делали бэкап',
+    reminderRecordsSince: (n: number) =>
+      `${n} ${plural('ru', n, { one: 'новая запись', few: 'новые записи', many: 'новых записей', other: 'новых записей' })} с последнего бэкапа`,
+    reminderDaysAgo: (n: number) =>
+      `Последний бэкап был ${n} ${plural('ru', n, { one: 'день', few: 'дня', many: 'дней', other: 'дней' })} назад`,
+
+    photoReportTitle: 'Фото-отчёт',
+    photoReportShare: 'Поделиться',
+    photoReportPreparing: 'Подготовка…',
+
+    photoShareTitle: 'Поделиться фото',
+    photoShareSelectAll: 'Выбрать все',
+    photoShareDeselectAll: 'Снять всё',
+    photoShareBtn: (n: number) => `Поделиться (${n})`,
+
+    easterCaption: 'ваша острая память',
+    easterAriaLabel: 'AppTochite — ваша острая память',
+  },
 } as const

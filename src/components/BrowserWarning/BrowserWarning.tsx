@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT } from '../../i18n'
 import s from './BrowserWarning.module.css'
 
 function isWebView(): boolean {
@@ -11,6 +12,7 @@ function isWebView(): boolean {
 
 export default function BrowserWarning() {
   const [dismissed, setDismissed] = useState(false)
+  const t = useT()
 
   const standalone = window.matchMedia('(display-mode: standalone)').matches
   if (standalone || !isWebView() || dismissed) return null
@@ -23,12 +25,10 @@ export default function BrowserWarning() {
 
   return (
     <div className={s.banner}>
-      <p className={s.text}>
-        Встроенный браузер Telegram не поддерживает установку приложения. Откройте в Chrome.
-      </p>
+      <p className={s.text}>{t.components.browserWarning}</p>
       <div className={s.actions}>
-        <button className={s.openBtn} onClick={openInChrome}>Открыть в Chrome</button>
-        <button className={s.skipBtn} onClick={() => setDismissed(true)}>Продолжить</button>
+        <button className={s.openBtn} onClick={openInChrome}>{t.components.openInChrome}</button>
+        <button className={s.skipBtn} onClick={() => setDismissed(true)}>{t.components.continueAnyway}</button>
       </div>
     </div>
   )

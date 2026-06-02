@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
+import { useT } from '../../i18n'
 import s from './BackupReminderModal.module.css'
 
 interface Props {
@@ -16,6 +17,7 @@ export default function BackupReminderModal({
   isOpen, variant, daysSinceBackup, newRecordsCount, onConfirm, onSnooze,
 }: Props) {
   const [saving, setSaving] = useState(false)
+  const t = useT()
 
   useEffect(() => {
     if (!isOpen) return
@@ -25,9 +27,15 @@ export default function BackupReminderModal({
   if (!isOpen) return null
 
   const busy = saving
-
-  const subtitle = buildSubtitle(variant, daysSinceBackup, newRecordsCount)
   const isWarn = variant === 'warn'
+
+  function buildSubtitle(): string {
+    if (daysSinceBackup === null) return t.components.reminderNeverDone
+    if (isWarn && newRecordsCount !== undefined && newRecordsCount >= 10) {
+      return t.components.reminderRecordsSince(newRecordsCount)
+    }
+    return t.components.reminderDaysAgo(daysSinceBackup)
+  }
 
   async function handleConfirm() {
     setSaving(true)
@@ -43,44 +51,17 @@ export default function BackupReminderModal({
           <polyline points="17 21 17 13 7 13 7 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           <polyline points="7 3 7 8 15 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <p className={s.title}>{isWarn ? 'Пора сделать бэкап' : 'Напоминание о бэкапе'}</p>
-        <p className={`${s.subtitle} ${isWarn ? s.subtitleDanger : ''}`}>{subtitle}</p>
-        <p className={s.desc}>
-          Android может удалить данные при очистке кэша или нехватке места.
-          Сохраните бэкап, чтобы не потерять историю заточек.
-        </p>
+        <p className={s.title}>{isWarn ? t.components.reminderTitleWarn : t.components.reminderTitleInfo}</p>
+        <p className={`${s.subtitle} ${isWarn ? s.subtitleDanger : ''}`}>{buildSubtitle()}</p>
+        <p className={s.desc}>{t.components.reminderBodyAndroid}</p>
         <div className={s.actions}>
           <button className={`${s.primaryBtn} ${isWarn ? s.primaryBtnDanger : ''}`} onClick={handleConfirm} disabled={busy}>
-            {saving ? 'Сохранение…' : 'Сделать бэкап'}
+            {saving ? t.backup.saving : t.components.reminderDoBackup}
           </button>
-          <button className={s.snoozeBtn} onClick={onSnooze} disabled={busy}>Напомнить завтра</button>
+          <button className={s.snoozeBtn} onClick={onSnooze} disabled={busy}>{t.components.reminderSnooze}</button>
         </div>
       </div>
     </div>,
     document.body
   )
-}
-
-function buildSubtitle(variant: 'info' | 'warn', days: number | null, records: number | undefined): string {
-  if (days === null) return 'Вы ещё ни разу не делали бэкап'
-  if (variant === 'warn' && records !== undefined && records >= 10) {
-    return `${records} ${recordsWord(records)} с последнего бэкапа`
-  }
-  return `Последний бэкап был ${days} ${daysWord(days)} назад`
-}
-
-function daysWord(n: number): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'день'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня'
-  return 'дней'
-}
-
-function recordsWord(n: number): string {
-  const mod10 = n % 10
-  const mod100 = n % 100
-  if (mod10 === 1 && mod100 !== 11) return 'новая запись'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'новые записи'
-  return 'новых записей'
 }

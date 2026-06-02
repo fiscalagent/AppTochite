@@ -68,8 +68,11 @@ restore **не затрагиваются**, и данные пользоват�
 - ✅ Backup (BK-1) — `backup.*`; все тосты, секции, даты по локали, merge-превью
 - ✅ About (A-1) — `about.*` в словаре; дата проверки через `localeTag`. Ченджлог не переводим.
 - ✅ Trash — `trash.*` в словаре; даты через `localeTag`, плюрал через `units.sharpenings`
-- ⏳ Компоненты: модалки (ConfirmModal), шаблоны тостов, BackupReminder, StorageWarning,
-  OnboardingSheet, BrowserWarning, PhotoReport/PhotoShare вотермарки и т.д.
+- ✅ Компоненты — `components.*`: ConfirmModal, OnboardingSheet, PhotoSourceSheet,
+  PhotoLightbox, StorageWarning, BrowserWarning, BackupCriticalBanner,
+  BackupReminderModal, PhotoReportSheet, PhotoShareSheet, EasterEgg.
+  Пропущено намеренно (Фаза 3/голос): DictationButton, DictationCandidates,
+  DictationIndicator, MicButton.
 
 ### 1.3 Форматирование
 

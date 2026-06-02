@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useT } from '../../i18n'
 import s from './EasterEgg.module.css'
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
  * Гаснет сам; тап не закрывает.
  */
 export default function EasterEgg({ onClose }: Props) {
+  const t = useT()
   const [closing, setClosing] = useState(false)
 
   // автозакрытие после того, как блик дважды пройдёт
@@ -32,7 +34,7 @@ export default function EasterEgg({ onClose }: Props) {
     <div
       className={`${s.overlay} ${closing ? s.closing : ''}`}
       role="dialog"
-      aria-label="AppTochite — ваша острая память"
+      aria-label={t.components.easterAriaLabel}
     >
       <svg className={s.blade} viewBox="0 0 24 14" fill="none" aria-hidden="true">
         <rect x="0" y="9" width="24" height="5" rx="2" fill="var(--text-200)" opacity="0.3" />
@@ -51,7 +53,7 @@ export default function EasterEgg({ onClose }: Props) {
         </span>
       </div>
 
-      <div className={s.caption}>ваша острая память</div>
+      <div className={s.caption}>{t.components.easterCaption}</div>
     </div>
   )
 }

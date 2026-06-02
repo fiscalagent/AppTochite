@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Sharpening } from '../../db/db'
 import { startBlur } from '../../utils/modalBlur'
+import { useT } from '../../i18n'
 import s from './PhotoReportSheet.module.css'
 
 interface Props {
@@ -221,6 +222,7 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
 }
 
 export default function PhotoReportSheet({ photos, sharpening, onClose }: Props) {
+  const t = useT()
   const [selected, setSelected] = useState(0)
   const [sharing, setSharing] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -264,7 +266,7 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
   return createPortal(
     <div className={s.overlay} onClick={onClose}>
       <div className={s.sheet} onClick={e => e.stopPropagation()}>
-        <div className={s.title}>Фото-отчёт</div>
+        <div className={s.title}>{t.components.photoReportTitle}</div>
 
         {photos.length > 1 && (
           <div className={s.thumbs}>
@@ -285,9 +287,9 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
         </div>
 
         <button className={s.shareBtn} onClick={handleShare} disabled={sharing}>
-          {sharing ? 'Подготовка…' : 'Поделиться'}
+          {sharing ? t.components.photoReportPreparing : t.components.photoReportShare}
         </button>
-        <button className={s.cancelBtn} onClick={onClose}>Отмена</button>
+        <button className={s.cancelBtn} onClick={onClose}>{t.common.cancel}</button>
       </div>
     </div>,
     document.body

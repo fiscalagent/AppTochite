@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
+import { useT } from '../../i18n'
 import s from './PhotoShareSheet.module.css'
 
 export interface SharePhoto {
@@ -47,6 +48,7 @@ async function applyWatermark(b64: string): Promise<Blob> {
 }
 
 export default function PhotoShareSheet({ photos, onClose }: Props) {
+  const t = useT()
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(photos.map((_, i) => i))
   )
@@ -103,9 +105,9 @@ export default function PhotoShareSheet({ photos, onClose }: Props) {
     <div className={s.overlay} onClick={onClose}>
       <div className={s.sheet} onClick={e => e.stopPropagation()}>
         <div className={s.header}>
-          <span className={s.title}>Поделиться фото</span>
+          <span className={s.title}>{t.components.photoShareTitle}</span>
           <button className={s.toggleAll} onClick={toggleAll}>
-            {allSelected ? 'Снять всё' : 'Выбрать все'}
+            {allSelected ? t.components.photoShareDeselectAll : t.components.photoShareSelectAll}
           </button>
         </div>
 
@@ -129,12 +131,12 @@ export default function PhotoShareSheet({ photos, onClose }: Props) {
           disabled={sharing || selected.size === 0}
         >
           {sharing
-            ? 'Подготовка…'
+            ? t.components.photoReportPreparing
             : selected.size > 1
-              ? `Поделиться (${selected.size})`
-              : 'Поделиться'}
+              ? t.components.photoShareBtn(selected.size)
+              : t.components.photoReportShare}
         </button>
-        <button className={s.cancelBtn} onClick={onClose}>Отмена</button>
+        <button className={s.cancelBtn} onClick={onClose}>{t.common.cancel}</button>
       </div>
     </div>,
     document.body
