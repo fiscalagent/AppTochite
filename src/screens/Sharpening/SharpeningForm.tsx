@@ -139,17 +139,7 @@ export default function SharpeningForm() {
   })
 
   function fieldLabel(f: FieldKey): string {
-    switch (f) {
-      case 'client': return 'Клиент'
-      case 'knife': return 'Нож'
-      case 'steel': return 'Сталь'
-      case 'condition': return 'Требуется'
-      case 'notes': return 'Примечание'
-      case 'stone': return 'Камень'
-      case 'angle': return 'Угол'
-      case 'price': return 'Цена'
-      case 'hrc': return 'HRC'
-    }
+    return t.sharpening.fieldLabels[f] ?? f
   }
 
   function normalizeConditionValue(v: string): string | null {
@@ -172,7 +162,7 @@ export default function SharpeningForm() {
     }
     setAwaitingCancelConfirm(false)
     awaitingCancelConfirmRef.current = false
-    if (!silent) showToast('Отмена сброшена')
+    if (!silent) showToast(t.sharpening.voice.cancelReset)
   }
 
   function armCancelConfirm() {
@@ -183,9 +173,9 @@ export default function SharpeningForm() {
       cancelTimerRef.current = null
       setAwaitingCancelConfirm(false)
       awaitingCancelConfirmRef.current = false
-      showToast('Отмена сброшена')
+      showToast(t.sharpening.voice.cancelReset)
     }, 5000)
-    showToast('Сказать «да» для отмены')
+    showToast(t.sharpening.voice.cancelConfirm)
   }
 
   useEffect(() => {
@@ -228,23 +218,23 @@ export default function SharpeningForm() {
 
   function dispatchFuzzyField(field: FieldKey, value: string, suggestions: string[]) {
     if (!value.trim() || suggestions.length === 0) {
-      showToast(`${fieldLabel(field)} не найдено`)
+      showToast(t.sharpening.voice.fieldNotFound(fieldLabel(field)))
       return
     }
     const all = findAllMatches(value, suggestions, 30)
     if (all.length === 1) {
       applyByField(field, all[0])
       closeDictationList()
-      showToast(`${fieldLabel(field)}: ${all[0]}`)
+      showToast(t.sharpening.voice.fieldSet(fieldLabel(field), all[0]))
       return
     }
     if (all.length > 1) {
       setDictationCandidates({ field, items: all })
       setAwaitingListField(field)
-      showToast(`Уточни ${fieldLabel(field).toLowerCase()}`)
+      showToast(t.sharpening.voice.fieldClarify(fieldLabel(field)))
       return
     }
-    showToast(`${fieldLabel(field)} не найдено`)
+    showToast(t.sharpening.voice.fieldNotFound(fieldLabel(field)))
   }
 
   function applyClientCommand(value: string) {
@@ -253,17 +243,17 @@ export default function SharpeningForm() {
     if (single) {
       applyClientByName(single)
       closeDictationList()
-      showToast(`Клиент: ${single}`)
+      showToast(t.sharpening.voice.fieldSet(fieldLabel('client'), single))
       return
     }
     const all = findAllMatches(value, names, 30)
     if (all.length > 0) {
       setDictationCandidates({ field: 'client', items: all })
       setAwaitingListField('client')
-      showToast('Уточни клиента')
+      showToast(t.sharpening.voice.clarifyClient)
       return
     }
-    showToast('Клиент не найден')
+    showToast(t.sharpening.voice.clientNotFound)
   }
 
   function applyFieldCommand(field: FieldKey, value: string) {
@@ -273,9 +263,9 @@ export default function SharpeningForm() {
       case 'steel': dispatchFuzzyField('steel', value, steelSuggestions); return
       case 'condition': {
         const chip = normalizeConditionValue(value)
-        if (!chip) { showToast('Не понял требование'); return }
+        if (!chip) { showToast(t.sharpening.voice.conditionUnknown); return }
         toggleCondition(chip)
-        showToast(`Требуется: ${chip}`)
+        showToast(t.sharpening.voice.fieldSet(t.sharpening.conditionLabel, enumLabel(t.enums.condition, chip)))
         return
       }
       case 'notes':
@@ -283,10 +273,10 @@ export default function SharpeningForm() {
       case 'angle':
         // На Z-1 этих полей нет. Парсер отсекает их по step=1 — сюда попасть нельзя,
         // но оставлен явный отказ на случай рассогласования STEP1_FIELDS и UI.
-        showToast(`${fieldLabel(field)} — на экране заточки`)
+        showToast(t.sharpening.voice.fieldOnDetail(fieldLabel(field)))
         return
-      case 'price': setPrice(value); showToast(`Цена: ${value}`); return
-      case 'hrc': setHrc(value); showToast(`HRC: ${value}`); return
+      case 'price': setPrice(value); showToast(t.sharpening.voice.fieldSet(fieldLabel('price'), value)); return
+      case 'hrc': setHrc(value); showToast(t.sharpening.voice.fieldSet('HRC', value)); return
     }
   }
 
@@ -298,7 +288,7 @@ export default function SharpeningForm() {
     if (!picked) return
     applyByField(field, picked)
     closeDictationList()
-    showToast(`${fieldLabel(field)}: ${picked}`)
+    showToast(t.sharpening.voice.fieldSet(fieldLabel(field), picked))
   }
 
   function handleDictationCommand(cmd: Command, raw: string) {
@@ -318,7 +308,7 @@ export default function SharpeningForm() {
         return
       case 'addStone':
       case 'removeLastStone':
-        showToast('Камни — на экране заточки')
+        showToast(t.sharpening.voice.stonesOnDetail)
         return
       case 'clear':
         switch (cmd.field) {
@@ -332,18 +322,18 @@ export default function SharpeningForm() {
           default: return
         }
         closeDictationList()
-        showToast(`Очищено: ${fieldLabel(cmd.field)}`)
+        showToast(t.sharpening.voice.fieldClear(fieldLabel(cmd.field)))
         return
       case 'nav':
         if (cmd.action === 'next' || cmd.action === 'prev') {
-          showToast('Нет шагов')
+          showToast(t.sharpening.voice.noSteps)
           return
         }
         armCancelConfirm()
         return
       case 'submit':
         if (!clientId || !knifeBrand.trim()) {
-          showToast('Заполни клиента и нож')
+          showToast(t.sharpening.voice.fillRequired)
           return
         }
         dictation.stop()
@@ -361,10 +351,10 @@ export default function SharpeningForm() {
         handlePickFromList(cmd.hint)
         return
       case 'repeat':
-        showToast(`Слышал: «${lastRawRef.current}»`)
+        showToast(t.sharpening.voice.heard(lastRawRef.current))
         return
       case 'unknown':
-        showToast(`Не понял: «${raw}»`)
+        showToast(t.sharpening.voice.notUnderstood(raw))
         return
     }
   }
@@ -374,9 +364,9 @@ export default function SharpeningForm() {
   }
 
   function handleDictationAutoStop(reason: AutoStopReason) {
-    if (reason === 'errors') showToast('Микрофон отключён, проверь связь')
-    else if (reason === 'fatal') showToast('Нет доступа к микрофону')
-    else if (reason === 'unavailable') showToast('Голосовой ввод недоступен офлайн')
+    if (reason === 'errors') showToast(t.sharpening.voice.micErrors)
+    else if (reason === 'fatal') showToast(t.sharpening.voice.micFatal)
+    else if (reason === 'unavailable') showToast(t.components.voiceOffline)
   }
 
   const dictationCallbacksRef = useRef({
@@ -513,7 +503,7 @@ export default function SharpeningForm() {
           await db.sharpenings.update(Number(id), receptionFields)
         })
         trackSharpening(receptionFields as Parameters<typeof trackSharpening>[0])
-        if (opts.voiceTriggered) showToast('Заточка сохранена')
+        if (opts.voiceTriggered) showToast(t.sharpening.voice.savedVoice)
         navigate(`/sharpenings/${id}`, { replace: true })
       } else {
         const acceptanceData = {
@@ -554,12 +544,12 @@ export default function SharpeningForm() {
           return Number(await db.sharpenings.add(acceptanceData))
         })
         trackSharpening(acceptanceData as Parameters<typeof trackSharpening>[0])
-        if (opts.voiceTriggered) showToast('Принято в заточку')
+        if (opts.voiceTriggered) showToast(t.sharpening.voice.acceptedVoice)
         // fromAcceptance: на Z-2 «назад» (верхняя и аппаратная) ведёт обратно на Z-1 этой заточки
         navigate(`/sharpenings/${savedId}`, { replace: true, state: { fromAcceptance: true } })
       }
     } catch {
-      showToast('Ошибка при сохранении')
+      showToast(t.sharpening.saveError)
       setSaving(false)
     }
   }

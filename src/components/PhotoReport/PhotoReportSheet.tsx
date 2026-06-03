@@ -31,7 +31,7 @@ function cornerScore(r: { brightness: number; std: number }) {
   return r.brightness * 0.65 + r.std * 0.35
 }
 
-function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): Promise<void> {
+function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening, stonesPrefix: string): Promise<void> {
   return new Promise(resolve => {
     const img = new Image()
     img.onload = () => {
@@ -130,7 +130,7 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening): P
         ctx.font = font
 
         const maxOrder = Math.max(...stones.map(st => st.order))
-        const prefix = 'Камни: '
+        const prefix = stonesPrefix
         const arrowText = ' → '
         const prefixW = ctx.measureText(prefix).width
         const arrowW   = ctx.measureText(arrowText).width
@@ -231,7 +231,7 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
 
   useEffect(() => {
     if (canvasRef.current) {
-      renderReport(canvasRef.current, photos[selected], sharpening)
+      renderReport(canvasRef.current, photos[selected], sharpening, t.sharpening.stonesPrefix)
     }
   }, [selected, photos, sharpening])
 

@@ -214,12 +214,12 @@ export default function SharpeningDetail() {
     try {
       await db.stones.add(stone)
     } catch {
-      showToast('Не удалось сохранить камень')
+      showToast(t.sharpening.voice.stoneSaveFailed)
       return
     }
     const displayName = stoneDisplayName(stone)
     addStone(displayName)
-    showToast(`Камень добавлен: ${displayName}`)
+    showToast(t.sharpening.stoneAdded(displayName))
     setNewStoneBrand('')
     setNewStoneGritSource('')
     setNewStoneGritVal('')
@@ -236,17 +236,8 @@ export default function SharpeningDetail() {
   })
 
   function fieldLabel(f: FieldKey): string {
-    switch (f) {
-      case 'client': return 'Клиент'
-      case 'knife': return 'Нож'
-      case 'steel': return 'Сталь'
-      case 'condition': return 'Требуется'
-      case 'notes': return 'Комментарий'
-      case 'stone': return 'Камень'
-      case 'angle': return 'Угол'
-      case 'price': return 'Цена'
-      case 'hrc': return 'HRC'
-    }
+    if (f === 'notes') return t.sharpening.commentLabel
+    return t.sharpening.fieldLabels[f] ?? f
   }
 
   function closeDictationList() {
@@ -261,7 +252,7 @@ export default function SharpeningDetail() {
     }
     setAwaitingCancelConfirm(false)
     awaitingCancelConfirmRef.current = false
-    if (!silent) showToast('Отмена сброшена')
+    if (!silent) showToast(t.sharpening.voice.cancelReset)
   }
 
   function armCancelConfirm() {
@@ -272,42 +263,42 @@ export default function SharpeningDetail() {
       cancelTimerRef.current = null
       setAwaitingCancelConfirm(false)
       awaitingCancelConfirmRef.current = false
-      showToast('Отмена сброшена')
+      showToast(t.sharpening.voice.cancelReset)
     }, 5000)
-    showToast('Сказать «да» для отмены')
+    showToast(t.sharpening.voice.cancelConfirm)
   }
 
   function dispatchStone(value: string) {
     if (!value.trim() || stoneSuggestions.length === 0) {
-      showToast('Камень не найден')
+      showToast(t.sharpening.voice.stoneNotFound)
       return
     }
     const all = findAllMatches(value, stoneSuggestions, 30)
     if (all.length === 1) {
       setStoneInput(all[0])
       closeDictationList()
-      showToast(`Камень: ${all[0]}`)
+      showToast(t.sharpening.voice.fieldSet(fieldLabel('stone'), all[0]))
       return
     }
     if (all.length > 1) {
       setDictationCandidates({ field: 'stone', items: all })
       setAwaitingListField('stone')
-      showToast('Уточни камень')
+      showToast(t.sharpening.voice.clarifyStone)
       return
     }
-    showToast('Камень не найден')
+    showToast(t.sharpening.voice.stoneNotFound)
   }
 
   function applyFieldCommand(field: FieldKey, value: string) {
     switch (field) {
       case 'stone': dispatchStone(value); return
-      case 'angle': setAngle(value); showToast(`Угол: ${value}`); return
+      case 'angle': setAngle(value); showToast(t.sharpening.voice.fieldSet(fieldLabel('angle'), value)); return
       case 'notes':
         setComment(prev => prev ? `${prev} ${value}` : value)
-        showToast('Дописано в комментарий')
+        showToast(t.sharpening.voice.commentAppended)
         return
-      case 'price': showToast('Цена — на экране приёмки'); return
-      default: showToast(`${fieldLabel(field)} — на экране приёмки`); return
+      case 'price': showToast(t.sharpening.voice.priceOnAcceptance); return
+      default: showToast(t.sharpening.voice.fieldOnAcceptance(fieldLabel(field))); return
     }
   }
 
@@ -319,7 +310,7 @@ export default function SharpeningDetail() {
     if (!picked) return
     if (field === 'stone') setStoneInput(picked)
     closeDictationList()
-    showToast(`${fieldLabel(field)}: ${picked}`)
+    showToast(t.sharpening.voice.fieldSet(fieldLabel(field), picked))
   }
 
   function handleDictationCommand(cmd: Command, raw: string) {
@@ -341,25 +332,25 @@ export default function SharpeningDetail() {
         return
       case 'removeLastStone':
         if (selectedStonesRef.current.length === 0) {
-          showToast('Камней нет')
+          showToast(t.sharpening.voice.noStones)
           return
         }
         removeStone(selectedStonesRef.current.length - 1)
-        showToast('Последний камень удалён')
+        showToast(t.sharpening.voice.lastStoneRemoved)
         return
       case 'clear':
         switch (cmd.field) {
           case 'stone': setStoneInput(''); break
           case 'angle': setAngle(''); break
           case 'notes': setComment(''); break
-          default: showToast(`${fieldLabel(cmd.field)} — на экране приёмки`); return
+          default: showToast(t.sharpening.voice.fieldOnAcceptance(fieldLabel(cmd.field))); return
         }
         closeDictationList()
-        showToast(`Очищено: ${fieldLabel(cmd.field)}`)
+        showToast(t.sharpening.voice.fieldClear(fieldLabel(cmd.field)))
         return
       case 'nav':
         if (cmd.action === 'next' || cmd.action === 'prev') {
-          showToast('Нет шагов')
+          showToast(t.sharpening.voice.noSteps)
           return
         }
         armCancelConfirm()
@@ -381,10 +372,10 @@ export default function SharpeningDetail() {
         handlePickFromList(cmd.hint)
         return
       case 'repeat':
-        showToast(`Слышал: «${lastRawRef.current}»`)
+        showToast(t.sharpening.voice.heard(lastRawRef.current))
         return
       case 'unknown':
-        showToast(`Не понял: «${raw}»`)
+        showToast(t.sharpening.voice.notUnderstood(raw))
         return
     }
   }
@@ -394,9 +385,9 @@ export default function SharpeningDetail() {
   }
 
   function handleDictationAutoStop(reason: AutoStopReason) {
-    if (reason === 'errors') showToast('Микрофон отключён, проверь связь')
-    else if (reason === 'fatal') showToast('Нет доступа к микрофону')
-    else if (reason === 'unavailable') showToast('Голосовой ввод недоступен офлайн')
+    if (reason === 'errors') showToast(t.sharpening.voice.micErrors)
+    else if (reason === 'fatal') showToast(t.sharpening.voice.micFatal)
+    else if (reason === 'unavailable') showToast(t.components.voiceOffline)
   }
 
   const dictationCallbacksRef = useRef({
@@ -715,7 +706,7 @@ export default function SharpeningDetail() {
                   value={newStoneType}
                   onChange={e => setNewStoneType(e.target.value as Stone['type'] | '')}
                 >
-                  <option value="" disabled>выберите тип абразива</option>
+                  <option value="" disabled>{t.reference.selectTypePlaceholder}</option>
                   {Object.entries(t.enums.stoneType).map(([val, label]) => (
                     <option key={val} value={val}>{label}</option>
                   ))}

@@ -10,7 +10,7 @@ import { buildCSV } from '../../utils/backup'
 import { normSteel } from '../../utils/steelMatch'
 import { readSpreadsheet, detectColumns, extractRows, prepareImport, type ColumnMapping, type SkipReason, type PreparedKnife } from '../../utils/knifeImport'
 import { startBlur } from '../../utils/modalBlur'
-import { enumLabel, useT, ru } from '../../i18n'
+import { enumLabel, useT, useLocale, ru } from '../../i18n'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -488,7 +488,7 @@ function fuzzyScore(query: string, target: string): number {
 // ─── Stones ──────────────────────────────────────────────────────────────────
 
 function StonesTab({ search }: { search: string }) {
-  const t = useT()
+  const { t, locale } = useLocale()
   const [open, setOpen] = useState(false)
   const [brand, setBrand] = useState('')
   const [gritSource, setGritSource] = useState<GritSource | ''>('')
@@ -538,7 +538,7 @@ function StonesTab({ search }: { search: string }) {
   // При А-Я — весь список по алфавиту. Иначе: мои камни первыми по гритности, стандартные в подвале.
   const filtered = (() => {
     if (displayUnit === 'alpha') {
-      return [...allFiltered].sort((a, b) => a.brand.localeCompare(b.brand, 'ru'))
+      return [...allFiltered].sort((a, b) => a.brand.localeCompare(b.brand, locale))
     }
     const custom   = allFiltered.filter(st => st.isCustom)
     const standard = allFiltered.filter(st => !st.isCustom)
