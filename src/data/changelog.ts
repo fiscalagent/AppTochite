@@ -10,7 +10,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.81.2',
     date: '2026-06-03',
     changes: [
-      'русский язык по умолчанию; fieldLabel(\'hrc\') вместо хардкода',
+      'русский язык — по умолчанию для новых установок',
+    ],
+    changesEn: [
+      'Russian is now the default language for new installs',
     ],
   },
   {
