@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppTochite — Guide</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11.5px;
+    color: #1a1a1a;
+    background: #eef0f4;
+    line-height: 1.45;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 11mm 13mm 9mm;
+    background: #fff;
+  }
+  .page + .page { margin-top: 16px; }
+
+  /* ─── HEADER ─── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 9px;
+    margin-bottom: 9px;
+    border-bottom: 2.5px solid #4A90D9;
+  }
+  .header-left { display: flex; align-items: center; gap: 11px; }
+  .app-icon {
+    width: 50px; height: 50px;
+    background: #161618;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .header-title h1 { font-size: 21px; font-weight: 800; color: #4A90D9; letter-spacing: .4px; }
+  .header-title p  { font-size: 11px; color: #555; margin-top: 2px; }
+  .header-qr { text-align: center; }
+  .header-qr img { width: 70px; height: 70px; border: 1px solid #ddd; border-radius: 8px; display: block; }
+  .header-qr p { font-size: 9px; color: #888; margin-top: 3px; }
+
+  /* compact header (page 2) */
+  .header.cont .app-icon { width: 38px; height: 38px; font-size: 20px; border-radius: 10px; }
+  .header.cont .header-title h1 { font-size: 17px; }
+  .header.cont .page-tag { font-size: 10px; color: #aaa; font-weight: 600; }
+
+  /* ─── DISCLAIMER ─── */
+  .disclaimer {
+    background: #FFF8E6;
+    border: 1.5px solid #F5A623;
+    border-radius: 7px;
+    padding: 7px 11px;
+    margin-bottom: 9px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .disclaimer-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .disclaimer > div > strong { font-size: 11px; color: #7a4e00; display: block; margin-bottom: 2px; }
+  .disclaimer p     { font-size: 10.5px; color: #7a4e00; line-height: 1.4; }
+
+  /* ─── TWO COLUMNS ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+    align-items: start;
+  }
+
+  /* ─── SECTIONS ─── */
+  .section {
+    background: #f7f8fc;
+    border: 1px solid #dde0ea;
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .section + .section { margin-top: 7px; }
+  .section.blue  { border-left: 3px solid #4A90D9; border-color: #b8d5f5; }
+  .section.green { border-left: 3px solid #2a9d5c; border-color: #a8dfc0; }
+  .section.red   { border-left: 3px solid #c0392b; border-color: #f0b8b4; }
+  .section.grey  { border-left: 3px solid #999;    border-color: #dde0ea; }
+  .section.purple{ border-left: 3px solid #7a5cc0; border-color: #d2c6ee; }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section.blue   .section-title { color: #2a6db5; }
+  .section.green  .section-title { color: #1e7a44; }
+  .section.red    .section-title { color: #a12820; }
+  .section.grey   .section-title { color: #666; }
+  .section.purple .section-title { color: #5a3fa0; }
+
+  .num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .section.blue   .num { background: #4A90D9; }
+  .section.green  .num { background: #2a9d5c; }
+  .section.red    .num { background: #c0392b; }
+  .section.grey   .num { background: #999; }
+  .section.purple .num { background: #7a5cc0; }
+
+  /* ─── INSTALL VISUAL ─── */
+  .install-visual {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin: 7px 0 8px;
+  }
+  .iv-box {
+    flex: 1;
+    background: #eef4fd;
+    border: 1px solid #c5d9f7;
+    border-radius: 6px;
+    padding: 5px 4px;
+    text-align: center;
+    font-size: 9.5px;
+    line-height: 1.3;
+  }
+  .iv-box .ico { font-size: 15px; display: block; margin-bottom: 2px; }
+  .iv-arr { color: #4A90D9; font-size: 15px; flex-shrink: 0; }
+
+  /* ─── STEPS ─── */
+  .steps { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .steps li { display: flex; gap: 7px; align-items: flex-start; }
+  .sn {
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #fff;
+  }
+  .section.blue   .sn { background: #4A90D9; }
+  .section.green  .sn { background: #2a9d5c; }
+  .section.red    .sn { background: #c0392b; }
+  .section.grey   .sn { background: #999; }
+  .section.purple .sn { background: #7a5cc0; }
+
+  .st { font-size: 11px; line-height: 1.45; flex: 1; }
+  .st strong { font-weight: 700; }
+  .st em { color: #2a6db5; font-style: normal; font-weight: 600; }
+
+  .url-box {
+    display: inline-block;
+    background: #eef4fd;
+    border: 1px solid #c5d9f7;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: #1e4e8c;
+    margin: 2px 0;
+  }
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    background: #e8ecf5;
+    padding: 0 3px;
+    border-radius: 3px;
+    color: #2c3a6b;
+  }
+
+  /* ─── NOTE ─── */
+  .note {
+    background: #e8f2fc;
+    border: 1px solid #b8d5f5;
+    border-radius: 6px;
+    padding: 5px 9px;
+    font-size: 10px;
+    color: #1d4570;
+    line-height: 1.4;
+    margin-top: 6px;
+  }
+  .note.green { background: #e7f6ee; border-color: #a8dfc0; color: #1e6e3f; }
+
+  /* ─── MOCKUPS ─── */
+  .mockup-row { display: flex; gap: 6px; margin: 7px 0 6px; }
+  .mockup {
+    flex: 1;
+    border: 1.5px solid #e4e8f0;
+    border-radius: 8px;
+    padding: 6px;
+    background: #f8f9fb;
+    text-align: center;
+  }
+  .mockup-hdr {
+    background: #161618;
+    border-radius: 5px 5px 0 0;
+    color: #fff;
+    font-size: 9px;
+    padding: 3px 5px;
+    margin: -6px -6px 5px;
+    font-weight: 600;
+  }
+  .mockup-ico   { font-size: 20px; display: block; margin: 3px 0 2px; }
+  .mockup-label { font-size: 9px; color: #555; line-height: 1.3; }
+
+  /* ─── STATUSES ─── */
+  .statuses { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+  .badge {
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .badge-blue  { background: #4A90D9; }
+  .badge-green { background: #3DB87A; }
+
+  /* ─── NAV TABS ─── */
+  .nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+  .nav-tab {
+    font-size: 9px; font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #e8ecf5;
+    color: #333;
+  }
+
+  /* ─── WARN ─── */
+  .warn {
+    background: #fde8e6;
+    border: 1px solid #f0b8b4;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: #a12820;
+    font-weight: 500;
+    margin-top: 6px;
+  }
+  .warn:first-child { margin-top: 0; }
+  .warn strong { font-weight: 700; }
+  .warn.small { font-size: 10px; padding: 6px 9px; }
+
+  /* ─── DIVIDER + SUB-TITLE ─── */
+  .divider { height: 1px; background: #dde0ea; margin: 6px 0; }
+  .sub-title { font-size: 10.5px; font-weight: 700; color: #333; margin: 0 0 5px; }
+  .sub-title.mt { margin-top: 7px; }
+
+  /* ─── USEFUL LIST ─── */
+  .useful { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .useful li { display: flex; gap: 8px; align-items: flex-start; font-size: 10.5px; line-height: 1.4; }
+  .useful .u-ico { font-size: 14px; flex-shrink: 0; margin-top: 1px; width: 18px; text-align: center; }
+  .useful b { font-weight: 700; color: #1a1a1a; }
+
+  /* ─── FEATURES STRIP ─── */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 9px;
+  }
+  .feat {
+    border: 1.5px solid #e4e8f0;
+    border-radius: 7px;
+    padding: 6px 6px 7px;
+    text-align: center;
+    background: #f8f9fb;
+  }
+  .feat-ico  { font-size: 18px; display: block; margin-bottom: 3px; }
+  .feat-name { font-size: 10px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+  .feat-desc { font-size: 9px; color: #666; line-height: 1.3; }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    border-top: 1.5px solid #dde0ea;
+    padding-top: 7px;
+    margin-top: 9px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-l { font-size: 9.5px; color: #888; line-height: 1.6; }
+  .footer-l a { color: #4A90D9; text-decoration: none; }
+  .footer-r { font-size: 9.5px; color: #aaa; text-align: right; line-height: 1.6; }
+
+  /* ─── PRINT ─── */
+  @media print {
+    body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { margin: 0; padding: 9mm 12mm 8mm; width: 100%; page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+    .page + .page { margin-top: 0; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ PAGE 1 ════════════════════ -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="app-icon">🔪</div>
+      <div class="header-title">
+        <h1>AppTochite</h1>
+        <p>Knife Sharpener's Log &nbsp;·&nbsp; v1.79.0</p>
+      </div>
+    </div>
+    <div class="header-qr">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https://fiscalagent.github.io/AppTochite/" alt="QR">
+      <p>Open the app</p>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <div class="disclaimer-icon">⚠️</div>
+    <div>
+      <strong>This is a beta — the app is in early testing</strong>
+      <p>Bugs and even <strong>data loss</strong> are possible. Back up regularly! Your feedback helps us make the product better. Thank you for taking part in testing!</p>
+    </div>
+  </div>
+
+  <!-- TWO COLUMNS -->
+  <div class="two-col">
+
+    <!-- ════ LEFT ════ -->
+    <div>
+
+      <!-- INSTALL -->
+      <div class="section blue">
+        <div class="section-title"><span class="num">1</span> Installing on your phone</div>
+
+        <div class="sub-title">📱 Android — via Chrome browser</div>
+        <div class="install-visual">
+          <div class="iv-box"><span class="ico">🌐</span>Open Chrome</div>
+          <div class="iv-arr">›</div>
+          <div class="iv-box"><span class="ico">🔗</span>Enter address</div>
+          <div class="iv-arr">›</div>
+          <div class="iv-box"><span class="ico">⋮</span>Three dots</div>
+          <div class="iv-arr">›</div>
+          <div class="iv-box"><span class="ico">📲</span>"Add to screen"</div>
+        </div>
+
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Open <strong>Google Chrome</strong> on your Android phone</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Type the app address in the address bar:<br>
+              <span class="url-box">fiscalagent.github.io/AppTochite</span><br>
+              or point your camera at the QR code in the top right corner
+            </span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Tap <strong>⋮</strong> (three dots) in the top right corner of the browser</span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st">Choose <em>"Add to Home screen"</em> or <em>"Install app"</em></span>
+          </li>
+          <li>
+            <span class="sn">5</span>
+            <span class="st">Tap <strong>"Install"</strong> — the AppTochite icon will appear on your home screen</span>
+          </li>
+        </ul>
+
+        <div class="divider"></div>
+        <div class="sub-title">🍎 iPhone — via Safari browser</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Open <strong>Safari</strong> and enter the same address <span class="url-box">fiscalagent.github.io/AppTochite</span></span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Tap the <strong>Share</strong> button (square with an arrow) at the bottom of the screen</span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Choose <em>"Add to Home Screen"</em> → <strong>"Add"</strong></span>
+          </li>
+        </ul>
+
+        <div class="warn small">
+          <strong>⚠️ Don't open the link inside a messenger!</strong> If you follow it directly from Telegram, WhatsApp or Instagram — the app will open in an in-app browser where it <strong>cannot be installed and data won't be saved</strong>. Open Chrome (Android) or Safari (iPhone) first and type the address manually.
+        </div>
+        <div class="note">💡 Internet is only needed on first launch. After that the app works offline.</div>
+      </div>
+
+    </div>
+
+    <!-- ════ RIGHT ════ -->
+    <div>
+
+      <!-- FIRST USE -->
+      <div class="section blue">
+        <div class="section-title"><span class="num">2</span> Getting started</div>
+
+        <div class="mockup-row">
+          <div class="mockup">
+            <div class="mockup-hdr">👥 Clients</div>
+            <span class="mockup-ico">👤</span>
+            <div class="mockup-label">Client list.<br>"Me" is always on top</div>
+          </div>
+          <div class="mockup">
+            <div class="mockup-hdr">📋 History</div>
+            <span class="mockup-ico">🗓️</span>
+            <div class="mockup-label">All sharpenings<br>by date</div>
+          </div>
+          <div class="mockup">
+            <div class="mockup-hdr">📚 Reference</div>
+            <span class="mockup-ico">🪨</span>
+            <div class="mockup-label">Stones, steels,<br>knives</div>
+          </div>
+        </div>
+
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">On first launch a client called <strong>"Me"</strong> is already created — your personal log for your own knives</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Tap <em>"+ Client"</em> at the top right to add your first client</span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Tap the <strong>"+"</strong> (Sharpen) button in the centre of the bottom bar — a two-step form will open</span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st"><strong>Step 1 — Intake:</strong> choose the client, enter the knife, steel and job type (sharpening / edge touch-up / repair). Tap <em>"Sharpen now"</em> to go straight to step 2, or <em>"Save as accepted"</em> to queue the knife and return to step 2 later</span>
+          </li>
+          <li>
+            <span class="sn">5</span>
+            <span class="st"><strong>Step 2 — Sharpening:</strong> enter the angle, stones and price. Add before/after photos — optional. Tap <em>"Done"</em> to close the sharpening, or <em>"Accepted"</em> to save and return later</span>
+          </li>
+          <li>
+            <span class="sn">6</span>
+            <span class="st">If you saved a knife as accepted — open the record and tap <strong>"SHARPEN"</strong>: step 2 will open with the data already filled in</span>
+          </li>
+          <li>
+            <span class="sn">7</span>
+            <span class="st">In a finished record tap <em>"Share photo"</em> → <em>"Photo report"</em> — the app will draw a card with the knife, steel and stones that you can save or send to the client</span>
+          </li>
+        </ul>
+        <div class="statuses">
+          <span class="badge badge-blue">● accepted</span>
+          <span class="badge badge-green">● done</span>
+        </div>
+        <div class="nav-tabs">
+          <span class="nav-tab">👥 Clients</span>
+          <span class="nav-tab">🕑 History</span>
+          <span class="nav-tab">📚 Reference</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- VOICE (full width) -->
+  <div class="section green" style="margin-top:11px;">
+    <div class="section-title"><span class="num">🎙️</span> Voice input — log a sharpening hands-free <span style="font-size:8px;font-weight:700;background:#f0a500;color:#fff;border-radius:6px;padding:1px 5px;letter-spacing:0;text-transform:none;">beta</span></div>
+    <ul class="steps">
+      <li>
+        <span class="sn">1</span>
+        <span class="st"><strong>Enable the beta:</strong> 💾 icon → <em>"About"</em> → toggle <em>"Voice input"</em>. Requires internet; works on Android (unavailable on iPhone)</span>
+      </li>
+      <li>
+        <span class="sn">2</span>
+        <span class="st">Open the sharpening form and tap <strong>"Dictate"</strong> in the header — the app listens continuously, the last recognised phrase is shown at the bottom</span>
+      </li>
+      <li>
+        <span class="sn">3</span>
+        <span class="st"><strong>Each command starts with the field name.</strong> Intake: "<em>client Ivan</em>", "<em>knife Victorinox</em>", "<em>steel D2</em>", "<em>job sharpening</em>", "<em>note very dull</em>", then "<em>next</em>"</span>
+      </li>
+      <li>
+        <span class="sn">4</span>
+        <span class="st">Sharpening: "<em>angle 20</em>", "<em>stone naniwa 1000</em>" → "<em>add</em>", "<em>price 500</em>". Finish: "<em>save</em>" (knife accepted) or "<em>done</em>" (sharpening closed)</span>
+      </li>
+      <li>
+        <span class="sn">5</span>
+        <span class="st"><strong>Correct on the fly:</strong> "<em>clear steel</em>", "<em>remove last stone</em>", "<em>repeat</em>" (what was heard). Stop dictation — "<em>stop</em>"</span>
+      </li>
+    </ul>
+    <div class="note green" style="margin-top:6px;">⚡ You can also dictate a single field: tap the microphone next to it. Double-tap a suggestion below a field for quick selection from the stones, steels and knives list.</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-l">
+      <strong>AppTochite</strong> · Professional Knife Sharpener's Log<br>
+      🌐 <a href="https://fiscalagent.github.io/AppTochite/">fiscalagent.github.io/AppTochite</a>
+      &nbsp;&nbsp;✈️ <a href="https://t.me/Apptochite">t.me/Apptochite</a>
+    </div>
+    <div class="footer-r">
+      Version 1.79.0 · June 2026<br>
+      Page 1 of 2 — installation and usage
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════ PAGE 2 ════════════════════ -->
+<div class="page">
+
+  <!-- HEADER (compact) -->
+  <div class="header cont">
+    <div class="header-left">
+      <div class="app-icon">🔪</div>
+      <div class="header-title">
+        <h1>AppTochite</h1>
+        <p>Data, backup and useful features</p>
+      </div>
+    </div>
+    <div class="page-tag">Page 2 of 2</div>
+  </div>
+
+  <!-- DATA WARNING -->
+  <div class="warn">
+    <strong>⚠️ Data is stored only on your phone!</strong><br>
+    If you clear the browser, reset or lose your phone — everything will be gone with no way to recover it. <strong>Make a file backup every week and keep it somewhere other than your phone.</strong>
+  </div>
+
+  <!-- TWO COLUMNS -->
+  <div class="two-col" style="margin-top:9px;">
+
+    <!-- ════ LEFT ════ -->
+    <div>
+
+      <!-- BACKUP -->
+      <div class="section green">
+        <div class="section-title"><span class="num">3</span> Backup — how to save your data</div>
+
+        <div class="note green" style="margin-top:0;">🔄 <strong>Auto-backup is already on:</strong> every time you open the app it saves a copy internally. But this copy lives <strong>on the same phone</strong> — if you clear the browser or lose your phone, it's gone too. Make sure to do a file backup as described below.</div>
+
+        <div class="sub-title mt">File backup (the important one)</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">On the Clients screen tap the <strong>💾</strong> icon at the top right — the <strong>"Backup"</strong> screen will open</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Tap <strong>"Save backup (JSON)"</strong></span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">The file <code>apptochite-2026-05-22.json</code> will be saved to the <strong>Downloads</strong> folder on your phone</span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st">Or tap <strong>"Share backup…"</strong> — the system share sheet opens; send the file to yourself in <strong>Telegram (Saved Messages)</strong>, email or cloud. <em>The file arrives with a <code>.txt</code> extension — that's expected; it's accepted when you restore.</em></span>
+          </li>
+        </ul>
+
+        <div class="divider"></div>
+        <div class="sub-title">Restoring from backup</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Open <strong>"Backup"</strong> (💾 icon) → <strong>"Choose file…"</strong> → find your <code>.json</code> file.<br>If the file is lost but the app is intact — tap <em>"Restore from auto-backup"</em></span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Check the preview (how many clients and sharpenings) and choose a mode:<br>
+              <strong>"Merge"</strong> — adds new records from the file and updates those that are newer in the file; data on your phone is not deleted. <em>For using two devices or adding without data loss.</em><br>
+              <strong>"Replace all"</strong> — deletes current data and fully restores from the file. <em>For transferring to a new phone or after a reset.</em>
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- PRIVACY -->
+      <div class="section purple">
+        <div class="section-title"><span class="num">🔒</span> Privacy</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">●</span>
+            <span class="st"><strong>Client data</strong> (names, phone numbers, Telegram handles, photos) and all sharpenings are stored <strong>only on your phone</strong>. No cloud, no registration, no password — the app works offline</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- ════ RIGHT ════ -->
+    <div>
+
+      <!-- UPDATE -->
+      <div class="section grey">
+        <div class="section-title"><span class="num">4</span> Updates</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">The app <strong>updates automatically</strong> — just open it while online. Nothing else needed</span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">You can check the version manually in <strong>"About"</strong> (💾 icon → "About") → <em>"Check"</em></span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">If the developer asks you to reinstall — perform a full reset (see below)</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- REINSTALL -->
+      <div class="section red">
+        <div class="section-title"><span class="num">5</span> Full reinstall</div>
+        <div class="warn small" style="margin-bottom:6px;">
+          <strong>Make a file backup first!</strong> After clearing, data cannot be recovered.
+        </div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Open the cleaner page in Chrome:<br>
+              <span class="url-box">fiscalagent.github.io/AppTochite/cleaner.html</span>
+            </span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Tap <strong>"Clear all"</strong> — all app data will be deleted</span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Long-press the AppTochite icon on your home screen → choose <strong>"Uninstall"</strong></span>
+          </li>
+          <li>
+            <span class="sn">4</span>
+            <span class="st">Reinstall the app (see section <strong>"Installing"</strong> on page 1)</span>
+          </li>
+          <li>
+            <span class="sn">5</span>
+            <span class="st">Open <strong>"Backup"</strong> → "Choose file…" → restore your data from the <code>.json</code> file</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- USEFUL FEATURES (full width) -->
+  <div class="section blue" style="margin-top:11px;">
+    <div class="section-title"><span class="num">★</span> Useful features</div>
+    <ul class="useful">
+      <li><span class="u-ico">🔍</span><span><b>Search</b> — available on the Clients, History and Reference screens. Searches by name, phone, Telegram handle, knife or stone name.</span></li>
+      <li><span class="u-ico">🏷️</span><span><b>Filters</b> — in History you can show only <em>accepted</em> or only <em>done</em> sharpenings; in the client card you can filter by a specific knife.</span></li>
+      <li><span class="u-ico">🔁</span><span><b>Repeat sharpening</b> — in a finished record the <em>"Repeat sharpening"</em> button creates a new one with the same knife, steel and stones. Handy for regulars.</span></li>
+      <li><span class="u-ico">🗜️</span><span><b>Photo compression</b> — if storage fills up, enable <em>Settings → "Compress new photos"</em> (JPEG, up to 1280 px — images 3–5× smaller).</span></li>
+      <li><span class="u-ico">📊</span><span><b>Export to Excel</b> — <em>Backup → "Download CSV"</em> exports all sharpenings as a spreadsheet for Excel, Google Sheets or Numbers.</span></li>
+      <li><span class="u-ico">🪨</span><span><b>Import your stones from a file</b> — Reference → Stones → <em>"Import CSV"</em>. You need a "Name" column and one grit scale (µm / FEPA / JIS / GOST) — the rest are calculated. UTF-8 or Win-1251 encoding.</span></li>
+      <li><span class="u-ico">🗑️</span><span><b>Trash</b> — accidentally deleted a client or sharpening? <em>About → "Trash"</em>: deleted records are kept for <strong>3 days</strong> and can be restored. Deleting a client also puts all their sharpenings in the trash — they come back together.</span></li>
+      <li><span class="u-ico">❤️</span><span><b>Support the project</b> — the app is free. If you'd like to say thank you, there's a card number in <em>"About"</em> — tap it to copy.</span></li>
+    </ul>
+  </div>
+
+  <!-- FEATURES STRIP -->
+  <div class="features">
+    <div class="feat">
+      <span class="feat-ico">🔪</span>
+      <div class="feat-name">Sharpening log</div>
+      <div class="feat-desc">Knife, angle, stones, before &amp; after photos</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🪨</span>
+      <div class="feat-name">References</div>
+      <div class="feat-desc">890 knives, 219 steels, 100+ stones. Add your own manually or from a file</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🖼️</span>
+      <div class="feat-name">Photo report</div>
+      <div class="feat-desc">Card with knife and stones — save or send</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">⚖️</span>
+      <div class="feat-name">Grit converter</div>
+      <div class="feat-desc">FEPA / JIS / µm — drums in the stone reference</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🔥</span>
+      <div class="feat-name">Heatmap</div>
+      <div class="feat-desc">See which stones you use most</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🎙️</span>
+      <div class="feat-name">Voice dictation</div>
+      <div class="feat-desc">Log a sharpening without touching the screen</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🔒</span>
+      <div class="feat-name">Privacy</div>
+      <div class="feat-desc">Client data — only on your phone</div>
+    </div>
+    <div class="feat">
+      <span class="feat-ico">🆓</span>
+      <div class="feat-name">Free</div>
+      <div class="feat-desc">By a sharpener, for sharpeners</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-l">
+      <strong>AppTochite</strong> · Professional Knife Sharpener's Log<br>
+      🌐 <a href="https://fiscalagent.github.io/AppTochite/">fiscalagent.github.io/AppTochite</a>
+      &nbsp;&nbsp;✈️ <a href="https://t.me/Apptochite">t.me/Apptochite</a>
+    </div>
+    <div class="footer-r">
+      Version 1.79.0 · June 2026<br>
+      Data stored locally on device
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
