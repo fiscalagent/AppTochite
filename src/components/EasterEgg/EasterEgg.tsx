@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useT } from '../../i18n'
+import { playSwoosh } from './swoosh'
 import s from './EasterEgg.module.css'
 
 interface Props {
@@ -21,6 +22,13 @@ export default function EasterEgg({ onClose }: Props) {
   useEffect(() => {
     const t = setTimeout(() => setClosing(true), 4200)
     return () => clearTimeout(t)
+  }, [])
+
+  // «вззз» взмаха клинка — синхронно с проходом разреза (блик стартует через
+  // 0.5s). При prefers-reduced-motion раскола нет, поэтому и звук не играем.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    return playSwoosh(0.42)
   }, [])
 
   // гашение оверлея перед размонтированием
