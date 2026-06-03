@@ -34,6 +34,13 @@ export function detectDefaultLocale(): Locale {
 
 export function readStoredLocale(): Locale {
   try {
+    // ?lang=en в URL имеет приоритет над localStorage — для прямых ссылок на язык
+    const param = new URLSearchParams(location.search).get('lang')
+    if (isLocale(param) && AVAILABLE_LOCALES.includes(param)) {
+      localStorage.setItem(STORAGE_KEY, param)
+      history.replaceState(null, '', location.pathname + location.hash)
+      return param
+    }
     const raw = localStorage.getItem(STORAGE_KEY)
     if (isLocale(raw) && AVAILABLE_LOCALES.includes(raw)) return raw
   } catch {

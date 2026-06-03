@@ -4,7 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
-import { useT } from '../../i18n'
+import { useT, useLocale } from '../../i18n'
+import type { Locale } from '../../i18n/locale'
 import type { Client } from '../../db/instance'
 import s from './ClientList.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
@@ -58,6 +59,8 @@ export default function ClientList() {
   const [query, setQuery] = useState('')
   const { hasUpdate } = useVersionCheck()
   const t = useT()
+  const { locale, setLocale } = useLocale()
+  const otherLocale: Locale = locale === 'ru' ? 'en' : 'ru'
   const rows = useLiveQuery<ClientRow[]>(async () => {
     const [allClients, sharpenings] = await Promise.all([
       db.clients.orderBy('name').toArray(),
@@ -99,6 +102,9 @@ export default function ClientList() {
       <div className={s.header}>
         <span className={s.title}>{t.clients.title}</span>
         <div className={s.headerRight}>
+          <button className={s.langToggle} onClick={() => setLocale(otherLocale)}>
+            {locale.toUpperCase()}
+          </button>
           <Link to="/backup" className={s.backupLink}>
             <span className={s.iconWrap}>
               <IconSave />

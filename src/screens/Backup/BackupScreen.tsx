@@ -44,7 +44,7 @@ import {
   type DailyBackupMeta,
 } from '../../utils/backup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
-import { useLocale, fmtDate, fmtDateDayMonth, fmtDateTimeLong, AVAILABLE_LOCALES, type Locale } from '../../i18n'
+import { useLocale, fmtDate, fmtDateDayMonth, fmtDateTimeLong } from '../../i18n'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -55,7 +55,7 @@ function todayStr() {
 export default function BackupScreen() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { t, locale, setLocale } = useLocale()
+  const { t, locale } = useLocale()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { currentVersion, hasUpdate } = useVersionCheck()
 
@@ -240,25 +240,6 @@ export default function BackupScreen() {
         <button className={s.back} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.title}>{t.backup.title}</span>
       </div>
-
-      <div className={s.section}>
-        <div className={s.langRow}>
-          <span className={s.langLabel}>{t.about.languageLabel}</span>
-          <div className={s.langSwitcher}>
-            {(AVAILABLE_LOCALES as readonly Locale[]).map(loc => (
-              <button
-                key={loc}
-                className={`${s.langBtn} ${locale === loc ? s.langBtnActive : ''}`}
-                onClick={() => setLocale(loc)}
-              >
-                {loc.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className={s.divider} />
 
       <div className={s.section}>
         <p className={s.sectionTitle}>{t.backup.dbSection}</p>
