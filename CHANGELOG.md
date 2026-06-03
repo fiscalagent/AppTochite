@@ -1,3 +1,10 @@
+## [1.81.1](https://github.com/fiscalagent/AppTochite/compare/v1.81.0...v1.81.1) (2026-06-03)
+
+
+### fix
+
+* Widened<T> в Dict — убирает конфликт literal-типов между ru и en ([](https://github.com/fiscalagent/AppTochite/commit/2ae4717c68c22e71a9b1c4ae12a39bcda8660346))
+
 # [1.81.0](https://github.com/fiscalagent/AppTochite/compare/v1.80.0...v1.81.0) (2026-06-02)
 
 
