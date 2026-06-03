@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.81.2',
+    date: '2026-06-03',
+    changes: [
+      'русский язык по умолчанию; fieldLabel(\'hrc\') вместо хардкода',
+    ],
+  },
+  {
     version: '1.81.1',
     date: '2026-06-03',
     changes: [

@@ -1,3 +1,10 @@
+## [1.81.2](https://github.com/fiscalagent/AppTochite/compare/v1.81.1...v1.81.2) (2026-06-03)
+
+
+### fix
+
+* русский язык по умолчанию; fieldLabel('hrc') вместо хардкода ([](https://github.com/fiscalagent/AppTochite/commit/05c2ce3b10c0cc4db4f2227b541589acc5042830))
+
 ## [1.81.1](https://github.com/fiscalagent/AppTochite/compare/v1.81.0...v1.81.1) (2026-06-03)
 
 
