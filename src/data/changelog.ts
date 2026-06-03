@@ -17,24 +17,30 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.81.1',
     date: '2026-06-03',
     changes: [
-      'Widened<T> в Dict — убирает конфликт literal-типов между ru и en',
-      'Фаза 3 i18n — голосовой ввод на двух языках',
-      'i18n фаза 2 — английский язык (en.ts) и переключатель языка',
-      'голосовой ввод включён по умолчанию — отключается в настройках',
+      'устранена техническая ошибка в сборке — на работу приложения не влияла',
+    ],
+    changesEn: [
+      'fixed a build error — did not affect app functionality',
     ],
   },
   {
     version: '1.81.0',
     date: '2026-06-02',
     changes: [
-      'Исправления и улучшения',
+      'голосовой ввод работает на английском — диктовка, команды и подсказки на выбранном языке',
+    ],
+    changesEn: [
+      'voice input works in English — dictation, commands and prompts follow the selected language',
     ],
   },
   {
     version: '1.80.0',
     date: '2026-06-02',
     changes: [
-      'Исправления и улучшения',
+      'интерфейс можно переключить на английский язык — раздел «О программе» → Язык',
+    ],
+    changesEn: [
+      'the interface can be switched to English — About → Language',
     ],
   },
   {
