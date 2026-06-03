@@ -1,3 +1,10 @@
+# [1.83.0](https://github.com/fiscalagent/AppTochite/compare/v1.82.0...v1.83.0) (2026-06-03)
+
+
+### feat
+
+* переключатель языка на главном экране, ссылка ?lang=en ([](https://github.com/fiscalagent/AppTochite/commit/b962ff07d15cabb88af4ae84ed2d650e0e807459))
+
 # [1.82.0](https://github.com/fiscalagent/AppTochite/compare/v1.81.2...v1.82.0) (2026-06-03)
 
 
