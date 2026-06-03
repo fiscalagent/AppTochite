@@ -178,6 +178,51 @@
   white-space: nowrap;
 }
 
+/* Language switcher */
+.langRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+}
+
+.langLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-100);
+}
+
+.langSwitcher {
+  display: flex;
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.langBtn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  color: var(--text-300);
+  background: var(--bg-300);
+  letter-spacing: 0.5px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.langBtn + .langBtn {
+  border-left: 1px solid var(--border-200);
+}
+
+.langBtnActive {
+  background: var(--accent);
+  color: #fff;
+}
+
 /* Toggle row */
 .toggleRow {
   display: flex;
