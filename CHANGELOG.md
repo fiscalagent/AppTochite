@@ -1,3 +1,10 @@
+# [1.82.0](https://github.com/fiscalagent/AppTochite/compare/v1.81.2...v1.82.0) (2026-06-03)
+
+
+### feat
+
+* переключатель языка перенесён из «О программе» в «Настройки» ([](https://github.com/fiscalagent/AppTochite/commit/3296e1683763e2477becc68d6354b227cbb3c567))
+
 ## [1.81.2](https://github.com/fiscalagent/AppTochite/compare/v1.81.1...v1.81.2) (2026-06-03)
 
 
