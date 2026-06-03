@@ -10,7 +10,12 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.82.0',
     date: '2026-06-03',
     changes: [
-      'Исправления и улучшения',
+      'переключатель языка перенесён в «Настройки» — раньше был в «О программе»',
+      'английский гайд доступен по ссылке в «О программе» при выбранном языке EN',
+    ],
+    changesEn: [
+      'language switcher moved to Settings — was previously in About',
+      'English guide available via the link in About when EN language is selected',
     ],
   },
   {
@@ -47,10 +52,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.80.0',
     date: '2026-06-02',
     changes: [
-      'интерфейс можно переключить на английский язык — раздел «О программе» → Язык',
+      'интерфейс можно переключить на английский язык — раздел «Настройки»',
     ],
     changesEn: [
-      'the interface can be switched to English — About → Language',
+      'the interface can be switched to English — Settings',
     ],
   },
   {
