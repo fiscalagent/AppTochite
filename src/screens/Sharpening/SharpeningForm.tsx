@@ -276,7 +276,7 @@ export default function SharpeningForm() {
         showToast(t.sharpening.voice.fieldOnDetail(fieldLabel(field)))
         return
       case 'price': setPrice(value); showToast(t.sharpening.voice.fieldSet(fieldLabel('price'), value)); return
-      case 'hrc': setHrc(value); showToast(t.sharpening.voice.fieldSet('HRC', value)); return
+      case 'hrc': setHrc(value); showToast(t.sharpening.voice.fieldSet(fieldLabel('hrc'), value)); return
     }
   }
 

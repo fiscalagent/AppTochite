@@ -27,11 +27,9 @@ function isLocale(value: unknown): value is Locale {
   return value === 'ru' || value === 'en'
 }
 
-// Дефолт при первом запуске: системный язык, если он доступен, иначе русский.
+// Дефолт при первом запуске — всегда русский.
 export function detectDefaultLocale(): Locale {
-  const nav = typeof navigator !== 'undefined' ? navigator.language : ''
-  const guess: Locale = nav.toLowerCase().startsWith('ru') ? 'ru' : 'en'
-  return AVAILABLE_LOCALES.includes(guess) ? guess : 'ru'
+  return 'ru'
 }
 
 export function readStoredLocale(): Locale {
