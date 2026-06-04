@@ -16,6 +16,7 @@
 import { db } from './instance';
 import type { AppTochiteDB, Stone, Steel, Knife } from './db';
 import { fromFepa, fromJis, fromMk } from '../data/gritTable';
+import { readStoredLocale } from '../i18n/locale';
 
 // ─── Камни ───────────────────────────────────────────────────────────────────
 
@@ -1704,11 +1705,11 @@ const SEED_MIGRATIONS: Array<(db: AppTochiteDB) => Promise<void>> = [
 // ─── Каталог камней (хэш-подход) ─────────────────────────────────────────────
 //
 // Чтобы обновить справочник камней:
-//   1. Отредактируй STONES_CATALOG ниже.
+//   1. Отредактируй STONES_CATALOG_RU ниже.
 //   2. Задеплой. При первом запуске приложение сравнит хэш и заменит isCustom=false камни.
 //   Никаких v13, v14... — только правка этого массива.
 
-const STONES_CATALOG: Omit<Stone, 'id'>[] = [
+const STONES_CATALOG_RU: Omit<Stone, 'id'>[] = [
   // ── GRINDERMAN OA — ОА, вода, FEPA ───────────────────────────────────────
   { brand: 'GRINDERMAN OA', ...fromFepa(120), type: 'ao', coolant: 'water', isCustom: false },
   { brand: 'GRINDERMAN OA', ...fromFepa(220), type: 'ao', coolant: 'water', isCustom: false },
@@ -1827,6 +1828,107 @@ const STONES_CATALOG: Omit<Stone, 'id'>[] = [
   { brand: 'Венёв MB-1 Алмаз 100%', ...fromMk('3/2'), type: 'diamond', coolant: 'water', isCustom: false },
 ]
 
+// ─── Английский каталог камней ───────────────────────────────────────────────
+//
+// Чтобы обновить: отредактируй STONES_CATALOG_EN ниже.
+// syncStonesCatalog применяет каталог, соответствующий локали при первом запуске.
+// Смена языка интерфейса после установки каталог НЕ меняет.
+
+const STONES_CATALOG_EN: Omit<Stone, 'id'>[] = [
+  // ── Boride CS-WX — AO, water/oil, FEPA ───────────────────────────────────
+  { brand: 'Boride CS-WX', ...fromFepa(150),  type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'Boride CS-WX', ...fromFepa(220),  type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'Boride CS-WX', ...fromFepa(320),  type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'Boride CS-WX', ...fromFepa(600),  type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'Boride CS-WX', ...fromFepa(800),  type: 'ao', coolant: 'both', isCustom: false },
+  { brand: 'Boride CS-WX', ...fromFepa(1200), type: 'ao', coolant: 'both', isCustom: false },
+  // ── Boride T2 — AO, oil, FEPA ────────────────────────────────────────────
+  { brand: 'Boride T2', ...fromFepa(150),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', ...fromFepa(220),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', ...fromFepa(320),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', ...fromFepa(400),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', ...fromFepa(600),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', ...fromFepa(800),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', ...fromFepa(1000), type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride T2', ...fromFepa(1200), type: 'ao', coolant: 'oil', isCustom: false },
+  // ── Boride PC — AO, oil, FEPA ────────────────────────────────────────────
+  { brand: 'Boride PC', ...fromFepa(150),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', ...fromFepa(220),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', ...fromFepa(320),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', ...fromFepa(400),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', ...fromFepa(600),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', ...fromFepa(900),  type: 'ao', coolant: 'oil', isCustom: false },
+  { brand: 'Boride PC', ...fromFepa(1200), type: 'ao', coolant: 'oil', isCustom: false },
+  // ── Boride CS-HD — SiC, water, FEPA ──────────────────────────────────────
+  { brand: 'Boride CS-HD', ...fromFepa(120),  type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(150),  type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(220),  type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(320),  type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(400),  type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(600),  type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(800),  type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(1000), type: 'kk', coolant: 'water', isCustom: false },
+  { brand: 'Boride CS-HD', ...fromFepa(1200), type: 'kk', coolant: 'water', isCustom: false },
+  // ── Shapton Pro (Kuromaku) — AO, water, JIS ──────────────────────────────
+  { brand: 'Shapton Pro (Kuromaku)', ...fromJis(120),  type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Shapton Pro (Kuromaku)', ...fromJis(220),  type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Shapton Pro (Kuromaku)', ...fromJis(320),  type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Shapton Pro (Kuromaku)', ...fromJis(1000), type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Shapton Pro (Kuromaku)', ...fromJis(1500), type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Shapton Pro (Kuromaku)', ...fromJis(2000), type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Shapton Pro (Kuromaku)', ...fromJis(8000), type: 'ao', coolant: 'water', isCustom: false },
+  // ── Naniwa — AO, water, JIS ──────────────────────────────────────────────
+  { brand: 'Naniwa', ...fromJis(400),   type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Naniwa', ...fromJis(600),   type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Naniwa', ...fromJis(800),   type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Naniwa', ...fromJis(1000),  type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Naniwa', ...fromJis(2000),  type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Naniwa', ...fromJis(3000),  type: 'ao', coolant: 'water', isCustom: false },
+  { brand: 'Naniwa', ...fromJis(10000), type: 'ao', coolant: 'water', isCustom: false },
+  // ── Norton India — natural, oil ───────────────────────────────────────────
+  { brand: 'Norton India Coarse', type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Norton India Medium', type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: 'Norton India Fine',   type: 'natural', coolant: 'oil', isCustom: false },
+  // ── Natural stones — natural, oil ─────────────────────────────────────────
+  { brand: '(Natural) Queer Creek',   type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: '(Natural) Hindostan',     type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: '(Natural) Washita',       type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: '(Natural) Arkansas Soft', type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: '(Natural) Numata',        type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: '(Natural) Omura',         type: 'natural', coolant: 'oil', isCustom: false },
+  { brand: '(Natural) Amakusa',       type: 'natural', coolant: 'oil', isCustom: false },
+  // ── Venev Dual Side B2-01 25% — diamond, water, ГОСТ/мк ──────────────────
+  { brand: 'Venev Dual Side B2-01 25%', ...fromMk('200/160'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side B2-01 25%', ...fromMk('160/125'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side B2-01 25%', ...fromMk('100/80'),  type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side B2-01 25%', ...fromMk('50/40'),   type: 'diamond', coolant: 'water', isCustom: false },
+  // ── Venev Dual Side OSB 25% — diamond, water, ГОСТ/мк ────────────────────
+  { brand: 'Venev Dual Side OSB 25%', ...fromMk('20/14'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side OSB 25%', ...fromMk('14/10'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side OSB 25%', ...fromMk('7/5'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side OSB 25%', ...fromMk('5/3'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side OSB 25%', ...fromMk('3/2'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev Dual Side OSB 25%', ...fromMk('1/0'),   type: 'diamond', coolant: 'water', isCustom: false },
+  // ── Venev MS-1 100% — diamond, water, ГОСТ/мк ────────────────────────────
+  { brand: 'Venev MS-1 100%', ...fromMk('250/200'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('200/160'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('160/125'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('125/100'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('100/80'),  type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('80/63'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('63/50'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('50/40'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('40/28'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('28/20'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('20/14'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('14/10'),   type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('10/7'),    type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MS-1 100%', ...fromMk('7/5'),     type: 'diamond', coolant: 'water', isCustom: false },
+  // ── Venev MB-1 100% — diamond, water, ГОСТ/мк ────────────────────────────
+  { brand: 'Venev MB-1 100%', ...fromMk('5/3'), type: 'diamond', coolant: 'water', isCustom: false },
+  { brand: 'Venev MB-1 100%', ...fromMk('3/2'), type: 'diamond', coolant: 'water', isCustom: false },
+]
+
 function catalogHash(items: Omit<Stone, 'id'>[]): string {
   const str = JSON.stringify(items)
   let h = 0
@@ -1837,13 +1939,29 @@ function catalogHash(items: Omit<Stone, 'id'>[]): string {
 }
 
 async function syncStonesCatalog(targetDb: AppTochiteDB): Promise<void> {
-  const hash = catalogHash(STONES_CATALOG)
-  const stored = await targetDb.meta.get('stonesCatalogHash')
-  if (stored?.value === hash) return
+  const locale = readStoredLocale()
+  const catalog = locale === 'en' ? STONES_CATALOG_EN : STONES_CATALOG_RU
+  const hash = catalogHash(catalog)
+
+  const [storedHash, storedLocale] = await Promise.all([
+    targetDb.meta.get('stonesCatalogHash'),
+    targetDb.meta.get('stonesCatalogLocale'),
+  ])
+
+  // Пользователь сменил язык после установки — каталог не трогаем
+  if (storedLocale?.value && storedLocale.value !== locale) return
+
+  // Каталог актуален для текущей локали
+  if (storedHash?.value === hash && storedLocale?.value === locale) return
+
   await targetDb.transaction('rw', [targetDb.stones, targetDb.meta], async () => {
-    await targetDb.stones.filter(s => !s.isCustom).delete()
-    await targetDb.stones.bulkAdd(STONES_CATALOG.map(s => ({ ...s, updatedAt: new Date(0) })))
-    await targetDb.meta.put({ key: 'stonesCatalogHash', value: hash })
+    if (storedHash?.value !== hash) {
+      await targetDb.stones.filter(s => !s.isCustom).delete()
+      await targetDb.stones.bulkAdd(catalog.map(s => ({ ...s, updatedAt: new Date(0) })))
+      await targetDb.meta.put({ key: 'stonesCatalogHash', value: hash })
+    }
+    // Записываем локаль каталога (в т.ч. для существующих пользователей без метки)
+    await targetDb.meta.put({ key: 'stonesCatalogLocale', value: locale })
   })
 }
 
