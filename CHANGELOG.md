@@ -1,3 +1,10 @@
+# [1.84.0](https://github.com/fiscalagent/AppTochite/compare/v1.83.0...v1.84.0) (2026-06-04)
+
+
+### feat
+
+* английский каталог камней — 80 камней для новых EN-пользователей ([](https://github.com/fiscalagent/AppTochite/commit/33cb889ce629ca2b119ea9f59c2e5f86ec4ca187))
+
 # [1.83.0](https://github.com/fiscalagent/AppTochite/compare/v1.82.0...v1.83.0) (2026-06-03)
 
 
