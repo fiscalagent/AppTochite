@@ -1,3 +1,10 @@
+# [1.86.0](https://github.com/fiscalagent/AppTochite/compare/v1.85.1...v1.86.0) (2026-06-05)
+
+
+### feat
+
+* аватар Me отображает полный текст на английском ([](https://github.com/fiscalagent/AppTochite/commit/3974954e326c54d972d218ca5961f38261d67374))
+
 ## [1.85.1](https://github.com/fiscalagent/AppTochite/compare/v1.85.0...v1.85.1) (2026-06-05)
 
 
