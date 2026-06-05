@@ -78,7 +78,7 @@ export default function ClientCard() {
       <div className={s.profile}>
         {client.isSelf ? (
           <button className={s.avatarBtn} onClick={() => setAvatarSheetOpen(true)}>
-            <Avatar name={t.clients.selfName} size={48} isSelf photo={client.avatar} />
+            <Avatar name={t.clients.selfName} size={48} isSelf photo={client.avatar} initials={t.clients.selfName} />
           </button>
         ) : (
           <Avatar name={client.name} size={48} photo={client.avatar} />

@@ -5,10 +5,11 @@ interface Props {
   size?: number
   isSelf?: boolean
   photo?: string
+  initials?: string
 }
 
-export default function Avatar({ name, size = 40, isSelf = false, photo }: Props) {
-  const initials = name
+export default function Avatar({ name, size = 40, isSelf = false, photo, initials: initialsOverride }: Props) {
+  const initials = initialsOverride ?? name
     .split(' ')
     .map(w => w[0])
     .slice(0, 2)
@@ -32,7 +33,7 @@ export default function Avatar({ name, size = 40, isSelf = false, photo }: Props
       ) : (
         <div
           className={s.avatar}
-          style={{ width: size, height: size, fontSize: size * 0.35 }}
+          style={{ width: size, height: size, fontSize: initials.length > 2 ? size * 0.27 : size * 0.35 }}
         >
           {initials}
         </div>
