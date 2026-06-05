@@ -602,7 +602,7 @@ export default function SharpeningForm() {
             >
               <option value="">{t.sharpening.selectClient}</option>
               {sortedClients.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>{c.isSelf ? t.clients.selfName : c.name}</option>
               ))}
             </select>
           </div>
