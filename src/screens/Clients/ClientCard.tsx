@@ -67,7 +67,7 @@ export default function ClientCard() {
     <div className={s.screen}>
       <div className={s.header}>
         <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
-        <span className={s.headerTitle}>{client.name.toUpperCase()}</span>
+        <span className={s.headerTitle}>{(client.isSelf ? t.clients.selfName : client.name).toUpperCase()}</span>
         {!client.isSelf && (
           <Link to={`/clients/${clientId}/edit`}>
             <button className={s.editBtn}>{t.clients.edit}</button>
@@ -78,13 +78,13 @@ export default function ClientCard() {
       <div className={s.profile}>
         {client.isSelf ? (
           <button className={s.avatarBtn} onClick={() => setAvatarSheetOpen(true)}>
-            <Avatar name={client.name} size={48} isSelf photo={client.avatar} />
+            <Avatar name={t.clients.selfName} size={48} isSelf photo={client.avatar} />
           </button>
         ) : (
           <Avatar name={client.name} size={48} photo={client.avatar} />
         )}
         <div className={s.profileInfo}>
-          <div className={s.profileName}>{client.name}</div>
+          <div className={s.profileName}>{client.isSelf ? t.clients.selfName : client.name}</div>
           <div className={s.profileMeta}>
             {client.phone && (
               <button

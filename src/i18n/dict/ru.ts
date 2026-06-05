@@ -170,6 +170,7 @@ export const ru = {
     telegramLabel: 'Telegram',
     telegramPlaceholder: '@username',
     addClientBtn: 'Добавить клиента',
+    selfName: 'Я',
   },
 
   // Лента заточек (H-1)

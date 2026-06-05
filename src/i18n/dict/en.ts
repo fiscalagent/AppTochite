@@ -212,6 +212,7 @@ export const en = {
     telegramLabel: 'Telegram',
     telegramPlaceholder: '@username',
     addClientBtn: 'Add client',
+    selfName: 'I',
   },
 
   history: {
