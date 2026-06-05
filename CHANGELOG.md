@@ -1,3 +1,10 @@
+## [1.84.1](https://github.com/fiscalagent/AppTochite/compare/v1.84.0...v1.84.1) (2026-06-05)
+
+
+### fix
+
+* каталог камней меняется в обе стороны при смене языка ([](https://github.com/fiscalagent/AppTochite/commit/380a9e9a352edac5386586cb6437c83f8641c3ed))
+
 # [1.84.0](https://github.com/fiscalagent/AppTochite/compare/v1.83.0...v1.84.0) (2026-06-04)
 
 
