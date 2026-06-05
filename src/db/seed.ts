@@ -1938,7 +1938,7 @@ function catalogHash(items: Omit<Stone, 'id'>[]): string {
   return (h >>> 0).toString(36)
 }
 
-async function syncStonesCatalog(targetDb: AppTochiteDB): Promise<void> {
+export async function syncStonesCatalog(targetDb: AppTochiteDB): Promise<void> {
   const locale = readStoredLocale()
   const catalog = locale === 'en' ? STONES_CATALOG_EN : STONES_CATALOG_RU
   const hash = catalogHash(catalog)

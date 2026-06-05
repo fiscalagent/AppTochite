@@ -6,6 +6,8 @@ import {
   applyHtmlLang,
 } from './locale'
 import { dicts, ru, type Dict } from './dict'
+import { db } from '../db/instance'
+import { syncStonesCatalog } from '../db/seed'
 
 interface LocaleContextValue {
   locale: Locale
@@ -26,6 +28,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const setLocale = useCallback((next: Locale) => {
     writeStoredLocale(next)
     setLocaleState(next)
+    syncStonesCatalog(db).catch(() => {})
   }, [])
 
   // Фолбэк на русский, пока словарь локали не добавлен (Фаза 1).
