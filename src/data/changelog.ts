@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.84.2',
+    date: '2026-06-05',
+    changes: [
+      'синхронизация каталога камней при смене языка без перезагрузки',
+    ],
+  },
+  {
     version: '1.84.1',
     date: '2026-06-05',
     changes: [

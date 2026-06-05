@@ -1,3 +1,10 @@
+## [1.84.2](https://github.com/fiscalagent/AppTochite/compare/v1.84.1...v1.84.2) (2026-06-05)
+
+
+### fix
+
+* синхронизация каталога камней при смене языка без перезагрузки ([](https://github.com/fiscalagent/AppTochite/commit/d4e441fb7f11d8d68ce7c34aaa77093dee364d7b))
+
 ## [1.84.1](https://github.com/fiscalagent/AppTochite/compare/v1.84.0...v1.84.1) (2026-06-05)
 
 
