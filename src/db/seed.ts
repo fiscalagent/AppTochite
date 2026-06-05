@@ -1948,19 +1948,15 @@ async function syncStonesCatalog(targetDb: AppTochiteDB): Promise<void> {
     targetDb.meta.get('stonesCatalogLocale'),
   ])
 
-  // Пользователь сменил язык после установки — каталог не трогаем
-  if (storedLocale?.value && storedLocale.value !== locale) return
-
-  // Каталог актуален для текущей локали
+  // Каталог актуален для текущей локали — ничего не делаем
   if (storedHash?.value === hash && storedLocale?.value === locale) return
 
+  // Смена локали или обновление каталога: заменяем isCustom=false камни.
+  // Камни пользователя (isCustom=true) не затрагиваются никогда.
   await targetDb.transaction('rw', [targetDb.stones, targetDb.meta], async () => {
-    if (storedHash?.value !== hash) {
-      await targetDb.stones.filter(s => !s.isCustom).delete()
-      await targetDb.stones.bulkAdd(catalog.map(s => ({ ...s, updatedAt: new Date(0) })))
-      await targetDb.meta.put({ key: 'stonesCatalogHash', value: hash })
-    }
-    // Записываем локаль каталога (в т.ч. для существующих пользователей без метки)
+    await targetDb.stones.filter(s => !s.isCustom).delete()
+    await targetDb.stones.bulkAdd(catalog.map(s => ({ ...s, updatedAt: new Date(0) })))
+    await targetDb.meta.put({ key: 'stonesCatalogHash', value: hash })
     await targetDb.meta.put({ key: 'stonesCatalogLocale', value: locale })
   })
 }
