@@ -1,3 +1,10 @@
+## [1.85.1](https://github.com/fiscalagent/AppTochite/compare/v1.85.0...v1.85.1) (2026-06-05)
+
+
+### fix
+
+* самоссылка на английском — Me вместо I ([](https://github.com/fiscalagent/AppTochite/commit/ea4ac30c4a353806a9a3cf497b458a3e46fb5536))
+
 # [1.85.0](https://github.com/fiscalagent/AppTochite/compare/v1.84.2...v1.85.0) (2026-06-05)
 
 

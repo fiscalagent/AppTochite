@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.85.1',
+    date: '2026-06-05',
+    changes: [
+      'самоссылка на английском — Me вместо I',
+      'клиент «Я» отображается как «I» на английском языке',
+    ],
+  },
+  {
     version: '1.85.0',
     date: '2026-06-05',
     changes: [
