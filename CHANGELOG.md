@@ -1,3 +1,10 @@
+## [1.86.1](https://github.com/fiscalagent/AppTochite/compare/v1.86.0...v1.86.1) (2026-06-05)
+
+
+### fix
+
+* имя «Я» в выпадающем списке клиентов локализуется на Me ([](https://github.com/fiscalagent/AppTochite/commit/94bff0d075c4949974844ac9a3db8d043f9d03fa))
+
 # [1.86.0](https://github.com/fiscalagent/AppTochite/compare/v1.85.1...v1.86.0) (2026-06-05)
 
 

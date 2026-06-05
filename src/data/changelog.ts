@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.86.1',
+    date: '2026-06-05',
+    changes: [
+      'имя «Я» в выпадающем списке клиентов локализуется на Me',
+      'аватар Me отображает полный текст на английском',
+    ],
+  },
+  {
     version: '1.86.0',
     date: '2026-06-05',
     changes: [
