@@ -1,3 +1,10 @@
+# [1.85.0](https://github.com/fiscalagent/AppTochite/compare/v1.84.2...v1.85.0) (2026-06-05)
+
+
+### feat
+
+* клиент «Я» отображается как «I» на английском языке ([](https://github.com/fiscalagent/AppTochite/commit/ade3398c02d09744d7929025495217d03ea371e0))
+
 ## [1.84.2](https://github.com/fiscalagent/AppTochite/compare/v1.84.1...v1.84.2) (2026-06-05)
 
 
