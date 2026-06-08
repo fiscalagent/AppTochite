@@ -481,6 +481,11 @@ export const ru = {
     onboardingOpen: 'Открыть инструкцию',
     onboardingSkip: 'Пропустить',
 
+    folderPromptTitle: 'Защитите данные от очистки Chrome',
+    folderPromptBody: 'Авто-бэкап хранится в том же месте, что и данные приложения. Если Chrome очистит хранилище — оба пропадут. Бэкап в папку — отдельный файл, который Chrome не трогает.',
+    folderPromptPick: 'Выбрать папку для бэкапа',
+    folderPromptDecline: 'Отказаться от бэкапа в папку',
+
     takePhoto: 'Сфотографировать',
     chooseFromGallery: 'Выбрать из галереи',
 

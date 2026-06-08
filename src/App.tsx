@@ -8,6 +8,7 @@ import BackupReminder from './components/BackupReminder/BackupReminder'
 import StorageWarning from './components/StorageWarning/StorageWarning'
 import BrowserWarning from './components/BrowserWarning/BrowserWarning'
 import OnboardingSheet from './components/OnboardingSheet/OnboardingSheet'
+import FolderBackupPrompt from './components/FolderBackupPrompt/FolderBackupPrompt'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
 import { flushAnalyticsQueue } from './services/analytics'
 import { db } from './db/instance'
@@ -47,6 +48,7 @@ export default function App() {
           <ErrorBoundary name="BackupReminder"><BackupReminder /></ErrorBoundary>
           <ErrorBoundary name="StorageWarning"><StorageWarning /></ErrorBoundary>
           <ErrorBoundary name="OnboardingSheet"><OnboardingSheet /></ErrorBoundary>
+        <ErrorBoundary name="FolderBackupPrompt"><FolderBackupPrompt /></ErrorBoundary>
         </AutoBackupProvider>
       </ToastProvider>
     </LocaleProvider>

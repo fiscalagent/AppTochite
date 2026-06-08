@@ -505,6 +505,11 @@ export const en = {
     onboardingOpen: 'Open guide',
     onboardingSkip: 'Skip',
 
+    folderPromptTitle: 'Protect your data from Chrome cleanup',
+    folderPromptBody: 'Auto-backup is stored in the same place as app data. If Chrome clears its storage — both will be gone. A folder backup is a separate file that Chrome cannot touch.',
+    folderPromptPick: 'Choose backup folder',
+    folderPromptDecline: 'Skip folder backup',
+
     takePhoto: 'Take photo',
     chooseFromGallery: 'Choose from gallery',
 
