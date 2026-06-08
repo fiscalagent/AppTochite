@@ -39,6 +39,7 @@ export default function App() {
     window.addEventListener('online', flushAnalyticsQueue)
     runPurgeIfDue()
     healFolderBackupIfNeeded(db).catch(() => {})
+    writeSentinel(db).catch(() => {})
 
     // Периодический бэкап: SW шлёт сообщение когда приложение открыто во время sync-события.
     function handleSWMessage(event: MessageEvent) {

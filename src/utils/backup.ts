@@ -209,6 +209,7 @@ async function writeFolderFile(handle: FileSystemDirectoryHandle, database: AppT
   await writable.write(json)
   await writable.close()
   await database.settings.put({ key: FOLDER_LAST_AT_KEY, value: new Date().toISOString() })
+  await updateLastBackupAt(database)
   writeSentinel(database).catch(() => {})
 }
 
@@ -254,6 +255,39 @@ export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
   await database.settings.delete(FOLDER_HANDLE_KEY)
   await database.settings.delete(FOLDER_LAST_AT_KEY)
   try { localStorage.removeItem(FOLDER_NAME_LS_KEY) } catch { /* silent */ }
+}
+
+export interface FolderPrevMeta { date: Date; size: number }
+
+async function getFolderHandleIfGranted(database: AppTochiteDB): Promise<FileSystemDirectoryHandle | null> {
+  const entry = await database.settings.get(FOLDER_HANDLE_KEY)
+  if (!entry) return null
+  const handle = entry.value as FileSystemDirectoryHandle
+  const perm = await queryDirectoryPermission(handle)
+  return perm === 'granted' ? handle : null
+}
+
+export async function getFolderPrevMeta(database: AppTochiteDB): Promise<FolderPrevMeta | null> {
+  try {
+    const handle = await getFolderHandleIfGranted(database)
+    if (!handle) return null
+    const fh = await handle.getFileHandle(FOLDER_FILENAME_PREV)
+    const file = await fh.getFile()
+    if (file.size === 0) return null
+    return { date: new Date(file.lastModified), size: file.size }
+  } catch { return null }
+}
+
+export async function readFolderPrevBackup(database: AppTochiteDB): Promise<BackupFile | null> {
+  try {
+    const handle = await getFolderHandleIfGranted(database)
+    if (!handle) return null
+    const fh = await handle.getFileHandle(FOLDER_FILENAME_PREV)
+    const file = await fh.getFile()
+    if (file.size === 0) return null
+    const parsed = JSON.parse(await file.text(), reviveDates)
+    return isValidBackup(parsed) ? parsed : null
+  } catch { return null }
 }
 
 export async function checkOPFSIntegrity(): Promise<boolean> {

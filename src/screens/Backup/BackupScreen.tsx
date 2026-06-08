@@ -40,6 +40,8 @@ import {
   getDailyBackupMeta,
   readDailyBackup,
   getFolderBackupMeta,
+  getFolderPrevMeta,
+  readFolderPrevBackup,
   pickAndConnectFolder,
   saveFolderBackupNow,
   disconnectFolder,
@@ -54,6 +56,7 @@ import {
   type OPFSBackupMeta,
   type DailyBackupMeta,
   type FolderBackupMeta,
+  type FolderPrevMeta,
   type PreRestoreSnapshotMeta,
 } from '../../utils/backup'
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
@@ -116,6 +119,7 @@ export default function BackupScreen() {
   const [dailyMeta, setDailyMeta] = useState<DailyBackupMeta | null | undefined>(undefined)
   const [folderMeta, setFolderMeta] = useState<FolderBackupMeta | null | undefined>(undefined)
   const [folderWorking, setFolderWorking] = useState(false)
+  const [folderPrevMeta, setFolderPrevMeta] = useState<FolderPrevMeta | null | undefined>(undefined)
   const [preRestoreMeta, setPreRestoreMeta] = useState<PreRestoreSnapshotMeta | null | undefined>(undefined)
   const [periodicStatus, setPeriodicStatus] = useState<'on' | 'off' | 'unsupported' | undefined>(undefined)
   const [opfsValid, setOpfsValid] = useState<boolean | undefined>(undefined)
@@ -129,6 +133,7 @@ export default function BackupScreen() {
     })
     getDailyBackupMeta(db).then(setDailyMeta)
     getFolderBackupMeta(db).then(setFolderMeta)
+    getFolderPrevMeta(db).then(setFolderPrevMeta)
     getPreRestoreSnapshotMeta().then(setPreRestoreMeta)
     getPeriodicSyncStatus().then(setPeriodicStatus)
   }, [])
@@ -518,6 +523,26 @@ export default function BackupScreen() {
                 {t.backup.folderDisconnect}
               </button>
             </div>
+            {folderPrevMeta && (
+              <>
+                <div className={s.autoBackupRow}>
+                  <span className={s.autoBackupBadge} style={{ color: 'var(--text-300)', background: 'transparent', border: '1px solid var(--border-200)' }}>
+                    {t.backup.folderPrevSection}
+                  </span>
+                  <span className={s.autoBackupMeta}>
+                    {`${fmtDateTimeLong(locale, folderPrevMeta.date)} · ${t.backup.kb((folderPrevMeta.size / 1024).toFixed(0))}`}
+                  </span>
+                </div>
+                <p className={s.desc}>{t.backup.folderPrevDesc}</p>
+                <button className={s.secondaryBtn} onClick={async () => {
+                  const backup = await readFolderPrevBackup(db)
+                  if (!backup) { showToast(t.backup.folderPrevNotFound); return }
+                  setPreview(backup)
+                }}>
+                  {t.backup.restoreFromFolderPrev}
+                </button>
+              </>
+            )}
           </>
         ) : (
           <button className={s.primaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
