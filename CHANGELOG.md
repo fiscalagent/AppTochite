@@ -1,3 +1,10 @@
+## [1.91.2](https://github.com/fiscalagent/AppTochite/compare/v1.91.1...v1.91.2) (2026-06-08)
+
+
+### fix
+
+* добавить recoveryPoints в английский словарь ([](https://github.com/fiscalagent/AppTochite/commit/6746d3aa58065d07a8b2c2946cf6a981c5c9495f))
+
 ## [1.91.1](https://github.com/fiscalagent/AppTochite/compare/v1.91.0...v1.91.1) (2026-06-08)
 
 

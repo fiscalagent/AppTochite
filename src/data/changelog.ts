@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.91.2',
+    date: '2026-06-08',
+    changes: [
+      'добавить recoveryPoints в английский словарь',
+    ],
+  },
+  {
     version: '1.91.1',
     date: '2026-06-08',
     changes: [
