@@ -1,3 +1,10 @@
+# [1.91.0](https://github.com/fiscalagent/AppTochite/compare/v1.90.0...v1.91.0) (2026-06-08)
+
+
+### feat
+
+* статус защиты, folder hint при потере, авто-sync, 90д-промпт ([](https://github.com/fiscalagent/AppTochite/commit/2eb55f5e7488ead33a763cd49bd5a0aa18de6085))
+
 # [1.90.0](https://github.com/fiscalagent/AppTochite/compare/v1.89.0...v1.90.0) (2026-06-08)
 
 
