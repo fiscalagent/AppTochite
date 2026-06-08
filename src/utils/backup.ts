@@ -247,6 +247,114 @@ export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
   await database.settings.delete(FOLDER_LAST_AT_KEY)
 }
 
+// ─── Pre-restore snapshot ────────────────────────────────────────────────────
+// Создаётся перед любым restore/merge: если восстановление прошло неудачно,
+// пользователь может откатиться к этому снапшоту через BK-1.
+
+const PRE_RESTORE_FILENAME = 'apptochite-before-restore.json'
+
+export async function createPreRestoreSnapshot(database: AppTochiteDB): Promise<void> {
+  try {
+    const backup = await exportBackup(database)
+    if (!isValidBackup(backup) || backup.data.clients.length === 0) return
+    const root = await navigator.storage.getDirectory()
+    const fh = await root.getFileHandle(PRE_RESTORE_FILENAME, { create: true })
+    const w = await fh.createWritable()
+    await w.write(JSON.stringify(backup))
+    await w.close()
+  } catch { /* silent — не блокируем restore */ }
+}
+
+export interface PreRestoreSnapshotMeta { date: Date; size: number }
+
+export async function getPreRestoreSnapshotMeta(): Promise<PreRestoreSnapshotMeta | null> {
+  try {
+    const root = await navigator.storage.getDirectory()
+    const fh = await root.getFileHandle(PRE_RESTORE_FILENAME)
+    const file = await fh.getFile()
+    if (file.size === 0) return null
+    return { date: new Date(file.lastModified), size: file.size }
+  } catch { return null }
+}
+
+export async function readPreRestoreSnapshot(): Promise<BackupFile | null> {
+  try {
+    const root = await navigator.storage.getDirectory()
+    const fh = await root.getFileHandle(PRE_RESTORE_FILENAME)
+    const file = await fh.getFile()
+    if (file.size === 0) return null
+    const parsed = JSON.parse(await file.text(), reviveDates)
+    return isValidBackup(parsed) ? parsed : null
+  } catch { return null }
+}
+
+// ─── Heal folder backup ───────────────────────────────────────────────────────
+// При старте приложения: если handle есть и разрешение granted, но файл
+// отсутствует или пуст — пересоздаём без участия пользователя.
+
+export async function healFolderBackupIfNeeded(database: AppTochiteDB): Promise<void> {
+  try {
+    const entry = await database.settings.get(FOLDER_HANDLE_KEY)
+    if (!entry) return
+    const handle = entry.value as FileSystemDirectoryHandle
+    const perm = await queryDirectoryPermission(handle)
+    if (perm !== 'granted') return
+    try {
+      const fh = await handle.getFileHandle(FOLDER_FILENAME)
+      const file = await fh.getFile()
+      if (file.size > 0) return
+    } catch { /* файл не найден */ }
+    await writeFolderFile(handle, database)
+  } catch { /* silent */ }
+}
+
+// ─── Periodic Background Sync ─────────────────────────────────────────────────
+// Регистрирует периодический фоновый бэкап через Periodic Background Sync API.
+// Требует разрешения periodic-background-sync (Chrome Android).
+// Тег 'backup-sync' обрабатывается в src/sw.ts.
+
+const PERIODIC_SYNC_TAG = 'backup-sync'
+const PERIODIC_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000 // 1 раз в сутки
+
+type SWWithPeriodicSync = ServiceWorkerRegistration & {
+  periodicSync: {
+    register(tag: string, opts: { minInterval: number }): Promise<void>
+    unregister(tag: string): Promise<void>
+    getTags(): Promise<string[]>
+  }
+}
+
+export async function getPeriodicSyncStatus(): Promise<'on' | 'off' | 'unsupported'> {
+  try {
+    if (!('serviceWorker' in navigator)) return 'unsupported'
+    const sw = await navigator.serviceWorker.ready as SWWithPeriodicSync
+    if (!('periodicSync' in sw)) return 'unsupported'
+    const tags = await sw.periodicSync.getTags()
+    return tags.includes(PERIODIC_SYNC_TAG) ? 'on' : 'off'
+  } catch { return 'unsupported' }
+}
+
+export async function enablePeriodicSync(): Promise<'ok' | 'denied' | 'unsupported'> {
+  try {
+    if (!('serviceWorker' in navigator)) return 'unsupported'
+    const sw = await navigator.serviceWorker.ready as SWWithPeriodicSync
+    if (!('periodicSync' in sw)) return 'unsupported'
+    const status = await navigator.permissions.query({ name: 'periodic-background-sync' as PermissionName })
+    if (status.state === 'denied') return 'denied'
+    await sw.periodicSync.register(PERIODIC_SYNC_TAG, { minInterval: PERIODIC_SYNC_INTERVAL_MS })
+    return 'ok'
+  } catch { return 'unsupported' }
+}
+
+export async function disablePeriodicSync(): Promise<void> {
+  try {
+    if (!('serviceWorker' in navigator)) return
+    const sw = await navigator.serviceWorker.ready as SWWithPeriodicSync
+    if (!('periodicSync' in sw)) return
+    await sw.periodicSync.unregister(PERIODIC_SYNC_TAG)
+  } catch { /* silent */ }
+}
+
 // ─── OPFS backup ─────────────────────────────────────────────────────────────
 
 export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {

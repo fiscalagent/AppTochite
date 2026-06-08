@@ -42,11 +42,18 @@ import {
   pickAndConnectFolder,
   saveFolderBackupNow,
   disconnectFolder,
+  createPreRestoreSnapshot,
+  getPreRestoreSnapshotMeta,
+  readPreRestoreSnapshot,
+  getPeriodicSyncStatus,
+  enablePeriodicSync,
+  disablePeriodicSync,
   type BackupFile,
   type MergeStats,
   type OPFSBackupMeta,
   type DailyBackupMeta,
   type FolderBackupMeta,
+  type PreRestoreSnapshotMeta,
 } from '../../utils/backup'
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
@@ -55,6 +62,15 @@ import s from './BackupScreen.module.css'
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
+}
+
+// Цветовой индикатор свежести бэкапа
+function ageDot(date: Date | null | undefined): string {
+  if (!date) return 'var(--danger)'
+  const hours = (Date.now() - date.getTime()) / 3_600_000
+  if (hours < 72) return 'var(--status-done)'   // < 3 дней — зелёный
+  if (hours < 168) return '#F5A623'              // < 7 дней — жёлтый
+  return 'var(--danger)'                         // ≥ 7 дней — красный
 }
 
 
@@ -78,12 +94,16 @@ export default function BackupScreen() {
   const [dailyMeta, setDailyMeta] = useState<DailyBackupMeta | null | undefined>(undefined)
   const [folderMeta, setFolderMeta] = useState<FolderBackupMeta | null | undefined>(undefined)
   const [folderWorking, setFolderWorking] = useState(false)
+  const [preRestoreMeta, setPreRestoreMeta] = useState<PreRestoreSnapshotMeta | null | undefined>(undefined)
+  const [periodicStatus, setPeriodicStatus] = useState<'on' | 'off' | 'unsupported' | undefined>(undefined)
   const { lastBackupTick } = useAutoBackup()
 
   const refreshOpfsMeta = useCallback(() => {
     getOPFSBackupMeta().then(setOpfsMeta)
     getDailyBackupMeta(db).then(setDailyMeta)
     getFolderBackupMeta(db).then(setFolderMeta)
+    getPreRestoreSnapshotMeta().then(setPreRestoreMeta)
+    getPeriodicSyncStatus().then(setPeriodicStatus)
   }, [])
 
   useEffect(() => {
@@ -249,6 +269,7 @@ export default function BackupScreen() {
     if (!preview) return
     setRestoring(true)
     try {
+      await createPreRestoreSnapshot(db)
       await restoreBackup(db, preview)
       showToast(t.backup.restored)
       navigate('/')
@@ -271,6 +292,7 @@ export default function BackupScreen() {
     if (!preview) return
     setMerging(true)
     try {
+      await createPreRestoreSnapshot(db)
       const stats = await mergeBackup(db, preview)
       setMergeStats(stats)
       setPreview(null)
@@ -360,7 +382,10 @@ export default function BackupScreen() {
               ? t.backup.loading
               : opfsMeta === null
                 ? t.backup.neverCreated
-                : `${fmtDateTimeLong(locale, opfsMeta.date)} · ${t.backup.kb((opfsMeta.size / 1024).toFixed(0))}`}
+                : (<>
+                    <span style={{ color: ageDot(opfsMeta.date), marginRight: 4 }}>●</span>
+                    {`${fmtDateTimeLong(locale, opfsMeta.date)} · ${t.backup.kb((opfsMeta.size / 1024).toFixed(0))}`}
+                  </>)}
           </span>
         </div>
         <p className={s.desc}>{t.backup.autoBackupDesc}</p>
@@ -379,6 +404,7 @@ export default function BackupScreen() {
             <div className={s.autoBackupRow}>
               <span className={s.autoBackupBadge}>{t.backup.perDay}</span>
               <span className={s.autoBackupMeta}>
+                <span style={{ color: ageDot(dailyMeta.date), marginRight: 4 }}>●</span>
                 {t.backup.snapshotFor(fmtDateDayMonth(locale, dailyMeta.snapshotDate))} · {t.backup.kb((dailyMeta.size / 1024).toFixed(0))}
               </span>
             </div>
@@ -389,6 +415,25 @@ export default function BackupScreen() {
               setPreview(backup)
             }}>
               {t.backup.restoreFromDaily}
+            </button>
+          </>
+        )}
+
+        {preRestoreMeta && (
+          <>
+            <div className={s.autoBackupRow}>
+              <span className={s.autoBackupBadge}>{t.backup.preRestoreSection}</span>
+              <span className={s.autoBackupMeta}>
+                {`${fmtDateTimeLong(locale, preRestoreMeta.date)} · ${t.backup.kb((preRestoreMeta.size / 1024).toFixed(0))}`}
+              </span>
+            </div>
+            <p className={s.desc}>{t.backup.preRestoreDesc}</p>
+            <button className={s.secondaryBtn} onClick={async () => {
+              const backup = await readPreRestoreSnapshot()
+              if (!backup) { showToast(t.backup.autoNotFound); return }
+              setPreview(backup)
+            }}>
+              {t.backup.restoreFromPreRestore}
             </button>
           </>
         )}
@@ -409,7 +454,7 @@ export default function BackupScreen() {
             </div>
             <p className={s.desc}>
               {folderMeta.lastAt
-                ? t.backup.folderLastAt(fmtDateTimeLong(locale, folderMeta.lastAt))
+                ? (<><span style={{ color: ageDot(folderMeta.lastAt), marginRight: 4 }}>●</span>{t.backup.folderLastAt(fmtDateTimeLong(locale, folderMeta.lastAt))}</>)
                 : t.backup.folderNeverSaved}
             </p>
             <div className={s.autoBackupActions}>
@@ -428,6 +473,34 @@ export default function BackupScreen() {
           <button className={s.primaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
             {folderWorking ? t.backup.saving : t.backup.folderPick}
           </button>
+        )}
+      </div>
+
+      <div className={s.divider} />
+
+      <div className={s.section}>
+        <p className={s.sectionTitle}>{t.backup.periodicSyncSection}</p>
+        <p className={s.desc}>{t.backup.periodicSyncDesc}</p>
+        {periodicStatus === undefined || periodicStatus === 'unsupported' ? (
+          <p className={s.desc} style={{ color: 'var(--text-300)' }}>{t.backup.periodicSyncUnsupported}</p>
+        ) : (
+          <div className={s.autoBackupRow}>
+            <span className={s.autoBackupBadge} style={{ color: periodicStatus === 'on' ? 'var(--status-done)' : 'var(--text-300)' }}>
+              {periodicStatus === 'on' ? t.backup.periodicSyncOn : t.backup.periodicSyncOff}
+            </span>
+            {periodicStatus === 'on' ? (
+              <button className={s.secondaryBtn} style={{ marginLeft: 'auto' }} onClick={async () => {
+                await disablePeriodicSync()
+                setPeriodicStatus(await getPeriodicSyncStatus())
+              }}>{t.backup.periodicSyncDisable}</button>
+            ) : (
+              <button className={s.primaryBtn} style={{ marginLeft: 'auto' }} onClick={async () => {
+                const result = await enablePeriodicSync()
+                if (result === 'denied') showToast(t.backup.periodicSyncDenied)
+                setPeriodicStatus(await getPeriodicSyncStatus())
+              }}>{t.backup.periodicSyncEnable}</button>
+            )}
+          </div>
         )}
       </div>
 

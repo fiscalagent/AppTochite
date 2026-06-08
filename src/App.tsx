@@ -14,6 +14,7 @@ import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
 import { flushAnalyticsQueue } from './services/analytics'
 import { db } from './db/instance'
 import { purgeExpired } from './utils/trash'
+import { healFolderBackupIfNeeded, performFolderBackup, writeSentinel } from './utils/backup'
 
 const PURGE_INTERVAL_MS = 12 * 60 * 60 * 1000
 
@@ -37,7 +38,21 @@ export default function App() {
     navigator.storage?.persist?.()
     window.addEventListener('online', flushAnalyticsQueue)
     runPurgeIfDue()
-    return () => window.removeEventListener('online', flushAnalyticsQueue)
+    healFolderBackupIfNeeded(db).catch(() => {})
+
+    // Периодический бэкап: SW шлёт сообщение когда приложение открыто во время sync-события.
+    function handleSWMessage(event: MessageEvent) {
+      if (event.data?.type === 'periodic-backup') {
+        performFolderBackup(db).catch(() => {})
+        writeSentinel(db).catch(() => {})
+      }
+    }
+    navigator.serviceWorker?.addEventListener('message', handleSWMessage)
+
+    return () => {
+      window.removeEventListener('online', flushAnalyticsQueue)
+      navigator.serviceWorker?.removeEventListener('message', handleSWMessage)
+    }
   }, [])
 
   return (

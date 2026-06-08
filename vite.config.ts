@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
         name: 'AppTochite',
@@ -43,11 +46,9 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         globIgnores: ['**/cleaner.html', '**/guide.html'],
-        navigateFallback: '/AppTochite/index.html',
-        navigateFallbackDenylist: [/\/cleaner\.html$/, /\/guide\.html$/],
       },
     }),
   ],
