@@ -1,3 +1,10 @@
+# [1.87.0](https://github.com/fiscalagent/AppTochite/compare/v1.86.1...v1.87.0) (2026-06-08)
+
+
+### feat
+
+* бэкап в папку на устройстве + защита хранилища + восстановление аналитики ([](https://github.com/fiscalagent/AppTochite/commit/ddb36288a7d34664d589d3c809d2dcf93adbd8e2))
+
 ## [1.86.1](https://github.com/fiscalagent/AppTochite/compare/v1.86.0...v1.86.1) (2026-06-05)
 
 
