@@ -517,6 +517,7 @@ export const en = {
     merge: 'Merge',
     restoring: 'Restoring…',
     replaceAll: 'Replace all',
+    recoveryPoints: 'Recovery points',
     donateSection: 'Support the project',
     donateText: 'If this app helps you — you can support its development. Thank you! 🤝',
     aboutLabel: 'About',
