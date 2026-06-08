@@ -1,6 +1,7 @@
 import type { AppTochiteDB, Client, Sharpening, Stone, Steel, Knife, Meta } from '../db/instance'
 import { GRIT_TABLE } from '../data/gritTable'
 import { ru } from '../i18n/dict'
+import { queryDirectoryPermission, requestDirectoryPermission, pickDirectory } from './fileSystemAccess'
 
 function normalizeStoneFromBackup(raw: Stone): Stone {
   if (raw.gritSource != null) return raw
@@ -132,6 +133,82 @@ async function verifyAutoBackup(
     return false
   }
 }
+
+// ─── Folder backup (File System Access API) ──────────────────────────────────
+// Хранит FileSystemDirectoryHandle прямо в IndexedDB (structured clone).
+// Файл apptochite-auto.json пишется в реальную папку пользователя —
+// Chrome не трогает её при очистке своего хранилища.
+
+const FOLDER_HANDLE_KEY = 'autoBackupFolderHandle'
+const FOLDER_LAST_AT_KEY = 'autoBackupFolderLastAt'
+const FOLDER_FILENAME = 'apptochite-auto.json'
+
+export interface FolderBackupMeta {
+  folderName: string
+  lastAt: Date | null
+}
+
+export async function getFolderBackupMeta(database: AppTochiteDB): Promise<FolderBackupMeta | null> {
+  const entry = await database.settings.get(FOLDER_HANDLE_KEY)
+  if (!entry) return null
+  const handle = entry.value as FileSystemDirectoryHandle
+  const lastEntry = await database.settings.get(FOLDER_LAST_AT_KEY)
+  return {
+    folderName: handle.name,
+    lastAt: lastEntry ? new Date(lastEntry.value as string) : null,
+  }
+}
+
+async function writeFolderFile(handle: FileSystemDirectoryHandle, database: AppTochiteDB): Promise<void> {
+  const backup = await exportBackup(database)
+  const fileHandle = await handle.getFileHandle(FOLDER_FILENAME, { create: true })
+  const writable = await fileHandle.createWritable()
+  await writable.write(JSON.stringify(backup))
+  await writable.close()
+  await database.settings.put({ key: FOLDER_LAST_AT_KEY, value: new Date().toISOString() })
+}
+
+// Вызывается из авто-бэкапа (без жеста пользователя) — только если уже granted.
+export async function performFolderBackup(database: AppTochiteDB): Promise<void> {
+  const entry = await database.settings.get(FOLDER_HANDLE_KEY)
+  if (!entry) return
+  const handle = entry.value as FileSystemDirectoryHandle
+  const perm = await queryDirectoryPermission(handle)
+  if (perm !== 'granted') return
+  await writeFolderFile(handle, database)
+}
+
+// Вызывается по кнопке (есть жест) — может показать диалог разрешения.
+// Возвращает 'ok' | 'no-folder' | 'no-permission' | 'error'
+export async function saveFolderBackupNow(database: AppTochiteDB): Promise<'ok' | 'no-folder' | 'no-permission' | 'error'> {
+  const entry = await database.settings.get(FOLDER_HANDLE_KEY)
+  if (!entry) return 'no-folder'
+  const handle = entry.value as FileSystemDirectoryHandle
+  let perm = await queryDirectoryPermission(handle)
+  if (perm !== 'granted') perm = await requestDirectoryPermission(handle)
+  if (perm !== 'granted') return 'no-permission'
+  try {
+    await writeFolderFile(handle, database)
+    return 'ok'
+  } catch {
+    return 'error'
+  }
+}
+
+// Пользователь выбирает папку: сохраняем handle и сразу пишем первый бэкап.
+export async function pickAndConnectFolder(database: AppTochiteDB): Promise<FolderBackupMeta> {
+  const handle = await pickDirectory()
+  await database.settings.put({ key: FOLDER_HANDLE_KEY, value: handle })
+  await writeFolderFile(handle, database)
+  return { folderName: handle.name, lastAt: new Date() }
+}
+
+export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
+  await database.settings.delete(FOLDER_HANDLE_KEY)
+  await database.settings.delete(FOLDER_LAST_AT_KEY)
+}
+
+// ─── OPFS backup ─────────────────────────────────────────────────────────────
 
 export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
   const root = await navigator.storage.getDirectory()

@@ -38,11 +38,17 @@ import {
   readOPFSBackup,
   getDailyBackupMeta,
   readDailyBackup,
+  getFolderBackupMeta,
+  pickAndConnectFolder,
+  saveFolderBackupNow,
+  disconnectFolder,
   type BackupFile,
   type MergeStats,
   type OPFSBackupMeta,
   type DailyBackupMeta,
+  type FolderBackupMeta,
 } from '../../utils/backup'
+import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import { useLocale, fmtDate, fmtDateDayMonth, fmtDateTimeLong } from '../../i18n'
 import s from './BackupScreen.module.css'
@@ -70,11 +76,14 @@ export default function BackupScreen() {
   const [storageMb, setStorageMb] = useState<number | null>(null)
   const [opfsMeta, setOpfsMeta] = useState<OPFSBackupMeta | null | undefined>(undefined)
   const [dailyMeta, setDailyMeta] = useState<DailyBackupMeta | null | undefined>(undefined)
+  const [folderMeta, setFolderMeta] = useState<FolderBackupMeta | null | undefined>(undefined)
+  const [folderWorking, setFolderWorking] = useState(false)
   const { lastBackupTick } = useAutoBackup()
 
   const refreshOpfsMeta = useCallback(() => {
     getOPFSBackupMeta().then(setOpfsMeta)
     getDailyBackupMeta(db).then(setDailyMeta)
+    getFolderBackupMeta(db).then(setFolderMeta)
   }, [])
 
   useEffect(() => {
@@ -180,6 +189,44 @@ export default function BackupScreen() {
     } finally {
       setExporting(false)
     }
+  }
+
+  async function handlePickFolder() {
+    if (folderWorking) return
+    setFolderWorking(true)
+    try {
+      const meta = await pickAndConnectFolder(db)
+      setFolderMeta(meta)
+      showToast(t.backup.folderSaved)
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') showToast(t.backup.folderError)
+    } finally {
+      setFolderWorking(false)
+    }
+  }
+
+  async function handleFolderSaveNow() {
+    if (folderWorking) return
+    setFolderWorking(true)
+    try {
+      const result = await saveFolderBackupNow(db)
+      if (result === 'ok') {
+        const meta = await getFolderBackupMeta(db)
+        setFolderMeta(meta)
+        showToast(t.backup.folderSaved)
+      } else if (result === 'no-permission') {
+        showToast(t.backup.folderNoPermission)
+      } else if (result === 'error') {
+        showToast(t.backup.folderError)
+      }
+    } finally {
+      setFolderWorking(false)
+    }
+  }
+
+  async function handleDisconnectFolder() {
+    await disconnectFolder(db)
+    setFolderMeta(null)
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -344,6 +391,43 @@ export default function BackupScreen() {
               {t.backup.restoreFromDaily}
             </button>
           </>
+        )}
+      </div>
+
+      <div className={s.divider} />
+
+      <div className={s.section}>
+        <p className={s.sectionTitle}>{t.backup.folderSection}</p>
+        <p className={s.desc}>{t.backup.folderDesc}</p>
+        {!supportsFileSystemAccess() ? (
+          <p className={s.desc} style={{ color: 'var(--text-300)' }}>{t.backup.folderUnsupported}</p>
+        ) : folderMeta ? (
+          <>
+            <div className={s.autoBackupRow}>
+              <span className={s.autoBackupBadge}>{t.backup.active}</span>
+              <span className={s.autoBackupFolder}>{folderMeta.folderName}</span>
+            </div>
+            <p className={s.desc}>
+              {folderMeta.lastAt
+                ? t.backup.folderLastAt(fmtDateTimeLong(locale, folderMeta.lastAt))
+                : t.backup.folderNeverSaved}
+            </p>
+            <div className={s.autoBackupActions}>
+              <button className={s.primaryBtn} onClick={handleFolderSaveNow} disabled={folderWorking}>
+                {folderWorking ? t.backup.saving : t.backup.folderSaveNow}
+              </button>
+              <button className={s.secondaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
+                {t.backup.folderPick}
+              </button>
+              <button className={s.secondaryBtn} onClick={handleDisconnectFolder} disabled={folderWorking}>
+                {t.backup.folderDisconnect}
+              </button>
+            </div>
+          </>
+        ) : (
+          <button className={s.primaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
+            {folderWorking ? t.backup.saving : t.backup.folderPick}
+          </button>
         )}
       </div>
 

@@ -8,7 +8,6 @@ import { useCamera } from '../../hooks/useCamera'
 import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
-import { trackSharpening } from '../../services/analytics'
 import { useDictationMode, type DictationErrorCode, type AutoStopReason } from '../../hooks/useDictationMode'
 import { findClientMatch, findAllMatches, pickFromFiltered } from '../../utils/voiceMatch'
 import type { Command, CommandContext, FieldKey } from '../../utils/voiceCommand'
@@ -502,7 +501,6 @@ export default function SharpeningForm() {
           )
           await db.sharpenings.update(Number(id), receptionFields)
         })
-        trackSharpening(receptionFields as Parameters<typeof trackSharpening>[0])
         if (opts.voiceTriggered) showToast(t.sharpening.voice.savedVoice)
         navigate(`/sharpenings/${id}`, { replace: true })
       } else {
@@ -543,7 +541,6 @@ export default function SharpeningForm() {
           }
           return Number(await db.sharpenings.add(acceptanceData))
         })
-        trackSharpening(acceptanceData as Parameters<typeof trackSharpening>[0])
         if (opts.voiceTriggered) showToast(t.sharpening.voice.acceptedVoice)
         // fromAcceptance: на Z-2 «назад» (верхняя и аппаратная) ведёт обратно на Z-1 этой заточки
         navigate(`/sharpenings/${savedId}`, { replace: true, state: { fromAcceptance: true } })

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams, useLocation, useBlocker } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStone, type Stone, type GritSource, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
+import { trackSharpening } from '../../services/analytics'
 import { getAltGrits, fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
@@ -441,15 +442,18 @@ export default function SharpeningDetail() {
     if (saving) return
     setSaving(true)
     try {
-      await db.sharpenings.update(sharpeningId, {
+      const doneAt = new Date()
+      const updatedFields = {
         angle: angle ? Number(angle) : undefined,
         stones: selectedStones.length ? selectedStones : undefined,
         comment: comment.trim() || undefined,
         photosAfter: photosAfter.length ? photosAfter : undefined,
-        status: 'done',
-        doneAt: new Date(),
-        updatedAt: new Date(),
-      })
+        status: 'done' as const,
+        doneAt,
+        updatedAt: doneAt,
+      }
+      await db.sharpenings.update(sharpeningId, updatedFields)
+      if (sh) trackSharpening({ ...sh, ...updatedFields })
       navigate('/')
     } catch {
       showToast(t.sharpening.saveError)

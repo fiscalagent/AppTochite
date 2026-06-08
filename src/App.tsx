@@ -32,6 +32,7 @@ async function runPurgeIfDue() {
 export default function App() {
   useEffect(() => {
     flushAnalyticsQueue()
+    navigator.storage?.persist?.()
     window.addEventListener('online', flushAnalyticsQueue)
     runPurgeIfDue()
     return () => window.removeEventListener('online', flushAnalyticsQueue)

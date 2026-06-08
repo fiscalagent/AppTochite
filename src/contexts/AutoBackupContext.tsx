@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { db } from '../db/instance'
-import { performOPFSBackup } from '../utils/backup'
+import { performOPFSBackup, performFolderBackup } from '../utils/backup'
 
 interface AutoBackupContextValue {
   lastBackupTick: number  // increments after each successful backup — use to refresh UI
@@ -29,6 +29,7 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
     lastRunAtRef.current = now
     try {
       await performOPFSBackup(db)
+      performFolderBackup(db).catch(() => {})
       setLastBackupTick(t => t + 1)
     } catch {
       // silently skip — OPFS is always available, failures are transient
