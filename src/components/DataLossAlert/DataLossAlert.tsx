@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { db } from '../../db/instance'
-import { readSentinel } from '../../utils/backup'
+import { readSentinel, getFolderNameHint } from '../../utils/backup'
 import { startBlur } from '../../utils/modalBlur'
 import { router } from '../../router'
 import { useT } from '../../i18n'
@@ -10,6 +10,7 @@ import s from '../OnboardingSheet/OnboardingSheet.module.css'
 export default function DataLossAlert() {
   const [visible, setVisible] = useState(false)
   const [lostCount, setLostCount] = useState(0)
+  const folderHint = getFolderNameHint()
   const t = useT()
 
   useEffect(() => {
@@ -47,6 +48,11 @@ export default function DataLossAlert() {
         <div className={s.handle} />
         <div className={s.title}>{t.components.dataLossTitle}</div>
         <div className={s.subtitle}>{t.components.dataLossBody(lostCount)}</div>
+        {folderHint && (
+          <div className={s.subtitle} style={{ fontSize: 13, color: 'var(--accent)', marginTop: -8 }}>
+            {t.components.dataLossFolderHint(folderHint)}
+          </div>
+        )}
         <button className={s.primary} onClick={goToRestore}>
           {t.components.dataLossRestore}
         </button>

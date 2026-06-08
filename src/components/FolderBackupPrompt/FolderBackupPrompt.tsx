@@ -8,7 +8,18 @@ import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { getFolderBackupMeta, pickAndConnectFolder } from '../../utils/backup'
 import s from '../OnboardingSheet/OnboardingSheet.module.css'
 
-const DISMISSED_KEY = 'folderPromptDismissed'
+const DISMISSED_KEY = 'folderPromptDismissedAt'
+const RESHOW_AFTER_MS = 90 * 24 * 60 * 60 * 1000
+const RESHOW_THRESHOLD = 10
+
+function isDismissed(sharpeningCount: number): boolean {
+  const raw = localStorage.getItem(DISMISSED_KEY)
+  if (!raw) return false
+  const age = Date.now() - new Date(raw).getTime()
+  if (age < RESHOW_AFTER_MS) return true
+  // 90 дней прошло: показываем снова только если данных достаточно
+  return sharpeningCount < RESHOW_THRESHOLD
+}
 
 export default function FolderBackupPrompt() {
   const [visible, setVisible] = useState(false)
@@ -18,7 +29,6 @@ export default function FolderBackupPrompt() {
 
   useEffect(() => {
     if (!supportsFileSystemAccess()) return
-    if (localStorage.getItem(DISMISSED_KEY)) return
 
     async function check() {
       const [folderMeta, count] = await Promise.all([
@@ -27,6 +37,7 @@ export default function FolderBackupPrompt() {
       ])
       if (folderMeta) return
       if (count === 0) return
+      if (isDismissed(count)) return
       setVisible(true)
     }
     check()
@@ -38,7 +49,7 @@ export default function FolderBackupPrompt() {
   }, [visible])
 
   function dismiss() {
-    localStorage.setItem(DISMISSED_KEY, 'true')
+    localStorage.setItem(DISMISSED_KEY, new Date().toISOString())
     setVisible(false)
   }
 

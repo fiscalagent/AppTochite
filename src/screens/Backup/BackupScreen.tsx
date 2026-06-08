@@ -36,6 +36,7 @@ import {
   updateLastBackupAt,
   getOPFSBackupMeta,
   readOPFSBackup,
+  checkOPFSIntegrity,
   getDailyBackupMeta,
   readDailyBackup,
   getFolderBackupMeta,
@@ -62,6 +63,27 @@ import s from './BackupScreen.module.css'
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
+}
+
+type ProtectionLevel = 'protected' | 'partial' | 'at-risk'
+
+function computeProtection(
+  opfsMeta: OPFSBackupMeta | null | undefined,
+  opfsValid: boolean | undefined,
+  folderMeta: FolderBackupMeta | null | undefined,
+): ProtectionLevel {
+  if (opfsMeta === undefined) return 'partial' // ещё загружается
+  const ms7d = 7 * 24 * 3600_000
+  const ms3d = 3 * 24 * 3600_000
+  const folderAge = folderMeta?.lastAt ? Date.now() - folderMeta.lastAt.getTime() : Infinity
+  const opfsAge  = opfsMeta ? Date.now() - opfsMeta.date.getTime() : Infinity
+  if (folderMeta?.lastAt && folderAge < ms7d) return 'protected'
+  if (opfsValid === false && !folderMeta) return 'at-risk'
+  if (!opfsMeta && !folderMeta) return 'at-risk'
+  if (Math.min(folderAge, opfsAge) > ms7d) return 'at-risk'
+  if (!folderMeta) return 'partial'
+  if (folderAge < ms3d) return 'protected'
+  return 'partial'
 }
 
 // Цветовой индикатор свежести бэкапа
@@ -96,10 +118,15 @@ export default function BackupScreen() {
   const [folderWorking, setFolderWorking] = useState(false)
   const [preRestoreMeta, setPreRestoreMeta] = useState<PreRestoreSnapshotMeta | null | undefined>(undefined)
   const [periodicStatus, setPeriodicStatus] = useState<'on' | 'off' | 'unsupported' | undefined>(undefined)
+  const [opfsValid, setOpfsValid] = useState<boolean | undefined>(undefined)
   const { lastBackupTick } = useAutoBackup()
 
   const refreshOpfsMeta = useCallback(() => {
-    getOPFSBackupMeta().then(setOpfsMeta)
+    getOPFSBackupMeta().then(meta => {
+      setOpfsMeta(meta)
+      if (meta) checkOPFSIntegrity().then(setOpfsValid)
+      else setOpfsValid(undefined)
+    })
     getDailyBackupMeta(db).then(setDailyMeta)
     getFolderBackupMeta(db).then(setFolderMeta)
     getPreRestoreSnapshotMeta().then(setPreRestoreMeta)
@@ -310,6 +337,26 @@ export default function BackupScreen() {
         <span className={s.title}>{t.backup.title}</span>
       </div>
 
+      {(() => {
+        const level = computeProtection(opfsMeta, opfsValid, folderMeta)
+        const cfg = {
+          protected: { color: 'var(--status-done)', label: t.backup.statusProtected, desc: t.backup.statusProtectedDesc },
+          partial:   { color: '#F5A623',            label: t.backup.statusPartial,   desc: folderMeta ? t.backup.statusPartialStale : t.backup.statusPartialNoFolder },
+          'at-risk': { color: 'var(--danger)',       label: t.backup.statusAtRisk,    desc: !opfsMeta && !folderMeta ? t.backup.statusAtRiskNoBackup : opfsValid === false && !folderMeta ? t.backup.statusAtRiskCorrupt : t.backup.statusAtRiskStale },
+        }[level]
+        return (
+          <div className={s.statusCard} style={{ borderColor: cfg.color }}>
+            <span className={s.statusDot} style={{ background: cfg.color }} />
+            <div className={s.statusBody}>
+              <span className={s.statusLabel} style={{ color: cfg.color }}>{cfg.label}</span>
+              <span className={s.statusDesc}>{cfg.desc}</span>
+            </div>
+          </div>
+        )
+      })()}
+
+      <div className={s.divider} />
+
       <div className={s.section}>
         <p className={s.sectionTitle}>{t.backup.dbSection}</p>
         {(() => {
@@ -388,6 +435,9 @@ export default function BackupScreen() {
                   </>)}
           </span>
         </div>
+        {opfsValid === false && (
+          <p className={s.autoBackupWarn}>{t.backup.opfsCorruptWarn}</p>
+        )}
         <p className={s.desc}>{t.backup.autoBackupDesc}</p>
         {opfsMeta !== null && (
           <button className={s.secondaryBtn} onClick={async () => {

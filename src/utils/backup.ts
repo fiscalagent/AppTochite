@@ -143,6 +143,11 @@ const FOLDER_HANDLE_KEY = 'autoBackupFolderHandle'
 const FOLDER_LAST_AT_KEY = 'autoBackupFolderLastAt'
 const FOLDER_FILENAME = 'apptochite-auto.json'
 const FOLDER_FILENAME_PREV = 'apptochite-auto-prev.json'
+const FOLDER_NAME_LS_KEY = 'bk_folderName'
+
+export function getFolderNameHint(): string | null {
+  try { return localStorage.getItem(FOLDER_NAME_LS_KEY) } catch { return null }
+}
 
 const SENTINEL_KEY = 'bk_sentinel'
 
@@ -234,17 +239,26 @@ export async function saveFolderBackupNow(database: AppTochiteDB): Promise<'ok' 
   }
 }
 
-// Пользователь выбирает папку: сохраняем handle и сразу пишем первый бэкап.
+// Пользователь выбирает папку: сохраняем handle, имя в LS и сразу пишем первый бэкап.
+// Тихо регистрируем Periodic Background Sync — пользователю не нужно делать ничего лишнего.
 export async function pickAndConnectFolder(database: AppTochiteDB): Promise<FolderBackupMeta> {
   const handle = await pickDirectory()
   await database.settings.put({ key: FOLDER_HANDLE_KEY, value: handle })
+  try { localStorage.setItem(FOLDER_NAME_LS_KEY, handle.name) } catch { /* silent */ }
   await writeFolderFile(handle, database)
+  enablePeriodicSync().catch(() => {})
   return { folderName: handle.name, lastAt: new Date() }
 }
 
 export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
   await database.settings.delete(FOLDER_HANDLE_KEY)
   await database.settings.delete(FOLDER_LAST_AT_KEY)
+  try { localStorage.removeItem(FOLDER_NAME_LS_KEY) } catch { /* silent */ }
+}
+
+export async function checkOPFSIntegrity(): Promise<boolean> {
+  const backup = await readOPFSBackup()
+  return backup !== null
 }
 
 // ─── Pre-restore snapshot ────────────────────────────────────────────────────
