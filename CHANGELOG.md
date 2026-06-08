@@ -1,3 +1,10 @@
+# [1.88.0](https://github.com/fiscalagent/AppTochite/compare/v1.87.0...v1.88.0) (2026-06-08)
+
+
+### feat
+
+* напоминание выбрать папку для бэкапа при первом открытии ([](https://github.com/fiscalagent/AppTochite/commit/5c1536b58d1974e525b0bdbc38028cedbf7f8c0d))
+
 # [1.87.0](https://github.com/fiscalagent/AppTochite/compare/v1.86.1...v1.87.0) (2026-06-08)
 
 
