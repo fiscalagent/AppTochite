@@ -7,6 +7,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.91.1',
+    date: '2026-06-08',
+    changes: [
+      'BackupReminder, sentinel на старте, prev-файл в BK-1',
+      'статус защиты, folder hint при потере, авто-sync, 90д-промпт',
+      'надёжность бэкапа — снапшот перед restore, heal folder, fon. sync, цвет',
+      'надёжность бэкапа — ротация prev, sentinel, alert при потере данных',
+      'напоминание выбрать папку для бэкапа при первом открытии',
+      'бэкап в папку на устройстве + защита хранилища + восстановление аналитики',
+    ],
+  },
+  {
     version: '1.91.0',
     date: '2026-06-08',
     changes: [

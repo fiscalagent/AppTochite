@@ -1,3 +1,10 @@
+## [1.91.1](https://github.com/fiscalagent/AppTochite/compare/v1.91.0...v1.91.1) (2026-06-08)
+
+
+### fix
+
+* BackupReminder, sentinel на старте, prev-файл в BK-1 ([](https://github.com/fiscalagent/AppTochite/commit/df67bebd68c42a3fb6f2f6c43bbc564cd64d543b))
+
 # [1.91.0](https://github.com/fiscalagent/AppTochite/compare/v1.90.0...v1.91.0) (2026-06-08)
 
 
