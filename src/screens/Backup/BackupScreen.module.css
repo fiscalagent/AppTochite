@@ -481,3 +481,54 @@
   color: var(--text-200);
   line-height: 1.5;
 }
+
+/* Collapsible */
+.collapseBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: var(--space-2) 0;
+  font-family: var(--font-body);
+  background: none;
+}
+
+.collapseChevron {
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.collapseChevronOpen {
+  transform: rotate(90deg);
+}
+
+.collapseContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Строка метаданных точки восстановления */
+.recoveryRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recoveryLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-300);
+}
+
+.recoveryMeta {
+  font-size: 13px;
+  color: var(--text-200);
+}
