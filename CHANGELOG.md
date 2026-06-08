@@ -1,3 +1,10 @@
+# [1.90.0](https://github.com/fiscalagent/AppTochite/compare/v1.89.0...v1.90.0) (2026-06-08)
+
+
+### feat
+
+* надёжность бэкапа — снапшот перед restore, heal folder, fon. sync, цвет ([](https://github.com/fiscalagent/AppTochite/commit/0e18f4c565825cbff1fee2168fc7a069c5dde839))
+
 # [1.89.0](https://github.com/fiscalagent/AppTochite/compare/v1.88.0...v1.89.0) (2026-06-08)
 
 
