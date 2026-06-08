@@ -22,35 +22,46 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.91.0',
     date: '2026-06-08',
     changes: [
-      'Исправления и улучшения',
+      'исправлено напоминание о бэкапе',
+      'при старте проверяется целостность хранилища',
+      'в разделе бэкапа виден предыдущий файл резервной копии',
     ],
   },
   {
     version: '1.90.0',
     date: '2026-06-08',
     changes: [
-      'Исправления и улучшения',
+      'на экране бэкапа — статус защиты с датой последнего снимка',
+      'при потере доступа к папке — подсказка перевыбрать',
+      'синхронизация запускается при открытии раздела бэкапа',
+      'промпт повторить выбор папки через 90 дней',
     ],
   },
   {
     version: '1.89.0',
     date: '2026-06-08',
     changes: [
-      'Исправления и улучшения',
+      'перед восстановлением из файла автоматически сохраняется снапшот',
+      'если папка бэкапа перемещена — приложение находит её само',
+      'синхронизация файла выполняется в фоне',
     ],
   },
   {
     version: '1.88.0',
     date: '2026-06-08',
     changes: [
-      'Исправления и улучшения',
+      'старые резервные копии в папке ротируются автоматически',
+      'маркер целостности защищает от незаметной потери записей',
+      'предупреждение при обнаружении расхождения в данных',
     ],
   },
   {
     version: '1.87.0',
     date: '2026-06-08',
     changes: [
-      'Исправления и улучшения',
+      'бэкап сохраняется в выбранную папку автоматически — без подтверждения каждый раз',
+      'защита от переполнения хранилища',
+      'исправлено восстановление статистики аналитики после импорта',
     ],
   },
   {
@@ -58,29 +69,27 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: '2026-06-05',
     changes: [
       'имя «Я» в выпадающем списке клиентов локализуется на Me',
-      'аватар Me отображает полный текст на английском',
     ],
   },
   {
     version: '1.86.0',
     date: '2026-06-05',
     changes: [
-      'Исправления и улучшения',
+      'аватар клиента «Я» на английском интерфейсе показывает «Me»',
     ],
   },
   {
     version: '1.85.1',
     date: '2026-06-05',
     changes: [
-      'самоссылка на английском — Me вместо I',
-      'клиент «Я» отображается как «I» на английском языке',
+      'исправлена самоссылка на английском — Me вместо I',
     ],
   },
   {
     version: '1.85.0',
     date: '2026-06-05',
     changes: [
-      'Исправления и улучшения',
+      'клиент «Я» отображается как «I» на английском языке',
     ],
   },
   {
@@ -95,23 +104,21 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: '2026-06-05',
     changes: [
       'каталог камней меняется в обе стороны при смене языка',
-      'английский каталог камней — 80 камней для новых EN-пользователей',
-      'переключатель языка на главном экране, ссылка ?lang=en',
-      'переключатель языка перенесён из «О программе» в «Настройки»',
     ],
   },
   {
     version: '1.84.0',
     date: '2026-06-04',
     changes: [
-      'Исправления и улучшения',
+      'английский каталог камней — 80 позиций для новых EN-пользователей',
     ],
   },
   {
     version: '1.83.0',
     date: '2026-06-03',
     changes: [
-      'Исправления и улучшения',
+      'переключатель языка вынесен на главный экран — ссылка ?lang=en',
+      'пасхалка: при разрубании надписи звучит взмах клинка',
     ],
   },
   {
@@ -203,33 +210,29 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: '2026-06-01',
     changes: [
       'редактирование ножа в справочнике — кнопка «Изменить» при выделении',
-      'импорт ножей из файла xlsx/csv с автоматическим распознаванием стали',
-      'при выборе ножа подставляется его сталь, а нож сохраняется с учётом стали',
     ],
     changesEn: [
       'knife editing in the reference — "Edit" button on selection',
-      'knife import from xlsx/csv with automatic steel recognition',
-      'when a knife is selected its steel is filled in, and the knife is saved with steel information',
     ],
   },
   {
     version: '1.77.0',
     date: '2026-06-01',
     changes: [
-      'Исправления и улучшения',
+      'импорт ножей из файла xlsx/csv с автоматическим распознаванием стали',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'knife import from xlsx/csv with automatic steel recognition',
     ],
   },
   {
     version: '1.76.0',
     date: '2026-06-01',
     changes: [
-      'Исправления и улучшения',
+      'при выборе ножа подставляется его сталь, а нож сохраняется с учётом стали',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'when a knife is selected its steel is filled in, and the knife is saved with steel information',
     ],
   },
   {
@@ -288,10 +291,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.70.4',
     date: '2026-05-30',
     changes: [
-      'Исправления и улучшения',
+      'убрана отладочная надпись об ошибке шаринга после стабилизации кнопки',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'removed the debug share error toast after the button was stabilised',
     ],
   },
   {
@@ -328,10 +331,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.70.0',
     date: '2026-05-30',
     changes: [
-      'Исправления и улучшения',
+      'улучшен экран бэкапа: подсказки под кнопками и переработанный порядок действий',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'improved backup screen: hints below buttons and revised action order',
     ],
   },
   {
@@ -386,10 +389,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.66.0',
     date: '2026-05-29',
     changes: [
-      'Исправления и улучшения',
+      'правки экранов приёмки и заточки после их разделения на два шага',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'polish of intake and sharpening screens following the two-step split',
     ],
   },
   {
@@ -460,20 +463,20 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.64.0',
     date: '2026-05-21',
     changes: [
-      'Исправления и улучшения',
+      'кнопка «ЗАТОЧИТЬ» и статусные кнопки на экране заточки — первая версия',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'SHARPEN button and status buttons on the sharpening screen — initial version',
     ],
   },
   {
     version: '1.63.0',
     date: '2026-05-21',
     changes: [
-      'Исправления и улучшения',
+      'работа над разделением формы заточки на шаг приёмки и шаг заточки',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'work on splitting the sharpening form into intake and sharpening steps',
     ],
   },
   {
@@ -502,10 +505,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.62.0',
     date: '2026-05-20',
     changes: [
-      'Исправления и улучшения',
+      'доработки сортировки и отображения камней после добавления импорта из CSV',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'stone sorting and display fixes following the CSV import addition',
     ],
   },
   {
@@ -526,20 +529,20 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.61.0',
     date: '2026-05-20',
     changes: [
-      'Исправления и улучшения',
+      'подготовка к импорту камней: шаблон CSV и обработка дублей при загрузке',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'groundwork for stone import: CSV template and duplicate handling on upload',
     ],
   },
   {
     version: '1.60.0',
     date: '2026-05-20',
     changes: [
-      'Исправления и улучшения',
+      'стабилизация автобэкапа при работе в фоне и переключении между экранами',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'auto-backup stability improvements when running in the background and switching screens',
     ],
   },
   {
@@ -558,10 +561,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.59.0',
     date: '2026-05-20',
     changes: [
-      'Исправления и улучшения',
+      'доработки автобэкапа: расписание, обработка ошибок записи',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'auto-backup refinements: scheduling and write error handling',
     ],
   },
   {
@@ -614,20 +617,20 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.58.0',
     date: '2026-05-19',
     changes: [
-      'Исправления и улучшения',
+      'автобэкап в выбранную папку — первая рабочая версия',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'auto-backup to a chosen folder — first working version',
     ],
   },
   {
     version: '1.57.0',
     date: '2026-05-18',
     changes: [
-      'Исправления и улучшения',
+      'стабилизация диктовочного режима: меньше ложных срабатываний и зависаний микрофона',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'dictation mode stability: fewer false triggers and microphone hang-ups',
     ],
   },
   {
@@ -666,10 +669,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: '1.56.0',
     date: '2026-05-18',
     changes: [
-      'Исправления и улучшения',
+      'улучшения голосового поиска: транслитерация и точность матчинга названий',
     ],
     changesEn: [
-      'Bug fixes and improvements',
+      'voice search improvements: transliteration and name matching accuracy',
     ],
   },
   {
