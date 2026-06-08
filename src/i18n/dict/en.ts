@@ -510,6 +510,12 @@ export const en = {
     folderPromptPick: 'Choose backup folder',
     folderPromptDecline: 'Skip folder backup',
 
+    dataLossTitle: 'Data may have been lost',
+    dataLossBody: (n: number) =>
+      `Your last backup recorded ${n} ${plural('en', n, { one: 'sharpening', other: 'sharpenings' })}. The database is now empty — Chrome may have cleared its storage.`,
+    dataLossRestore: 'Go to restore',
+    dataLossDismiss: 'There really is no data, everything is fine',
+
     takePhoto: 'Take photo',
     chooseFromGallery: 'Choose from gallery',
 

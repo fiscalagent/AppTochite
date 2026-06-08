@@ -486,6 +486,12 @@ export const ru = {
     folderPromptPick: 'Выбрать папку для бэкапа',
     folderPromptDecline: 'Отказаться от бэкапа в папку',
 
+    dataLossTitle: 'Данные могли пропасть',
+    dataLossBody: (n: number) =>
+      `По последнему бэкапу у вас было ${n} ${plural('ru', n, { one: 'заточка', few: 'заточки', many: 'заточек', other: 'заточек' })}. Сейчас база данных пуста — возможно, Chrome очистил хранилище.`,
+    dataLossRestore: 'Перейти к восстановлению',
+    dataLossDismiss: 'Данных и правда нет, всё хорошо',
+
     takePhoto: 'Сфотографировать',
     chooseFromGallery: 'Выбрать из галереи',
 

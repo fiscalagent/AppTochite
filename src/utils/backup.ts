@@ -142,6 +142,23 @@ async function verifyAutoBackup(
 const FOLDER_HANDLE_KEY = 'autoBackupFolderHandle'
 const FOLDER_LAST_AT_KEY = 'autoBackupFolderLastAt'
 const FOLDER_FILENAME = 'apptochite-auto.json'
+const FOLDER_FILENAME_PREV = 'apptochite-auto-prev.json'
+
+const SENTINEL_KEY = 'bk_sentinel'
+
+export async function writeSentinel(database: AppTochiteDB): Promise<void> {
+  try {
+    const count = await database.sharpenings.filter(sh => !sh.deletedAt).count()
+    localStorage.setItem(SENTINEL_KEY, JSON.stringify({ sharpenings: count, updatedAt: new Date().toISOString() }))
+  } catch { /* localStorage not available */ }
+}
+
+export function readSentinel(): { sharpenings: number; updatedAt: string } | null {
+  try {
+    const raw = localStorage.getItem(SENTINEL_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
 
 export interface FolderBackupMeta {
   folderName: string
@@ -161,11 +178,33 @@ export async function getFolderBackupMeta(database: AppTochiteDB): Promise<Folde
 
 async function writeFolderFile(handle: FileSystemDirectoryHandle, database: AppTochiteDB): Promise<void> {
   const backup = await exportBackup(database)
+
+  // Отказываемся перезаписывать, если база выглядит пустой (очистка Chrome).
+  // Клиент «Я» всегда присутствует — его отсутствие означает потерю данных.
+  if (!isValidBackup(backup) || backup.data.clients.length === 0) {
+    throw new Error('folder backup aborted: DB appears empty')
+  }
+
+  const json = JSON.stringify(backup)
+
+  // Ротация: текущий файл → prev перед перезаписью.
+  try {
+    const curHandle = await handle.getFileHandle(FOLDER_FILENAME)
+    const curFile = await curHandle.getFile()
+    if (curFile.size > 0) {
+      const prevHandle = await handle.getFileHandle(FOLDER_FILENAME_PREV, { create: true })
+      const prevWritable = await prevHandle.createWritable()
+      await prevWritable.write(await curFile.text())
+      await prevWritable.close()
+    }
+  } catch { /* первый бэкап — prev ещё нет */ }
+
   const fileHandle = await handle.getFileHandle(FOLDER_FILENAME, { create: true })
   const writable = await fileHandle.createWritable()
-  await writable.write(JSON.stringify(backup))
+  await writable.write(json)
   await writable.close()
   await database.settings.put({ key: FOLDER_LAST_AT_KEY, value: new Date().toISOString() })
+  writeSentinel(database).catch(() => {})
 }
 
 // Вызывается из авто-бэкапа (без жеста пользователя) — только если уже granted.
@@ -230,6 +269,7 @@ export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
 
   await database.settings.put({ key: LAST_AUTO_DATE_KEY, value: ymd(new Date()) })
   await updateLastBackupAt(database)
+  writeSentinel(database).catch(() => {})
 }
 
 export interface OPFSBackupMeta {

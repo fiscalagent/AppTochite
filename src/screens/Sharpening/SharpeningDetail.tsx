@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useLocation, useBlocker } from 'react-rou
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStone, type Stone, type GritSource, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
 import { trackSharpening } from '../../services/analytics'
+import { performFolderBackup, writeSentinel } from '../../utils/backup'
 import { getAltGrits, fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
@@ -454,6 +455,8 @@ export default function SharpeningDetail() {
       }
       await db.sharpenings.update(sharpeningId, updatedFields)
       if (sh) trackSharpening({ ...sh, ...updatedFields })
+      performFolderBackup(db).catch(() => {})
+      writeSentinel(db).catch(() => {})
       navigate('/')
     } catch {
       showToast(t.sharpening.saveError)
