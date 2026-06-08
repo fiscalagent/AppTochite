@@ -1,3 +1,10 @@
+# [1.89.0](https://github.com/fiscalagent/AppTochite/compare/v1.88.0...v1.89.0) (2026-06-08)
+
+
+### feat
+
+* надёжность бэкапа — ротация prev, sentinel, alert при потере данных ([](https://github.com/fiscalagent/AppTochite/commit/d8a51b93a4c71eb07baa225d81d7620d8fb6d7c2))
+
 # [1.88.0](https://github.com/fiscalagent/AppTochite/compare/v1.87.0...v1.88.0) (2026-06-08)
 
 
