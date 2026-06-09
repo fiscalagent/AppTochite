@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.91.4',
+    date: '2026-06-09',
+    changes: [
+      'готовить CSV заранее, share() вызывать синхронно в обработчике клика',
+    ],
+  },
+  {
     version: '1.91.3',
     date: '2026-06-09',
     changes: [

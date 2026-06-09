@@ -1,3 +1,10 @@
+## [1.91.4](https://github.com/fiscalagent/AppTochite/compare/v1.91.3...v1.91.4) (2026-06-09)
+
+
+### fix
+
+* готовить CSV заранее, share() вызывать синхронно в обработчике клика ([](https://github.com/fiscalagent/AppTochite/commit/5f4e2ad5739df5a85f14c86c6de5fde355749096))
+
 ## [1.91.3](https://github.com/fiscalagent/AppTochite/compare/v1.91.2...v1.91.3) (2026-06-09)
 
 
