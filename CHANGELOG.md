@@ -1,3 +1,11 @@
+## [1.92.2](https://github.com/fiscalagent/AppTochite/compare/v1.92.1...v1.92.2) (2026-06-09)
+
+
+### fix
+
+* на iOS использовать text/plain для CSV-вложения в Mail ([](https://github.com/fiscalagent/AppTochite/commit/d87d4fd949e63efb3c1b54a7413592173c0d32f8))
+* на iOS шарить бэкап как application/json, не text/plain ([](https://github.com/fiscalagent/AppTochite/commit/3602d8b3fe761b9df9487b9a46265b9b4189733c))
+
 ## [1.92.1](https://github.com/fiscalagent/AppTochite/compare/v1.92.0...v1.92.1) (2026-06-09)
 
 

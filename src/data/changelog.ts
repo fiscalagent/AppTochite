@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.92.2',
+    date: '2026-06-09',
+    changes: [
+      'на iOS использовать text/plain для CSV-вложения в Mail',
+      'на iOS шарить бэкап как application/json, не text/plain',
+    ],
+  },
+  {
     version: '1.92.1',
     date: '2026-06-09',
     changes: [
