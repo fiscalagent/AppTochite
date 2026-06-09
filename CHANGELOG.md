@@ -1,3 +1,10 @@
+# [1.92.0](https://github.com/fiscalagent/AppTochite/compare/v1.91.4...v1.92.0) (2026-06-09)
+
+
+### feat
+
+* добавить weekYear, fixGritMkColumn, fillWeekYearColumn в Apps Script ([](https://github.com/fiscalagent/AppTochite/commit/a35422a9515f5150cc4f04cdb1320312947bc7fa))
+
 ## [1.91.4](https://github.com/fiscalagent/AppTochite/compare/v1.91.3...v1.91.4) (2026-06-09)
 
 
