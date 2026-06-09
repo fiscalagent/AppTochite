@@ -7,6 +7,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.92.1',
+    date: '2026-06-09',
+    changes: [
+      'использовать downloadBlob для CSV на Android, share только на iOS',
+      'добавить weekYear, fixGritMkColumn, fillWeekYearColumn в Apps Script',
+    ],
+  },
+  {
     version: '1.92.0',
     date: '2026-06-09',
     changes: [

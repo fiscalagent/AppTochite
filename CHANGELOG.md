@@ -1,3 +1,10 @@
+## [1.92.1](https://github.com/fiscalagent/AppTochite/compare/v1.92.0...v1.92.1) (2026-06-09)
+
+
+### fix
+
+* использовать downloadBlob для CSV на Android, share только на iOS ([](https://github.com/fiscalagent/AppTochite/commit/43097b4210e218108254a4f6029b99617f8e5a71))
+
 # [1.92.0](https://github.com/fiscalagent/AppTochite/compare/v1.91.4...v1.92.0) (2026-06-09)
 
 
