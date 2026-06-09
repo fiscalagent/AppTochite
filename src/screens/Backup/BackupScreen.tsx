@@ -205,6 +205,29 @@ export default function BackupScreen() {
     return () => { cancelled = true }
   }, [lastBackupTick])
 
+  // CSV готовим заранее — share() требует вызова сразу в обработчике клика
+  // (transient user activation истекает после первого await)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [preparingCsv, setPreparingCsv] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setPreparingCsv(true)
+    Promise.all([db.clients.toArray(), db.sharpenings.orderBy('receivedAt').toArray()])
+      .then(([allClients, allSharpenings]) => {
+        if (cancelled) return
+        const clients = allClients.filter(c => !c.deletedAt)
+        const sharpenings = allSharpenings.filter(s => !s.deletedAt)
+        const clientMap = new Map(clients.map(c => [c.id!, c.name]))
+        const csv = buildSharpeningCSV(sharpenings, clientMap)
+        const filename = `apptochite-sharpenings-${todayStr()}.csv`
+        setCsvFile(new File([csv], filename, { type: 'text/csv;charset=utf-8' }))
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setPreparingCsv(false) })
+    return () => { cancelled = true }
+  }, [])
+
   function handleShare() {
     if (!shareFile) return
     if (!navigator.canShare?.({ files: [shareFile] })) {
@@ -223,33 +246,17 @@ export default function BackupScreen() {
       })
   }
 
-  async function handleExportCSV() {
-    setExporting(true)
-    try {
-      const [allClients, allSharpenings] = await Promise.all([
-        db.clients.toArray(),
-        db.sharpenings.orderBy('receivedAt').toArray(),
-      ])
-      const clients = allClients.filter(c => !c.deletedAt)
-      const sharpenings = allSharpenings.filter(s => !s.deletedAt)
-      const clientMap = new Map(clients.map(c => [c.id!, c.name]))
-      const csv = buildSharpeningCSV(sharpenings, clientMap)
-      const filename = `apptochite-sharpenings-${todayStr()}.csv`
-      const file = new File([csv], filename, { type: 'text/csv;charset=utf-8' })
-      // iOS Safari не поддерживает <a download> — файл открывается в превью вместо
-      // скачивания, и при шаринге через почту вложение теряется. Используем share API.
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: filename })
-      } else {
-        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), filename)
-      }
+  function handleExportCSV() {
+    if (!csvFile) return
+    if (navigator.canShare?.({ files: [csvFile] })) {
+      navigator.share({ files: [csvFile], title: csvFile.name })
+        .then(() => showToast(t.backup.csvSaved))
+        .catch(e => {
+          if (e instanceof Error && e.name !== 'AbortError') showToast(t.backup.shareFailed)
+        })
+    } else {
+      downloadBlob(csvFile, csvFile.name)
       showToast(t.backup.csvSaved)
-    } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') {
-        showToast(t.backup.shareFailed)
-      }
-    } finally {
-      setExporting(false)
     }
   }
 
@@ -568,8 +575,8 @@ export default function BackupScreen() {
         {csvOpen && (
           <div className={s.collapseContent}>
             <p className={s.desc}>{t.backup.csvDesc}</p>
-            <button className={s.secondaryBtn} onClick={handleExportCSV} disabled={exporting}>
-              {exporting ? t.backup.saving : t.backup.downloadCsv}
+            <button className={s.secondaryBtn} onClick={handleExportCSV} disabled={preparingCsv || !csvFile}>
+              {preparingCsv ? t.backup.preparing : t.backup.downloadCsv}
             </button>
           </div>
         )}
