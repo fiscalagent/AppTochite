@@ -248,7 +248,10 @@ export default function BackupScreen() {
 
   function handleExportCSV() {
     if (!csvFile) return
-    if (navigator.canShare?.({ files: [csvFile] })) {
+    // iOS Safari не поддерживает <a download> — используем share.
+    // На Android text/csv не в белом списке Web Share API, поэтому там downloadBlob.
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())
+    if (isIOS && navigator.canShare?.({ files: [csvFile] })) {
       navigator.share({ files: [csvFile], title: csvFile.name })
         .then(() => showToast(t.backup.csvSaved))
         .catch(e => {
