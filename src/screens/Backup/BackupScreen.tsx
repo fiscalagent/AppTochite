@@ -221,7 +221,11 @@ export default function BackupScreen() {
         const clientMap = new Map(clients.map(c => [c.id!, c.name]))
         const csv = buildSharpeningCSV(sharpenings, clientMap)
         const filename = `apptochite-sharpenings-${todayStr()}.csv`
-        setCsvFile(new File([csv], filename, { type: 'text/csv;charset=utf-8' }))
+        // iOS Mail дропает text/csv вложения — text/plain прикрепляется корректно.
+        // Numbers открывает файл по расширению .csv независимо от MIME-типа.
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())
+        const mimeType = isIOS ? 'text/plain' : 'text/csv;charset=utf-8'
+        setCsvFile(new File([csv], filename, { type: mimeType }))
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setPreparingCsv(false) })
