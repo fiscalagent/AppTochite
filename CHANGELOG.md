@@ -1,3 +1,10 @@
+## [1.91.3](https://github.com/fiscalagent/AppTochite/compare/v1.91.2...v1.91.3) (2026-06-09)
+
+
+### fix
+
+* экспорт CSV через Web Share API вместо <a download> ([](https://github.com/fiscalagent/AppTochite/commit/3c4a18c9abc52e729109fd298d7594f00f8460b8))
+
 ## [1.91.2](https://github.com/fiscalagent/AppTochite/compare/v1.91.1...v1.91.2) (2026-06-08)
 
 

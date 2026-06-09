@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.91.3',
+    date: '2026-06-09',
+    changes: [
+      'экспорт CSV через Web Share API вместо <a download>',
+    ],
+  },
+  {
     version: '1.91.2',
     date: '2026-06-08',
     changes: [
