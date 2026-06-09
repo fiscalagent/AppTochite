@@ -234,9 +234,20 @@ export default function BackupScreen() {
       const sharpenings = allSharpenings.filter(s => !s.deletedAt)
       const clientMap = new Map(clients.map(c => [c.id!, c.name]))
       const csv = buildSharpeningCSV(sharpenings, clientMap)
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-      downloadBlob(blob, `apptochite-sharpenings-${todayStr()}.csv`)
+      const filename = `apptochite-sharpenings-${todayStr()}.csv`
+      const file = new File([csv], filename, { type: 'text/csv;charset=utf-8' })
+      // iOS Safari не поддерживает <a download> — файл открывается в превью вместо
+      // скачивания, и при шаринге через почту вложение теряется. Используем share API.
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename })
+      } else {
+        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), filename)
+      }
       showToast(t.backup.csvSaved)
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') {
+        showToast(t.backup.shareFailed)
+      }
     } finally {
       setExporting(false)
     }
