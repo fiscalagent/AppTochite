@@ -192,14 +192,12 @@ export default function BackupScreen() {
     exportBackup(db)
       .then(backup => {
         if (cancelled) return
-        // application/json не в белом списке Chrome Android — берём text/plain с расширением .txt.
-        // На iOS application/json разрешён и нужен: text/plain Mail вставляет в тело письма,
-        // а не прикрепляет вложением, из-за чего большой JSON (с base64-фото) приходит «пустым».
-        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())
-        const [name, type] = isIOS
-          ? [`apptochite-${todayStr()}.json`, 'application/json']
-          : [`apptochite-${todayStr()}.txt`, 'text/plain']
-        const file = new File([JSON.stringify(backup)], name, { type })
+        // application/json не в белом списке Chrome Android — берём text/plain.
+        const file = new File(
+          [JSON.stringify(backup)],
+          `apptochite-${todayStr()}.txt`,
+          { type: 'text/plain' }
+        )
         setShareFile(file)
       })
       .catch(() => {})
