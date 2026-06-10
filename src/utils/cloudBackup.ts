@@ -6,6 +6,8 @@ import { exportBackup, mergeBackup, isValidBackup, reviveDates, type BackupFile,
 const YANDEX_TOKEN_KEY = 'yandexToken'
 const YANDEX_AUTO_KEY = 'yandexAutoBackup'
 const YANDEX_LAST_AT_KEY = 'yandexLastBackupAt'
+const YANDEX_LAST_SIG_KEY = 'yandexLastBackupSig'      // сигнатура данных последней успешной заливки
+const YANDEX_LAST_CHECK_DAY_KEY = 'yandexLastCheckDay' // день последней авто-проверки (YYYY-MM-DD)
 
 const APP_FOLDER = 'app:/'           // Яндекс.Диск: папка приложения (Приложения/<имя>)
 const MAX_SNAPSHOTS = 7
@@ -25,8 +27,13 @@ export async function saveYandexToken(database: AppTochiteDB, token: string): Pr
 }
 
 export async function removeYandexToken(database: AppTochiteDB): Promise<void> {
-  await database.settings.delete(YANDEX_TOKEN_KEY)
-  await database.settings.delete(YANDEX_LAST_AT_KEY)
+  await database.settings.bulkDelete([
+    YANDEX_TOKEN_KEY,
+    YANDEX_LAST_AT_KEY,
+    YANDEX_AUTO_KEY,        // иначе авто-бэкап молча оживёт при переподключении
+    YANDEX_LAST_SIG_KEY,
+    YANDEX_LAST_CHECK_DAY_KEY,
+  ])
 }
 
 // ─── Auto-backup setting ──────────────────────────────────────────────────────
@@ -91,12 +98,34 @@ export async function listYandexSnapshots(token: string): Promise<CloudSnapshot[
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
 
-function backupFilename(): string {
+// День в формате YYYY-MM-DD по локальному времени устройства.
+function localDayStr(): string {
   const now = new Date()
   const pad = (n: number) => String(n).padStart(2, '0')
-  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-  const time = `${pad(now.getHours())}${pad(now.getMinutes())}`
-  return `${BACKUP_PREFIX}${date}-${time}.json`
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
+// Имя файла — по дню (без времени): один снапшот в сутки, overwrite перезаписывает
+// внутридневные пере-заливки. Ротация на 7 файлов = ровно неделя истории.
+function backupFilename(): string {
+  return `${BACKUP_PREFIX}${localDayStr()}.json`
+}
+
+// Лёгкая сигнатура содержимого: количество записей + максимальный updatedAt по каждой
+// таблице. updatedAt бампится при любом create/update/delete/restore (см. trash.ts),
+// поэтому сигнатура ловит любые изменения, не сериализуя фото повторно.
+function dataSignature(data: BackupFile['data']): string {
+  const sig = (arr: { updatedAt?: Date }[]) => {
+    let max = 0
+    for (const r of arr) {
+      const ts = r.updatedAt ? new Date(r.updatedAt).getTime() : 0
+      if (ts > max) max = ts
+    }
+    return `${arr.length}:${max}`
+  }
+  return [data.clients, data.sharpenings, data.stones, data.steels, data.knives]
+    .map(sig)
+    .join('|')
 }
 
 export class YandexApiError extends Error {
@@ -108,6 +137,42 @@ export class YandexApiError extends Error {
   }
 }
 
+// Сырая заливка готового бэкапа. Без побочных эффектов на settings.
+async function putBackup(token: string, backup: BackupFile): Promise<'ok' | 'auth-error' | 'error'> {
+  const path = `${APP_FOLDER}${backupFilename()}`
+
+  // Получаем URL для загрузки
+  const uploadLinkRes = await fetch(
+    `${DISK_API}/resources/upload?path=${encodeURIComponent(path)}&overwrite=true`,
+    { headers: { Authorization: `OAuth ${token}` } }
+  )
+  if (uploadLinkRes.status === 401) return 'auth-error'
+  if (!uploadLinkRes.ok) return 'error'
+
+  const { href } = await uploadLinkRes.json() as { href: string }
+
+  // Загружаем файл
+  const uploadRes = await fetch(href, {
+    method: 'PUT',
+    body: JSON.stringify(backup),
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!uploadRes.ok) return 'error'
+
+  return 'ok'
+}
+
+// Фиксируем успешную заливку: время, сигнатуру данных, день проверки. Затем ротация.
+async function recordUploadSuccess(database: AppTochiteDB, backup: BackupFile, token: string): Promise<void> {
+  await database.settings.bulkPut([
+    { key: YANDEX_LAST_AT_KEY, value: new Date().toISOString() },
+    { key: YANDEX_LAST_SIG_KEY, value: dataSignature(backup.data) },
+    { key: YANDEX_LAST_CHECK_DAY_KEY, value: localDayStr() },
+  ])
+  await rotateSnapshots(token).catch(() => {})
+}
+
+// Ручная заливка («Сохранить сейчас») — без дневного гейта и проверки изменений.
 export async function uploadToYandex(
   database: AppTochiteDB,
   token: string,
@@ -116,32 +181,10 @@ export async function uploadToYandex(
     const backup = await exportBackup(database)
     if (!backup.data.clients.length) return 'error'
 
-    const filename = backupFilename()
-    const path = `${APP_FOLDER}${filename}`
+    const result = await putBackup(token, backup)
+    if (result !== 'ok') return result
 
-    // Получаем URL для загрузки
-    const uploadLinkRes = await fetch(
-      `${DISK_API}/resources/upload?path=${encodeURIComponent(path)}&overwrite=true`,
-      { headers: { Authorization: `OAuth ${token}` } }
-    )
-    if (uploadLinkRes.status === 401) return 'auth-error'
-    if (!uploadLinkRes.ok) return 'error'
-
-    const { href } = await uploadLinkRes.json() as { href: string }
-
-    // Загружаем файл
-    const uploadRes = await fetch(href, {
-      method: 'PUT',
-      body: JSON.stringify(backup),
-      headers: { 'Content-Type': 'application/json' },
-    })
-    if (!uploadRes.ok) return 'error'
-
-    await database.settings.put({ key: YANDEX_LAST_AT_KEY, value: new Date().toISOString() })
-
-    // Ротация: удаляем старые снапшоты сверх MAX_SNAPSHOTS
-    await rotateSnapshots(token).catch(() => {})
-
+    await recordUploadSuccess(database, backup, token)
     return 'ok'
   } catch {
     return 'error'
@@ -189,6 +232,13 @@ export async function downloadAndMerge(
 // ─── Auto-backup entry point ──────────────────────────────────────────────────
 // Вызывается из AutoBackupContext параллельно с performFolderBackup.
 // Тихо завершается если токена нет или авто-бэкап отключён.
+//
+// Политика: не чаще одного снапшота в сутки и только если данные изменились.
+//  1) Дневной гейт (дёшево, без скана): если сегодня уже проверяли — выходим.
+//     Поэтому тяжёлый exportBackup срабатывает максимум раз в календарный день,
+//     а не на каждом возврате приложения в фокус.
+//  2) Проверка изменений: сравниваем сигнатуру с последней успешной заливкой —
+//     если ничего не поменялось, не плодим идентичный снапшот.
 
 export async function performCloudBackup(database: AppTochiteDB): Promise<void> {
   const [token, autoEnabled] = await Promise.all([
@@ -196,7 +246,25 @@ export async function performCloudBackup(database: AppTochiteDB): Promise<void> 
     getCloudAutoBackup(database),
   ])
   if (!token || !autoEnabled) return
-  await uploadToYandex(database, token)
+
+  const today = localDayStr()
+  const checkEntry = await database.settings.get(YANDEX_LAST_CHECK_DAY_KEY)
+  if (checkEntry?.value === today) return
+
+  // Помечаем день проверенным сразу — чтобы при отсутствии изменений не гонять
+  // exportBackup повторно на каждом фокусе в течение дня.
+  await database.settings.put({ key: YANDEX_LAST_CHECK_DAY_KEY, value: today })
+
+  const backup = await exportBackup(database)
+  if (!backup.data.clients.length) return
+
+  const sigEntry = await database.settings.get(YANDEX_LAST_SIG_KEY)
+  if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
+
+  const result = await putBackup(token, backup)
+  if (result !== 'ok') return
+
+  await recordUploadSuccess(database, backup, token)
 }
 
 // ─── OAuth helpers ────────────────────────────────────────────────────────────
