@@ -1,3 +1,10 @@
+# [1.93.0](https://github.com/fiscalagent/AppTochite/compare/v1.92.2...v1.93.0) (2026-06-10)
+
+
+### feat
+
+* облачный бэкап через Яндекс.Диск REST API ([](https://github.com/fiscalagent/AppTochite/commit/676db4b495c7b89f0da62925df1fb4c55894cfe5))
+
 ## [1.92.2](https://github.com/fiscalagent/AppTochite/compare/v1.92.1...v1.92.2) (2026-06-09)
 
 
