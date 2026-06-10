@@ -1,3 +1,5 @@
+## [1.93.1](https://github.com/fiscalagent/AppTochite/compare/v1.93.0...v1.93.1) (2026-06-10)
+
 # [1.93.0](https://github.com/fiscalagent/AppTochite/compare/v1.92.2...v1.93.0) (2026-06-10)
 
 

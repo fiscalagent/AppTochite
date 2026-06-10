@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.93.1',
+    date: '2026-06-10',
+    changes: [
+      'облачный бэкап через Яндекс.Диск REST API',
+    ],
+  },
+  {
     version: '1.93.0',
     date: '2026-06-10',
     changes: [
