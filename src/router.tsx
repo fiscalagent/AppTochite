@@ -8,6 +8,7 @@ import SharpeningForm from './screens/Sharpening/SharpeningForm'
 import SharpeningDetail from './screens/Sharpening/SharpeningDetail'
 import ReferenceScreen from './screens/Reference/ReferenceScreen'
 import BackupScreen from './screens/Backup/BackupScreen'
+import OAuthCallback from './screens/Backup/OAuthCallback'
 import AboutScreen from './screens/About/AboutScreen'
 import TrashScreen from './screens/Trash/TrashScreen'
 
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: '/sharpenings/:id/edit',    element: <SharpeningForm /> },
       { path: '/reference/:tab',          element: <ReferenceScreen /> },
       { path: '/backup',                  element: <BackupScreen /> },
+      { path: '/oauth/yandex/callback',   element: <OAuthCallback /> },
       { path: '/about',                   element: <AboutScreen /> },
       { path: '/trash',                   element: <TrashScreen /> },
     ],

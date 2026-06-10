@@ -39,6 +39,7 @@ jobs:
       - run: npm run build
         env:
           VITE_ANALYTICS_URL: ${{ secrets.VITE_ANALYTICS_URL }}
+          VITE_YANDEX_CLIENT_ID: ${{ secrets.VITE_YANDEX_CLIENT_ID }}
 
       - uses: actions/configure-pages@v6
 

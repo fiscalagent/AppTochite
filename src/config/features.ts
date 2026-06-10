@@ -1,5 +1,6 @@
 export const FEATURES = {
   voiceInput: true, // мастер-выключатель для разработчика
+  cloudBackup: true, // Яндекс.Диск — облачный бэкап
 }
 
 const VOICE_STORAGE_KEY = 'voice_input_enabled'

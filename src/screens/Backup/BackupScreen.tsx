@@ -62,6 +62,20 @@ import {
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import { useLocale, fmtDate, fmtDateDayMonth, fmtDateTimeLong } from '../../i18n'
+import { FEATURES } from '../../config/features'
+import {
+  getYandexToken,
+  removeYandexToken,
+  getCloudAutoBackup,
+  setCloudAutoBackup,
+  getCloudLastAt,
+  uploadToYandex,
+  listYandexSnapshots,
+  downloadAndMerge,
+  downloadSnapshotJson,
+  buildOAuthUrl,
+  type CloudSnapshot,
+} from '../../utils/cloudBackup'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -74,18 +88,20 @@ function computeProtection(
   opfsMeta: OPFSBackupMeta | null | undefined,
   opfsValid: boolean | undefined,
   folderMeta: FolderBackupMeta | null | undefined,
+  cloudLastAt?: Date | null,
 ): ProtectionLevel {
   if (opfsMeta === undefined) return 'partial'
   const ms7d = 7 * 24 * 3600_000
   const ms3d = 3 * 24 * 3600_000
   const folderAge = folderMeta?.lastAt ? Date.now() - folderMeta.lastAt.getTime() : Infinity
-  const opfsAge  = opfsMeta ? Date.now() - opfsMeta.date.getTime() : Infinity
-  if (folderMeta?.lastAt && folderAge < ms7d) return 'protected'
-  if (opfsValid === false && !folderMeta) return 'at-risk'
-  if (!opfsMeta && !folderMeta) return 'at-risk'
-  if (Math.min(folderAge, opfsAge) > ms7d) return 'at-risk'
-  if (!folderMeta) return 'partial'
-  if (folderAge < ms3d) return 'protected'
+  const cloudAge  = cloudLastAt ? Date.now() - cloudLastAt.getTime() : Infinity
+  const opfsAge   = opfsMeta ? Date.now() - opfsMeta.date.getTime() : Infinity
+  if ((folderMeta?.lastAt && folderAge < ms7d) || cloudAge < ms7d) return 'protected'
+  if (opfsValid === false && !folderMeta && cloudAge === Infinity) return 'at-risk'
+  if (!opfsMeta && !folderMeta && cloudAge === Infinity) return 'at-risk'
+  if (Math.min(folderAge, opfsAge, cloudAge) > ms7d) return 'at-risk'
+  if (!folderMeta && cloudAge === Infinity) return 'partial'
+  if (folderAge < ms3d || cloudAge < ms3d) return 'protected'
   return 'partial'
 }
 
@@ -122,6 +138,17 @@ export default function BackupScreen() {
   const [preRestoreMeta, setPreRestoreMeta] = useState<PreRestoreSnapshotMeta | null | undefined>(undefined)
   const [periodicStatus, setPeriodicStatus] = useState<'on' | 'off' | 'unsupported' | undefined>(undefined)
   const [opfsValid, setOpfsValid] = useState<boolean | undefined>(undefined)
+
+  // cloud backup state
+  const [cloudToken, setCloudToken] = useState<string | null | undefined>(undefined)
+  const [cloudLastAt, setCloudLastAt] = useState<Date | null | undefined>(undefined)
+  const [cloudAuto, setCloudAuto] = useState(false)
+  const [cloudSnapshots, setCloudSnapshots] = useState<CloudSnapshot[] | null>(null)
+  const [cloudSnapshotsLoading, setCloudSnapshotsLoading] = useState(false)
+  const [cloudSnapshotsError, setCloudSnapshotsError] = useState(false)
+  const [cloudWorking, setCloudWorking] = useState(false)
+  const [cloudMergingId, setCloudMergingId] = useState<string | null>(null)
+
   const { lastBackupTick } = useAutoBackup()
 
   // collapsible state
@@ -141,6 +168,25 @@ export default function BackupScreen() {
     getPeriodicSyncStatus().then(setPeriodicStatus)
   }, [])
 
+  const refreshCloud = useCallback(async () => {
+    if (!FEATURES.cloudBackup) return
+    const [token, lastAt, auto] = await Promise.all([
+      getYandexToken(db),
+      getCloudLastAt(db),
+      getCloudAutoBackup(db),
+    ])
+    setCloudToken(token)
+    setCloudLastAt(lastAt)
+    setCloudAuto(auto)
+    if (token) {
+      setCloudSnapshotsLoading(true)
+      setCloudSnapshotsError(false)
+      listYandexSnapshots(token)
+        .then(snaps => { setCloudSnapshots(snaps); setCloudSnapshotsLoading(false) })
+        .catch(() => { setCloudSnapshotsError(true); setCloudSnapshotsLoading(false) })
+    }
+  }, [])
+
   useEffect(() => {
     if ('storage' in navigator && 'estimate' in navigator.storage) {
       navigator.storage.estimate().then(({ usage }) => {
@@ -148,7 +194,8 @@ export default function BackupScreen() {
       })
     }
     refreshOpfsMeta()
-  }, [refreshOpfsMeta])
+    refreshCloud()
+  }, [refreshOpfsMeta, refreshCloud])
 
   useEffect(() => {
     if (lastBackupTick > 0) refreshOpfsMeta()
@@ -305,6 +352,79 @@ export default function BackupScreen() {
     setFolderMeta(null)
   }
 
+  // ── Cloud handlers ────────────────────────────────────────────────────────
+
+  function handleCloudConnect() {
+    const clientId = import.meta.env.VITE_YANDEX_CLIENT_ID as string | undefined
+    if (!clientId) { showToast('VITE_YANDEX_CLIENT_ID не задан'); return }
+    const redirectUri = `${window.location.origin}${import.meta.env.BASE_URL}oauth/yandex/callback`
+    window.location.href = buildOAuthUrl(clientId, redirectUri)
+  }
+
+  async function handleCloudDisconnect() {
+    await removeYandexToken(db)
+    setCloudToken(null)
+    setCloudLastAt(null)
+    setCloudSnapshots(null)
+    setCloudAuto(false)
+  }
+
+  async function handleCloudSaveNow() {
+    if (cloudWorking || !cloudToken) return
+    setCloudWorking(true)
+    try {
+      const result = await uploadToYandex(db, cloudToken)
+      if (result === 'ok') {
+        showToast(t.backup.cloudSaved)
+        await refreshCloud()
+      } else if (result === 'auth-error') {
+        showToast(t.backup.cloudAuthError)
+      } else {
+        showToast(t.backup.cloudSaveError)
+      }
+    } finally {
+      setCloudWorking(false)
+    }
+  }
+
+  async function handleCloudAutoToggle() {
+    const next = !cloudAuto
+    await setCloudAutoBackup(db, next)
+    setCloudAuto(next)
+  }
+
+  async function handleCloudMerge(snap: CloudSnapshot) {
+    if (!cloudToken || cloudMergingId) return
+    setCloudMergingId(snap.name)
+    try {
+      await createPreRestoreSnapshot(db)
+      const result = await downloadAndMerge(db, cloudToken, snap.downloadUrl)
+      if (result === 'auth-error') {
+        showToast(t.backup.cloudAuthError)
+      } else if (result === 'error') {
+        showToast(t.backup.cloudRestoreError)
+      } else {
+        const statsStr = `+${result.added} / ~${result.updated} / =${result.skipped}`
+        showToast(t.backup.cloudRestoreDone(statsStr))
+        setMergeStats(result)
+      }
+    } finally {
+      setCloudMergingId(null)
+    }
+  }
+
+  async function handleCloudDownload(snap: CloudSnapshot) {
+    if (!cloudToken) return
+    try {
+      const backup = await downloadSnapshotJson(snap.downloadUrl, cloudToken)
+      if (!backup) { showToast(t.backup.cloudRestoreError); return }
+      const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
+      downloadBlob(blob, snap.name.replace('.json', '') + '.json')
+    } catch {
+      showToast(t.backup.cloudRestoreError)
+    }
+  }
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -370,7 +490,7 @@ export default function BackupScreen() {
 
       {/* Карточка статуса защиты */}
       {(() => {
-        const level = computeProtection(opfsMeta, opfsValid, folderMeta)
+        const level = computeProtection(opfsMeta, opfsValid, folderMeta, cloudLastAt)
         const cfg = {
           protected: { color: 'var(--status-done)', label: t.backup.statusProtected, desc: t.backup.statusProtectedDesc },
           partial:   { color: '#F5A623',            label: t.backup.statusPartial,   desc: folderMeta ? t.backup.statusPartialStale : t.backup.statusPartialNoFolder },
@@ -559,6 +679,100 @@ export default function BackupScreen() {
       </div>
 
       <div className={s.divider} />
+
+      {/* Яндекс.Диск — только при включённом флаге */}
+      {FEATURES.cloudBackup && (
+        <>
+          <div className={s.section}>
+            <p className={s.sectionTitle}>{t.backup.cloudSection}</p>
+            <p className={s.desc}>{t.backup.cloudDesc}</p>
+
+            {cloudToken === undefined ? (
+              <p className={s.desc}>{t.backup.loading}</p>
+            ) : !cloudToken ? (
+              <button className={s.primaryBtn} onClick={handleCloudConnect}>
+                {t.backup.cloudConnect}
+              </button>
+            ) : (
+              <>
+                <div className={s.autoBackupRow}>
+                  <span className={s.autoBackupBadge} style={{ color: 'var(--status-done)' }}>
+                    {t.backup.cloudConnected}
+                  </span>
+                  <span className={s.autoBackupMeta}>
+                    {cloudLastAt
+                      ? (<><span style={{ color: ageDot(cloudLastAt), marginRight: 4 }}>●</span>{t.backup.cloudLastAt(fmtDateTimeLong(locale, cloudLastAt))}</>)
+                      : t.backup.cloudNeverSaved}
+                  </span>
+                </div>
+
+                <div className={s.autoBackupActions}>
+                  <button className={s.primaryBtn} onClick={handleCloudSaveNow} disabled={cloudWorking}>
+                    {cloudWorking ? t.backup.cloudSaving : t.backup.cloudSaveNow}
+                  </button>
+                  <button className={s.secondaryBtn} onClick={handleCloudDisconnect} disabled={cloudWorking}>
+                    {t.backup.cloudDisconnect}
+                  </button>
+                </div>
+
+                {/* Авто-бэкап тоггл */}
+                <button
+                  role="switch"
+                  aria-checked={cloudAuto}
+                  className={s.toggleRow}
+                  onClick={handleCloudAutoToggle}
+                >
+                  <div className={s.toggleInfo}>
+                    <span className={s.toggleLabel}>{t.backup.cloudAutoBackup}</span>
+                    <span className={s.toggleDesc}>{t.backup.cloudAutoBackupDesc}</span>
+                  </div>
+                  <div className={`${s.toggle} ${cloudAuto ? s.toggleOn : ''}`}>
+                    <div className={s.toggleThumb} />
+                  </div>
+                </button>
+
+                {/* Список снапшотов */}
+                <p className={s.sectionTitle} style={{ marginTop: 16 }}>{t.backup.cloudSnapshots}</p>
+                {cloudSnapshotsLoading ? (
+                  <p className={s.desc}>{t.backup.cloudSnapshotsLoading}</p>
+                ) : cloudSnapshotsError ? (
+                  <p className={s.desc} style={{ color: 'var(--danger)' }}>{t.backup.cloudSnapshotsError}</p>
+                ) : !cloudSnapshots || cloudSnapshots.length === 0 ? (
+                  <p className={s.desc}>{t.backup.cloudSnapshotsEmpty}</p>
+                ) : (
+                  cloudSnapshots.map(snap => (
+                    <div key={snap.name} className={s.recoveryRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                        <span className={s.recoveryLabel}>{fmtDateTimeLong(locale, snap.createdAt)}</span>
+                        <span className={s.recoveryMeta}>{t.backup.cloudMb((snap.size / 1_048_576).toFixed(1))}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          className={s.primaryBtn}
+                          style={{ width: 'auto', padding: '6px 14px', fontSize: 13 }}
+                          disabled={!!cloudMergingId}
+                          onClick={() => handleCloudMerge(snap)}
+                        >
+                          {cloudMergingId === snap.name ? t.backup.cloudRestoring : t.backup.cloudRestore}
+                        </button>
+                        <button
+                          className={s.secondaryBtn}
+                          style={{ width: 'auto', padding: '6px 14px', fontSize: 13 }}
+                          disabled={!!cloudMergingId}
+                          onClick={() => handleCloudDownload(snap)}
+                        >
+                          {t.backup.cloudDownload}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </>
+            )}
+          </div>
+          <div className={s.divider} />
+        </>
+      )}
 
       {/* Экспорт */}
       <div className={s.section}>
