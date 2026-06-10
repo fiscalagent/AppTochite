@@ -1,3 +1,10 @@
+# [1.94.0](https://github.com/fiscalagent/AppTochite/compare/v1.93.1...v1.94.0) (2026-06-10)
+
+
+### feat
+
+* дневной гейт и сигнатура данных для авто-бэкапа в облако ([](https://github.com/fiscalagent/AppTochite/commit/977430f5e7b7e272ffacb5e1bc1aeeebf312e01b))
+
 ## [1.93.1](https://github.com/fiscalagent/AppTochite/compare/v1.93.0...v1.93.1) (2026-06-10)
 
 # [1.93.0](https://github.com/fiscalagent/AppTochite/compare/v1.92.2...v1.93.0) (2026-06-10)
