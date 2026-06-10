@@ -100,8 +100,10 @@ function backupFilename(): string {
 }
 
 export class YandexApiError extends Error {
-  constructor(public readonly status: number) {
+  readonly status: number
+  constructor(status: number) {
     super(`Yandex API error: ${status}`)
+    this.status = status
     this.name = 'YandexApiError'
   }
 }
