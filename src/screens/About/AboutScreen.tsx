@@ -148,6 +148,16 @@ export default function AboutScreen() {
             <span className={s.linkLabel}>{t.about.telegramGroup}</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </a>
+          <a
+            href="https://apptochite.github.io/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={s.linkItem}
+          >
+            <span className={s.linkIcon}>🌐</span>
+            <span className={s.linkLabel}>{t.about.website}</span>
+            <span className={s.linkArrow}><IconChevronRight /></span>
+          </a>
           <div className={s.toggleItem}>
             <div className={s.toggleLabel}>
               <div className={s.toggleLabelTitle}>{t.about.analyticsTitle}</div>
