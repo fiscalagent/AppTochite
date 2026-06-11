@@ -8,6 +8,7 @@ const YANDEX_AUTO_KEY = 'yandexAutoBackup'
 const YANDEX_LAST_AT_KEY = 'yandexLastBackupAt'
 const YANDEX_LAST_SIG_KEY = 'yandexLastBackupSig'      // сигнатура данных последней успешной заливки
 const YANDEX_LAST_CHECK_DAY_KEY = 'yandexLastCheckDay' // день последней авто-проверки (YYYY-MM-DD)
+const CLOUD_DEVICE_ID_KEY = 'cloudDeviceId'            // стабильный id устройства для имён снапшотов
 
 const APP_FOLDER = 'app:/'           // Яндекс.Диск: папка приложения (Приложения/<имя>)
 const MAX_SNAPSHOTS = 7
@@ -52,13 +53,33 @@ export async function getCloudLastAt(database: AppTochiteDB): Promise<Date | nul
   return entry ? new Date(entry.value as string) : null
 }
 
+// ─── Device id ────────────────────────────────────────────────────────────────
+// Стабильный короткий id этого устройства — входит в имя снапшота, чтобы устройства
+// одного пользователя не перетирали файлы друг друга. Живёт в settings (вне бэкапа),
+// независим от analyticsDeviceId (аналитику можно отключить).
+
+async function getCloudDeviceId(database: AppTochiteDB): Promise<string> {
+  const entry = await database.settings.get(CLOUD_DEVICE_ID_KEY)
+  if (entry?.value) return entry.value as string
+  const id = crypto.randomUUID().slice(0, 8)
+  await database.settings.put({ key: CLOUD_DEVICE_ID_KEY, value: id })
+  return id
+}
+
+// Прочитать id без создания — для листинга снапшотов до первой заливки.
+export async function peekCloudDeviceId(database: AppTochiteDB): Promise<string | null> {
+  const entry = await database.settings.get(CLOUD_DEVICE_ID_KEY)
+  return entry?.value ? (entry.value as string) : null
+}
+
 // ─── Snapshot list ────────────────────────────────────────────────────────────
 
 export interface CloudSnapshot {
   name: string
   createdAt: Date
   size: number
-  downloadUrl: string
+  deviceId: string | null   // null = старый файл без device-id (до этой версии)
+  fromThisDevice: boolean
 }
 
 interface YandexResourceItem {
@@ -75,8 +96,19 @@ interface YandexListResponse {
   }
 }
 
-export async function listYandexSnapshots(token: string): Promise<CloudSnapshot[]> {
-  const url = `${DISK_API}/resources?path=${encodeURIComponent(APP_FOLDER)}&limit=50&sort=-created`
+// Имя снапшота: backup-<deviceId8>-<YYYY-MM-DD>.json (новое) либо backup-<YYYY-MM-DD>[-<HHMM>].json
+// (старые версии, без device-id). deviceId — ровно 8 hex-символов, год начинается с 20 —
+// поэтому форматы однозначно различимы.
+function parseDeviceId(name: string): string | null {
+  const m = /^backup-([0-9a-f]{8})-\d{4}-\d{2}-\d{2}\.json$/.exec(name)
+  return m ? m[1] : null
+}
+
+export async function listYandexSnapshots(
+  token: string,
+  currentDeviceId?: string | null,
+): Promise<CloudSnapshot[]> {
+  const url = `${DISK_API}/resources?path=${encodeURIComponent(APP_FOLDER)}&limit=100&sort=-created`
   const res = await fetch(url, { headers: { Authorization: `OAuth ${token}` } })
 
   if (res.status === 404) return []
@@ -87,12 +119,16 @@ export async function listYandexSnapshots(token: string): Promise<CloudSnapshot[
 
   return items
     .filter(it => it.type === 'file' && it.name.startsWith(BACKUP_PREFIX) && it.name.endsWith('.json') && it.file)
-    .map(it => ({
-      name: it.name,
-      createdAt: new Date(it.created),
-      size: it.size,
-      downloadUrl: it.file!,
-    }))
+    .map(it => {
+      const deviceId = parseDeviceId(it.name)
+      return {
+        name: it.name,
+        createdAt: new Date(it.created),
+        size: it.size,
+        deviceId,
+        fromThisDevice: deviceId != null && deviceId === currentDeviceId,
+      }
+    })
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 }
 
@@ -105,10 +141,10 @@ function localDayStr(): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
-// Имя файла — по дню (без времени): один снапшот в сутки, overwrite перезаписывает
-// внутридневные пере-заливки. Ротация на 7 файлов = ровно неделя истории.
-function backupFilename(): string {
-  return `${BACKUP_PREFIX}${localDayStr()}.json`
+// Имя файла — <deviceId>-<день> (без времени): один снапшот в сутки на устройство,
+// overwrite перезаписывает внутридневные пере-заливки. Ротация 7 на устройство = неделя.
+function backupFilename(deviceId: string): string {
+  return `${BACKUP_PREFIX}${deviceId}-${localDayStr()}.json`
 }
 
 // Лёгкая сигнатура содержимого: количество записей + максимальный updatedAt по каждой
@@ -138,8 +174,8 @@ export class YandexApiError extends Error {
 }
 
 // Сырая заливка готового бэкапа. Без побочных эффектов на settings.
-async function putBackup(token: string, backup: BackupFile): Promise<'ok' | 'auth-error' | 'error'> {
-  const path = `${APP_FOLDER}${backupFilename()}`
+async function putBackup(token: string, backup: BackupFile, deviceId: string): Promise<'ok' | 'auth-error' | 'error'> {
+  const path = `${APP_FOLDER}${backupFilename(deviceId)}`
 
   // Получаем URL для загрузки
   const uploadLinkRes = await fetch(
@@ -163,13 +199,13 @@ async function putBackup(token: string, backup: BackupFile): Promise<'ok' | 'aut
 }
 
 // Фиксируем успешную заливку: время, сигнатуру данных, день проверки. Затем ротация.
-async function recordUploadSuccess(database: AppTochiteDB, backup: BackupFile, token: string): Promise<void> {
+async function recordUploadSuccess(database: AppTochiteDB, backup: BackupFile, token: string, deviceId: string): Promise<void> {
   await database.settings.bulkPut([
     { key: YANDEX_LAST_AT_KEY, value: new Date().toISOString() },
     { key: YANDEX_LAST_SIG_KEY, value: dataSignature(backup.data) },
     { key: YANDEX_LAST_CHECK_DAY_KEY, value: localDayStr() },
   ])
-  await rotateSnapshots(token).catch(() => {})
+  await rotateSnapshots(token, deviceId).catch(() => {})
 }
 
 // Ручная заливка («Сохранить сейчас») — без дневного гейта и проверки изменений.
@@ -181,19 +217,23 @@ export async function uploadToYandex(
     const backup = await exportBackup(database)
     if (!backup.data.clients.length) return 'error'
 
-    const result = await putBackup(token, backup)
+    const deviceId = await getCloudDeviceId(database)
+    const result = await putBackup(token, backup, deviceId)
     if (result !== 'ok') return result
 
-    await recordUploadSuccess(database, backup, token)
+    await recordUploadSuccess(database, backup, token, deviceId)
     return 'ok'
   } catch {
     return 'error'
   }
 }
 
-async function rotateSnapshots(token: string): Promise<void> {
-  const snapshots = await listYandexSnapshots(token)
-  const toDelete = snapshots.slice(MAX_SNAPSHOTS)
+// Ротация — только снапшоты ЭТОГО устройства (свой префикс). Файлы других устройств
+// и старые файлы без device-id это устройство не трогает.
+async function rotateSnapshots(token: string, deviceId: string): Promise<void> {
+  const snapshots = await listYandexSnapshots(token, deviceId)
+  const own = snapshots.filter(s => s.deviceId === deviceId)
+  const toDelete = own.slice(MAX_SNAPSHOTS)
   for (const snap of toDelete) {
     const path = `${APP_FOLDER}${snap.name}`
     await fetch(
@@ -205,8 +245,24 @@ async function rotateSnapshots(token: string): Promise<void> {
 
 // ─── Download + merge ─────────────────────────────────────────────────────────
 
-export async function downloadSnapshotJson(downloadUrl: string, token: string): Promise<BackupFile | null> {
-  const res = await fetch(downloadUrl, { headers: { Authorization: `OAuth ${token}` } })
+// Свежий временный download-URL по имени файла. href из листинга короткоживущий и
+// протухает, если экран открыт долго, — поэтому запрашиваем ссылку прямо перед скачиванием.
+async function freshDownloadHref(token: string, name: string): Promise<{ href: string } | 'auth-error' | 'error'> {
+  const path = `${APP_FOLDER}${name}`
+  const res = await fetch(
+    `${DISK_API}/resources/download?path=${encodeURIComponent(path)}`,
+    { headers: { Authorization: `OAuth ${token}` } }
+  )
+  if (res.status === 401) return 'auth-error'
+  if (!res.ok) return 'error'
+  const { href } = await res.json() as { href: string }
+  return { href }
+}
+
+export async function downloadSnapshotJson(name: string, token: string): Promise<BackupFile | null> {
+  const link = await freshDownloadHref(token, name)
+  if (typeof link === 'string') return null
+  const res = await fetch(link.href, { headers: { Authorization: `OAuth ${token}` } })
   if (!res.ok) return null
   const parsed = JSON.parse(await res.text(), reviveDates)
   return isValidBackup(parsed) ? parsed : null
@@ -215,11 +271,12 @@ export async function downloadSnapshotJson(downloadUrl: string, token: string): 
 export async function downloadAndMerge(
   database: AppTochiteDB,
   token: string,
-  downloadUrl: string,
+  name: string,
 ): Promise<MergeStats | 'auth-error' | 'error'> {
   try {
-    const res = await fetch(downloadUrl, { headers: { Authorization: `OAuth ${token}` } })
-    if (res.status === 401) return 'auth-error'
+    const link = await freshDownloadHref(token, name)
+    if (typeof link === 'string') return link
+    const res = await fetch(link.href, { headers: { Authorization: `OAuth ${token}` } })
     if (!res.ok) return 'error'
     const parsed = JSON.parse(await res.text(), reviveDates)
     if (!isValidBackup(parsed)) return 'error'
@@ -261,10 +318,11 @@ export async function performCloudBackup(database: AppTochiteDB): Promise<void> 
   const sigEntry = await database.settings.get(YANDEX_LAST_SIG_KEY)
   if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
 
-  const result = await putBackup(token, backup)
+  const deviceId = await getCloudDeviceId(database)
+  const result = await putBackup(token, backup, deviceId)
   if (result !== 'ok') return
 
-  await recordUploadSuccess(database, backup, token)
+  await recordUploadSuccess(database, backup, token, deviceId)
 }
 
 // ─── OAuth helpers ────────────────────────────────────────────────────────────

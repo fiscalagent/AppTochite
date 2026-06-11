@@ -74,6 +74,7 @@ import {
   downloadAndMerge,
   downloadSnapshotJson,
   buildOAuthUrl,
+  peekCloudDeviceId,
   type CloudSnapshot,
 } from '../../utils/cloudBackup'
 import s from './BackupScreen.module.css'
@@ -170,10 +171,11 @@ export default function BackupScreen() {
 
   const refreshCloud = useCallback(async () => {
     if (!FEATURES.cloudBackup) return
-    const [token, lastAt, auto] = await Promise.all([
+    const [token, lastAt, auto, deviceId] = await Promise.all([
       getYandexToken(db),
       getCloudLastAt(db),
       getCloudAutoBackup(db),
+      peekCloudDeviceId(db),
     ])
     setCloudToken(token)
     setCloudLastAt(lastAt)
@@ -181,7 +183,7 @@ export default function BackupScreen() {
     if (token) {
       setCloudSnapshotsLoading(true)
       setCloudSnapshotsError(false)
-      listYandexSnapshots(token)
+      listYandexSnapshots(token, deviceId)
         .then(snaps => { setCloudSnapshots(snaps); setCloudSnapshotsLoading(false) })
         .catch(() => { setCloudSnapshotsError(true); setCloudSnapshotsLoading(false) })
     }
@@ -398,7 +400,7 @@ export default function BackupScreen() {
     setCloudMergingId(snap.name)
     try {
       await createPreRestoreSnapshot(db)
-      const result = await downloadAndMerge(db, cloudToken, snap.downloadUrl)
+      const result = await downloadAndMerge(db, cloudToken, snap.name)
       if (result === 'auth-error') {
         showToast(t.backup.cloudAuthError)
       } else if (result === 'error') {
@@ -416,7 +418,7 @@ export default function BackupScreen() {
   async function handleCloudDownload(snap: CloudSnapshot) {
     if (!cloudToken) return
     try {
-      const backup = await downloadSnapshotJson(snap.downloadUrl, cloudToken)
+      const backup = await downloadSnapshotJson(snap.name, cloudToken)
       if (!backup) { showToast(t.backup.cloudRestoreError); return }
       const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
       downloadBlob(blob, snap.name.replace('.json', '') + '.json')
@@ -743,7 +745,14 @@ export default function BackupScreen() {
                   cloudSnapshots.map(snap => (
                     <div key={snap.name} className={s.recoveryRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6, marginBottom: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                        <span className={s.recoveryLabel}>{fmtDateTimeLong(locale, snap.createdAt)}</span>
+                        <span className={s.recoveryLabel}>
+                          {fmtDateTimeLong(locale, snap.createdAt)}
+                          {snap.deviceId && (
+                            <span style={{ color: 'var(--text-300)', fontSize: 12, marginLeft: 6 }}>
+                              · {snap.fromThisDevice ? t.backup.cloudThisDevice : t.backup.cloudOtherDevice}
+                            </span>
+                          )}
+                        </span>
                         <span className={s.recoveryMeta}>{t.backup.cloudMb((snap.size / 1_048_576).toFixed(1))}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>

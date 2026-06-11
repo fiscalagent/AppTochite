@@ -543,6 +543,8 @@ export const en = {
     cloudRestoreError: 'Failed to load snapshot',
     cloudDesc: 'Stores the last 7 backups in the "Applications/AppTochite" folder on your Yandex.Disk.',
     cloudMb: (n: string) => `${n} MB`,
+    cloudThisDevice: 'this device',
+    cloudOtherDevice: 'another device',
     donateSection: 'Support the project',
     donateText: 'If this app helps you — you can support its development. Thank you! 🤝',
     aboutLabel: 'About',
