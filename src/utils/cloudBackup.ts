@@ -309,20 +309,32 @@ export async function performCloudBackup(database: AppTochiteDB): Promise<void> 
   if (checkEntry?.value === today) return
 
   // Помечаем день проверенным сразу — чтобы при отсутствии изменений не гонять
-  // exportBackup повторно на каждом фокусе в течение дня.
+  // exportBackup повторно на каждом фокусе в течение дня. При сбое заливки гейт
+  // снимается ниже, иначе временная ошибка сети стоила бы целого дня бэкапа.
   await database.settings.put({ key: YANDEX_LAST_CHECK_DAY_KEY, value: today })
 
-  const backup = await exportBackup(database)
-  if (!backup.data.clients.length) return
+  const clearDayGate = () =>
+    database.settings.delete(YANDEX_LAST_CHECK_DAY_KEY).catch(() => {})
 
-  const sigEntry = await database.settings.get(YANDEX_LAST_SIG_KEY)
-  if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
+  try {
+    const backup = await exportBackup(database)
+    if (!backup.data.clients.length) return
 
-  const deviceId = await getCloudDeviceId(database)
-  const result = await putBackup(token, backup, deviceId)
-  if (result !== 'ok') return
+    const sigEntry = await database.settings.get(YANDEX_LAST_SIG_KEY)
+    if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
 
-  await recordUploadSuccess(database, backup, token, deviceId)
+    const deviceId = await getCloudDeviceId(database)
+    const result = await putBackup(token, backup, deviceId)
+    if (result !== 'ok') {
+      await clearDayGate()
+      return
+    }
+
+    await recordUploadSuccess(database, backup, token, deviceId)
+  } catch (err) {
+    await clearDayGate()
+    throw err
+  }
 }
 
 // ─── OAuth helpers ────────────────────────────────────────────────────────────
