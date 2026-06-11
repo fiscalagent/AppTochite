@@ -144,7 +144,9 @@ export default function SharpeningDetail() {
   useEffect(() => { awaitingListFieldRef.current = awaitingListField }, [awaitingListField])
   useEffect(() => { awaitingCancelConfirmRef.current = awaitingCancelConfirm }, [awaitingCancelConfirm])
 
-  const sh = useLiveQuery(() => db.sharpenings.get(sharpeningId), [sharpeningId])
+  // ?? null: get() для отсутствующей записи отдаёт undefined — неотличимо от
+  // «ещё грузится». null явно означает «записи нет» и включает ветку not-found.
+  const sh = useLiveQuery(async () => (await db.sharpenings.get(sharpeningId)) ?? null, [sharpeningId])
   const client = useLiveQuery(
     () => sh ? db.clients.get(sh.clientId) : undefined,
     [sh?.clientId]

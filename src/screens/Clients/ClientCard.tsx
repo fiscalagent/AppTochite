@@ -42,7 +42,9 @@ export default function ClientCard() {
 
   const PAGE_SIZE = 10
 
-  const client = useLiveQuery(() => db.clients.get(clientId), [clientId])
+  // ?? null: get() для отсутствующей записи отдаёт undefined — неотличимо от
+  // «ещё грузится». null явно означает «записи нет» и включает ветку not-found.
+  const client = useLiveQuery(async () => (await db.clients.get(clientId)) ?? null, [clientId])
   const sharpenings = useLiveQuery(
     () => db.sharpenings.where('clientId').equals(clientId).reverse().sortBy('receivedAt').then(arr =>
       arr.filter(sh => !sh.deletedAt).map(sh => ({
