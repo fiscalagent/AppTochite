@@ -1,7 +1,10 @@
 import type { AppTochiteDB, Client, Sharpening, Stone, Steel, Knife, Meta } from '../db/instance'
+import type { Table } from 'dexie'
 import { GRIT_TABLE } from '../data/gritTable'
 import { ru } from '../i18n/dict'
 import { queryDirectoryPermission, requestDirectoryPermission, pickDirectory } from './fileSystemAccess'
+import { normSteel } from './steelMatch'
+import { uuid } from './uuid'
 
 function normalizeStoneFromBackup(raw: Stone): Stone {
   if (raw.gritSource != null) return raw
@@ -571,6 +574,71 @@ function shouldTakeFileSoftDeletable<T extends { updatedAt?: Date; deletedAt?: D
   return newerInFile(device, file)
 }
 
+// ─── Natural keys справочников ────────────────────────────────────────────────
+// У справочных записей id тоже автоинкрементный (свой на устройстве), но есть
+// естественный ключ содержимого — по нему merge и сопоставляет записи, поэтому
+// одинаковые камни/стали/ножи двух устройств не плодят дубли и не перетирают
+// чужие записи по совпавшему id.
+
+function stoneNatKey(s: Stone): string {
+  const grit = s.gritMk ? `mk:${s.gritMk}` : String(s.gritMicrons ?? s.gritFepa ?? s.gritJis ?? '')
+  return `${s.brand.trim().toLowerCase()}|${grit}`
+}
+
+function steelNatKey(s: Steel): string {
+  return normSteel(s.name)
+}
+
+function knifeNatKey(k: Knife): string {
+  return `${k.brand.trim().toLowerCase()}|${(k.steel ?? '').trim().toLowerCase()}`
+}
+
+// Merge одного справочника: совпадение по natural key → LWW; новая запись —
+// со своим id, если он свободен, иначе с новым автоинкрементным.
+async function mergeRefTable<T extends { id?: number; updatedAt?: Date }>(
+  table: Table<T>,
+  records: T[],
+  natKey: (r: T) => string,
+  stats: MergeStats,
+): Promise<void> {
+  const deviceByKey = new Map<string, T>()
+  await table.toCollection().each(rec => {
+    const k = natKey(rec)
+    if (!deviceByKey.has(k)) deviceByKey.set(k, rec)
+  })
+
+  for (const fileRecord of records) {
+    if (!fileRecord.id) continue
+    const k = natKey(fileRecord)
+    const device = deviceByKey.get(k)
+    if (device?.id != null) {
+      if (newerInFile(device, fileRecord)) {
+        await table.put({ ...fileRecord, id: device.id })
+        stats.updated++
+      } else {
+        stats.skipped++
+      }
+    } else {
+      const occupant = await table.get(fileRecord.id)
+      let savedId = fileRecord.id
+      if (occupant) {
+        savedId = Number(await table.add({ ...fileRecord, id: undefined }))
+      } else {
+        await table.put(fileRecord)
+      }
+      deviceByKey.set(k, { ...fileRecord, id: savedId })
+      stats.added++
+    }
+  }
+}
+
+// Merge бэкапа в живую базу. Идентичность записей:
+//  - clients/sharpenings — по guid (схема v9); «Я» всегда мапится на локального
+//    isSelf-клиента. Файлы без guid (старые экспорты) сопоставляются по id —
+//    прежнее поведение для restore на том же устройстве.
+//  - справочники — по natural key (см. выше).
+// Коллизия id (запись другого устройства с занятым id) разрешается вставкой под
+// новым автоинкрементным id; clientId заточек ремапится через clientIdMap.
 export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): Promise<MergeStats> {
   const stats: MergeStats = { added: 0, updated: 0, skipped: 0 }
 
@@ -578,38 +646,90 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
     'rw',
     [database.clients, database.sharpenings, database.stones, database.steels, database.knives, database.meta],
     async () => {
-      const tables = [
-        { table: database.clients,     records: backup.data.clients,     softDelete: true  },
-        { table: database.sharpenings, records: backup.data.sharpenings, softDelete: true  },
-        { table: database.stones,      records: backup.data.stones,      softDelete: false },
-        { table: database.steels,      records: backup.data.steels,      softDelete: false },
-        { table: database.knives,      records: backup.data.knives,      softDelete: false },
-      ] as const
+      // ── Клиенты ────────────────────────────────────────────────────────────
+      // fileId → deviceId для записей, сменивших id (нужно заточкам ниже).
+      const clientIdMap = new Map<number, number>()
+      const localSelf = await database.clients.filter(c => c.isSelf).first()
 
-      for (const { table, records, softDelete } of tables) {
-        for (const rawRecord of records) {
-          if (!rawRecord.id) continue
-          const fileRecord = table === database.stones ? normalizeStoneFromBackup(rawRecord as Stone) as typeof rawRecord : rawRecord
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const deviceRecord = await (table as any).get(fileRecord.id)
-          if (!deviceRecord) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (table as any).put(fileRecord)
-            stats.added++
+      for (const fileClient of backup.data.clients) {
+        if (!fileClient.id) continue
+
+        let device: Client | undefined
+        if (fileClient.isSelf) {
+          device = localSelf
+        } else if (fileClient.guid) {
+          device = await database.clients.where('guid').equals(fileClient.guid).first()
+        } else {
+          // Легаси-файл без guid: по id, но локального «Я» не-self записью не трогаем.
+          const byId = await database.clients.get(fileClient.id)
+          device = byId && !byId.isSelf ? byId : undefined
+        }
+
+        if (device?.id != null) {
+          if (device.id !== fileClient.id) clientIdMap.set(fileClient.id, device.id)
+          if (shouldTakeFileSoftDeletable(device, fileClient)) {
+            await database.clients.put({
+              ...fileClient,
+              id: device.id,
+              guid: device.guid ?? fileClient.guid ?? uuid(),
+            })
+            stats.updated++
           } else {
-            const takeFile = softDelete
-              ? shouldTakeFileSoftDeletable(deviceRecord, fileRecord)
-              : newerInFile(deviceRecord, fileRecord)
-            if (takeFile) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await (table as any).put(fileRecord)
-              stats.updated++
-            } else {
-              stats.skipped++
-            }
+            stats.skipped++
           }
+        } else {
+          const record: Client = { ...fileClient, guid: fileClient.guid ?? uuid() }
+          const occupant = await database.clients.get(fileClient.id)
+          if (occupant) {
+            const newId = Number(await database.clients.add({ ...record, id: undefined }))
+            clientIdMap.set(fileClient.id, newId)
+          } else {
+            await database.clients.put(record)
+          }
+          stats.added++
         }
       }
+
+      // ── Заточки ────────────────────────────────────────────────────────────
+      for (const fileSh of backup.data.sharpenings) {
+        if (!fileSh.id) continue
+        const clientId = clientIdMap.get(fileSh.clientId) ?? fileSh.clientId
+        const candidate: Sharpening = { ...fileSh, clientId }
+
+        let device: Sharpening | undefined
+        if (fileSh.guid) {
+          device = await database.sharpenings.where('guid').equals(fileSh.guid).first()
+        } else {
+          device = await database.sharpenings.get(fileSh.id)
+        }
+
+        if (device?.id != null) {
+          if (shouldTakeFileSoftDeletable(device, candidate)) {
+            await database.sharpenings.put({
+              ...candidate,
+              id: device.id,
+              guid: device.guid ?? candidate.guid ?? uuid(),
+            })
+            stats.updated++
+          } else {
+            stats.skipped++
+          }
+        } else {
+          const record: Sharpening = { ...candidate, guid: candidate.guid ?? uuid() }
+          const occupant = await database.sharpenings.get(fileSh.id)
+          if (occupant) {
+            await database.sharpenings.add({ ...record, id: undefined })
+          } else {
+            await database.sharpenings.put(record)
+          }
+          stats.added++
+        }
+      }
+
+      // ── Справочники ────────────────────────────────────────────────────────
+      await mergeRefTable(database.stones, backup.data.stones.map(normalizeStoneFromBackup), stoneNatKey, stats)
+      await mergeRefTable(database.steels, backup.data.steels, steelNatKey, stats)
+      await mergeRefTable(database.knives, backup.data.knives, knifeNatKey, stats)
 
       if (backup.data.meta) {
         for (const entry of backup.data.meta) {
@@ -640,9 +760,13 @@ export async function restoreBackup(database: AppTochiteDB, backup: BackupFile):
       ]
       if (hasMeta) clearTasks.push(database.meta.clear())
       await Promise.all(clearTasks)
+      // Записям из старых бэкапов (до v9) присваиваем guid прямо при восстановлении:
+      // после restore в базе не должно быть записей без кросс-устройственной идентичности.
+      const withGuid = <T extends { guid?: string }>(arr: T[]): T[] =>
+        arr.map(r => (r.guid ? r : { ...r, guid: uuid() }))
       const putTasks = [
-        database.clients.bulkPut(backup.data.clients),
-        database.sharpenings.bulkPut(backup.data.sharpenings),
+        database.clients.bulkPut(withGuid(backup.data.clients)),
+        database.sharpenings.bulkPut(withGuid(backup.data.sharpenings)),
         database.stones.bulkPut(backup.data.stones.map(normalizeStoneFromBackup)),
         database.steels.bulkPut(backup.data.steels),
         database.knives.bulkPut(backup.data.knives),

@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import { GRIT_TABLE, fromFepa, fromJis } from '../data/gritTable'
+import { uuid } from '../utils/uuid'
 
 export interface Meta {
   key: string
@@ -13,6 +14,10 @@ export interface Setting {
 
 export interface Client {
   id?: number
+  // Глобальная идентичность записи между устройствами (id — автоинкремент,
+  // у каждого устройства свой). Merge бэкапов сопоставляет записи по guid.
+  // Optional: записи до схемы v9 получают guid в миграции.
+  guid?: string
   name: string
   phone?: string
   telegram?: string
@@ -33,6 +38,8 @@ export type SharpeningStatus = 'accepted' | 'done'
 
 export interface Sharpening {
   id?: number
+  // См. комментарий к Client.guid — кросс-устройственная идентичность для merge.
+  guid?: string
   clientId: number
   knifeBrand: string
   steel?: string
@@ -135,7 +142,7 @@ export interface AnalyticsQueueItem {
 
 // Текущая максимальная версия схемы. БАМПИТЬ при добавлении новой `this.version(N)`
 // в конструкторе ниже, иначе preMigrationSnapshot не сработает на новой миграции.
-export const CURRENT_SCHEMA_VERSION = 8
+export const CURRENT_SCHEMA_VERSION = 9
 
 export class AppTochiteDB extends Dexie {
   clients!: Table<Client>
@@ -235,6 +242,21 @@ export class AppTochiteDB extends Dexie {
     this.version(8).stores({
       clients:     '++id, name, isSelf, deletedAt',
       sharpenings: '++id, clientId, status, receivedAt, deletedAt',
+    })
+    // v9: guid у clients/sharpenings — стабильная идентичность записи между
+    // устройствами. Автоинкрементный id у каждого устройства свой, поэтому merge
+    // чужого бэкапа сопоставляет записи по guid (см. mergeBackup), а id остаётся
+    // локальным ключом. Существующим записям guid присваивается здесь.
+    this.version(9).stores({
+      clients:     '++id, name, isSelf, deletedAt, guid',
+      sharpenings: '++id, clientId, status, receivedAt, deletedAt, guid',
+    }).upgrade(async tx => {
+      await tx.table('clients').toCollection().modify((c: Client) => {
+        if (!c.guid) c.guid = uuid()
+      })
+      await tx.table('sharpenings').toCollection().modify((s: Sharpening) => {
+        if (!s.guid) s.guid = uuid()
+      })
     })
   }
 }

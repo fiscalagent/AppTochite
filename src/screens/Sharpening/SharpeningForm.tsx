@@ -15,6 +15,7 @@ import DictationButton from '../../components/DictationButton/DictationButton'
 import DictationIndicator from '../../components/DictationIndicator/DictationIndicator'
 import DictationCandidates from '../../components/DictationCandidates/DictationCandidates'
 import { isVoiceEnabled } from '../../config/features'
+import { uuid } from '../../utils/uuid'
 import { useLocale, enumLabel, fmtCurrencySymbol, ru } from '../../i18n'
 import s from './SharpeningForm.module.css'
 
@@ -522,6 +523,7 @@ export default function SharpeningForm() {
       } else {
         const acceptanceData = {
           ...receptionFields,
+          guid: uuid(),
           angle: repeatAngle,
           stones: repeatStones.length ? repeatStones : undefined,
           status: 'accepted' as const,

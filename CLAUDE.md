@@ -132,7 +132,7 @@ src/
 
 Таблицы: `clients`, `sharpenings`, `stones`, `steels`, `knives`, `meta`, `settings`, `analyticsQueue`
 
-Схема версионирована (текущая **v8**). Новые изменения добавлять через `this.version(N)`.
+Схема версионирована (текущая **v9**). Новые изменения добавлять через `this.version(N)`.
 
 **История версий схемы:**
 - v1: начальная схема (clients, sharpenings, stones, steels, knives)
@@ -143,6 +143,7 @@ src/
 - v6: таблица `analyticsQueue` — офлайн-буфер событий аналитики, **не входит в бэкап**
 - v7: четыре шкалы гритности (`gritFepa`, `gritJis`, `gritMicrons`, `gritMk`) хранятся явно; старые `grit`/`gritUnit` конвертируются через `GRIT_TABLE`
 - v8: soft-delete для `clients` и `sharpenings` — 3 дня в корзине (`deletedAt`, `deletedBatchId`), индекс `deletedAt` для быстрого purge и листинга
+- v9: `guid` у `clients`/`sharpenings` — кросс-устройственная идентичность записи. `id` — автоинкремент, у каждого устройства свой, поэтому merge чужого бэкапа сопоставляет по `guid`. Существующим записям guid присвоен миграцией; новые получают его при создании (`uuid()` из `utils/uuid.ts`)
 
 **Ключевые особенности схемы:**
 - `clients.isSelf = true` — нулевой клиент «Я», создаётся при первом запуске, не удаляется
@@ -157,6 +158,7 @@ src/
 - `deletedAt?: Date` + `deletedBatchId?: string` у `Client` и `Sharpening` — soft-delete. Удаление клиента помечает все его заточки тем же `deletedBatchId` для группового восстановления. Записи с `deletedAt` исключаются из всех списков и фильтруются в CSV-экспорте, но **остаются в JSON-бэкапе** (чтобы удаления распространялись через merge). Покидают БД через `purgeExpired` (TTL 3 дня) или вручную через корзину. **При merge tombstone устройства sticky**: если на устройстве запись в корзине, а файл несёт «живую» версию без `deletedAt`, файл игнорируется — иначе свежая правка на другом устройстве воскрешала бы запись до истечения окна корзины. Восстановление возможно только вручную через `TrashScreen`
 - Фото хранятся как `base64[]` в полях `photosBefore` / `photosAfter`
 - `updatedAt?: Date` — есть у всех сущностей (`Client`, `Sharpening`, `Stone`, `Steel`, `Knife`). Проставляется при каждом create/update. Используется в `mergeBackup` для last-write-wins разрешения конфликтов
+- **Идентичность при merge** (`mergeBackup`): `clients`/`sharpenings` — по `guid`; «Я» всегда мапится на локального `isSelf`-клиента; файлы без guid (старые экспорты) — по `id` (прежнее поведение для restore на том же устройстве). Справочники — по natural key: стали `normSteel(name)`, ножи `brand+steel`, камни `brand+гритность`. Коллизия `id` (чужая запись с занятым id) разрешается вставкой под новым автоинкрементным id, `clientId` заточек ремапится. `restoreBackup` присваивает guid легаси-записям при восстановлении. Тесты — `mergeCrossDevice.test.ts`
 
 ---
 

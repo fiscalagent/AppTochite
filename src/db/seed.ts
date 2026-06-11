@@ -17,6 +17,7 @@ import { db } from './instance';
 import type { AppTochiteDB, Stone, Steel, Knife } from './db';
 import { fromFepa, fromJis, fromMk } from '../data/gritTable';
 import { readStoredLocale } from '../i18n/locale';
+import { uuid } from '../utils/uuid';
 
 // ─── Камни ───────────────────────────────────────────────────────────────────
 
@@ -1968,7 +1969,7 @@ async function ensureSelfClient(targetDb: AppTochiteDB): Promise<void> {
   const hasSelf = (await targetDb.clients.filter(c => c.isSelf).count()) > 0;
   if (!hasSelf) {
     const now = new Date();
-    await targetDb.clients.add({ name: 'Я', isSelf: true, createdAt: now, updatedAt: now });
+    await targetDb.clients.add({ name: 'Я', isSelf: true, createdAt: now, updatedAt: now, guid: uuid() });
   }
 }
 

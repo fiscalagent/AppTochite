@@ -6,6 +6,7 @@ import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { pickAvatarFile } from '../../hooks/useCamera'
 import { softDeleteClient } from '../../utils/trash'
+import { uuid } from '../../utils/uuid'
 import { useT } from '../../i18n'
 import s from './ClientForm.module.css'
 
@@ -63,6 +64,7 @@ export default function ClientForm() {
     } else {
       const now = new Date()
       const newId = await db.clients.add({
+        guid: uuid(),
         name: name.trim(),
         phone: phone.trim() || undefined,
         telegram: normalizeTelegram(telegram),

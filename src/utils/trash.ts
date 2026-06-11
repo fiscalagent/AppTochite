@@ -1,13 +1,7 @@
 import type { AppTochiteDB, Client, Sharpening } from '../db/instance'
+import { uuid } from './uuid'
 
 export const TRASH_TTL_MS = 3 * 24 * 60 * 60 * 1000
-
-function uuid(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-  return 'b-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)
-}
 
 export async function softDeleteClient(database: AppTochiteDB, clientId: number): Promise<string> {
   const batchId = uuid()
