@@ -37,8 +37,24 @@ const IconCamera = () => (
 const CONDITIONS = Object.keys(ru.enums.condition)
 const PHOTO_LIMIT = 5
 
+// Дата по ЛОКАЛЬНОМУ времени устройства. toISOString() здесь нельзя: это UTC,
+// и ночью (00:00–03:00 МСК) приёмка датировалась бы вчерашним днём.
+function localYmd(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 function todayStr() {
-  return new Date().toISOString().slice(0, 10)
+  return localYmd(new Date())
+}
+
+// 'YYYY-MM-DD' → Date в локальной полуночи (new Date('YYYY-MM-DD') дал бы UTC).
+// Пустое/битое значение → текущий момент, чтобы Invalid Date не уронил
+// IndexedDB-индекс receivedAt при сохранении.
+function parseLocalYmd(s: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
+  if (!m) return new Date()
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
 }
 
 function parseStoneName(name: string): { brand: string } & Partial<ReturnType<typeof fromFepa>> {
@@ -432,7 +448,7 @@ export default function SharpeningForm() {
       setSteel(sh.steel ?? '')
       setHrc(sh.hrc != null ? String(sh.hrc) : '')
       setCondition(sh.condition ?? [])
-      setReceivedAt(new Date(sh.receivedAt).toISOString().slice(0, 10))
+      setReceivedAt(localYmd(new Date(sh.receivedAt)))
       setPhotosBefore(sh.photosBefore ?? [])
       setPrice(sh.price != null ? String(sh.price) : '')
     })
@@ -480,7 +496,7 @@ export default function SharpeningForm() {
       steel: steel.trim() || undefined,
       hrc: hrc ? Number(hrc) : undefined,
       condition: condition.length ? condition : undefined,
-      receivedAt: new Date(receivedAt),
+      receivedAt: parseLocalYmd(receivedAt),
       photosBefore: photosBefore.length ? photosBefore : undefined,
       price: price ? Number(price) : undefined,
       updatedAt: now,
