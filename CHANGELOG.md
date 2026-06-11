@@ -1,3 +1,10 @@
+# [1.96.0](https://github.com/fiscalagent/AppTochite/compare/v1.95.0...v1.96.0) (2026-06-11)
+
+
+### feat
+
+* ссылка «Сайт приложения» в экране «О программе» ([](https://github.com/fiscalagent/AppTochite/commit/f3bb45cbd585ebc9465542da49791aeba89ffabe))
+
 # [1.95.0](https://github.com/fiscalagent/AppTochite/compare/v1.94.0...v1.95.0) (2026-06-11)
 
 
