@@ -1,3 +1,18 @@
+# [1.95.0](https://github.com/fiscalagent/AppTochite/compare/v1.94.0...v1.95.0) (2026-06-11)
+
+
+### feat
+
+* merge бэкапа другого устройства без перемешивания клиентов — записи сопоставляются по guid ([](https://github.com/fiscalagent/AppTochite/commit/460933b32cd47eebae6d9c6538ea8498c55d4862))
+* облачные снапшоты по устройствам — телефон и планшет не перетирают бэкапы друг друга ([](https://github.com/fiscalagent/AppTochite/commit/46fb9c46b357d31ab852d5d458e2dc871bfb1cf7))
+
+
+### fix
+
+* дата приёмки ночью больше не сдвигается на вчерашний день ([](https://github.com/fiscalagent/AppTochite/commit/99fd0104ed8880b1b5a6842d997af7a5117191b9))
+* открытие удалённой записи показывает «не найдено» вместо пустого экрана ([](https://github.com/fiscalagent/AppTochite/commit/a9ff9d0632727e8fe9d748c4e2848bb759d0a110))
+* сбой сети больше не отменяет облачный авто-бэкап на весь день ([](https://github.com/fiscalagent/AppTochite/commit/61fd1f9717d237121139b6fc8e9d401a18da18ce))
+
 # [1.94.0](https://github.com/fiscalagent/AppTochite/compare/v1.93.1...v1.94.0) (2026-06-10)
 
 
