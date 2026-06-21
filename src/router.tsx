@@ -13,6 +13,7 @@ import AboutScreen from './screens/About/AboutScreen'
 import TrashScreen from './screens/Trash/TrashScreen'
 import GamesHub from './screens/Games/GamesHub'
 import ProgressionGame from './screens/Games/ProgressionGame'
+import AngleGame from './screens/Games/AngleGame'
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: '/trash',                   element: <TrashScreen /> },
       { path: '/games',                   element: <GamesHub /> },
       { path: '/games/progression',       element: <ProgressionGame /> },
+      { path: '/games/angle',             element: <AngleGame /> },
     ],
   },
 ], { basename: '/AppTochite' })

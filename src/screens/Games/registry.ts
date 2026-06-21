@@ -20,4 +20,11 @@ export const GAMES: GameDef[] = [
     subtitle: t => t.game.subtitle,
     ready: true,
   },
+  {
+    id: 'angle',
+    path: '/games/angle',
+    title: t => t.gameAngle.title,
+    subtitle: t => t.gameAngle.subtitle,
+    ready: true,
+  },
 ]
