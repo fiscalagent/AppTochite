@@ -1,3 +1,10 @@
+## [1.98.1](https://github.com/fiscalagent/AppTochite/compare/v1.98.0...v1.98.1) (2026-06-21)
+
+
+### fix
+
+* ключ doneTotal в английском словаре — сборка падала на tsc -b ([](https://github.com/fiscalagent/AppTochite/commit/ac08078dec78de9d2f06fb314d420897dc3f9fbe))
+
 # [1.98.0](https://github.com/fiscalagent/AppTochite/compare/v1.97.0...v1.98.0) (2026-06-21)
 
 
