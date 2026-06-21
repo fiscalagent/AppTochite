@@ -172,6 +172,11 @@ export const ru = {
     telegramPlaceholder: '@username',
     addClientBtn: 'Добавить клиента',
     selfName: 'Я',
+    // Поделиться приложением (футер C-1)
+    shareApp: 'Поделиться приложением',
+    shareTitle: 'AppTochite',
+    shareText: 'AppTochite — приложение для заточников: клиенты, журнал заточек, справочники сталей и камней. Бесплатно, без регистрации.',
+    shareLinkCopied: 'Ссылка скопирована в буфер',
   },
 
   // Лента заточек (H-1)

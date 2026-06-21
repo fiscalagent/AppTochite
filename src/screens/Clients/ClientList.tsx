@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
+import { useToast } from '../../components/Toast/ToastContext'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
 import { useT, useLocale } from '../../i18n'
 import type { Locale } from '../../i18n/locale'
@@ -39,6 +40,20 @@ const IconDatabase = () => (
   </svg>
 )
 
+const IconShare = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="18" cy="5" r="3"/>
+    <circle cx="6" cy="12" r="3"/>
+    <circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </svg>
+)
+
+// Лендинг-витрина — целимся на неё, а не на сам PWA: страница объясняет, что это,
+// и переживает встроенные браузеры мессенджеров (Telegram), в отличие от голого приложения.
+const SHARE_URL = 'https://apptochite.github.io/'
+
 interface ClientRow {
   client: Client
   count: number
@@ -59,7 +74,27 @@ export default function ClientList() {
   const [query, setQuery] = useState('')
   const { hasUpdate } = useVersionCheck()
   const t = useT()
+  const { showToast } = useToast()
   const { locale, setLocale } = useLocale()
+
+  async function handleShare() {
+    const data = { title: t.clients.shareTitle, text: t.clients.shareText, url: SHARE_URL }
+    try {
+      if (navigator.share) {
+        await navigator.share(data)
+        return
+      }
+    } catch {
+      // пользователь отменил системный шит — молча выходим
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(`${t.clients.shareText} ${SHARE_URL}`)
+      showToast(t.clients.shareLinkCopied)
+    } catch {
+      /* нет ни share, ни clipboard — ничего не делаем */
+    }
+  }
   const otherLocale: Locale = locale === 'ru' ? 'en' : 'ru'
   const rows = useLiveQuery<ClientRow[]>(async () => {
     const [allClients, sharpenings] = await Promise.all([
@@ -177,7 +212,13 @@ export default function ClientList() {
           </div>
         )}
       </div>
-      <AppLogo />
+      <div className={s.footer}>
+        <AppLogo />
+        <button className={s.shareBtn} onClick={handleShare}>
+          <IconShare />
+          {t.clients.shareApp}
+        </button>
+      </div>
     </div>
   )
 }

@@ -214,6 +214,11 @@ export const en = {
     telegramPlaceholder: '@username',
     addClientBtn: 'Add client',
     selfName: 'Me',
+    // Share the app (C-1 footer)
+    shareApp: 'Share the app',
+    shareTitle: 'AppTochite',
+    shareText: 'AppTochite — a knife sharpener\'s app: clients, sharpening log, steel and stone reference. Free, no sign-up.',
+    shareLinkCopied: 'Link copied to clipboard',
   },
 
   history: {

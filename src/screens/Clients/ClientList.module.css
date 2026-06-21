@@ -259,3 +259,27 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.shareBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-300);
+  font-size: 13px;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.shareBtn:active {
+  opacity: 0.5;
+}
