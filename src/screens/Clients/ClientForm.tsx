@@ -7,6 +7,7 @@ import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet
 import { pickAvatarFile } from '../../hooks/useCamera'
 import { softDeleteClient } from '../../utils/trash'
 import { uuid } from '../../utils/uuid'
+import { track } from '../../services/analytics'
 import { useT } from '../../i18n'
 import s from './ClientForm.module.css'
 
@@ -73,6 +74,7 @@ export default function ClientForm() {
         createdAt: now,
         updatedAt: now,
       })
+      track('client_created', { hasPhone: !!phone.trim(), hasAvatar: !!avatar }).catch(() => {})
       navigate(`/clients/${newId}`, { replace: true })
     }
   }

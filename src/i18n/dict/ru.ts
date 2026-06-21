@@ -116,6 +116,7 @@ export const ru = {
     trashCount: (n: number) => `Корзина (${n})`,
     telegramGroup: 'Группа в Telegram AppTochite',
     website: 'Сайт приложения',
+    installApp: 'Установить приложение',
     analyticsTitle: 'Анонимная статистика',
     analyticsDesc: 'Камни и ножи без личных данных — помогает улучшить справочник',
     voiceTitle: 'Голосовой ввод',

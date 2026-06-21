@@ -1,7 +1,11 @@
 import { db, stoneDisplayName } from '../db/instance'
 import type { Sharpening } from '../db/db'
+import { APP_VERSION } from '../version'
 
 const ENDPOINT = import.meta.env.VITE_ANALYTICS_URL as string | undefined
+
+// Один id на загрузку страницы — группирует события в «сессию».
+const SESSION_ID = crypto.randomUUID()
 
 async function getDeviceId(): Promise<string> {
   const existing = await db.settings.get('analyticsDeviceId')
@@ -40,6 +44,60 @@ export async function flushAnalyticsQueue(): Promise<void> {
       break
     }
   }
+}
+
+// ─── Обобщённые продуктовые события ─────────────────────────────────────────
+// ВАЖНО: в события НИКОГДА не уходит PII — имена клиентов, телефоны, телеграм,
+// фото, тексты комментариев. Только enum'ы, счётчики, флаги, случайный deviceId.
+
+function displayMode(): 'standalone' | 'browser' {
+  const standalone =
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    (navigator as { standalone?: boolean }).standalone
+  return standalone ? 'standalone' : 'browser'
+}
+
+// Базовый контекст — цепляется к app_open и воронке установки (где он важен
+// для разбора), не к каждому мелкому событию.
+export function baseContext() {
+  return {
+    displayMode: displayMode(),
+    online: navigator.onLine,
+    lang: navigator.language,
+    appVersion: APP_VERSION,
+    ua: navigator.userAgent,
+  }
+}
+
+// Универсальная отправка события. Та же труба, что и trackSharpening:
+// guard на endpoint + opt-out, при сбое сети — в офлайн-очередь.
+export async function track(event: string, props: Record<string, unknown> = {}): Promise<void> {
+  if (!ENDPOINT) return
+  if (!(await isAnalyticsEnabled())) return
+
+  const deviceId = await getDeviceId()
+  const payload = {
+    event,
+    deviceId,
+    sessionId: SESSION_ID,
+    ts: new Date().toISOString(),
+    ...props,
+  }
+
+  try {
+    await sendPayload(payload)
+  } catch {
+    enqueue(payload).catch(() => {})
+  }
+}
+
+// Анти-спам: событие шлётся не более одного раза за загрузку страницы.
+// Для частых триггеров (голос распознаёт по слову — иначе десятки строк).
+const onceSent = new Set<string>()
+export function trackOnce(event: string, props: Record<string, unknown> = {}): void {
+  if (onceSent.has(event)) return
+  onceSent.add(event)
+  track(event, props).catch(() => {})
 }
 
 export async function trackSharpening(sharpening: Sharpening): Promise<void> {

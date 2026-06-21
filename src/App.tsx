@@ -11,12 +11,26 @@ import OnboardingSheet from './components/OnboardingSheet/OnboardingSheet'
 import FolderBackupPrompt from './components/FolderBackupPrompt/FolderBackupPrompt'
 import DataLossAlert from './components/DataLossAlert/DataLossAlert'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
-import { flushAnalyticsQueue } from './services/analytics'
+import { flushAnalyticsQueue, track, baseContext } from './services/analytics'
 import { db } from './db/instance'
 import { purgeExpired } from './utils/trash'
 import { healFolderBackupIfNeeded, performFolderBackup, writeSentinel } from './utils/backup'
 
 const PURGE_INTERVAL_MS = 12 * 60 * 60 * 1000
+const APP_OPEN_DEBOUNCE_MS = 30 * 60 * 1000
+
+// app_open: при загрузке и при возврате во вкладку с паузой ≥30 мин. По
+// deviceId+дате считается DAU/retention, по displayMode — доля установивших PWA.
+function trackAppOpen() {
+  const last = Number(sessionStorage.getItem('lastOpenAt') ?? 0)
+  if (Date.now() - last < APP_OPEN_DEBOUNCE_MS) return
+  sessionStorage.setItem('lastOpenAt', String(Date.now()))
+  track('app_open', {
+    ...baseContext(),
+    referrer: document.referrer || null,
+    src: new URLSearchParams(location.search).get('src'),
+  }).catch(() => {})
+}
 
 async function runPurgeIfDue() {
   try {
@@ -35,8 +49,11 @@ async function runPurgeIfDue() {
 export default function App() {
   useEffect(() => {
     flushAnalyticsQueue()
+    trackAppOpen()
     navigator.storage?.persist?.()
     window.addEventListener('online', flushAnalyticsQueue)
+    const onVisible = () => { if (document.visibilityState === 'visible') trackAppOpen() }
+    document.addEventListener('visibilitychange', onVisible)
     runPurgeIfDue()
     healFolderBackupIfNeeded(db).catch(() => {})
     writeSentinel(db).catch(() => {})
@@ -52,6 +69,7 @@ export default function App() {
 
     return () => {
       window.removeEventListener('online', flushAnalyticsQueue)
+      document.removeEventListener('visibilitychange', onVisible)
       navigator.serviceWorker?.removeEventListener('message', handleSWMessage)
     }
   }, [])

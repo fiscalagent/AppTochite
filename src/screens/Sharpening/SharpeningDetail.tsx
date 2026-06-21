@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams, useLocation, useBlocker } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStone, type Stone, type GritSource, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
-import { trackSharpening } from '../../services/analytics'
+import { trackSharpening, track } from '../../services/analytics'
 import { performFolderBackup, writeSentinel } from '../../utils/backup'
 import { getAltGrits, fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
@@ -830,8 +830,8 @@ export default function SharpeningDetail() {
 
       {pickerOpen && (
         <PhotoSourceSheet
-          onCamera={() => openCamera(b64 => setPhotosAfter(prev => [...prev, b64]))}
-          onGallery={() => openGallery(b64 => setPhotosAfter(prev => [...prev, b64]))}
+          onCamera={() => openCamera(b64 => { setPhotosAfter(prev => [...prev, b64]); track('photo_added', { phase: 'after', source: 'camera' }).catch(() => {}) })}
+          onGallery={() => openGallery(b64 => { setPhotosAfter(prev => [...prev, b64]); track('photo_added', { phase: 'after', source: 'gallery' }).catch(() => {}) })}
           onClose={() => setPickerOpen(false)}
         />
       )}

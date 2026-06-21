@@ -162,6 +162,7 @@ export const en = {
     trashCount: (n: number) => `Trash (${n})`,
     telegramGroup: 'Telegram group AppTochite',
     website: 'App website',
+    installApp: 'Install app',
     analyticsTitle: 'Anonymous analytics',
     analyticsDesc: 'Stones and knives without personal data — helps improve the reference',
     voiceTitle: 'Voice input',

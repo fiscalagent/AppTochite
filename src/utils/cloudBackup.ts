@@ -1,5 +1,6 @@
 import type { AppTochiteDB } from '../db/instance'
 import { exportBackup, mergeBackup, isValidBackup, reviveDates, type BackupFile, type MergeStats } from './backup'
+import { track } from '../services/analytics'
 
 // ─── Константы ───────────────────────────────────────────────────────────────
 
@@ -331,6 +332,7 @@ export async function performCloudBackup(database: AppTochiteDB): Promise<void> 
     }
 
     await recordUploadSuccess(database, backup, token, deviceId)
+    track('cloud_upload', { trigger: 'auto' }).catch(() => {})
   } catch (err) {
     await clearDayGate()
     throw err

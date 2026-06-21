@@ -1,3 +1,4 @@
+import { trackOnce } from '../../services/analytics'
 import { useT } from '../../i18n'
 import s from './DictationButton.module.css'
 
@@ -36,7 +37,7 @@ export default function DictationButton({ isAvailable, isActive, onToggle }: Pro
   return (
     <button
       className={`${s.btn} ${isActive ? s.active : ''}`}
-      onClick={onToggle}
+      onClick={() => { if (!isActive) trackOnce('dictation_used'); onToggle() }}
       title={isActive ? t.components.voiceStopDictation : t.components.voiceStartDictation}
       type="button"
     >

@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { db } from '../../db/instance'
 import { startBlur } from '../../utils/modalBlur'
+import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 import { useT } from '../../i18n'
 import s from './OnboardingSheet.module.css'
 
 export default function OnboardingSheet() {
   const [visible, setVisible] = useState(false)
+  const { canInstall, promptInstall } = useInstallPrompt()
   const t = useT()
 
   useEffect(() => {
@@ -41,6 +43,11 @@ export default function OnboardingSheet() {
         <button className={s.primary} onClick={openGuide}>
           {t.components.onboardingOpen}
         </button>
+        {canInstall && (
+          <button className={s.skip} onClick={() => { promptInstall(); dismiss() }}>
+            {t.about.installApp}
+          </button>
+        )}
         <button className={s.skip} onClick={dismiss}>{t.components.onboardingSkip}</button>
       </div>
     </div>,
