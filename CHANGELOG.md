@@ -1,3 +1,10 @@
+# [1.99.0](https://github.com/fiscalagent/AppTochite/compare/v1.98.1...v1.99.0) (2026-06-21)
+
+
+### feat
+
+* мини-игра «Верный угол» — тренажёр глазомера на угол заточки ([](https://github.com/fiscalagent/AppTochite/commit/36ec1080cbf68ad2cad870eec0b4dd10f979f10a))
+
 ## [1.98.1](https://github.com/fiscalagent/AppTochite/compare/v1.98.0...v1.98.1) (2026-06-21)
 
 
