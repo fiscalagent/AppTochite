@@ -222,6 +222,7 @@ export const en = {
     filters: { all: 'All', accepted: 'Accepted', done: 'Done' } as Record<string, string>,
     notFound: 'Nothing found',
     empty: 'No sharpenings yet',
+    doneTotal: (n: number) => `${n} sharpened`,
     loadMore: (n: number, rest: number) => `${n} more of ${rest}`,
   },
 
