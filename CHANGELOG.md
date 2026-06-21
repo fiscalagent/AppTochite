@@ -1,3 +1,10 @@
+# [1.101.0](https://github.com/fiscalagent/AppTochite/compare/v1.100.0...v1.101.0) (2026-06-21)
+
+
+### feat
+
+* кнопка «Установить приложение» на экране «О программе» и в онбординге ([](https://github.com/fiscalagent/AppTochite/commit/7eb9006e02907929ad8f3ac7ef6b6038077c8ab9))
+
 # [1.100.0](https://github.com/fiscalagent/AppTochite/compare/v1.99.0...v1.100.0) (2026-06-21)
 
 
