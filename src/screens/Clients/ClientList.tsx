@@ -5,6 +5,7 @@ import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
+import { track } from '../../services/analytics'
 import { useT, useLocale } from '../../i18n'
 import type { Locale } from '../../i18n/locale'
 import type { Client } from '../../db/instance'
@@ -78,6 +79,7 @@ export default function ClientList() {
   const { locale, setLocale } = useLocale()
 
   async function handleShare() {
+    track('app_shared', { native: !!navigator.share }).catch(() => {})
     const data = { title: t.clients.shareTitle, text: t.clients.shareText, url: SHARE_URL }
     try {
       if (navigator.share) {
