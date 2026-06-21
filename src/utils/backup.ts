@@ -414,6 +414,11 @@ export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
   await rotateDailyIfNeeded(root, database)
 
   const backup = await exportBackup(database)
+
+  if (!isValidBackup(backup) || backup.data.clients.length === 0) {
+    throw new Error('OPFS backup aborted: DB appears empty')
+  }
+
   const json = JSON.stringify(backup)
   const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
   const writable = await fileHandle.createWritable()
