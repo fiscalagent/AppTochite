@@ -70,6 +70,11 @@ export default function HistoryFeed() {
     })
   }, [data, filter, query])
 
+  const doneTotal = useMemo(
+    () => (data ?? []).filter(({ sh }) => sh.status === 'done').length,
+    [data],
+  )
+
   const visible = filtered.slice(0, visibleCount)
   const hasMore = visibleCount < filtered.length
 
@@ -88,6 +93,7 @@ export default function HistoryFeed() {
     <div className={s.screen}>
       <div className={s.header}>
         <span className={s.title}>{t.history.title}</span>
+        {doneTotal > 0 && <span className={s.total}>{t.history.doneTotal(doneTotal)}</span>}
       </div>
 
       <div className={s.searchWrap}>

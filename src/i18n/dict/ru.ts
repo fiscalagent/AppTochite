@@ -181,6 +181,7 @@ export const ru = {
     filters: { all: 'Все', accepted: 'Принят', done: 'Готов' } as Record<string, string>,
     notFound: 'Ничего не найдено',
     empty: 'Заточек пока нет',
+    doneTotal: (n: number) => `заточено ${n}`,
     loadMore: (n: number, rest: number) => `Ещё ${n} из ${rest}`,
   },
 
