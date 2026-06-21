@@ -6,6 +6,7 @@ import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
 import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
+import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 import { useLocale, fmtDateTimeLong } from '../../i18n'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
@@ -43,6 +44,8 @@ export default function AboutScreen() {
     ])
     return c + s
   }, []) ?? 0
+
+  const { canInstall, promptInstall } = useInstallPrompt()
 
   const [voiceOn, setVoiceOn] = useState(() => isVoiceEnabled())
 
@@ -122,6 +125,13 @@ export default function AboutScreen() {
         <p className={s.sectionTitle}>{t.about.settingsSection}</p>
 
         <div className={s.linkList}>
+          {canInstall && !isPwa() && (
+            <button className={s.linkItem} onClick={() => promptInstall()}>
+              <span className={s.linkIcon}>📲</span>
+              <span className={s.linkLabel}>{t.about.installApp}</span>
+              <span className={s.linkArrow}><IconChevronRight /></span>
+            </button>
+          )}
           <button
             className={s.linkItem}
             onClick={() => window.open(`/AppTochite/guide${locale === 'en' ? '_en' : ''}.html`, '_blank')}

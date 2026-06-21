@@ -21,6 +21,11 @@ function weekYear(dateStr) {
 function doGet(e) {
   try {
     const data = JSON.parse(e.parameter.data)
+
+    // Обобщённые продуктовые события (track) идут с полем event → отдельный лист.
+    // Старый sharpening-payload (без event) — прежний путь ниже, лист raw.
+    if (data.event) return handleEvent(data)
+
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID)
     let sheet = ss.getSheetByName(SHEET_NAME)
 
@@ -64,6 +69,51 @@ function doGet(e) {
         ]])
       }
     }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON)
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON)
+  }
+}
+
+// Обобщённые продуктовые события (track) → лист "events".
+const EVENTS_SHEET = 'events'
+const EVENT_KNOWN_KEYS = ['event', 'deviceId', 'sessionId', 'ts', 'displayMode', 'appVersion', 'online', 'lang', 'ua', 'referrer', 'src']
+
+function handleEvent(data) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID)
+    let sheet = ss.getSheetByName(EVENTS_SHEET)
+    if (!sheet) {
+      sheet = ss.insertSheet(EVENTS_SHEET)
+      sheet.appendRow([
+        'ts', 'deviceId', 'sessionId', 'event',
+        'displayMode', 'appVersion', 'online', 'lang', 'ua', 'referrer', 'src',
+        'props', 'weekYear',
+      ])
+      sheet.setFrozenRows(1)
+      sheet.getRange('M:M').setNumberFormat('@') // weekYear как текст
+    }
+
+    // Всё, что не известная колонка, складываем в props (JSON).
+    const props = {}
+    for (const k in data) {
+      if (EVENT_KNOWN_KEYS.indexOf(k) === -1) props[k] = data[k]
+    }
+
+    const wy = data.ts ? weekYear(data.ts) : ''
+    const nextRow = sheet.getLastRow() + 1
+    sheet.getRange(nextRow, 13).setNumberFormat('@')
+    sheet.getRange(nextRow, 1, 1, 13).setValues([[
+      data.ts || '', data.deviceId || '', data.sessionId || '', data.event || '',
+      data.displayMode || '', data.appVersion || '', data.online, data.lang || '',
+      data.ua || '', data.referrer || '', data.src || '',
+      Object.keys(props).length ? JSON.stringify(props) : '', wy,
+    ]])
 
     return ContentService
       .createTextOutput(JSON.stringify({ ok: true }))

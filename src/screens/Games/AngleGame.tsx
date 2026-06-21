@@ -12,6 +12,7 @@ import {
   isTilted,
   contextKey,
 } from './angleLogic'
+import { track } from '../../services/analytics'
 import s from './AngleGame.module.css'
 
 const BEST_KEY = 'game.angle.best' // рекорд серии — в localStorage, вне бэкапа (как язык интерфейса)
@@ -25,6 +26,9 @@ function loadBest(): number {
 export default function AngleGame() {
   const navigate = useNavigate()
   const t = useT()
+
+  // Запуск игры — в events (частота использования тренажёров).
+  useEffect(() => { track('game_started', { game: 'angle' }).catch(() => {}) }, [])
 
   const [streak, setStreak] = useState(0)
   const [best, setBest] = useState(loadBest)

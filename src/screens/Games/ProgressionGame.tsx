@@ -5,6 +5,7 @@ import { db, type Stone } from '../../db/instance'
 import { getGritDisplay } from '../../data/gritTable'
 import { enumLabel, useT } from '../../i18n'
 import { ROUND_SIZE, micronOf, pickRound, isSolved } from './progressionLogic'
+import { track } from '../../services/analytics'
 import s from './ProgressionGame.module.css'
 
 const RANK_AT = [0, 3, 6, 10] // пороги по рекорду серии → индекс в t.game.ranks
@@ -18,6 +19,8 @@ function loadBest(): number {
 export default function ProgressionGame() {
   const navigate = useNavigate()
   const t = useT()
+  // Запуск игры — в events (частота использования тренажёров).
+  useEffect(() => { track('game_started', { game: 'progression' }).catch(() => {}) }, [])
   const stones = useLiveQuery(() => db.stones.toArray(), [])
 
   const pool = useMemo(() => (stones ?? []).filter(st => micronOf(st) != null), [stones])

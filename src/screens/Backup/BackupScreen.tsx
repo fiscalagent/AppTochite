@@ -22,6 +22,7 @@ const IconCopy = () => (
 
 const CARD_NUMBER = '2200 7006 1338 5722'
 import { db } from '../../db/instance'
+import { track } from '../../services/analytics'
 import { useToast } from '../../components/Toast/ToastContext'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
@@ -221,6 +222,7 @@ export default function BackupScreen() {
       const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
       downloadBlob(blob, `apptochite-${todayStr()}.json`)
       await updateLastBackupAt(db)
+      track('backup_manual').catch(() => {})
       showToast(t.backup.backupSaved)
     } finally {
       setExporting(false)
@@ -322,6 +324,7 @@ export default function BackupScreen() {
     try {
       const meta = await pickAndConnectFolder(db)
       setFolderMeta(meta)
+      track('folder_backup_connected').catch(() => {})
       showToast(t.backup.folderSaved)
     } catch (e) {
       if (e instanceof Error && e.name !== 'AbortError') showToast(t.backup.folderError)
@@ -377,6 +380,7 @@ export default function BackupScreen() {
     try {
       const result = await uploadToYandex(db, cloudToken)
       if (result === 'ok') {
+        track('cloud_upload', { trigger: 'manual' }).catch(() => {})
         showToast(t.backup.cloudSaved)
         await refreshCloud()
       } else if (result === 'auth-error') {
@@ -449,6 +453,7 @@ export default function BackupScreen() {
     try {
       await createPreRestoreSnapshot(db)
       await restoreBackup(db, preview)
+      track('backup_restore', { mode: 'replace' }).catch(() => {})
       showToast(t.backup.restored)
       navigate('/')
     } catch {
@@ -472,6 +477,7 @@ export default function BackupScreen() {
     try {
       await createPreRestoreSnapshot(db)
       const stats = await mergeBackup(db, preview)
+      track('backup_restore', { mode: 'merge' }).catch(() => {})
       setMergeStats(stats)
       setPreview(null)
       if (fileInputRef.current) fileInputRef.current.value = ''

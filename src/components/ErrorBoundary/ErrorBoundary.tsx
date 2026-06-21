@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { track } from '../../services/analytics'
 
 interface Props {
   /** имя виджета — попадёт в лог, чтобы понять, что именно упало */
@@ -27,6 +28,10 @@ export default class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, info: ErrorInfo) {
     const tag = this.props.name ? `[ErrorBoundary: ${this.props.name}]` : '[ErrorBoundary]'
     console.error(tag, error, info.componentStack)
+    track('error', {
+      name: this.props.name ?? 'unknown',
+      message: String(error?.message ?? error).slice(0, 300),
+    }).catch(() => {})
   }
 
   render() {

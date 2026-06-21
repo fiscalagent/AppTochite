@@ -7,6 +7,7 @@ import Autocomplete from '../../components/Autocomplete/Autocomplete'
 import { useToast } from '../../components/Toast/ToastContext'
 import { getGritDisplay, getGritSortValue, GRIT_TABLE, fromFepa, fromJis, fromMk, fromMicrons, type GritDisplayMode } from '../../data/gritTable'
 import { buildCSV } from '../../utils/backup'
+import { track } from '../../services/analytics'
 import { normSteel } from '../../utils/steelMatch'
 import { readSpreadsheet, detectColumns, extractRows, prepareImport, type ColumnMapping, type SkipReason, type PreparedKnife } from '../../utils/knifeImport'
 import { startBlur } from '../../utils/modalBlur'
@@ -1183,6 +1184,11 @@ function KnifeImportPreview({ grid, knives, steels, onClose }: {
         return { brand: k.name, steel, isCustom: true, updatedAt: now }
       }))
     })
+    track('reference_import', {
+      count: prepared.knives.length,
+      newSteels: newSteels.size,
+      skipped: prepared.skipped.length,
+    }).catch(() => {})
     const parts = [t.reference.importedKnives(prepared.knives.length)]
     if (newSteels.size > 0) parts.push(t.reference.newSteelsN(newSteels.size))
     if (prepared.skipped.length > 0) parts.push(t.reference.skippedN(prepared.skipped.length))

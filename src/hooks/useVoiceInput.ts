@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { track, trackOnce } from '../services/analytics'
 import type { Locale } from '../i18n'
 
 interface ISpeechRecognitionEvent {
@@ -120,6 +121,7 @@ export function useVoiceInput(locale: Locale = 'ru'): UseVoiceInputReturn {
 
     recognition.onresult = (e) => {
       if (mySession !== sessionIdRef.current) return
+      trackOnce('voice_used')
       const text = e.results[0][0].transcript
       onResult(text)
     }
@@ -133,7 +135,9 @@ export function useVoiceInput(locale: Locale = 'ru'): UseVoiceInputReturn {
       if (mySession !== sessionIdRef.current) return
       recognitionRef.current = null
       setIsListening(false)
-      onError?.(mapError(e.error))
+      const code = mapError(e.error)
+      if (code !== 'aborted') track('voice_failed', { code }).catch(() => {})
+      onError?.(code)
     }
 
     recognitionRef.current = recognition

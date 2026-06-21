@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../../db/instance'
 import { saveYandexToken, consumeOAuthState } from '../../utils/cloudBackup'
+import { track } from '../../services/analytics'
 
 // Обрабатывает редирект Яндекс OAuth: https://...#access_token=TOKEN&state=STATE
 // Если flow не был начат (нет state в sessionStorage) — мягкий редирект на /.
@@ -24,7 +25,10 @@ export default function OAuthCallback() {
     }
 
     saveYandexToken(db, token)
-      .then(() => navigate('/backup', { replace: true }))
+      .then(() => {
+        track('cloud_connected').catch(() => {})
+        navigate('/backup', { replace: true })
+      })
       .catch(() => navigate('/', { replace: true }))
   }, [navigate])
 

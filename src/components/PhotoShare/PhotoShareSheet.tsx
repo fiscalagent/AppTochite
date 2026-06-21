@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
+import { track } from '../../services/analytics'
 import { useT } from '../../i18n'
 import s from './PhotoShareSheet.module.css'
 
@@ -82,6 +83,7 @@ export default function PhotoShareSheet({ photos, onClose }: Props) {
       )
       if (navigator.share && navigator.canShare?.({ files })) {
         await navigator.share({ files })
+        track('photo_shared', { method: 'share', count: files.length }).catch(() => {})
       } else {
         for (const file of files) {
           const url = URL.createObjectURL(file)
@@ -93,6 +95,7 @@ export default function PhotoShareSheet({ photos, onClose }: Props) {
           document.body.removeChild(a)
           URL.revokeObjectURL(url)
         }
+        track('photo_shared', { method: 'download', count: files.length }).catch(() => {})
       }
     } catch {
       // cancelled

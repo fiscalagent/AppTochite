@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Sharpening } from '../../db/db'
 import { startBlur } from '../../utils/modalBlur'
+import { track } from '../../services/analytics'
 import { useT } from '../../i18n'
 import s from './PhotoReportSheet.module.css'
 
@@ -246,6 +247,7 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
 
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] })
+        track('report_shared', { method: 'share' }).catch(() => {})
       } else {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -255,6 +257,7 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
+        track('report_shared', { method: 'download' }).catch(() => {})
       }
     } catch {
       // cancelled

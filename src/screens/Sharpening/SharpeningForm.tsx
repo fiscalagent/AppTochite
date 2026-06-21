@@ -16,6 +16,7 @@ import DictationIndicator from '../../components/DictationIndicator/DictationInd
 import DictationCandidates from '../../components/DictationCandidates/DictationCandidates'
 import { isVoiceEnabled } from '../../config/features'
 import { uuid } from '../../utils/uuid'
+import { track } from '../../services/analytics'
 import { useLocale, enumLabel, fmtCurrencySymbol, ru } from '../../i18n'
 import s from './SharpeningForm.module.css'
 
@@ -559,6 +560,11 @@ export default function SharpeningForm() {
           }
           return Number(await db.sharpenings.add(acceptanceData))
         })
+        track('sharpening_created', {
+          repeat: !!repeat,
+          hasSteel: !!steel.trim(),
+          voice: !!opts.voiceTriggered,
+        }).catch(() => {})
         if (opts.voiceTriggered) showToast(t.sharpening.voice.acceptedVoice)
         // fromAcceptance: на Z-2 «назад» (верхняя и аппаратная) ведёт обратно на Z-1 этой заточки
         navigate(`/sharpenings/${savedId}`, { replace: true, state: { fromAcceptance: true } })
@@ -741,8 +747,8 @@ export default function SharpeningForm() {
 
       {pickerOpen && (
         <PhotoSourceSheet
-          onCamera={() => openCamera(b64 => setPhotosBefore(prev => [...prev, b64]))}
-          onGallery={() => openGallery(b64 => setPhotosBefore(prev => [...prev, b64]))}
+          onCamera={() => openCamera(b64 => { setPhotosBefore(prev => [...prev, b64]); track('photo_added', { phase: 'before', source: 'camera' }).catch(() => {}) })}
+          onGallery={() => openGallery(b64 => { setPhotosBefore(prev => [...prev, b64]); track('photo_added', { phase: 'before', source: 'gallery' }).catch(() => {}) })}
           onClose={() => setPickerOpen(false)}
         />
       )}
