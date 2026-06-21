@@ -457,6 +457,12 @@ export default function SharpeningDetail() {
       }
       await db.sharpenings.update(sharpeningId, updatedFields)
       if (sh) trackSharpening({ ...sh, ...updatedFields })
+      // Дублируем ключевое событие в events (в raw остаётся детальная запись).
+      track('sharpening_done', {
+        stoneCount: selectedStones.length,
+        hasAngle: !!angle,
+        hasPhotosAfter: photosAfter.length > 0,
+      }).catch(() => {})
       performFolderBackup(db).catch(() => {})
       writeSentinel(db).catch(() => {})
       navigate('/')
