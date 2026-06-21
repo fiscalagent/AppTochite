@@ -1,3 +1,10 @@
+# [1.100.0](https://github.com/fiscalagent/AppTochite/compare/v1.99.0...v1.100.0) (2026-06-21)
+
+
+### feat
+
+* кнопка «Поделиться приложением» на главном экране клиентов — ссылка на лендинг для сарафана ([](https://github.com/fiscalagent/AppTochite/commit/cb82fa37b96c48b216c44b5d679b6718eeaa5ca1))
+
 # [1.99.0](https://github.com/fiscalagent/AppTochite/compare/v1.98.1...v1.99.0) (2026-06-21)
 
 
