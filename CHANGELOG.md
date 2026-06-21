@@ -1,3 +1,15 @@
+# [1.98.0](https://github.com/fiscalagent/AppTochite/compare/v1.97.0...v1.98.0) (2026-06-21)
+
+
+### feat
+
+* счётчик заточенных ножей в шапке экрана «История» ([](https://github.com/fiscalagent/AppTochite/commit/63c0a3f039b6180b56485b38a4beacad1fea48dc))
+
+
+### fix
+
+* автобэкап не перезаписывает файл пустой базой данных ([](https://github.com/fiscalagent/AppTochite/commit/f400d2b94475ee97b2b7e9f5dd830a03842fc13a))
+
 # [1.97.0](https://github.com/fiscalagent/AppTochite/compare/v1.96.0...v1.97.0) (2026-06-21)
 
 
