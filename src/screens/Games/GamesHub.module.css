@@ -1,0 +1,111 @@
+.screen {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-8);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-200);
+  cursor: pointer;
+}
+
+.headTexts { min-width: 0; }
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--text-100);
+  line-height: 1;
+}
+
+.subtitle {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-300);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  background: var(--bg-200);
+  color: var(--text-100);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.card:not(:disabled):active { background: var(--bg-300); }
+.card:not(:disabled):hover { border-color: var(--border-200); }
+.card:disabled { opacity: 0.55; cursor: default; }
+
+.cardSpark {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.cardTexts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cardSub {
+  font-size: 13px;
+  color: var(--text-300);
+}
+
+.card svg { color: var(--text-300); flex-shrink: 0; }
+
+.soon {
+  flex-shrink: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+}

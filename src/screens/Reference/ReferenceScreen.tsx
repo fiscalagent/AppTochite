@@ -268,6 +268,16 @@ const IconHeatmap = () => (
   </svg>
 )
 
+const IconGames = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="6" y1="11" x2="10" y2="11"/>
+    <line x1="8" y1="9" x2="8" y2="13"/>
+    <line x1="15" y1="12" x2="15.01" y2="12"/>
+    <line x1="18" y1="10" x2="18.01" y2="10"/>
+    <rect x="2" y="6" width="20" height="12" rx="4"/>
+  </svg>
+)
+
 const HEATMAP_POSITIONS = [1, 2, 3, 4, 5] as const
 
 function heatColor(pct: number): string {
@@ -1545,6 +1555,9 @@ export default function ReferenceScreen() {
             </button>
             <button className={s.iconBtn} onClick={() => setShowHeatmap(true)}>
               <IconHeatmap />
+            </button>
+            <button className={s.iconBtn} onClick={() => navigate('/games')} aria-label={t.game.hubTitle}>
+              <IconGames />
             </button>
           </>
         )}

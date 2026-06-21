@@ -11,6 +11,8 @@ import BackupScreen from './screens/Backup/BackupScreen'
 import OAuthCallback from './screens/Backup/OAuthCallback'
 import AboutScreen from './screens/About/AboutScreen'
 import TrashScreen from './screens/Trash/TrashScreen'
+import GamesHub from './screens/Games/GamesHub'
+import ProgressionGame from './screens/Games/ProgressionGame'
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +31,8 @@ export const router = createBrowserRouter([
       { path: '/oauth/yandex/callback',   element: <OAuthCallback /> },
       { path: '/about',                   element: <AboutScreen /> },
       { path: '/trash',                   element: <TrashScreen /> },
+      { path: '/games',                   element: <GamesHub /> },
+      { path: '/games/progression',       element: <ProgressionGame /> },
     ],
   },
 ], { basename: '/AppTochite' })
