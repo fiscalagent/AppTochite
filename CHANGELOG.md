@@ -1,3 +1,10 @@
+# [1.97.0](https://github.com/fiscalagent/AppTochite/compare/v1.96.0...v1.97.0) (2026-06-21)
+
+
+### feat
+
+* игра «Расставь камни» — тренажёр зернистости в справочнике ([](https://github.com/fiscalagent/AppTochite/commit/ae9d3b1a62ec554057990e699c924cf8fdcdc1cf))
+
 # [1.96.0](https://github.com/fiscalagent/AppTochite/compare/v1.95.0...v1.96.0) (2026-06-11)
 
 
