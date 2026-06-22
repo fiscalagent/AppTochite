@@ -1,3 +1,10 @@
+# [1.102.0](https://github.com/fiscalagent/AppTochite/compare/v1.101.0...v1.102.0) (2026-06-22)
+
+
+### feat
+
+* добавлен угол микроподвода (МП) на экране заточки ([](https://github.com/fiscalagent/AppTochite/commit/ef3ff94989a7c0cf162c27c8f01cbd33bb9dc14c))
+
 # [1.101.0](https://github.com/fiscalagent/AppTochite/compare/v1.100.0...v1.101.0) (2026-06-21)
 
 
