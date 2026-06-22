@@ -152,13 +152,17 @@ function backupFilename(deviceId: string): string {
 // таблице. updatedAt бампится при любом create/update/delete/restore (см. trash.ts),
 // поэтому сигнатура ловит любые изменения, не сериализуя фото повторно.
 function dataSignature(data: BackupFile['data']): string {
-  const sig = (arr: { updatedAt?: Date }[]) => {
+  const sig = (arr: { id?: number; updatedAt?: Date }[]) => {
     let max = 0
+    let idSum = 0
     for (const r of arr) {
       const ts = r.updatedAt ? new Date(r.updatedAt).getTime() : 0
       if (ts > max) max = ts
+      idSum += r.id ?? 0
     }
-    return `${arr.length}:${max}`
+    // idSum ловит замену записи (delete+add) при неизменных count и max updatedAt:
+    // набор id меняется → сигнатура меняется.
+    return `${arr.length}:${max}:${idSum}`
   }
   return [data.clients, data.sharpenings, data.stones, data.steels, data.knives]
     .map(sig)
