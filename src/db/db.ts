@@ -47,6 +47,11 @@ export interface Sharpening {
   condition?: string[]
   receivedAt: Date
   angle?: number
+  // Микроподвод (МП): второй, более тупой угол, на который затачивается кромка
+  // после основного угла. Наличие значения = есть МП (галка в UI — производное).
+  // Неиндексированное поле — миграция схемы Dexie не нужна; в бэкап/merge едет
+  // вместе со спредом записи, как и прочие опциональные поля.
+  microbevelAngle?: number
   stones?: SharpeningStone[]
   comment?: string
   price?: number

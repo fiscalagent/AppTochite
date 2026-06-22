@@ -115,6 +115,8 @@ export default function SharpeningDetail() {
 
   // Editable sharpening fields
   const [angle, setAngle] = useState('')
+  const [microbevel, setMicrobevel] = useState(false)
+  const [microbevelAngle, setMicrobevelAngle] = useState('')
   const [selectedStones, setSelectedStones] = useState<SharpeningStone[]>([])
   const [stoneInput, setStoneInput] = useState('')
   const [comment, setComment] = useState('')
@@ -162,6 +164,8 @@ export default function SharpeningDetail() {
   useEffect(() => {
     if (!sh || initialized.current) return
     setAngle(sh.angle != null ? String(sh.angle) : '')
+    setMicrobevel(sh.microbevelAngle != null)
+    setMicrobevelAngle(sh.microbevelAngle != null ? String(sh.microbevelAngle) : '')
     setSelectedStones(sh.stones ?? [])
     setComment(sh.comment ?? '')
     setPhotosAfter(sh.photosAfter ?? [])
@@ -428,6 +432,7 @@ export default function SharpeningDetail() {
     try {
       await db.sharpenings.update(sharpeningId, {
         angle: angle ? Number(angle) : undefined,
+        microbevelAngle: microbevel && microbevelAngle ? Number(microbevelAngle) : undefined,
         stones: selectedStones.length ? selectedStones : undefined,
         comment: comment.trim() || undefined,
         photosAfter: photosAfter.length ? photosAfter : undefined,
@@ -448,6 +453,7 @@ export default function SharpeningDetail() {
       const doneAt = new Date()
       const updatedFields = {
         angle: angle ? Number(angle) : undefined,
+        microbevelAngle: microbevel && microbevelAngle ? Number(microbevelAngle) : undefined,
         stones: selectedStones.length ? selectedStones : undefined,
         comment: comment.trim() || undefined,
         photosAfter: photosAfter.length ? photosAfter : undefined,
@@ -456,7 +462,7 @@ export default function SharpeningDetail() {
         updatedAt: doneAt,
       }
       await db.sharpenings.update(sharpeningId, updatedFields)
-      if (sh) trackSharpening({ ...sh, ...updatedFields })
+      if (sh) trackSharpening({ ...sh, ...updatedFields }).catch(() => {})
       // Дублируем ключевое событие в events (в raw остаётся детальная запись).
       track('sharpening_done', {
         stoneCount: selectedStones.length,
@@ -624,6 +630,25 @@ export default function SharpeningDetail() {
             min={1}
             max={45}
           />
+          <label className={s.microbevelToggle}>
+            <input
+              type="checkbox"
+              checked={microbevel}
+              onChange={e => setMicrobevel(e.target.checked)}
+            />
+            <span>{t.sharpening.microbevelToggle}</span>
+          </label>
+          {microbevel && (
+            <input
+              value={microbevelAngle}
+              onChange={e => setMicrobevelAngle(e.target.value)}
+              placeholder={t.sharpening.microbevelPlaceholder}
+              type="number"
+              min={1}
+              max={45}
+              aria-label={t.sharpening.microbevelLabel}
+            />
+          )}
         </div>
 
         <div className={s.field}>

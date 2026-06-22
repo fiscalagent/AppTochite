@@ -269,6 +269,9 @@ export const en = {
     cover: 'cover',
     angleLabel: 'Sharpening angle, °',
     anglePlaceholder: '15',
+    microbevelToggle: 'Microbevel',
+    microbevelLabel: 'Microbevel angle, °',
+    microbevelPlaceholder: '20',
     stonesLabel: 'Stones',
     stonePlaceholder: 'Naniwa 1000, Shapton 2000…',
     createNewStone: '+ create new stone',
@@ -294,6 +297,7 @@ export const en = {
     saveError: 'Error saving',
     stoneAdded: (name: string) => `Stone added: ${name}`,
     stonesPrefix: 'Stones: ',
+    microbevelPrefix: 'MB',
     fieldLabels: {
       client: 'Client',
       knife: 'Knife',

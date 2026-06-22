@@ -32,7 +32,7 @@ function cornerScore(r: { brightness: number; std: number }) {
   return r.brightness * 0.65 + r.std * 0.35
 }
 
-function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening, stonesPrefix: string): Promise<void> {
+function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening, stonesPrefix: string, microbevelPrefix: string): Promise<void> {
   return new Promise(resolve => {
     const img = new Image()
     img.onload = () => {
@@ -98,7 +98,10 @@ function renderReport(canvas: HTMLCanvasElement, b64: string, sh: Sharpening, st
       ctx.font = font
 
       // Измеряем угол первым, чтобы гарантированно оставить под него место
-      const angleLabel = sh.angle != null ? `∠ ${sh.angle}°` : ''
+      const mbLabel = sh.microbevelAngle != null ? `${microbevelPrefix} ${sh.microbevelAngle}°` : ''
+      const angleLabel = sh.angle != null
+        ? (mbLabel ? `∠ ${sh.angle}° · ${mbLabel}` : `∠ ${sh.angle}°`)
+        : mbLabel
       const angleW = angleLabel ? ctx.measureText(angleLabel).width : 0
       const angleGap = angleW > 0 ? Math.round(w * 0.03) : 0
       const knifeMaxW = w - pad * 2 - angleW - angleGap
@@ -232,9 +235,9 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
 
   useEffect(() => {
     if (canvasRef.current) {
-      renderReport(canvasRef.current, photos[selected], sharpening, t.sharpening.stonesPrefix)
+      renderReport(canvasRef.current, photos[selected], sharpening, t.sharpening.stonesPrefix, t.sharpening.microbevelPrefix)
     }
-  }, [selected, photos, sharpening])
+  }, [selected, photos, sharpening, t.sharpening.stonesPrefix, t.sharpening.microbevelPrefix])
 
   async function handleShare() {
     if (!canvasRef.current) return

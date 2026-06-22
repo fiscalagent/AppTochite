@@ -791,7 +791,7 @@ export function buildSharpeningCSV(
 
   const headers = [
     '№ заточки', 'Дата приёмки', 'Дата готовности', 'Клиент', 'Нож', 'Сталь', 'HRC',
-    'Тип работы', 'Угол °', 'Порядок камня', 'Камень', 'Комментарий', 'Цена', 'Статус',
+    'Тип работы', 'Угол °', 'Угол МП °', 'Порядок камня', 'Камень', 'Комментарий', 'Цена', 'Статус',
   ]
 
   const rows: (string | number | null | undefined)[][] = []
@@ -808,6 +808,7 @@ export function buildSharpeningCSV(
       sh.hrc ?? '',
       sh.condition?.join(', ') ?? '',
       sh.angle ?? '',
+      sh.microbevelAngle ?? '',
     ]
     const suffix = [sh.comment ?? '', sh.price ?? '', ru.enums.status[sh.status] ?? sh.status]
 

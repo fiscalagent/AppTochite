@@ -283,6 +283,24 @@
   color: var(--text-300);
 }
 
+/* Микроподвод (МП) — галка под полем основного угла */
+.microbevelToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: 14px;
+  color: var(--text-200);
+  cursor: pointer;
+}
+
+.microbevelToggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
 /* Stone picker */
 .stoneTags {
   display: flex;

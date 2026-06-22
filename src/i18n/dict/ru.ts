@@ -230,6 +230,9 @@ export const ru = {
     cover: 'обложка',
     angleLabel: 'Угол заточки, °',
     anglePlaceholder: '15',
+    microbevelToggle: 'Микроподвод (МП)',
+    microbevelLabel: 'Угол микроподвода, °',
+    microbevelPlaceholder: '20',
     stonesLabel: 'Камни',
     stonePlaceholder: 'Naniwa 1000, Shapton 2000...',
     createNewStone: '+ создать новый камень',
@@ -255,6 +258,7 @@ export const ru = {
     saveError: 'Ошибка при сохранении',
     stoneAdded: (name: string) => `Камень добавлен: ${name}`,
     stonesPrefix: 'Камни: ',
+    microbevelPrefix: 'МП',
     fieldLabels: {
       client: 'Клиент',
       knife: 'Нож',
