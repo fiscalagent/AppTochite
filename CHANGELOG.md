@@ -1,3 +1,10 @@
+# [1.103.0](https://github.com/fiscalagent/AppTochite/compare/v1.102.0...v1.103.0) (2026-06-22)
+
+
+### feat
+
+* угол заточки и микроподвод регулируются ползунком с шагом 0,1° и шкалой 10–45° ([](https://github.com/fiscalagent/AppTochite/commit/37f6ead65d0a4a7759eae272978a301952c27329))
+
 # [1.102.0](https://github.com/fiscalagent/AppTochite/compare/v1.101.0...v1.102.0) (2026-06-22)
 
 
