@@ -88,7 +88,7 @@ export function useDictationMode(locale: Locale = 'ru'): UseDictationModeReturn 
   const consecutiveErrorsRef = useRef(0)
   const optsRef = useRef<DictationStartOptions | null>(null)
   const localeRef = useRef(locale)
-  localeRef.current = locale
+  useEffect(() => { localeRef.current = locale }, [locale])
 
   useEffect(() => {
     const SR = getSR()

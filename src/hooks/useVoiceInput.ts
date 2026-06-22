@@ -70,7 +70,7 @@ export function useVoiceInput(locale: Locale = 'ru'): UseVoiceInputReturn {
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const localeRef = useRef(locale)
-  localeRef.current = locale
+  useEffect(() => { localeRef.current = locale }, [locale])
   // Each session gets a unique id; callbacks check it to ignore late events
   // from a previous recognition that was replaced by a quick re-start.
   const sessionIdRef = useRef(0)
