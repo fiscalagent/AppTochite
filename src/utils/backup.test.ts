@@ -629,6 +629,7 @@ describe('getOPFSBackupMeta', () => {
   it('возвращает { date, size } после записи бэкапа', async () => {
     const root = mockOPFS()
     const db = makeDB(); await db.open()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
     await performOPFSBackup(db)
     db.close(); await db.delete()
 
@@ -719,6 +720,7 @@ describe('performOPFSBackup', () => {
 
   it('обновляет lastBackupAt в settings', async () => {
     mockOPFS()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
     const before = Date.now()
     await performOPFSBackup(db)
     const entry = await db.settings.get('lastBackupAt')
@@ -759,6 +761,7 @@ describe('daily backup rotation', () => {
 
   it('первый прогон не создаёт daily (нет ещё auto)', async () => {
     const root = mockOPFS()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
     await performOPFSBackup(db)
     const dailyFiles = [...root.files.keys()].filter(n => n.startsWith('apptochite-daily-'))
     expect(dailyFiles).toHaveLength(0)
@@ -767,6 +770,7 @@ describe('daily backup rotation', () => {
 
   it('второй прогон в тот же день не создаёт daily', async () => {
     const root = mockOPFS()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
     await performOPFSBackup(db)
     await performOPFSBackup(db)
     const dailyFiles = [...root.files.keys()].filter(n => n.startsWith('apptochite-daily-'))
@@ -814,6 +818,7 @@ describe('daily backup rotation', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
 
     vi.setSystemTime(day1)
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
     await performOPFSBackup(db)
 
     vi.setSystemTime(day2)
@@ -829,6 +834,7 @@ describe('daily backup rotation', () => {
 
   it('integrity-check проваливается — auto удаляется, lastBackupAt не обновляется', async () => {
     const root = mockOPFS()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
     // Подменяем createWritable так, чтобы запись auto.json молча провалилась.
     await performOPFSBackup(db)  // первый успешный
     const beforeMs = (await db.settings.get('lastBackupAt'))!.value as string
