@@ -1,0 +1,97 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  background: var(--bg-200);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-3) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-200);
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-2);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-100);
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-300);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.steps {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.num {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepText {
+  font-size: 15px;
+  color: var(--text-100);
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.shareIcon {
+  color: var(--accent);
+  vertical-align: middle;
+}
+
+.primary {
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  width: 100%;
+  text-align: center;
+  margin-top: var(--space-2);
+  font-family: var(--font-body);
+}

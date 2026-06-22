@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
+import { isIosInstallable } from '../../utils/platform'
 import { track } from '../../services/analytics'
 import { useT } from '../../i18n'
+import IosInstallSheet from './IosInstallSheet'
 import s from './InstallNudgeSheet.module.css'
 
 // Просьба установить PWA в момент ценности — сразу после первой завершённой
@@ -25,6 +27,7 @@ export default function InstallNudgeSheet() {
   const { canInstall, promptInstall } = useInstallPrompt()
   const [show, setShow] = useState(false)
   const t = useT()
+  const ios = isIosInstallable()
 
   useEffect(() => {
     const maybeShow = () => {
@@ -35,18 +38,25 @@ export default function InstallNudgeSheet() {
     return () => window.removeEventListener(NUDGE_EVENT, maybeShow)
   }, [])
 
-  // Показываем только когда установка реально доступна (Chrome/YaBrowser отдали
-  // beforeinstallprompt). На iOS canInstall=false — флаг просто лежит, гайд отдельно.
-  const visible = show && canInstall
+  // install — системный промпт (Chrome/YaBrowser); ios — инструкция (Safari).
+  // Если установка недоступна вовсе — ничего не показываем.
+  const mode: 'install' | 'ios' | null = !show ? null : canInstall ? 'install' : ios ? 'ios' : null
 
   useEffect(() => {
-    if (!visible) return
+    if (!mode) return
     localStorage.setItem(SEEN_KEY, 'shown')
-    track('install_nudge_shown', { trigger: 'after_sharpening' }).catch(() => {})
-    return startBlur()
-  }, [visible])
+    if (mode === 'install') {
+      track('install_nudge_shown', { trigger: 'after_sharpening' }).catch(() => {})
+      return startBlur()
+    }
+  }, [mode])
 
-  if (!visible) return null
+  // iOS: программного промпта нет — показываем инструкцию (она сама шлёт событие и блюрит фон).
+  if (mode === 'ios') {
+    return <IosInstallSheet trigger="after_sharpening" onClose={() => { snoozeBanner(); setShow(false) }} />
+  }
+
+  if (mode !== 'install') return null
 
   function close() {
     track('install_nudge_dismissed', { trigger: 'after_sharpening' }).catch(() => {})

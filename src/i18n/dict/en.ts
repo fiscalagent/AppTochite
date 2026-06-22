@@ -576,6 +576,14 @@ export const en = {
     installLater: 'Later',
     installBannerText: 'Like the app? Launch it with one tap from your home screen, works offline.',
     installBannerClose: 'Close',
+    installHowto: 'How to install',
+
+    iosInstallTitle: 'Add to your Home Screen',
+    iosInstallIntro: 'Then your journal opens with one tap and works offline.',
+    iosStep1: 'Tap Share in the Safari toolbar',
+    iosStep2: 'Choose “Add to Home Screen”',
+    iosStep3: 'Tap “Add”',
+    iosInstallGot: 'Got it',
 
     folderPromptTitle: 'Protect your data from Chrome cleanup',
     folderPromptBody: 'Auto-backup is stored in the same place as app data. If Chrome clears its storage — both will be gone. A folder backup is a separate file that Chrome cannot touch.',
