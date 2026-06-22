@@ -1,3 +1,10 @@
+# [1.105.0](https://github.com/fiscalagent/AppTochite/compare/v1.104.0...v1.105.0) (2026-06-22)
+
+
+### feat
+
+* подсказка для iPhone — как добавить приложение на экран «Домой» через Safari ([](https://github.com/fiscalagent/AppTochite/commit/57957cf705b99ce1e3a1fff9eb59c0d237161203))
+
 # [1.104.0](https://github.com/fiscalagent/AppTochite/compare/v1.103.0...v1.104.0) (2026-06-22)
 
 
