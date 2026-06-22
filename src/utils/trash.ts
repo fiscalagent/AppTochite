@@ -7,6 +7,10 @@ export async function softDeleteClient(database: AppTochiteDB, clientId: number)
   const batchId = uuid()
   const now = new Date()
   await database.transaction('rw', [database.clients, database.sharpenings], async () => {
+    // Инвариант БД: нулевой клиент «Я» (isSelf) не удаляется. UI прячет кнопку
+    // удаления для него — это защита на случай прямого вызова (например, voice-пути).
+    const client = await database.clients.get(clientId)
+    if (!client || client.isSelf) return
     await database.clients.update(clientId, { deletedAt: now, deletedBatchId: batchId, updatedAt: now })
     const sharpenings = await database.sharpenings.where('clientId').equals(clientId).toArray()
     for (const sh of sharpenings) {
