@@ -570,6 +570,13 @@ export const en = {
     onboardingOpen: 'Open guide',
     onboardingSkip: 'Skip',
 
+    installNudgeTitle: 'Sharpening saved 👍',
+    installNudgeBody: 'Add AppTochite to your home screen — your journal always at hand, one tap away, even offline.',
+    installAction: 'Install',
+    installLater: 'Later',
+    installBannerText: 'Like the app? Launch it with one tap from your home screen, works offline.',
+    installBannerClose: 'Close',
+
     folderPromptTitle: 'Protect your data from Chrome cleanup',
     folderPromptBody: 'Auto-backup is stored in the same place as app data. If Chrome clears its storage — both will be gone. A folder backup is a separate file that Chrome cannot touch.',
     folderPromptPick: 'Choose backup folder',

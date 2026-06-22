@@ -550,6 +550,13 @@ export const ru = {
     onboardingOpen: 'Открыть инструкцию',
     onboardingSkip: 'Пропустить',
 
+    installNudgeTitle: 'Заточка записана 👍',
+    installNudgeBody: 'Поставьте AppTochite на экран — журнал всегда под рукой и открывается одним касанием, даже без интернета.',
+    installAction: 'Установить',
+    installLater: 'Потом',
+    installBannerText: 'Понравилось приложение? Запускайте одним нажатием с домашнего экрана, работает офлайн.',
+    installBannerClose: 'Закрыть',
+
     folderPromptTitle: 'Защитите данные от очистки Chrome',
     folderPromptBody: 'Авто-бэкап хранится в том же месте, что и данные приложения. Если Chrome очистит хранилище — оба пропадут. Бэкап в папку — отдельный файл, который Chrome не трогает.',
     folderPromptPick: 'Выбрать папку для бэкапа',

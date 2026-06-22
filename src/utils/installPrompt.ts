@@ -41,13 +41,14 @@ export function subscribe(fn: (canInstall: boolean) => void): () => void {
   return () => subscribers.delete(fn)
 }
 
-// Показ системного диалога установки + замер исхода воронки.
-export async function promptInstall(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
+// Показ системного диалога установки + замер исхода воронки. trigger — откуда
+// позвали (onboarding/about/after_sharpening/banner), чтобы видеть конверсию по точкам.
+export async function promptInstall(trigger = 'unknown'): Promise<'accepted' | 'dismissed' | 'unavailable'> {
   if (!deferred) return 'unavailable'
-  track('install_prompt_shown', baseContext()).catch(() => {})
+  track('install_prompt_shown', { ...baseContext(), trigger }).catch(() => {})
   await deferred.prompt()
   const { outcome } = await deferred.userChoice
-  track('install_choice', { outcome }).catch(() => {})
+  track('install_choice', { outcome, trigger }).catch(() => {})
   deferred = null // повторно один и тот же event использовать нельзя
   notify()
   return outcome

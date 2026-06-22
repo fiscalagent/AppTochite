@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useLocation, useBlocker } from 'react-rou
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStone, type Stone, type GritSource, MK_VALUES, stoneDisplayName, compareStonesForSort } from '../../db/instance'
 import { trackSharpening, track } from '../../services/analytics'
+import { getCanInstall } from '../../utils/installPrompt'
 import { performFolderBackup, writeSentinel } from '../../utils/backup'
 import { getAltGrits, fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
@@ -516,6 +517,12 @@ export default function SharpeningDetail() {
       }).catch(() => {})
       performFolderBackup(db).catch(() => {})
       writeSentinel(db).catch(() => {})
+      // Момент ценности: только что записали заточку → предлагаем поставить PWA.
+      // Один раз за всё время и только если установка реально доступна.
+      if (getCanInstall() && localStorage.getItem('installNudgeSeen') == null) {
+        localStorage.setItem('installNudgeSeen', 'pending')
+        window.dispatchEvent(new Event('apptochite:install-nudge'))
+      }
       navigate('/')
     } catch {
       showToast(t.sharpening.saveError)

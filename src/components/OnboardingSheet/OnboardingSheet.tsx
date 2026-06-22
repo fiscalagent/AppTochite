@@ -44,7 +44,7 @@ export default function OnboardingSheet() {
           {t.components.onboardingOpen}
         </button>
         {canInstall && (
-          <button className={s.skip} onClick={() => { promptInstall(); dismiss() }}>
+          <button className={s.skip} onClick={() => { promptInstall('onboarding'); dismiss() }}>
             {t.about.installApp}
           </button>
         )}

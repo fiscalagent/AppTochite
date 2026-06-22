@@ -126,7 +126,7 @@ export default function AboutScreen() {
 
         <div className={s.linkList}>
           {canInstall && !isPwa() && (
-            <button className={s.linkItem} onClick={() => promptInstall()}>
+            <button className={s.linkItem} onClick={() => promptInstall('about')}>
               <span className={s.linkIcon}>📲</span>
               <span className={s.linkLabel}>{t.about.installApp}</span>
               <span className={s.linkArrow}><IconChevronRight /></span>

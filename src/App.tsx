@@ -8,6 +8,7 @@ import BackupReminder from './components/BackupReminder/BackupReminder'
 import StorageWarning from './components/StorageWarning/StorageWarning'
 import BrowserWarning from './components/BrowserWarning/BrowserWarning'
 import OnboardingSheet from './components/OnboardingSheet/OnboardingSheet'
+import InstallNudgeSheet from './components/InstallNudge/InstallNudgeSheet'
 import FolderBackupPrompt from './components/FolderBackupPrompt/FolderBackupPrompt'
 import DataLossAlert from './components/DataLossAlert/DataLossAlert'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
@@ -48,6 +49,8 @@ async function runPurgeIfDue() {
 
 export default function App() {
   useEffect(() => {
+    // Счётчик запусков (вне бэкапа) — для баннера установки «для возвращающихся».
+    localStorage.setItem('launchCount', String(Number(localStorage.getItem('launchCount') ?? 0) + 1))
     flushAnalyticsQueue()
     trackAppOpen()
     navigator.storage?.persist?.()
@@ -83,6 +86,7 @@ export default function App() {
           <ErrorBoundary name="BackupReminder"><BackupReminder /></ErrorBoundary>
           <ErrorBoundary name="StorageWarning"><StorageWarning /></ErrorBoundary>
           <ErrorBoundary name="OnboardingSheet"><OnboardingSheet /></ErrorBoundary>
+          <ErrorBoundary name="InstallNudgeSheet"><InstallNudgeSheet /></ErrorBoundary>
         <ErrorBoundary name="FolderBackupPrompt"><FolderBackupPrompt /></ErrorBoundary>
         <ErrorBoundary name="DataLossAlert"><DataLossAlert /></ErrorBoundary>
         </AutoBackupProvider>
