@@ -197,6 +197,7 @@ export default function BackupScreen() {
       })
     }
     refreshOpfsMeta()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch-on-mount: setState только после await
     refreshCloud()
   }, [refreshOpfsMeta, refreshCloud])
 
@@ -263,6 +264,7 @@ export default function BackupScreen() {
 
   useEffect(() => {
     let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- эффект пересобирает CSV при изменении данных (lastBackupTick)
     setPreparingCsv(true)
     Promise.all([db.clients.toArray(), db.sharpenings.orderBy('receivedAt').toArray()])
       .then(([allClients, allSharpenings]) => {
@@ -281,7 +283,7 @@ export default function BackupScreen() {
       .catch(() => {})
       .finally(() => { if (!cancelled) setPreparingCsv(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [lastBackupTick])
 
   function handleShare() {
     if (!shareFile) return
