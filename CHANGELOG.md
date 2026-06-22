@@ -1,3 +1,10 @@
+# [1.104.0](https://github.com/fiscalagent/AppTochite/compare/v1.103.0...v1.104.0) (2026-06-22)
+
+
+### feat
+
+* предложение установить приложение — после первой заточки и баннером для возвращающихся ([](https://github.com/fiscalagent/AppTochite/commit/d82f9ea4e1e187444ad5563f1b896cbda0b3eb22))
+
 # [1.103.0](https://github.com/fiscalagent/AppTochite/compare/v1.102.0...v1.103.0) (2026-06-22)
 
 
