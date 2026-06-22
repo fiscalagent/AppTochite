@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Локальные секреты сборки (VITE_*) — значения приходят из GitHub Actions
+.env
+
 # Нагрузочные бэкапы — генерируются через scripts/generate-*.mjs, не для репо
 load-test-backup.json
 photo-load-test-backup.json
