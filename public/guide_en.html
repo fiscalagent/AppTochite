@@ -319,7 +319,7 @@
       <div class="app-icon">🔪</div>
       <div class="header-title">
         <h1>AppTochite</h1>
-        <p>Knife Sharpener's Log &nbsp;·&nbsp; v1.79.0</p>
+        <p>Knife Sharpener's Log &nbsp;·&nbsp; v1.103.0</p>
       </div>
     </div>
     <div class="header-qr">
@@ -405,6 +405,7 @@
           <strong>⚠️ Don't open the link inside a messenger!</strong> If you follow it directly from Telegram, WhatsApp or Instagram — the app will open in an in-app browser where it <strong>cannot be installed and data won't be saved</strong>. Open Chrome (Android) or Safari (iPhone) first and type the address manually.
         </div>
         <div class="note">💡 Internet is only needed on first launch. After that the app works offline.</div>
+        <div class="note green">📲 <strong>Easiest of all</strong> — the app offers an <em>"Install app"</em> button itself: it appears on the welcome screen on first launch and in <em>"About"</em> (💾 icon). One tap and the shortcut is on your home screen.</div>
       </div>
 
     </div>
@@ -453,7 +454,7 @@
           </li>
           <li>
             <span class="sn">5</span>
-            <span class="st"><strong>Step 2 — Sharpening:</strong> enter the angle, stones and price. Add before/after photos — optional. Tap <em>"Done"</em> to close the sharpening, or <em>"Accepted"</em> to save and return later</span>
+            <span class="st"><strong>Step 2 — Sharpening:</strong> set the angle with a slider (10–45° scale, 0.1° step), optionally enable a <strong>microbevel</strong> (defaults to 2° blunter than the main angle), then add stones and a price. Before/after photos — optional. Tap <em>"Done"</em> to close the sharpening, or <em>"Accepted"</em> to save and return later</span>
           </li>
           <li>
             <span class="sn">6</span>
@@ -514,7 +515,7 @@
       &nbsp;&nbsp;✈️ <a href="https://t.me/Apptochite">t.me/Apptochite</a>
     </div>
     <div class="footer-r">
-      Version 1.79.0 · June 2026<br>
+      Version 1.103.0 · June 2026<br>
       Page 1 of 2 — installation and usage
     </div>
   </div>
@@ -538,8 +539,8 @@
 
   <!-- DATA WARNING -->
   <div class="warn">
-    <strong>⚠️ Data is stored only on your phone!</strong><br>
-    If you clear the browser, reset or lose your phone — everything will be gone with no way to recover it. <strong>Make a file backup every week and keep it somewhere other than your phone.</strong>
+    <strong>⚠️ Data is stored on your phone!</strong><br>
+    If you clear the browser, reset or lose your phone — your data is gone. <strong>Connect Yandex.Disk for automatic cloud backup, or make a file backup once a week.</strong>
   </div>
 
   <!-- TWO COLUMNS -->
@@ -552,9 +553,26 @@
       <div class="section green">
         <div class="section-title"><span class="num">3</span> Backup — how to save your data</div>
 
-        <div class="note green" style="margin-top:0;">🔄 <strong>Auto-backup is already on:</strong> every time you open the app it saves a copy internally. But this copy lives <strong>on the same phone</strong> — if you clear the browser or lose your phone, it's gone too. Make sure to do a file backup as described below.</div>
+        <div class="note green" style="margin-top:0;">🔄 <strong>Auto-backup is already on:</strong> every time you open the app it saves a copy of your data internally. But this copy lives <strong>on the same phone</strong> — if you clear the browser or lose your phone, it's gone too. Connect Yandex.Disk or make a file backup below.</div>
 
-        <div class="sub-title mt">File backup (the important one)</div>
+        <div class="sub-title mt">☁️ Yandex.Disk (recommended)</div>
+        <ul class="steps">
+          <li>
+            <span class="sn">1</span>
+            <span class="st">Open <strong>"Backup"</strong> (💾 icon) → <strong>"Yandex.Disk"</strong> section → tap <strong>"Connect Yandex.Disk"</strong></span>
+          </li>
+          <li>
+            <span class="sn">2</span>
+            <span class="st">Sign in with your Yandex ID and grant access to the app folder</span>
+          </li>
+          <li>
+            <span class="sn">3</span>
+            <span class="st">Turn on <strong>"Auto-backup to cloud"</strong> — the app will upload a backup to Yandex.Disk every time it opens. The last 7 snapshots are kept.</span>
+          </li>
+        </ul>
+        <div class="note green">To restore: <strong>"Backup"</strong> → <strong>"Yandex.Disk"</strong> → pick a snapshot → <strong>"Merge"</strong>. Data on your phone won't be lost — only new records from the cloud are added. To fully replace your data — tap <strong>"Download file"</strong> and restore via "Choose file…".</div>
+
+        <div class="sub-title mt">File backup</div>
         <ul class="steps">
           <li>
             <span class="sn">1</span>
@@ -672,6 +690,9 @@
       <li><span class="u-ico">📊</span><span><b>Export to Excel</b> — <em>Backup → "Download CSV"</em> exports all sharpenings as a spreadsheet for Excel, Google Sheets or Numbers.</span></li>
       <li><span class="u-ico">🪨</span><span><b>Import your stones from a file</b> — Reference → Stones → <em>"Import CSV"</em>. You need a "Name" column and one grit scale (µm / FEPA / JIS / GOST) — the rest are calculated. UTF-8 or Win-1251 encoding.</span></li>
       <li><span class="u-ico">🗑️</span><span><b>Trash</b> — accidentally deleted a client or sharpening? <em>About → "Trash"</em>: deleted records are kept for <strong>3 days</strong> and can be restored. Deleting a client also puts all their sharpenings in the trash — they come back together.</span></li>
+      <li><span class="u-ico">🎮</span><span><b>Trainers for sharpeners</b> — in Reference the 🎮 icon opens <em>"Games"</em>: <em>"Arrange the stones"</em> (order the stones by grit) and <em>"True angle"</em> (read the sharpening angle by eye). They train your eye and your memory for grit.</span></li>
+      <li><span class="u-ico">🔢</span><span><b>Sharpening counter</b> — the header of the History screen shows how many knives you've sharpened in total.</span></li>
+      <li><span class="u-ico">📤</span><span><b>Share the app</b> — at the bottom of the Clients screen the <em>"Share the app"</em> button sends friends and clients a link to the app via any messenger.</span></li>
       <li><span class="u-ico">❤️</span><span><b>Support the project</b> — the app is free. If you'd like to say thank you, there's a card number in <em>"About"</em> — tap it to copy.</span></li>
     </ul>
   </div>
@@ -728,7 +749,7 @@
       &nbsp;&nbsp;✈️ <a href="https://t.me/Apptochite">t.me/Apptochite</a>
     </div>
     <div class="footer-r">
-      Version 1.79.0 · June 2026<br>
+      Version 1.103.0 · June 2026<br>
       Data stored locally on device
     </div>
   </div>

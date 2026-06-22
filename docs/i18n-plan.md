@@ -125,5 +125,5 @@ restore **не затрагиваются**, и данные пользоват�
   `AboutScreen` показывает `changesEn` при `locale === 'en'`, `changes` иначе.
 - ✅ `docs/guide_en.html` — полный перевод гайда на английский (2 страницы A4, та же структура).
   Ссылка в About адаптирована: `guide_en.html` для EN, `guide.html` для RU.
-- ⏳ `presentation/*.html`, `onepager.html` — при необходимости
+- ⏳ `presentation/*.html` — при необходимости
 - ⏳ store-листинги
