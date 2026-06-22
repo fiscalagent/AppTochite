@@ -230,7 +230,7 @@ export const ru = {
     cover: 'обложка',
     angleLabel: 'Угол заточки, °',
     anglePlaceholder: '15',
-    microbevelToggle: 'Микроподвод (МП)',
+    microbevelToggle: 'Микроподвод, °',
     microbevelLabel: 'Угол микроподвода, °',
     microbevelPlaceholder: '20',
     stonesLabel: 'Камни',

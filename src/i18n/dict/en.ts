@@ -269,7 +269,7 @@ export const en = {
     cover: 'cover',
     angleLabel: 'Sharpening angle, °',
     anglePlaceholder: '15',
-    microbevelToggle: 'Microbevel',
+    microbevelToggle: 'Microbevel, °',
     microbevelLabel: 'Microbevel angle, °',
     microbevelPlaceholder: '20',
     stonesLabel: 'Stones',

@@ -68,6 +68,42 @@ function parseStoneName(name: string): { brand: string } & Partial<ReturnType<ty
 }
 
 const PHOTO_LIMIT = 5
+const ANGLE_MIN = 1
+const ANGLE_MAX = 45
+const SLIDER_MIN = 10 // нижняя граница ползунка и шкалы (рабочий диапазон углов)
+const MICROBEVEL_DELTA = 2 // микроподвод по умолчанию = основной угол + 2°
+const ANGLE_SCALE = [10, 15, 20, 25, 30, 35, 40, 45] // деления едва заметной шкалы
+
+// Горизонтальный ползунок угла (шаг 0,1°) с едва заметной шкалой 10–45°.
+// Управляет тем же строковым значением, что и number-инпут над ним.
+function AngleSlider({ value, onChange, ariaLabel }: {
+  value: string
+  onChange: (v: string) => void
+  ariaLabel: string
+}) {
+  return (
+    <div className={s.angleSliderWrap}>
+      <input
+        className={s.angleSlider}
+        type="range"
+        min={SLIDER_MIN}
+        max={ANGLE_MAX}
+        step={0.1}
+        value={value === '' ? SLIDER_MIN : value}
+        onChange={e => onChange(e.target.value)}
+        aria-label={ariaLabel}
+      />
+      <div className={s.angleScale} aria-hidden="true">
+        {ANGLE_SCALE.map(tick => (
+          <span key={tick} className={s.angleTick}>
+            <span className={s.angleTickMark} />
+            <span className={s.angleTickLabel}>{tick}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function formatDate(date: Date | string, locale: Locale) {
   return fmtDateLong(locale, date)
@@ -203,6 +239,15 @@ export default function SharpeningDetail() {
     setSelectedStones(prev =>
       prev.filter((_, i) => i !== index).map((st, i) => ({ ...st, order: i + 1 }))
     )
+  }
+
+  function toggleMicrobevel(on: boolean) {
+    setMicrobevel(on)
+    // При включении подставляем основной угол + 2° (значение редактируется вручную).
+    if (on && !microbevelAngle && angle) {
+      const base = Number(angle)
+      if (!Number.isNaN(base)) setMicrobevelAngle(String(base + MICROBEVEL_DELTA))
+    }
   }
 
   async function saveNewStone() {
@@ -623,31 +668,39 @@ export default function SharpeningDetail() {
         <div className={s.field}>
           <label className={s.fieldLabel}>{t.sharpening.angleLabel}</label>
           <input
+            className={s.angleNumber}
             value={angle}
             onChange={e => setAngle(e.target.value)}
             placeholder={t.sharpening.anglePlaceholder}
             type="number"
-            min={1}
-            max={45}
+            min={ANGLE_MIN}
+            max={ANGLE_MAX}
+            step={0.1}
           />
+          <AngleSlider value={angle} onChange={setAngle} ariaLabel={t.sharpening.angleLabel} />
           <label className={s.microbevelToggle}>
             <input
               type="checkbox"
               checked={microbevel}
-              onChange={e => setMicrobevel(e.target.checked)}
+              onChange={e => toggleMicrobevel(e.target.checked)}
             />
-            <span>{t.sharpening.microbevelToggle}</span>
+            <span className={s.fieldLabel}>{t.sharpening.microbevelToggle}</span>
           </label>
           {microbevel && (
-            <input
-              value={microbevelAngle}
-              onChange={e => setMicrobevelAngle(e.target.value)}
-              placeholder={t.sharpening.microbevelPlaceholder}
-              type="number"
-              min={1}
-              max={45}
-              aria-label={t.sharpening.microbevelLabel}
-            />
+            <>
+              <input
+                className={s.angleNumber}
+                value={microbevelAngle}
+                onChange={e => setMicrobevelAngle(e.target.value)}
+                placeholder={t.sharpening.microbevelPlaceholder}
+                type="number"
+                min={ANGLE_MIN}
+                max={ANGLE_MAX}
+                step={0.1}
+                aria-label={t.sharpening.microbevelLabel}
+              />
+              <AngleSlider value={microbevelAngle} onChange={setMicrobevelAngle} ariaLabel={t.sharpening.microbevelLabel} />
+            </>
           )}
         </div>
 

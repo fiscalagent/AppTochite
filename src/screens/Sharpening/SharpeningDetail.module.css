@@ -283,14 +283,65 @@
   color: var(--text-300);
 }
 
-/* Микроподвод (МП) — галка под полем основного угла */
+/* Угол: прячем нативные стрелки number-инпута — вместо них горизонтальный ползунок ниже */
+.angleNumber::-webkit-outer-spin-button,
+.angleNumber::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.angleNumber {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Горизонтальный ползунок угла под полем ввода (шаг 0,1°) */
+.angleSliderWrap {
+  margin-top: var(--space-2);
+}
+
+.angleSlider {
+  width: 100%;
+  display: block;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Едва заметная шкала 10–45° под ползунком */
+.angleScale {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 6px;
+  margin-top: 1px;
+  pointer-events: none;
+}
+
+.angleTick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.angleTickMark {
+  width: 1px;
+  height: 4px;
+  background: var(--border-200);
+}
+
+.angleTickLabel {
+  font-size: 9px;
+  line-height: 1;
+  color: var(--text-400);
+  opacity: 0.55;
+}
+
+/* Микроподвод — галка под полем основного угла; подпись в стиле .fieldLabel */
 .microbevelToggle {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-2);
-  font-size: 14px;
-  color: var(--text-200);
+  margin-top: var(--space-3);
   cursor: pointer;
 }
 
