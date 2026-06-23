@@ -5,10 +5,8 @@ import {
   saveYandexToken,
   setCloudAutoBackup,
   getCloudLastAt,
-  downloadAndMerge,
-  downloadSnapshotJson,
+  getSnapshotDownloadUrl,
 } from './cloudBackup'
-import type { BackupFile } from './backup'
 
 function makeDB(): AppTochiteDB {
   return new AppTochiteDB(`test-${Math.random().toString(36).slice(2)}`)
@@ -117,43 +115,11 @@ describe('performCloudBackup — дневной гейт', () => {
   })
 })
 
-// Регрессия: storage-href от /resources/download — временная подписанная ссылка
-// на отдельный домен. Authorization на неё слать нельзя — он не нужен и ломает
-// запрос CORS-preflight'ом («Не удалось загрузить снапшот»). Заголовок шлём только
-// на API-домен (за самой ссылкой), как и при загрузке (putBackup).
-describe('скачивание из облака — Authorization только на API, не на storage-href', () => {
+// Прямое чтение файла из облака через fetch невозможно: storage-домен Яндекса не
+// отдаёт CORS. Поэтому файл качается навигацией браузера, а getSnapshotDownloadUrl
+// лишь добывает свежую подписанную ссылку (API-домен, нужен Authorization).
+describe('getSnapshotDownloadUrl — ссылка для навигационного скачивания', () => {
   const STORAGE_HREF = 'https://downloader.test/get'
-
-  function validBackup(): BackupFile {
-    return {
-      version: 2,
-      exportedAt: new Date().toISOString(),
-      data: {
-        clients: [{ id: 1, name: 'Я', isSelf: true, guid: 'g-self', createdAt: new Date(), updatedAt: new Date() }],
-        sharpenings: [],
-        stones: [],
-        steels: [],
-        knives: [],
-        meta: [],
-      },
-    }
-  }
-
-  // Мок: GET /resources/download → { href }, затем GET по самому href → тело файла.
-  function installDownloadMock(body: string) {
-    const fetchSpy = vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input)
-      if (url.includes('/resources/download')) {
-        return new Response(JSON.stringify({ href: STORAGE_HREF }), { status: 200 })
-      }
-      if (url === STORAGE_HREF) {
-        return new Response(body, { status: 200 })
-      }
-      throw new Error(`unexpected fetch: ${url}`)
-    })
-    vi.stubGlobal('fetch', fetchSpy)
-    return fetchSpy
-  }
 
   function authHeaderOf(call: unknown[] | undefined): string | undefined {
     const init = call?.[1] as RequestInit | undefined
@@ -161,40 +127,33 @@ describe('скачивание из облака — Authorization только 
     return headers.Authorization
   }
 
-  function callFor(fetchSpy: ReturnType<typeof vi.fn>, pred: (url: string) => boolean) {
-    return fetchSpy.mock.calls.find(([input]) => pred(String(input)))
-  }
-
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
-  it('downloadAndMerge: на storage-href заголовка нет, на API-домене он есть', async () => {
-    const db = makeDB()
-    await db.open()
-    try {
-      const fetchSpy = installDownloadMock(JSON.stringify(validBackup()))
+  it('возвращает href и шлёт Authorization на API-запрос', async () => {
+    const fetchSpy = vi.fn(async () =>
+      new Response(JSON.stringify({ href: STORAGE_HREF }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchSpy)
 
-      const result = await downloadAndMerge(db, 'tok', 'backup-abcd1234-2026-06-23.json')
-      expect(result).not.toBe('error')
-      expect(result).not.toBe('auth-error')
+    const url = await getSnapshotDownloadUrl('tok', 'backup-abcd1234-2026-06-23.json')
+    expect(url).toBe(STORAGE_HREF)
 
-      expect(authHeaderOf(callFor(fetchSpy, u => u === STORAGE_HREF))).toBeUndefined()
-      expect(authHeaderOf(callFor(fetchSpy, u => u.includes('/resources/download')))).toBe('OAuth tok')
-    } finally {
-      db.close()
-      await db.delete()
-    }
+    const call = fetchSpy.mock.calls.find(([u]) => String(u).includes('/resources/download'))
+    expect(call).toBeTruthy()
+    expect(authHeaderOf(call)).toBe('OAuth tok')
   })
 
-  it('downloadSnapshotJson: на storage-href заголовка нет, файл распарсен', async () => {
-    const fetchSpy = installDownloadMock(JSON.stringify(validBackup()))
+  it('401 → auth-error, прочий не-ok → error', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+    expect(await getSnapshotDownloadUrl('tok', 'x.json')).toBe('auth-error')
 
-    const got = await downloadSnapshotJson('backup-abcd1234-2026-06-23.json', 'tok')
-    expect(got).not.toBeNull()
-    expect(got?.data.clients).toHaveLength(1)
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 500 })))
+    expect(await getSnapshotDownloadUrl('tok', 'x.json')).toBe('error')
+  })
 
-    expect(authHeaderOf(callFor(fetchSpy, u => u === STORAGE_HREF))).toBeUndefined()
-    expect(authHeaderOf(callFor(fetchSpy, u => u.includes('/resources/download')))).toBe('OAuth tok')
+  it('сетевое исключение (CORS/offline) → error', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch') }))
+    expect(await getSnapshotDownloadUrl('tok', 'x.json')).toBe('error')
   })
 })

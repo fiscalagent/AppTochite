@@ -1,5 +1,5 @@
 import type { AppTochiteDB } from '../db/instance'
-import { exportBackup, mergeBackup, isValidBackup, reviveDates, type BackupFile, type MergeStats } from './backup'
+import { exportBackup, type BackupFile } from './backup'
 import { track } from '../services/analytics'
 
 // ─── Константы ───────────────────────────────────────────────────────────────
@@ -248,88 +248,32 @@ async function rotateSnapshots(token: string, deviceId: string): Promise<void> {
   }
 }
 
-// ─── Download + merge ─────────────────────────────────────────────────────────
+// ─── Download URL (навигационное скачивание) ────────────────────────────────────
 
-// Диагностика последнего сбоя скачивания/объединения: на каком шаге и с чем упало.
-// Читается экраном бэкапа и показывается в тосте — чтобы причина была видна сразу,
-// а не сводилась к общему «Не удалось загрузить снапшот».
-export type RestoreStage = 'link' | 'download' | 'parse' | 'invalid' | 'merge'
-let lastRestoreError: string | null = null
-export function getLastRestoreError(): string | null {
-  return lastRestoreError
-}
-
-function errMsg(e: unknown): string {
-  return e instanceof Error ? `${e.name}: ${e.message}` : String(e)
-}
-
-function noteRestoreError(stage: RestoreStage, detail: string): void {
-  lastRestoreError = `${stage} — ${detail}`
-  console.error('[cloud restore]', stage, detail)
-  track('cloud_restore_fail', { stage, detail: detail.slice(0, 200) }).catch(() => {})
-}
-
-// Скачивание снапшота в объект BackupFile с поэтапной диагностикой. href из листинга
-// короткоживущий — запрашиваем свежую ссылку прямо перед скачиванием.
-async function fetchSnapshot(token: string, name: string): Promise<BackupFile | 'auth-error' | 'error'> {
-  lastRestoreError = null
+// Прямое чтение файла через fetch из браузера невозможно: storage-домен Яндекса
+// (downloader.disk.yandex.ru) не отдаёт CORS-заголовки, и браузер блокирует ответ
+// (TypeError: Failed to fetch). API-домен (запрос ссылки) и uploader (PUT) CORS
+// отдают — поэтому листинг и загрузка работают, а чтение файла нет.
+//
+// Решение: качаем файл НАВИГАЦИЕЙ браузера по подписанной ссылке (download не
+// подчиняется CORS), а объединяем уже из скачанного файла («Восстановить из файла»
+// → «Объединить»). Эта функция отдаёт свежую ссылку — короткоживущую, поэтому
+// запрашивается прямо перед скачиванием.
+export async function getSnapshotDownloadUrl(
+  token: string,
+  name: string,
+): Promise<string | 'auth-error' | 'error'> {
   const path = `${APP_FOLDER}${name}`
-
-  // 1) Ссылка на скачивание — API-домен Яндекса, нужен Authorization (как в листинге).
-  let href: string
   try {
     const res = await fetch(
       `${DISK_API}/resources/download?path=${encodeURIComponent(path)}`,
       { headers: { Authorization: `OAuth ${token}` } },
     )
-    if (res.status === 401) { noteRestoreError('link', 'HTTP 401'); return 'auth-error' }
-    if (!res.ok) { noteRestoreError('link', `HTTP ${res.status}`); return 'error' }
-    href = (await res.json() as { href: string }).href
-  } catch (e) {
-    noteRestoreError('link', errMsg(e))
-    return 'error'
-  }
-
-  // 2) Сам файл — storage-домен по подписанной ссылке. Authorization не шлём: он не
-  // нужен и спровоцировал бы CORS-preflight (как и в putBackup — заголовок не ставим).
-  let text: string
-  try {
-    const res = await fetch(href)
-    if (!res.ok) { noteRestoreError('download', `HTTP ${res.status}`); return 'error' }
-    text = await res.text()
-  } catch (e) {
-    noteRestoreError('download', errMsg(e))
-    return 'error'
-  }
-
-  // 3) Разбор и валидация формата.
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(text, reviveDates)
-  } catch (e) {
-    noteRestoreError('parse', `${errMsg(e)} (len=${text.length})`)
-    return 'error'
-  }
-  if (!isValidBackup(parsed)) { noteRestoreError('invalid', 'формат не распознан'); return 'error' }
-  return parsed
-}
-
-export async function downloadSnapshotJson(name: string, token: string): Promise<BackupFile | null> {
-  const result = await fetchSnapshot(token, name)
-  return typeof result === 'string' ? null : result
-}
-
-export async function downloadAndMerge(
-  database: AppTochiteDB,
-  token: string,
-  name: string,
-): Promise<MergeStats | 'auth-error' | 'error'> {
-  const result = await fetchSnapshot(token, name)
-  if (typeof result === 'string') return result
-  try {
-    return await mergeBackup(database, result)
-  } catch (e) {
-    noteRestoreError('merge', errMsg(e))
+    if (res.status === 401) return 'auth-error'
+    if (!res.ok) return 'error'
+    const { href } = await res.json() as { href: string }
+    return href
+  } catch {
     return 'error'
   }
 }

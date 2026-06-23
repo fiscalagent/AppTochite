@@ -72,9 +72,7 @@ import {
   getCloudLastAt,
   uploadToYandex,
   listYandexSnapshots,
-  downloadAndMerge,
-  downloadSnapshotJson,
-  getLastRestoreError,
+  getSnapshotDownloadUrl,
   buildOAuthUrl,
   peekCloudDeviceId,
   type CloudSnapshot,
@@ -402,41 +400,43 @@ export default function BackupScreen() {
     setCloudAuto(next)
   }
 
+  // Скачивание снапшота навигацией браузера: storage-домен Яндекса не отдаёт CORS,
+  // поэтому прочитать файл через fetch нельзя — но download по подписанной ссылке
+  // CORS не подчиняется. Возвращает true, если скачивание запущено.
+  async function triggerCloudDownload(snap: CloudSnapshot): Promise<boolean> {
+    if (!cloudToken) return false
+    const url = await getSnapshotDownloadUrl(cloudToken, snap.name)
+    if (url === 'auth-error') { showToast(t.backup.cloudAuthError); return false }
+    if (url === 'error') { showToast(t.backup.cloudRestoreError); return false }
+    const a = document.createElement('a')
+    a.href = url
+    a.target = '_blank'
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    return true
+  }
+
+  // «Объединить» из облака в браузере невозможно (CORS storage-домена Яндекса не даёт
+  // прочитать файл). Поэтому качаем файл и подсказываем объединить из файла.
   async function handleCloudMerge(snap: CloudSnapshot) {
-    if (!cloudToken || cloudMergingId) return
+    if (cloudMergingId) return
     setCloudMergingId(snap.name)
     try {
-      await createPreRestoreSnapshot(db)
-      const result = await downloadAndMerge(db, cloudToken, snap.name)
-      if (result === 'auth-error') {
-        showToast(t.backup.cloudAuthError)
-      } else if (result === 'error') {
-        const detail = getLastRestoreError()
-        showToast(detail ? `${t.backup.cloudRestoreError}: ${detail}` : t.backup.cloudRestoreError)
-      } else {
-        const statsStr = `+${result.added} / ~${result.updated} / =${result.skipped}`
-        showToast(t.backup.cloudRestoreDone(statsStr))
-        setMergeStats(result)
-      }
+      if (await triggerCloudDownload(snap)) showToast(t.backup.cloudMergeViaFile)
     } finally {
       setCloudMergingId(null)
     }
   }
 
   async function handleCloudDownload(snap: CloudSnapshot) {
-    if (!cloudToken) return
+    if (cloudMergingId) return
+    setCloudMergingId(snap.name)
     try {
-      const backup = await downloadSnapshotJson(snap.name, cloudToken)
-      if (!backup) {
-        const detail = getLastRestoreError()
-        showToast(detail ? `${t.backup.cloudRestoreError}: ${detail}` : t.backup.cloudRestoreError)
-        return
-      }
-      const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
-      downloadBlob(blob, snap.name.replace('.json', '') + '.json')
-    } catch (e) {
-      const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e)
-      showToast(`${t.backup.cloudRestoreError}: ${msg}`)
+      if (await triggerCloudDownload(snap)) showToast(t.backup.cloudDownloadStarted)
+    } finally {
+      setCloudMergingId(null)
     }
   }
 
