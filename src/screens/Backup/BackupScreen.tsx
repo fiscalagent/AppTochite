@@ -72,7 +72,9 @@ import {
   getCloudLastAt,
   uploadToYandex,
   listYandexSnapshots,
-  getSnapshotDownloadUrl,
+  downloadAndMerge,
+  downloadSnapshotJson,
+  isCloudProxyConfigured,
   buildOAuthUrl,
   peekCloudDeviceId,
   type CloudSnapshot,
@@ -400,42 +402,41 @@ export default function BackupScreen() {
     setCloudAuto(next)
   }
 
-  // Скачивание снапшота по подписанной ссылке. fetch читать тело не может (storage-
-  // домен Яндекса не отдаёт CORS), а навигация в новую вкладку даёт ERR_INVALID_RESPONSE
-  // (Яндекс отвечает некорректно на document-навигацию). Поэтому качаем кликом по
-  // <a download> БЕЗ target — это download-запрос (Content-Disposition: attachment),
-  // другой кодовый путь, файл сохраняется без ухода со страницы.
-  async function triggerCloudDownload(snap: CloudSnapshot): Promise<boolean> {
-    if (!cloudToken) return false
-    const url = await getSnapshotDownloadUrl(cloudToken, snap.name)
-    if (url === 'auth-error') { showToast(t.backup.cloudAuthError); return false }
-    if (url === 'error') { showToast(t.backup.cloudRestoreError); return false }
-    const a = document.createElement('a')
-    a.href = url
-    a.download = snap.name
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    return true
-  }
-
-  // «Объединить» из облака в браузере невозможно (CORS storage-домена Яндекса не даёт
-  // прочитать файл). Поэтому качаем файл и подсказываем объединить из файла.
+  // Облачное объединение «в один тап». Файл читается через CORS-прокси (Cloudflare
+  // Worker, см. cloudflare-worker/) — браузер напрямую с шарда Яндекса прочитать не
+  // может. Если прокси не настроен — ведём на восстановление из файла.
   async function handleCloudMerge(snap: CloudSnapshot) {
-    if (cloudMergingId) return
+    if (!cloudToken || cloudMergingId) return
+    if (!isCloudProxyConfigured()) { showToast(t.backup.cloudViaFile); return }
     setCloudMergingId(snap.name)
     try {
-      if (await triggerCloudDownload(snap)) showToast(t.backup.cloudMergeViaFile)
+      await createPreRestoreSnapshot(db)
+      const result = await downloadAndMerge(db, cloudToken, snap.name)
+      if (result === 'auth-error') {
+        showToast(t.backup.cloudAuthError)
+      } else if (result === 'error') {
+        showToast(t.backup.cloudRestoreError)
+      } else {
+        const statsStr = `+${result.added} / ~${result.updated} / =${result.skipped}`
+        showToast(t.backup.cloudRestoreDone(statsStr))
+        setMergeStats(result)
+      }
     } finally {
       setCloudMergingId(null)
     }
   }
 
   async function handleCloudDownload(snap: CloudSnapshot) {
-    if (cloudMergingId) return
+    if (!cloudToken || cloudMergingId) return
+    if (!isCloudProxyConfigured()) { showToast(t.backup.cloudViaFile); return }
     setCloudMergingId(snap.name)
     try {
-      if (await triggerCloudDownload(snap)) showToast(t.backup.cloudDownloadStarted)
+      const backup = await downloadSnapshotJson(snap.name, cloudToken)
+      if (!backup) { showToast(t.backup.cloudRestoreError); return }
+      const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
+      downloadBlob(blob, snap.name)
+    } catch {
+      showToast(t.backup.cloudRestoreError)
     } finally {
       setCloudMergingId(null)
     }

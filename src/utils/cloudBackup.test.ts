@@ -6,7 +6,11 @@ import {
   setCloudAutoBackup,
   getCloudLastAt,
   getSnapshotDownloadUrl,
+  isCloudProxyConfigured,
+  downloadAndMerge,
+  downloadSnapshotJson,
 } from './cloudBackup'
+import type { BackupFile } from './backup'
 
 function makeDB(): AppTochiteDB {
   return new AppTochiteDB(`test-${Math.random().toString(36).slice(2)}`)
@@ -155,5 +159,86 @@ describe('getSnapshotDownloadUrl — ссылка для навигационн�
   it('сетевое исключение (CORS/offline) → error', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch') }))
     expect(await getSnapshotDownloadUrl('tok', 'x.json')).toBe('error')
+  })
+})
+
+// Чтение снапшота через CORS-прокси: приложение само берёт подписанную ссылку у API
+// Яндекса (с токеном), а файл качает через Worker (он добавляет CORS). Без настроенного
+// прокси облачное чтение недоступно.
+describe('downloadAndMerge / downloadSnapshotJson — через прокси', () => {
+  const PROXY = 'https://proxy.test'
+  const STORAGE_HREF = 'https://downloader.test/get'
+
+  function validBackup(): BackupFile {
+    return {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      data: {
+        clients: [{ id: 1, name: 'Я', isSelf: true, guid: 'g-self', createdAt: new Date(), updatedAt: new Date() }],
+        sharpenings: [], stones: [], steels: [], knives: [], meta: [],
+      },
+    }
+  }
+
+  // Мок: GET /resources/download → { href }; GET <proxy>/?url=… → тело бэкапа.
+  function installProxyMock(body: string) {
+    const fetchSpy = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/resources/download')) {
+        return new Response(JSON.stringify({ href: STORAGE_HREF }), { status: 200 })
+      }
+      if (url.startsWith(`${PROXY}/?url=`)) {
+        return new Response(body, { status: 200 })
+      }
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+    vi.stubGlobal('fetch', fetchSpy)
+    return fetchSpy
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+  })
+
+  it('без VITE_CLOUD_PROXY_URL прокси не настроен и чтение даёт error', async () => {
+    vi.stubEnv('VITE_CLOUD_PROXY_URL', '')
+    expect(isCloudProxyConfigured()).toBe(false)
+    const db = makeDB()
+    await db.open()
+    try {
+      expect(await downloadAndMerge(db, 'tok', 'backup-a-2026-06-23.json')).toBe('error')
+    } finally {
+      db.close()
+      await db.delete()
+    }
+  })
+
+  it('с прокси: качает подписанную ссылку через Worker и объединяет', async () => {
+    vi.stubEnv('VITE_CLOUD_PROXY_URL', PROXY)
+    expect(isCloudProxyConfigured()).toBe(true)
+    const fetchSpy = installProxyMock(JSON.stringify(validBackup()))
+    const db = makeDB()
+    await db.open()
+    try {
+      const result = await downloadAndMerge(db, 'tok', 'backup-a-2026-06-23.json')
+      expect(result).not.toBe('error')
+      expect(result).not.toBe('auth-error')
+      // Worker вызван именно с подписанной ссылкой (url-encoded).
+      const proxyCall = fetchSpy.mock.calls.find(([u]) => String(u).startsWith(`${PROXY}/?url=`))
+      expect(proxyCall).toBeTruthy()
+      expect(String(proxyCall?.[0])).toContain(encodeURIComponent(STORAGE_HREF))
+    } finally {
+      db.close()
+      await db.delete()
+    }
+  })
+
+  it('downloadSnapshotJson через прокси возвращает разобранный бэкап', async () => {
+    vi.stubEnv('VITE_CLOUD_PROXY_URL', PROXY)
+    installProxyMock(JSON.stringify(validBackup()))
+    const got = await downloadSnapshotJson('backup-a-2026-06-23.json', 'tok')
+    expect(got).not.toBeNull()
+    expect(got?.data.clients).toHaveLength(1)
   })
 })
