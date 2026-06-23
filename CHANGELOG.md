@@ -1,3 +1,10 @@
+## [1.105.4](https://github.com/fiscalagent/AppTochite/compare/v1.105.3...v1.105.4) (2026-06-23)
+
+
+### fix
+
+* скачивание бэкапа из облака — клик по <a download> вместо новой вкладки (убирает ERR_INVALID_RESPONSE) ([](https://github.com/fiscalagent/AppTochite/commit/b7bfd54ecc5a44706b7ddec95c66ca9cef0833c6))
+
 ## [1.105.3](https://github.com/fiscalagent/AppTochite/compare/v1.105.2...v1.105.3) (2026-06-23)
 
 

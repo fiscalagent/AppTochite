@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.105.4',
+    date: '2026-06-23',
+    changes: [
+      'скачивание бэкапа из облака — клик по <a download> вместо новой вкладки (убирает ERR_INVALID_RESPONSE)',
+    ],
+  },
+  {
     version: '1.105.3',
     date: '2026-06-23',
     changes: [
