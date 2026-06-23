@@ -1,3 +1,10 @@
+## [1.105.1](https://github.com/fiscalagent/AppTochite/compare/v1.105.0...v1.105.1) (2026-06-23)
+
+
+### fix
+
+* объединение и скачивание бэкапа из облака больше не падают с ошибкой «Не удалось загрузить снапшот» ([](https://github.com/fiscalagent/AppTochite/commit/24a1ef63017898b4beab43044365944a4e5cf026))
+
 # [1.105.0](https://github.com/fiscalagent/AppTochite/compare/v1.104.0...v1.105.0) (2026-06-22)
 
 
