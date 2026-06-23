@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.105.2',
+    date: '2026-06-23',
+    changes: [
+      'при сбое загрузки бэкапа из облака тост показывает, на каком шаге упало',
+    ],
+  },
+  {
     version: '1.105.1',
     date: '2026-06-23',
     changes: [

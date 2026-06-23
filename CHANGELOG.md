@@ -1,3 +1,10 @@
+## [1.105.2](https://github.com/fiscalagent/AppTochite/compare/v1.105.1...v1.105.2) (2026-06-23)
+
+
+### fix
+
+* при сбое загрузки бэкапа из облака тост показывает, на каком шаге упало ([](https://github.com/fiscalagent/AppTochite/commit/ad5fec83862669b800adef39fc4677b7b0e0c877))
+
 ## [1.105.1](https://github.com/fiscalagent/AppTochite/compare/v1.105.0...v1.105.1) (2026-06-23)
 
 
