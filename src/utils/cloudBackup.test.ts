@@ -132,7 +132,7 @@ describe('getSnapshotDownloadUrl — ссылка для навигационн�
   })
 
   it('возвращает href и шлёт Authorization на API-запрос', async () => {
-    const fetchSpy = vi.fn(async () =>
+    const fetchSpy = vi.fn(async (_input: RequestInfo | URL) =>
       new Response(JSON.stringify({ href: STORAGE_HREF }), { status: 200 }))
     vi.stubGlobal('fetch', fetchSpy)
 
