@@ -1,3 +1,10 @@
+# [1.106.0](https://github.com/fiscalagent/AppTochite/compare/v1.105.4...v1.106.0) (2026-06-23)
+
+
+### feat
+
+* восстановление и объединение бэкапа из облака через CORS-прокси ([](https://github.com/fiscalagent/AppTochite/commit/224287584cae66bb3b6de0a0359c08f703b7a2b7))
+
 ## [1.105.4](https://github.com/fiscalagent/AppTochite/compare/v1.105.3...v1.105.4) (2026-06-23)
 
 
