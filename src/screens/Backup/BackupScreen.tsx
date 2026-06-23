@@ -72,13 +72,11 @@ import {
   getCloudLastAt,
   uploadToYandex,
   listYandexSnapshots,
-  downloadAndMerge,
-  downloadSnapshotJson,
-  isCloudProxyConfigured,
   buildOAuthUrl,
   peekCloudDeviceId,
   type CloudSnapshot,
 } from '../../utils/cloudBackup'
+import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import s from './BackupScreen.module.css'
 
 function todayStr() {
@@ -150,7 +148,7 @@ export default function BackupScreen() {
   const [cloudSnapshotsLoading, setCloudSnapshotsLoading] = useState(false)
   const [cloudSnapshotsError, setCloudSnapshotsError] = useState(false)
   const [cloudWorking, setCloudWorking] = useState(false)
-  const [cloudMergingId, setCloudMergingId] = useState<string | null>(null)
+  const [confirmReplace, setConfirmReplace] = useState(false)
 
   const { lastBackupTick } = useAutoBackup()
 
@@ -402,46 +400,6 @@ export default function BackupScreen() {
     setCloudAuto(next)
   }
 
-  // Облачное объединение «в один тап». Файл читается через CORS-прокси (Cloudflare
-  // Worker, см. cloudflare-worker/) — браузер напрямую с шарда Яндекса прочитать не
-  // может. Если прокси не настроен — ведём на восстановление из файла.
-  async function handleCloudMerge(snap: CloudSnapshot) {
-    if (!cloudToken || cloudMergingId) return
-    if (!isCloudProxyConfigured()) { showToast(t.backup.cloudViaFile); return }
-    setCloudMergingId(snap.name)
-    try {
-      await createPreRestoreSnapshot(db)
-      const result = await downloadAndMerge(db, cloudToken, snap.name)
-      if (result === 'auth-error') {
-        showToast(t.backup.cloudAuthError)
-      } else if (result === 'error') {
-        showToast(t.backup.cloudRestoreError)
-      } else {
-        const statsStr = `+${result.added} / ~${result.updated} / =${result.skipped}`
-        showToast(t.backup.cloudRestoreDone(statsStr))
-        setMergeStats(result)
-      }
-    } finally {
-      setCloudMergingId(null)
-    }
-  }
-
-  async function handleCloudDownload(snap: CloudSnapshot) {
-    if (!cloudToken || cloudMergingId) return
-    if (!isCloudProxyConfigured()) { showToast(t.backup.cloudViaFile); return }
-    setCloudMergingId(snap.name)
-    try {
-      const backup = await downloadSnapshotJson(snap.name, cloudToken)
-      if (!backup) { showToast(t.backup.cloudRestoreError); return }
-      const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
-      downloadBlob(blob, snap.name)
-    } catch {
-      showToast(t.backup.cloudRestoreError)
-    } finally {
-      setCloudMergingId(null)
-    }
-  }
-
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -460,6 +418,7 @@ export default function BackupScreen() {
 
   async function handleRestore() {
     if (!preview) return
+    setConfirmReplace(false)
     setRestoring(true)
     try {
       await createPreRestoreSnapshot(db)
@@ -759,9 +718,9 @@ export default function BackupScreen() {
                 ) : !cloudSnapshots || cloudSnapshots.length === 0 ? (
                   <p className={s.desc}>{t.backup.cloudSnapshotsEmpty}</p>
                 ) : (
-                  cloudSnapshots.map(snap => (
-                    <div key={snap.name} className={s.recoveryRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6, marginBottom: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                  <>
+                    {cloudSnapshots.map(snap => (
+                      <div key={snap.name} className={s.recoveryRow}>
                         <span className={s.recoveryLabel}>
                           {fmtDateTimeLong(locale, snap.createdAt)}
                           {snap.deviceId && (
@@ -772,26 +731,9 @@ export default function BackupScreen() {
                         </span>
                         <span className={s.recoveryMeta}>{t.backup.cloudMb((snap.size / 1_048_576).toFixed(1))}</span>
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          className={s.primaryBtn}
-                          style={{ width: 'auto', padding: '6px 14px', fontSize: 13 }}
-                          disabled={!!cloudMergingId}
-                          onClick={() => handleCloudMerge(snap)}
-                        >
-                          {cloudMergingId === snap.name ? t.backup.cloudRestoring : t.backup.cloudRestore}
-                        </button>
-                        <button
-                          className={s.secondaryBtn}
-                          style={{ width: 'auto', padding: '6px 14px', fontSize: 13 }}
-                          disabled={!!cloudMergingId}
-                          onClick={() => handleCloudDownload(snap)}
-                        >
-                          {t.backup.cloudDownload}
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    ))}
+                    <p className={s.desc} style={{ marginTop: 8 }}>{t.backup.cloudSnapshotsHint}</p>
+                  </>
                 )}
               </>
             )}
@@ -883,7 +825,7 @@ export default function BackupScreen() {
               <button className={s.primaryBtn} onClick={handleMerge} disabled={merging || restoring}>
                 {merging ? t.backup.merging : t.backup.merge}
               </button>
-              <button className={s.dangerBtn} onClick={handleRestore} disabled={restoring || merging}>
+              <button className={s.dangerBtn} onClick={() => setConfirmReplace(true)} disabled={restoring || merging}>
                 {restoring ? t.backup.restoring : t.backup.replaceAll}
               </button>
               <button className={s.secondaryBtn} onClick={() => {
@@ -983,6 +925,15 @@ export default function BackupScreen() {
           </div>
         </Link>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmReplace}
+        title={t.backup.replaceConfirmTitle}
+        message={t.backup.replaceConfirmText}
+        confirmLabel={t.backup.replaceAll}
+        onConfirm={handleRestore}
+        onCancel={() => setConfirmReplace(false)}
+      />
     </div>
   )
 }

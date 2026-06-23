@@ -1,5 +1,5 @@
 import type { AppTochiteDB } from '../db/instance'
-import { exportBackup, mergeBackup, isValidBackup, reviveDates, type BackupFile, type MergeStats } from './backup'
+import { exportBackup, type BackupFile } from './backup'
 import { track } from '../services/analytics'
 
 // ─── Константы ───────────────────────────────────────────────────────────────
@@ -245,83 +245,6 @@ async function rotateSnapshots(token: string, deviceId: string): Promise<void> {
       `${DISK_API}/resources?path=${encodeURIComponent(path)}&permanently=true`,
       { method: 'DELETE', headers: { Authorization: `OAuth ${token}` } }
     ).catch(() => {})
-  }
-}
-
-// ─── Download URL (навигационное скачивание) ────────────────────────────────────
-
-// Прямое чтение файла через fetch из браузера невозможно: storage-домен Яндекса
-// (downloader.disk.yandex.ru) не отдаёт CORS-заголовки, и браузер блокирует ответ
-// (TypeError: Failed to fetch). API-домен (запрос ссылки) и uploader (PUT) CORS
-// отдают — поэтому листинг и загрузка работают, а чтение файла нет.
-//
-// Решение: качаем файл НАВИГАЦИЕЙ браузера по подписанной ссылке (download не
-// подчиняется CORS), а объединяем уже из скачанного файла («Восстановить из файла»
-// → «Объединить»). Эта функция отдаёт свежую ссылку — короткоживущую, поэтому
-// запрашивается прямо перед скачиванием.
-export async function getSnapshotDownloadUrl(
-  token: string,
-  name: string,
-): Promise<string | 'auth-error' | 'error'> {
-  const path = `${APP_FOLDER}${name}`
-  try {
-    const res = await fetch(
-      `${DISK_API}/resources/download?path=${encodeURIComponent(path)}`,
-      { headers: { Authorization: `OAuth ${token}` } },
-    )
-    if (res.status === 401) return 'auth-error'
-    if (!res.ok) return 'error'
-    const { href } = await res.json() as { href: string }
-    return href
-  } catch {
-    return 'error'
-  }
-}
-
-// ─── Чтение снапшота через CORS-прокси ──────────────────────────────────────────
-// URL прокси (Cloudflare Worker) читаем лениво — чтобы тесты могли подменять env.
-function cloudProxyUrl(): string {
-  return ((import.meta.env.VITE_CLOUD_PROXY_URL as string | undefined) ?? '').replace(/\/$/, '')
-}
-
-export function isCloudProxyConfigured(): boolean {
-  return cloudProxyUrl().length > 0
-}
-
-// Скачать снапшот в объект BackupFile. Браузер не может прочитать файл напрямую (CORS
-// на шарде Яндекса), поэтому: сами берём подписанную ссылку (без токена!), а Worker
-// качает по ней файл серверно и отдаёт с CORS-заголовком. См. cloudflare-worker/.
-async function fetchSnapshotViaProxy(token: string, name: string): Promise<BackupFile | 'auth-error' | 'error'> {
-  const proxy = cloudProxyUrl()
-  if (!proxy) return 'error'
-  const href = await getSnapshotDownloadUrl(token, name)
-  if (href === 'auth-error' || href === 'error') return href
-  try {
-    const res = await fetch(`${proxy}/?url=${encodeURIComponent(href)}`)
-    if (!res.ok) return 'error'
-    const parsed = JSON.parse(await res.text(), reviveDates)
-    return isValidBackup(parsed) ? parsed : 'error'
-  } catch {
-    return 'error'
-  }
-}
-
-export async function downloadSnapshotJson(name: string, token: string): Promise<BackupFile | null> {
-  const result = await fetchSnapshotViaProxy(token, name)
-  return typeof result === 'string' ? null : result
-}
-
-export async function downloadAndMerge(
-  database: AppTochiteDB,
-  token: string,
-  name: string,
-): Promise<MergeStats | 'auth-error' | 'error'> {
-  const result = await fetchSnapshotViaProxy(token, name)
-  if (typeof result === 'string') return result
-  try {
-    return await mergeBackup(database, result)
-  } catch {
-    return 'error'
   }
 }
 

@@ -46,7 +46,6 @@ jobs:
         env:
           VITE_ANALYTICS_URL: ${{ secrets.VITE_ANALYTICS_URL }}
           VITE_YANDEX_CLIENT_ID: ${{ secrets.VITE_YANDEX_CLIENT_ID }}
-          VITE_CLOUD_PROXY_URL: ${{ secrets.VITE_CLOUD_PROXY_URL }}
 
       - uses: actions/configure-pages@v6
 
