@@ -267,7 +267,9 @@ async function freshDownloadHref(token: string, name: string): Promise<{ href: s
 export async function downloadSnapshotJson(name: string, token: string): Promise<BackupFile | null> {
   const link = await freshDownloadHref(token, name)
   if (typeof link === 'string') return null
-  const res = await fetch(link.href, { headers: { Authorization: `OAuth ${token}` } })
+  // href — временная подписанная ссылка на storage-домен; Authorization не нужен и
+  // ломал бы запрос CORS-preflight'ом (как и в putBackup — заголовок не шлём).
+  const res = await fetch(link.href)
   if (!res.ok) return null
   const parsed = JSON.parse(await res.text(), reviveDates)
   return isValidBackup(parsed) ? parsed : null
@@ -281,7 +283,9 @@ export async function downloadAndMerge(
   try {
     const link = await freshDownloadHref(token, name)
     if (typeof link === 'string') return link
-    const res = await fetch(link.href, { headers: { Authorization: `OAuth ${token}` } })
+    // href — временная подписанная ссылка на storage-домен; Authorization не нужен и
+    // ломал бы запрос CORS-preflight'ом (как и в putBackup — заголовок не шлём).
+    const res = await fetch(link.href)
     if (!res.ok) return 'error'
     const parsed = JSON.parse(await res.text(), reviveDates)
     if (!isValidBackup(parsed)) return 'error'
