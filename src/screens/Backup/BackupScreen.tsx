@@ -74,6 +74,7 @@ import {
   listYandexSnapshots,
   downloadAndMerge,
   downloadSnapshotJson,
+  getLastRestoreError,
   buildOAuthUrl,
   peekCloudDeviceId,
   type CloudSnapshot,
@@ -410,7 +411,8 @@ export default function BackupScreen() {
       if (result === 'auth-error') {
         showToast(t.backup.cloudAuthError)
       } else if (result === 'error') {
-        showToast(t.backup.cloudRestoreError)
+        const detail = getLastRestoreError()
+        showToast(detail ? `${t.backup.cloudRestoreError}: ${detail}` : t.backup.cloudRestoreError)
       } else {
         const statsStr = `+${result.added} / ~${result.updated} / =${result.skipped}`
         showToast(t.backup.cloudRestoreDone(statsStr))
@@ -425,11 +427,16 @@ export default function BackupScreen() {
     if (!cloudToken) return
     try {
       const backup = await downloadSnapshotJson(snap.name, cloudToken)
-      if (!backup) { showToast(t.backup.cloudRestoreError); return }
+      if (!backup) {
+        const detail = getLastRestoreError()
+        showToast(detail ? `${t.backup.cloudRestoreError}: ${detail}` : t.backup.cloudRestoreError)
+        return
+      }
       const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
       downloadBlob(blob, snap.name.replace('.json', '') + '.json')
-    } catch {
-      showToast(t.backup.cloudRestoreError)
+    } catch (e) {
+      const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e)
+      showToast(`${t.backup.cloudRestoreError}: ${msg}`)
     }
   }
 

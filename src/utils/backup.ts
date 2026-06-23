@@ -585,17 +585,24 @@ function shouldTakeFileSoftDeletable<T extends { updatedAt?: Date; deletedAt?: D
 // одинаковые камни/стали/ножи двух устройств не плодят дубли и не перетирают
 // чужие записи по совпавшему id.
 
+// Нормализация поля-ключа: терпима к null/undefined и нестроковым значениям
+// (кривой импорт мог записать число/пусто). natKey НЕ должен бросать — иначе одна
+// битая справочная запись роняет весь mergeBackup (строится для каждой записи).
+function lcKey(v: unknown): string {
+  return String(v ?? '').trim().toLowerCase()
+}
+
 function stoneNatKey(s: Stone): string {
   const grit = s.gritMk ? `mk:${s.gritMk}` : String(s.gritMicrons ?? s.gritFepa ?? s.gritJis ?? '')
-  return `${s.brand.trim().toLowerCase()}|${grit}`
+  return `${lcKey(s.brand)}|${grit}`
 }
 
 function steelNatKey(s: Steel): string {
-  return normSteel(s.name)
+  return normSteel(String(s.name ?? ''))
 }
 
 function knifeNatKey(k: Knife): string {
-  return `${k.brand.trim().toLowerCase()}|${(k.steel ?? '').trim().toLowerCase()}`
+  return `${lcKey(k.brand)}|${lcKey(k.steel)}`
 }
 
 // Merge одного справочника: совпадение по natural key → LWW; новая запись —

@@ -250,29 +250,73 @@ async function rotateSnapshots(token: string, deviceId: string): Promise<void> {
 
 // ─── Download + merge ─────────────────────────────────────────────────────────
 
-// Свежий временный download-URL по имени файла. href из листинга короткоживущий и
-// протухает, если экран открыт долго, — поэтому запрашиваем ссылку прямо перед скачиванием.
-async function freshDownloadHref(token: string, name: string): Promise<{ href: string } | 'auth-error' | 'error'> {
+// Диагностика последнего сбоя скачивания/объединения: на каком шаге и с чем упало.
+// Читается экраном бэкапа и показывается в тосте — чтобы причина была видна сразу,
+// а не сводилась к общему «Не удалось загрузить снапшот».
+export type RestoreStage = 'link' | 'download' | 'parse' | 'invalid' | 'merge'
+let lastRestoreError: string | null = null
+export function getLastRestoreError(): string | null {
+  return lastRestoreError
+}
+
+function errMsg(e: unknown): string {
+  return e instanceof Error ? `${e.name}: ${e.message}` : String(e)
+}
+
+function noteRestoreError(stage: RestoreStage, detail: string): void {
+  lastRestoreError = `${stage} — ${detail}`
+  console.error('[cloud restore]', stage, detail)
+  track('cloud_restore_fail', { stage, detail: detail.slice(0, 200) }).catch(() => {})
+}
+
+// Скачивание снапшота в объект BackupFile с поэтапной диагностикой. href из листинга
+// короткоживущий — запрашиваем свежую ссылку прямо перед скачиванием.
+async function fetchSnapshot(token: string, name: string): Promise<BackupFile | 'auth-error' | 'error'> {
+  lastRestoreError = null
   const path = `${APP_FOLDER}${name}`
-  const res = await fetch(
-    `${DISK_API}/resources/download?path=${encodeURIComponent(path)}`,
-    { headers: { Authorization: `OAuth ${token}` } }
-  )
-  if (res.status === 401) return 'auth-error'
-  if (!res.ok) return 'error'
-  const { href } = await res.json() as { href: string }
-  return { href }
+
+  // 1) Ссылка на скачивание — API-домен Яндекса, нужен Authorization (как в листинге).
+  let href: string
+  try {
+    const res = await fetch(
+      `${DISK_API}/resources/download?path=${encodeURIComponent(path)}`,
+      { headers: { Authorization: `OAuth ${token}` } },
+    )
+    if (res.status === 401) { noteRestoreError('link', 'HTTP 401'); return 'auth-error' }
+    if (!res.ok) { noteRestoreError('link', `HTTP ${res.status}`); return 'error' }
+    href = (await res.json() as { href: string }).href
+  } catch (e) {
+    noteRestoreError('link', errMsg(e))
+    return 'error'
+  }
+
+  // 2) Сам файл — storage-домен по подписанной ссылке. Authorization не шлём: он не
+  // нужен и спровоцировал бы CORS-preflight (как и в putBackup — заголовок не ставим).
+  let text: string
+  try {
+    const res = await fetch(href)
+    if (!res.ok) { noteRestoreError('download', `HTTP ${res.status}`); return 'error' }
+    text = await res.text()
+  } catch (e) {
+    noteRestoreError('download', errMsg(e))
+    return 'error'
+  }
+
+  // 3) Разбор и валидация формата.
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text, reviveDates)
+  } catch (e) {
+    noteRestoreError('parse', `${errMsg(e)} (len=${text.length})`)
+    return 'error'
+  }
+  if (!isValidBackup(parsed)) { noteRestoreError('invalid', 'формат не распознан'); return 'error' }
+  return parsed
 }
 
 export async function downloadSnapshotJson(name: string, token: string): Promise<BackupFile | null> {
-  const link = await freshDownloadHref(token, name)
-  if (typeof link === 'string') return null
-  // href — временная подписанная ссылка на storage-домен; Authorization не нужен и
-  // ломал бы запрос CORS-preflight'ом (как и в putBackup — заголовок не шлём).
-  const res = await fetch(link.href)
-  if (!res.ok) return null
-  const parsed = JSON.parse(await res.text(), reviveDates)
-  return isValidBackup(parsed) ? parsed : null
+  const result = await fetchSnapshot(token, name)
+  return typeof result === 'string' ? null : result
 }
 
 export async function downloadAndMerge(
@@ -280,17 +324,12 @@ export async function downloadAndMerge(
   token: string,
   name: string,
 ): Promise<MergeStats | 'auth-error' | 'error'> {
+  const result = await fetchSnapshot(token, name)
+  if (typeof result === 'string') return result
   try {
-    const link = await freshDownloadHref(token, name)
-    if (typeof link === 'string') return link
-    // href — временная подписанная ссылка на storage-домен; Authorization не нужен и
-    // ломал бы запрос CORS-preflight'ом (как и в putBackup — заголовок не шлём).
-    const res = await fetch(link.href)
-    if (!res.ok) return 'error'
-    const parsed = JSON.parse(await res.text(), reviveDates)
-    if (!isValidBackup(parsed)) return 'error'
-    return await mergeBackup(database, parsed)
-  } catch {
+    return await mergeBackup(database, result)
+  } catch (e) {
+    noteRestoreError('merge', errMsg(e))
     return 'error'
   }
 }
