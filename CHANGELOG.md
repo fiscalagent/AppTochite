@@ -1,3 +1,10 @@
+## [1.106.1](https://github.com/fiscalagent/AppTochite/compare/v1.106.0...v1.106.1) (2026-06-23)
+
+
+### fix
+
+* восстановление из облака — снимки в облаке стали справочным списком, восстановление через «Восстановить из файла»; добавлено подтверждение для «Заменить всё» ([](https://github.com/fiscalagent/AppTochite/commit/79029dbf7f8919b34e1c7afd04b9e07c8cee6c57))
+
 # [1.106.0](https://github.com/fiscalagent/AppTochite/compare/v1.105.4...v1.106.0) (2026-06-23)
 
 
