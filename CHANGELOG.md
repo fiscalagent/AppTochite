@@ -1,3 +1,10 @@
+## [1.105.3](https://github.com/fiscalagent/AppTochite/compare/v1.105.2...v1.105.3) (2026-06-23)
+
+
+### fix
+
+* скачивание бэкапа из облака работает через системный загрузчик, объединение — из скачанного файла ([](https://github.com/fiscalagent/AppTochite/commit/dce6f2fe90bcb7b0089db175b3420b8111111ee8))
+
 ## [1.105.2](https://github.com/fiscalagent/AppTochite/compare/v1.105.1...v1.105.2) (2026-06-23)
 
 
