@@ -400,9 +400,11 @@ export default function BackupScreen() {
     setCloudAuto(next)
   }
 
-  // Скачивание снапшота навигацией браузера: storage-домен Яндекса не отдаёт CORS,
-  // поэтому прочитать файл через fetch нельзя — но download по подписанной ссылке
-  // CORS не подчиняется. Возвращает true, если скачивание запущено.
+  // Скачивание снапшота по подписанной ссылке. fetch читать тело не может (storage-
+  // домен Яндекса не отдаёт CORS), а навигация в новую вкладку даёт ERR_INVALID_RESPONSE
+  // (Яндекс отвечает некорректно на document-навигацию). Поэтому качаем кликом по
+  // <a download> БЕЗ target — это download-запрос (Content-Disposition: attachment),
+  // другой кодовый путь, файл сохраняется без ухода со страницы.
   async function triggerCloudDownload(snap: CloudSnapshot): Promise<boolean> {
     if (!cloudToken) return false
     const url = await getSnapshotDownloadUrl(cloudToken, snap.name)
@@ -410,8 +412,7 @@ export default function BackupScreen() {
     if (url === 'error') { showToast(t.backup.cloudRestoreError); return false }
     const a = document.createElement('a')
     a.href = url
-    a.target = '_blank'
-    a.rel = 'noopener'
+    a.download = snap.name
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
