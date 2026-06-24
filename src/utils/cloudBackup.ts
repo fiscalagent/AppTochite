@@ -1,5 +1,5 @@
 import type { AppTochiteDB } from '../db/instance'
-import { exportBackup, type BackupFile } from './backup'
+import { exportBackup, dataSignature, localDayStr, type BackupFile } from './backup'
 import { track } from '../services/analytics'
 
 // ─── Константы ───────────────────────────────────────────────────────────────
@@ -135,38 +135,10 @@ export async function listYandexSnapshots(
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
 
-// День в формате YYYY-MM-DD по локальному времени устройства.
-function localDayStr(): string {
-  const now = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-}
-
 // Имя файла — <deviceId>-<день> (без времени): один снапшот в сутки на устройство,
 // overwrite перезаписывает внутридневные пере-заливки. Ротация 7 на устройство = неделя.
 function backupFilename(deviceId: string): string {
   return `${BACKUP_PREFIX}${deviceId}-${localDayStr()}.json`
-}
-
-// Лёгкая сигнатура содержимого: количество записей + максимальный updatedAt по каждой
-// таблице. updatedAt бампится при любом create/update/delete/restore (см. trash.ts),
-// поэтому сигнатура ловит любые изменения, не сериализуя фото повторно.
-function dataSignature(data: BackupFile['data']): string {
-  const sig = (arr: { id?: number; updatedAt?: Date }[]) => {
-    let max = 0
-    let idSum = 0
-    for (const r of arr) {
-      const ts = r.updatedAt ? new Date(r.updatedAt).getTime() : 0
-      if (ts > max) max = ts
-      idSum += r.id ?? 0
-    }
-    // idSum ловит замену записи (delete+add) при неизменных count и max updatedAt:
-    // набор id меняется → сигнатура меняется.
-    return `${arr.length}:${max}:${idSum}`
-  }
-  return [data.clients, data.sharpenings, data.stones, data.steels, data.knives]
-    .map(sig)
-    .join('|')
 }
 
 export class YandexApiError extends Error {

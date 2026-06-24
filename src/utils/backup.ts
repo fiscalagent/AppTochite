@@ -56,6 +56,34 @@ export async function updateLastBackupAt(database: AppTochiteDB): Promise<void> 
   await database.settings.put({ key: 'lastBackupAt', value: new Date().toISOString() })
 }
 
+// День в формате YYYY-MM-DD по локальному времени устройства.
+// Используется дневными гейтами авто-бэкапа (облако и папка).
+export function localDayStr(): string {
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
+// Лёгкая сигнатура содержимого: количество записей + максимальный updatedAt + сумма id
+// по каждой таблице. updatedAt бампится при любом create/update/delete/restore,
+// поэтому сигнатура ловит любые изменения, не сериализуя фото повторно. idSum ловит
+// замену записи (delete+add) при неизменных count и max updatedAt: набор id меняется.
+export function dataSignature(data: BackupFile['data']): string {
+  const sig = (arr: { id?: number; updatedAt?: Date }[]) => {
+    let max = 0
+    let idSum = 0
+    for (const r of arr) {
+      const ts = r.updatedAt ? new Date(r.updatedAt).getTime() : 0
+      if (ts > max) max = ts
+      idSum += r.id ?? 0
+    }
+    return `${arr.length}:${max}:${idSum}`
+  }
+  return [data.clients, data.sharpenings, data.stones, data.steels, data.knives]
+    .map(sig)
+    .join('|')
+}
+
 const OPFS_FILENAME = 'apptochite-auto.json'
 const DAILY_PREFIX = 'apptochite-daily-'
 const DAILY_FILENAME_KEY = 'dailyBackupFilename'
@@ -144,6 +172,8 @@ async function verifyAutoBackup(
 
 const FOLDER_HANDLE_KEY = 'autoBackupFolderHandle'
 const FOLDER_LAST_AT_KEY = 'autoBackupFolderLastAt'
+const FOLDER_LAST_SIG_KEY = 'autoBackupFolderLastSig'        // сигнатура данных последней записи
+const FOLDER_LAST_CHECK_DAY_KEY = 'autoBackupFolderCheckDay' // день последней авто-проверки (YYYY-MM-DD)
 const FOLDER_FILENAME = 'apptochite-auto.json'
 const FOLDER_FILENAME_PREV = 'apptochite-auto-prev.json'
 const FOLDER_NAME_LS_KEY = 'bk_folderName'
@@ -195,10 +225,10 @@ export async function getFolderBackupMeta(database: AppTochiteDB): Promise<Folde
   }
 }
 
-async function writeFolderFile(handle: FileSystemDirectoryHandle, database: AppTochiteDB): Promise<void> {
-  const backup = await exportBackup(database)
-
-  // Отказываемся перезаписывать, если база выглядит пустой (очистка Chrome).
+// Пишет уже готовый backup в папку. Валидность проверяет вызывающий код
+// (для дневного гейта/сигнатуры backup всё равно нужен заранее), здесь —
+// последняя защита от перезаписи пустой базой (очистка Chrome).
+async function writeFolderFile(handle: FileSystemDirectoryHandle, database: AppTochiteDB, backup: BackupFile): Promise<void> {
   // Клиент «Я» всегда присутствует — его отсутствие означает потерю данных.
   if (!isValidBackup(backup) || backup.data.clients.length === 0) {
     throw new Error('folder backup aborted: DB appears empty')
@@ -222,22 +252,53 @@ async function writeFolderFile(handle: FileSystemDirectoryHandle, database: AppT
   const writable = await fileHandle.createWritable()
   await writable.write(json)
   await writable.close()
-  await database.settings.put({ key: FOLDER_LAST_AT_KEY, value: new Date().toISOString() })
+  await database.settings.bulkPut([
+    { key: FOLDER_LAST_AT_KEY, value: new Date().toISOString() },
+    { key: FOLDER_LAST_SIG_KEY, value: dataSignature(backup.data) },
+    { key: FOLDER_LAST_CHECK_DAY_KEY, value: localDayStr() },
+  ])
   await updateLastBackupAt(database)
   writeSentinel(database).catch(() => {})
 }
 
-// Вызывается из авто-бэкапа (без жеста пользователя) — только если уже granted.
+// Авто-бэкап в папку (без жеста). Та же политика, что у облака
+// (см. performCloudBackup): не чаще раза в сутки и только при изменении данных.
+//  1) Дневной гейт — тяжёлый exportBackup максимум раз в календарный день,
+//     а не на каждом возврате приложения в фокус.
+//  2) Сигнатура — если данные не менялись с прошлой записи, не трогаем файл.
+// Ручная запись («Сохранить сейчас») гейт обходит.
 export async function performFolderBackup(database: AppTochiteDB): Promise<void> {
   const entry = await database.settings.get(FOLDER_HANDLE_KEY)
   if (!entry) return
   const handle = entry.value as FileSystemDirectoryHandle
-  const perm = await queryDirectoryPermission(handle)
-  if (perm !== 'granted') return
-  await writeFolderFile(handle, database)
+  if (await queryDirectoryPermission(handle) !== 'granted') return
+
+  const today = localDayStr()
+  const checkEntry = await database.settings.get(FOLDER_LAST_CHECK_DAY_KEY)
+  if (checkEntry?.value === today) return
+
+  // Помечаем день проверенным сразу — чтобы при отсутствии изменений не гонять
+  // exportBackup повторно на каждом фокусе в течение дня. При сбое гейт снимаем.
+  await database.settings.put({ key: FOLDER_LAST_CHECK_DAY_KEY, value: today })
+  const clearDayGate = () =>
+    database.settings.delete(FOLDER_LAST_CHECK_DAY_KEY).catch(() => {})
+
+  try {
+    const backup = await exportBackup(database)
+    if (!isValidBackup(backup) || backup.data.clients.length === 0) return
+
+    const sigEntry = await database.settings.get(FOLDER_LAST_SIG_KEY)
+    if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
+
+    await writeFolderFile(handle, database, backup)
+  } catch (err) {
+    await clearDayGate()
+    throw err
+  }
 }
 
 // Вызывается по кнопке (есть жест) — может показать диалог разрешения.
+// Гейт/сигнатуру не проверяет: пользователь явно просит записать сейчас.
 // Возвращает 'ok' | 'no-folder' | 'no-permission' | 'error'
 export async function saveFolderBackupNow(database: AppTochiteDB): Promise<'ok' | 'no-folder' | 'no-permission' | 'error'> {
   const entry = await database.settings.get(FOLDER_HANDLE_KEY)
@@ -247,7 +308,7 @@ export async function saveFolderBackupNow(database: AppTochiteDB): Promise<'ok' 
   if (perm !== 'granted') perm = await requestDirectoryPermission(handle)
   if (perm !== 'granted') return 'no-permission'
   try {
-    await writeFolderFile(handle, database)
+    await writeFolderFile(handle, database, await exportBackup(database))
     return 'ok'
   } catch {
     return 'error'
@@ -268,8 +329,12 @@ export async function pickAndConnectFolder(database: AppTochiteDB): Promise<Fold
 }
 
 export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
-  await database.settings.delete(FOLDER_HANDLE_KEY)
-  await database.settings.delete(FOLDER_LAST_AT_KEY)
+  await database.settings.bulkDelete([
+    FOLDER_HANDLE_KEY,
+    FOLDER_LAST_AT_KEY,
+    FOLDER_LAST_SIG_KEY,        // иначе при переподключении гейт/сигнатура были бы устаревшими
+    FOLDER_LAST_CHECK_DAY_KEY,
+  ])
   try { localStorage.removeItem(FOLDER_NAME_LS_KEY) } catch { /* silent */ }
 }
 
@@ -382,7 +447,8 @@ export async function healFolderBackupIfNeeded(database: AppTochiteDB): Promise<
       const file = await fh.getFile()
       if (file.size > 0) return
     } catch { /* файл не найден */ }
-    await writeFolderFile(handle, database)
+    // Лечим пропавший файл — пишем напрямую, в обход дневного гейта.
+    await writeFolderFile(handle, database, await exportBackup(database))
   } catch { /* silent */ }
 }
 
