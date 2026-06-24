@@ -1,3 +1,10 @@
+# [1.108.0](https://github.com/fiscalagent/AppTochite/compare/v1.107.0...v1.108.0) (2026-06-24)
+
+
+### feat
+
+* автобэкап в папку — как у облака: не чаще раза в сутки и только при изменении данных (раньше писал при каждом открытии приложения) ([](https://github.com/fiscalagent/AppTochite/commit/5a756bf17a7122f7fae451bcc8340ce0f4a23bff))
+
 # [1.107.0](https://github.com/fiscalagent/AppTochite/compare/v1.106.1...v1.107.0) (2026-06-24)
 
 
