@@ -2,8 +2,13 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
 import { track } from '../../services/analytics'
+import { shareFilesNative } from '../../utils/nativeShare'
 import { useT } from '../../i18n'
 import s from './PhotoShareSheet.module.css'
+
+// В APK navigator.share файлов нет — шарим нативно (см. nativeShare.ts).
+// Литерал, чтобы Rollup вырезал нативную ветку из PWA-сборки.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
 
 export interface SharePhoto {
   b64: string
@@ -81,7 +86,10 @@ export default function PhotoShareSheet({ photos, onClose }: Props) {
       const files = blobs.map(
         (b, j) => new File([b], `photo-${j + 1}.jpg`, { type: 'image/jpeg' })
       )
-      if (navigator.share && navigator.canShare?.({ files })) {
+      if (IS_CAPACITOR) {
+        await shareFilesNative(files)
+        track('photo_shared', { method: 'share', count: files.length }).catch(() => {})
+      } else if (navigator.share && navigator.canShare?.({ files })) {
         await navigator.share({ files })
         track('photo_shared', { method: 'share', count: files.length }).catch(() => {})
       } else {

@@ -3,8 +3,13 @@ import { createPortal } from 'react-dom'
 import type { Sharpening } from '../../db/db'
 import { startBlur } from '../../utils/modalBlur'
 import { track } from '../../services/analytics'
+import { shareFilesNative } from '../../utils/nativeShare'
 import { useT } from '../../i18n'
 import s from './PhotoReportSheet.module.css'
+
+// В APK navigator.share файлов нет — шарим нативно (см. nativeShare.ts).
+// Литерал, чтобы Rollup вырезал нативную ветку из PWA-сборки.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
 
 interface Props {
   photos: string[]
@@ -248,7 +253,10 @@ export default function PhotoReportSheet({ photos, sharpening, onClose }: Props)
       )
       const file = new File([blob], 'sharpening-report.jpg', { type: 'image/jpeg' })
 
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      if (IS_CAPACITOR) {
+        await shareFilesNative([file])
+        track('report_shared', { method: 'share' }).catch(() => {})
+      } else if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] })
         track('report_shared', { method: 'share' }).catch(() => {})
       } else {
