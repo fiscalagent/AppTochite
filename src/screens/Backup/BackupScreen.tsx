@@ -62,9 +62,15 @@ import {
   type PreRestoreSnapshotMeta,
 } from '../../utils/backup'
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
+import { shareFilesNative } from '../../utils/nativeShare'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import { useLocale, fmtDate, fmtDateTimeLong } from '../../i18n'
 import { FEATURES } from '../../config/features'
+
+// В APK <a download> и navigator.share(files) не работают — выгрузку бэкапа гоним
+// через системное «Поделиться» (см. nativeShare.ts). Это пол миграции PWA→APK.
+// Литерал → Rollup вырезает нативные ветки из PWA-сборки.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
 import {
   getYandexToken,
   removeYandexToken,
@@ -230,11 +236,20 @@ export default function BackupScreen() {
     setExporting(true)
     try {
       const backup = await exportBackup(db)
-      const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' })
-      downloadBlob(blob, `apptochite-${todayStr()}.json`)
+      const json = JSON.stringify(backup)
+      const filename = `apptochite-${todayStr()}.json`
+      if (IS_CAPACITOR) {
+        // Системное «Поделиться» (Drive/почта/телега) — бросает при отмене.
+        const file = new File([json], filename, { type: 'application/json' })
+        await shareFilesNative([file], { title: t.backup.shareTitle })
+      } else {
+        downloadBlob(new Blob([json], { type: 'application/json' }), filename)
+      }
       await updateLastBackupAt(db)
       track('backup_manual').catch(() => {})
       showToast(t.backup.backupSaved)
+    } catch {
+      // отмена share — без тоста об успехе
     } finally {
       setExporting(false)
     }
@@ -297,6 +312,15 @@ export default function BackupScreen() {
 
   function handleShare() {
     if (!shareFile) return
+    if (IS_CAPACITOR) {
+      shareFilesNative([shareFile], { title: t.backup.shareTitle })
+        .then(async () => {
+          await updateLastBackupAt(db)
+          showToast(t.backup.backupShared)
+        })
+        .catch(() => { /* отмена */ })
+      return
+    }
     if (!navigator.canShare?.({ files: [shareFile] })) {
       showToast(t.backup.shareUnsupported)
       return
@@ -315,6 +339,12 @@ export default function BackupScreen() {
 
   function handleExportCSV() {
     if (!csvFile) return
+    if (IS_CAPACITOR) {
+      shareFilesNative([csvFile], { title: csvFile.name })
+        .then(() => showToast(t.backup.csvSaved))
+        .catch(() => { /* отмена */ })
+      return
+    }
     // iOS Safari не поддерживает <a download> — используем share.
     // На Android text/csv не в белом списке Web Share API, поэтому там downloadBlob.
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase())
