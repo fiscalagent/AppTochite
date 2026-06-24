@@ -101,12 +101,40 @@ function pickFile(capture: boolean, onDone: (b64: string) => void) {
   input.click()
 }
 
+// В APK (`--mode capacitor`) фото берём нативным @capacitor/camera, а не <input
+// type=file>: системная камера/Photo Picker вместо «выбери приложение». Плагин
+// импортируется динамически и только в этой ветке — в PWA-сборке (MODE='production')
+// условие сворачивается в false, Rollup вырезает и ветку, и chunk плагина, бандл не
+// растёт. Результат прогоняется через тот же processFile → сжатие идентично web.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
+
+async function nativeGetPhoto(source: 'camera' | 'gallery', onDone: (b64: string) => void) {
+  try {
+    const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
+    const photo = await Camera.getPhoto({
+      source: source === 'camera' ? CameraSource.Camera : CameraSource.Photos,
+      resultType: CameraResultType.DataUrl,
+      quality: 90,
+      allowEditing: false,
+      correctOrientation: true,
+    })
+    if (!photo.dataUrl) return
+    const blob = await (await fetch(photo.dataUrl)).blob()
+    const file = new File([blob], 'photo.jpg', { type: blob.type || 'image/jpeg' })
+    processFile(file, onDone)
+  } catch {
+    // Отмена пользователем или отказ в разрешении — тихо игнорируем, как web-cancel.
+  }
+}
+
 export function useCamera() {
   function openCamera(onDone: (b64: string) => void) {
+    if (IS_CAPACITOR) return void nativeGetPhoto('camera', onDone)
     pickFile(true, onDone)
   }
 
   function openGallery(onDone: (b64: string) => void) {
+    if (IS_CAPACITOR) return void nativeGetPhoto('gallery', onDone)
     pickFile(false, onDone)
   }
 

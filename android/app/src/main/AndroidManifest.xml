@@ -38,4 +38,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Нативная съёмка фото «До/После» через @capacitor/camera (Ф2).
+         required=false — APK ставится и на устройства без камеры (галерея работает всегда). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>
