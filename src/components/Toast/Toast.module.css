@@ -16,6 +16,30 @@
   pointer-events: none;
 }
 
+.withAction {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: auto;
+}
+
+.toastMsg {
+  flex: 1;
+}
+
+.toastAction {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .raised {
   bottom: 150px;
 }

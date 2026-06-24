@@ -168,6 +168,10 @@ export default function SharpeningDetail() {
   const [newStoneGritVal, setNewStoneGritVal] = useState('')
   const [newStoneGritMk, setNewStoneGritMk] = useState('')
   const [newStoneType, setNewStoneType] = useState<Stone['type'] | ''>('')
+  // Режим «уточнения»: модалка редактирует уже созданный камень справочника,
+  // а не добавляет новый. refineFromName — текущее имя камня в этой заточке (для переименования тега).
+  const [editingStoneId, setEditingStoneId] = useState<number | null>(null)
+  const [refineFromName, setRefineFromName] = useState('')
 
   // Dictation (Z-2: angle / stones / comment)
   const dictation = useDictationMode(locale)
@@ -235,6 +239,69 @@ export default function SharpeningDetail() {
     if (selectedStones.find(st => st.name.toLowerCase() === trimmed.toLowerCase())) return
     setSelectedStones(prev => [...prev, { name: trimmed, order: prev.length + 1 }])
     setStoneInput('')
+    // Новый камень — заодно заводим его в справочник, чтобы он стал «моим».
+    void ensureStoneInReference(trimmed)
+  }
+
+  function renameStone(from: string, to: string) {
+    if (from === to) return
+    setSelectedStones(prev => prev.map(st => (st.name === from ? { ...st, name: to } : st)))
+  }
+
+  // Если камня с таким именем нет в справочнике — создаём его (бренд + распознанная
+  // из имени гритность), нормализуем тег к каноничному имени и предлагаем уточнить тип/гритность.
+  async function ensureStoneInReference(typedName: string) {
+    const trimmed = typedName.trim()
+    if (!trimmed) return
+    const all = await db.stones.toArray()
+    if (all.some(st => stoneDisplayName(st).toLowerCase() === trimmed.toLowerCase())) return
+    const { brand, ...gritFields } = parseStoneName(trimmed)
+    const stone: Stone = {
+      brand: brand.trim(),
+      ...gritFields,
+      isCustom: true,
+      updatedAt: new Date(),
+    }
+    let newId: number
+    try {
+      newId = (await db.stones.add(stone)) as number
+    } catch {
+      return // справочник не записался — работу не прерываем
+    }
+    const display = stoneDisplayName(stone)
+    renameStone(trimmed, display)
+    showToast(t.sharpening.stoneAutoAdded(display), {
+      label: t.sharpening.refineStone,
+      onClick: () => openRefineStone(newId, stone),
+    })
+  }
+
+  function openRefineStone(id: number, stone: Stone) {
+    setEditingStoneId(id)
+    setRefineFromName(stoneDisplayName(stone))
+    setNewStoneBrand(stone.brand)
+    setNewStoneGritVal('')
+    setNewStoneGritMk('')
+    switch (stone.gritSource) {
+      case 'mk': setNewStoneGritSource('mk'); setNewStoneGritMk(stone.gritMk ?? ''); break
+      case 'fepa': setNewStoneGritSource('fepa'); setNewStoneGritVal(stone.gritFepa != null ? String(stone.gritFepa) : ''); break
+      case 'jis': setNewStoneGritSource('jis'); setNewStoneGritVal(stone.gritJis != null ? String(stone.gritJis) : ''); break
+      case 'microns': setNewStoneGritSource('microns'); setNewStoneGritVal(stone.gritMicrons != null ? String(stone.gritMicrons) : ''); break
+      default: setNewStoneGritSource('')
+    }
+    setNewStoneType(stone.type ?? '')
+    setNewStoneOpen(true)
+  }
+
+  function closeNewStone() {
+    setNewStoneOpen(false)
+    setEditingStoneId(null)
+    setRefineFromName('')
+    setNewStoneBrand('')
+    setNewStoneGritSource('')
+    setNewStoneGritVal('')
+    setNewStoneGritMk('')
+    setNewStoneType('')
   }
 
   function removeStone(index: number) {
@@ -259,12 +326,32 @@ export default function SharpeningDetail() {
     else if (newStoneGritSource === 'jis' && newStoneGritVal) gritFields = fromJis(Number(newStoneGritVal))
     else if (newStoneGritSource === 'microns' && newStoneGritVal) gritFields = fromMicrons(Number(newStoneGritVal))
     else if (newStoneGritSource === 'mk' && newStoneGritMk) gritFields = fromMk(newStoneGritMk)
+    // Явные undefined-дефолты, чтобы при уточнении update мог СБРОСИТЬ ранее распознанную гритность.
     const stone: Stone = {
       brand: newStoneBrand.trim(),
+      gritFepa: undefined,
+      gritJis: undefined,
+      gritMicrons: undefined,
+      gritMk: undefined,
+      gritSource: undefined,
       ...gritFields,
       type: newStoneType || undefined,
       isCustom: true,
       updatedAt: new Date(),
+    }
+    if (editingStoneId != null) {
+      // Уточнение уже созданного камня: обновляем запись и переименовываем тег в заточке.
+      try {
+        await db.stones.update(editingStoneId, stone)
+      } catch {
+        showToast(t.sharpening.voice.stoneSaveFailed)
+        return
+      }
+      const display = stoneDisplayName({ ...stone, id: editingStoneId })
+      renameStone(refineFromName, display)
+      showToast(t.sharpening.stoneAdded(display))
+      closeNewStone()
+      return
     }
     try {
       await db.stones.add(stone)
@@ -275,12 +362,7 @@ export default function SharpeningDetail() {
     const displayName = stoneDisplayName(stone)
     addStone(displayName)
     showToast(t.sharpening.stoneAdded(displayName))
-    setNewStoneBrand('')
-    setNewStoneGritSource('')
-    setNewStoneGritVal('')
-    setNewStoneGritMk('')
-    setNewStoneType('')
-    setNewStoneOpen(false)
+    closeNewStone()
   }
 
   // ─── Dictation command handling ───────────────────────────────────────────
@@ -759,12 +841,12 @@ export default function SharpeningDetail() {
           {newStoneOpen && createPortal(
             <div
               style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:'var(--space-4)' }}
-              onClick={() => setNewStoneOpen(false)}
+              onClick={closeNewStone}
             >
             <div style={{ width:'100%', background:'var(--bg-100)', borderRadius:'var(--radius-lg)', maxHeight:'92vh', overflowY:'auto', padding:'var(--space-4)', display:'flex', flexDirection:'column', gap:'var(--space-2)' }}
               onClick={e => e.stopPropagation()}
             >
-            <span className={s.newStoneTitle}>{t.sharpening.newStoneTitle}</span>
+            <span className={s.newStoneTitle}>{editingStoneId != null ? t.sharpening.refineStoneTitle : t.sharpening.newStoneTitle}</span>
               <input
                 value={newStoneBrand}
                 onChange={e => setNewStoneBrand(e.target.value)}
@@ -814,8 +896,8 @@ export default function SharpeningDetail() {
                 </select>
               </div>
               <div className={s.newStoneRow}>
-                <button className={s.newStoneSaveBtn} onClick={saveNewStone} disabled={!newStoneBrand.trim()}>{t.common.add}</button>
-                <button className={s.newStoneCancelBtn} onClick={() => setNewStoneOpen(false)}>{t.common.cancel}</button>
+                <button className={s.newStoneSaveBtn} onClick={saveNewStone} disabled={!newStoneBrand.trim()}>{editingStoneId != null ? t.common.save : t.common.add}</button>
+                <button className={s.newStoneCancelBtn} onClick={closeNewStone}>{t.common.cancel}</button>
               </div>
             </div>
             </div>,
