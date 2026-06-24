@@ -37,4 +37,6 @@ export const router = createBrowserRouter([
       { path: '/games/angle',             element: <AngleGame /> },
     ],
   },
-], { basename: '/AppTochite' })
+// PWA живёт на GitHub Pages под /AppTochite/, APK (cap-сборка) — на https://localhost/.
+// Без правильного basename роутер в APK не матчит '/' и не рендерит ничего (тёмный экран).
+], { basename: import.meta.env.MODE === 'capacitor' ? '/' : '/AppTochite' })
