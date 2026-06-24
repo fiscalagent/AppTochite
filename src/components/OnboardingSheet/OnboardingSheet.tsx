@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom'
 import { db } from '../../db/instance'
 import { startBlur } from '../../utils/modalBlur'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
-import { useT } from '../../i18n'
+import { openGuide as openGuideUrl } from '../../utils/openGuide'
+import { useLocale } from '../../i18n'
 import s from './OnboardingSheet.module.css'
 
 export default function OnboardingSheet() {
   const [visible, setVisible] = useState(false)
   const { canInstall, promptInstall } = useInstallPrompt()
-  const t = useT()
+  const { t, locale } = useLocale()
 
   useEffect(() => {
     db.settings.get('onboardingShown').then(entry => {
@@ -28,7 +29,7 @@ export default function OnboardingSheet() {
   }
 
   function openGuide() {
-    window.open('/AppTochite/guide.html', '_blank')
+    openGuideUrl(locale)
     dismiss()
   }
 

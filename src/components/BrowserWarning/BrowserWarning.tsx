@@ -2,6 +2,12 @@ import { useState } from 'react'
 import { useT } from '../../i18n'
 import s from './BrowserWarning.module.css'
 
+// В APK (нативный WebView) баннер не нужен и вреден: UA Android System WebView
+// тоже содержит «; wv)», поэтому isWebView() ложно срабатывает, а совет «открыть
+// в Chrome» уводит из легитимного приложения. Литерал → Rollup вырежет ветку из
+// PWA-сборки (там MODE='production', баннер работает как прежде).
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
+
 function isWebView(): boolean {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
@@ -15,7 +21,7 @@ export default function BrowserWarning() {
   const t = useT()
 
   const standalone = window.matchMedia('(display-mode: standalone)').matches
-  if (standalone || !isWebView() || dismissed) return null
+  if (IS_CAPACITOR || standalone || !isWebView() || dismissed) return null
 
   const openInChrome = () => {
     const url = window.location.href
