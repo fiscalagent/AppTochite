@@ -1,3 +1,10 @@
+## [1.108.1](https://github.com/fiscalagent/AppTochite/compare/v1.108.0...v1.108.1) (2026-06-24)
+
+
+### fix
+
+* восстановление из папки на устройстве — «Файл в папке не найден или повреждён» при живом файле; чтение теперь повышает разрешение под тапом (раньше только запрашивало статус и срывалось в prompt) ([](https://github.com/fiscalagent/AppTochite/commit/026444563c230781f92f4e44cf4c4c70caff86b2))
+
 # [1.108.0](https://github.com/fiscalagent/AppTochite/compare/v1.107.0...v1.108.0) (2026-06-24)
 
 
