@@ -1,3 +1,10 @@
+# [1.109.0](https://github.com/fiscalagent/AppTochite/compare/v1.108.1...v1.109.0) (2026-06-24)
+
+
+### feat
+
+* камень, заведённый прямо в заточке, теперь сохраняется и в справочник — с распознанной из названия гритностью; в подсказке кнопка «Уточнить тип и гритность» для дозаполнения типа ([](https://github.com/fiscalagent/AppTochite/commit/ad7587db957d08a6be2c8a78ebb824eaad59fe73))
+
 ## [1.108.1](https://github.com/fiscalagent/AppTochite/compare/v1.108.0...v1.108.1) (2026-06-24)
 
 
