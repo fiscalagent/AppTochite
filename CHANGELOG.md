@@ -1,3 +1,10 @@
+# [1.107.0](https://github.com/fiscalagent/AppTochite/compare/v1.106.1...v1.107.0) (2026-06-24)
+
+
+### feat
+
+* новый экран бэкапа — лесенка надёжности (в браузере → папка → облако), единый список копий для восстановления, ручные выгрузки в «Дополнительно» ([](https://github.com/fiscalagent/AppTochite/commit/836bba8d93c16386c73ba052f03a26317a292fef))
+
 ## [1.106.1](https://github.com/fiscalagent/AppTochite/compare/v1.106.0...v1.106.1) (2026-06-23)
 
 
