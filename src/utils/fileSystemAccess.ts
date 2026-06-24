@@ -27,10 +27,16 @@ export async function pickDirectory(): Promise<FileSystemDirectoryHandle> {
   return window.showDirectoryPicker({ mode: 'read', startIn: 'documents' })
 }
 
-export async function queryDirectoryPermission(handle: FileSystemDirectoryHandle): Promise<PermissionState> {
-  return (handle as FSDirectoryHandleWithPermission).queryPermission({ mode: 'readwrite' })
+export async function queryDirectoryPermission(
+  handle: FileSystemDirectoryHandle,
+  mode: 'read' | 'readwrite' = 'readwrite',
+): Promise<PermissionState> {
+  return (handle as FSDirectoryHandleWithPermission).queryPermission({ mode })
 }
 
-export async function requestDirectoryPermission(handle: FileSystemDirectoryHandle): Promise<PermissionState> {
-  return (handle as FSDirectoryHandleWithPermission).requestPermission({ mode: 'readwrite' })
+export async function requestDirectoryPermission(
+  handle: FileSystemDirectoryHandle,
+  mode: 'read' | 'readwrite' = 'readwrite',
+): Promise<PermissionState> {
+  return (handle as FSDirectoryHandleWithPermission).requestPermission({ mode })
 }

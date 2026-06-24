@@ -212,7 +212,7 @@ export async function getFolderBackupMeta(database: AppTochiteDB): Promise<Folde
   // Размер текущего файла — только если доступ к папке уже выдан (без запроса).
   let size: number | undefined
   try {
-    if (await queryDirectoryPermission(handle) === 'granted') {
+    if (await queryDirectoryPermission(handle, 'read') === 'granted') {
       const fh = await handle.getFileHandle(FOLDER_FILENAME)
       const file = await fh.getFile()
       if (file.size > 0) size = file.size
@@ -340,17 +340,26 @@ export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
 
 export interface FolderPrevMeta { date: Date; size: number }
 
-async function getFolderHandleIfGranted(database: AppTochiteDB): Promise<FileSystemDirectoryHandle | null> {
+// Для чтения нужен ровно read-доступ (не readwrite). Разрешение File System Access
+// после завершения жеста (и почти всегда на мобильном/после перезагрузки) сваливается
+// в 'prompt'. Поэтому при interactive=true (вызов под тапом «Восстановить») повышаем
+// его через requestPermission — иначе чтение молча вернёт null, хотя файл на месте.
+// При interactive=false (фоновая загрузка метаданных) только запрашиваем статус.
+async function getFolderHandleForRead(
+  database: AppTochiteDB,
+  interactive: boolean,
+): Promise<FileSystemDirectoryHandle | null> {
   const entry = await database.settings.get(FOLDER_HANDLE_KEY)
   if (!entry) return null
   const handle = entry.value as FileSystemDirectoryHandle
-  const perm = await queryDirectoryPermission(handle)
+  let perm = await queryDirectoryPermission(handle, 'read')
+  if (perm !== 'granted' && interactive) perm = await requestDirectoryPermission(handle, 'read')
   return perm === 'granted' ? handle : null
 }
 
 export async function getFolderPrevMeta(database: AppTochiteDB): Promise<FolderPrevMeta | null> {
   try {
-    const handle = await getFolderHandleIfGranted(database)
+    const handle = await getFolderHandleForRead(database, false)
     if (!handle) return null
     const fh = await handle.getFileHandle(FOLDER_FILENAME_PREV)
     const file = await fh.getFile()
@@ -361,7 +370,7 @@ export async function getFolderPrevMeta(database: AppTochiteDB): Promise<FolderP
 
 export async function readFolderPrevBackup(database: AppTochiteDB): Promise<BackupFile | null> {
   try {
-    const handle = await getFolderHandleIfGranted(database)
+    const handle = await getFolderHandleForRead(database, true)
     if (!handle) return null
     const fh = await handle.getFileHandle(FOLDER_FILENAME_PREV)
     const file = await fh.getFile()
@@ -371,11 +380,11 @@ export async function readFolderPrevBackup(database: AppTochiteDB): Promise<Back
   } catch { return null }
 }
 
-// Чтение текущего файла из подключённой папки — для прямого «Восстановить из
-// папки». Только чтение (через уже granted handle), данные не трогаем.
+// Чтение текущего файла из подключённой папки — для прямого «Восстановить из папки».
+// Вызывается под тапом пользователя → можно повысить разрешение (interactive=true).
 export async function readFolderBackup(database: AppTochiteDB): Promise<BackupFile | null> {
   try {
-    const handle = await getFolderHandleIfGranted(database)
+    const handle = await getFolderHandleForRead(database, true)
     if (!handle) return null
     const fh = await handle.getFileHandle(FOLDER_FILENAME)
     const file = await fh.getFile()
