@@ -5,9 +5,11 @@ interface FSDirectoryHandleWithPermission extends FileSystemDirectoryHandle {
   requestPermission(desc: { mode: 'read' | 'readwrite' }): Promise<PermissionState>
 }
 
+type WellKnownDir = 'desktop' | 'documents' | 'downloads' | 'music' | 'pictures' | 'videos'
+
 declare global {
   interface Window {
-    showDirectoryPicker(options?: { mode?: 'read' | 'readwrite' }): Promise<FileSystemDirectoryHandle>
+    showDirectoryPicker(options?: { mode?: 'read' | 'readwrite'; startIn?: WellKnownDir }): Promise<FileSystemDirectoryHandle>
   }
 }
 
@@ -16,7 +18,13 @@ export function supportsFileSystemAccess(): boolean {
 }
 
 export async function pickDirectory(): Promise<FileSystemDirectoryHandle> {
-  return window.showDirectoryPicker({ mode: 'readwrite' })
+  // mode:'read' — подключение без второго окна «Разрешить изменение файлов?».
+  // Его отмена даёт AbortError и подключение молча срывается. Доступ на запись
+  // повышаем позже, при «Сохранить сейчас» (свежий жест → requestPermission
+  // readwrite), где окно «Изменение файлов» появляется в понятном контексте.
+  // startIn: 'documents' уводит от «Загрузок» (Chrome их блокирует).
+  // Без id: Chrome допускает в id только буквы/цифры, дефис → TypeError.
+  return window.showDirectoryPicker({ mode: 'read', startIn: 'documents' })
 }
 
 export async function queryDirectoryPermission(handle: FileSystemDirectoryHandle): Promise<PermissionState> {

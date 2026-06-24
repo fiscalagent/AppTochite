@@ -446,6 +446,150 @@
   gap: var(--space-2);
 }
 
+/* Адресат резервной копии (облако / папка) */
+.destCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.destHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.destTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.destMeta {
+  font-size: 13px;
+  color: var(--text-200);
+  line-height: 1.5;
+}
+
+/* Бейдж подключения — акцентный синий, а не зелёный: выглядит активным
+   («включено»), но не светофор. Единственный индикатор «всё ли в порядке»
+   (зелёный/жёлтый/красный) — верхняя карточка статуса. */
+.destBadge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+}
+
+/* Плоский тоггл внутри карточки-адресата (без двойной рамки) */
+.toggleFlat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-body);
+  background: none;
+  padding: 0;
+}
+
+/* Под-описание адресата (надёжность хранилища) */
+.destSub {
+  font-size: 12px;
+  color: var(--text-300);
+  line-height: 1.5;
+}
+
+/* Полоски надёжности хранилища: 3 деления, заполнено N. Акцентный синий —
+   это «уровень», а не светофор «хорошо/плохо». */
+.relBars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.relBar {
+  width: 6px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--bg-400);
+}
+
+.relBarOn {
+  background: var(--accent);
+}
+
+.relCaption {
+  font-size: 11px;
+  color: var(--text-400);
+  margin-right: 2px;
+}
+
+/* Единый список доступных копий (восстановление) */
+.copyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--bg-300);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.copyMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.copyHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.copyStorage {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyMeta {
+  font-size: 13px;
+  color: var(--text-200);
+  font-variant-numeric: tabular-nums;
+}
+
+.copyBtn {
+  flex-shrink: 0;
+  background: var(--bg-400);
+  color: var(--accent);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+
 /* Карточка статуса защиты данных */
 .statusCard {
   display: flex;

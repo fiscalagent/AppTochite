@@ -43,6 +43,7 @@ import {
   getFolderBackupMeta,
   getFolderPrevMeta,
   readFolderPrevBackup,
+  readFolderBackup,
   pickAndConnectFolder,
   saveFolderBackupNow,
   disconnectFolder,
@@ -62,7 +63,7 @@ import {
 } from '../../utils/backup'
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
-import { useLocale, fmtDate, fmtDateDayMonth, fmtDateTimeLong } from '../../i18n'
+import { useLocale, fmtDate, fmtDateTimeLong } from '../../i18n'
 import { FEATURES } from '../../config/features'
 import {
   getYandexToken,
@@ -81,6 +82,17 @@ import s from './BackupScreen.module.css'
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
+}
+
+// Полоски надёжности хранилища: 1 — в браузере, 2 — папка, 3 — облако.
+function ReliabilityBars({ n }: { n: 1 | 2 | 3 }) {
+  return (
+    <span className={s.relBars} aria-hidden>
+      {[1, 2, 3].map(i => (
+        <span key={i} className={`${s.relBar} ${i <= n ? s.relBarOn : ''}`} />
+      ))}
+    </span>
+  )
 }
 
 type ProtectionLevel = 'protected' | 'partial' | 'at-risk'
@@ -153,8 +165,7 @@ export default function BackupScreen() {
   const { lastBackupTick } = useAutoBackup()
 
   // collapsible state
-  const [recoveryOpen, setRecoveryOpen] = useState(false)
-  const [csvOpen, setCsvOpen] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const refreshOpfsMeta = useCallback(() => {
     getOPFSBackupMeta().then(meta => {
@@ -326,9 +337,12 @@ export default function BackupScreen() {
       const meta = await pickAndConnectFolder(db)
       setFolderMeta(meta)
       track('folder_backup_connected').catch(() => {})
-      showToast(t.backup.folderSaved)
+      // lastAt есть — запись прошла сразу; иначе подсказываем «Сохранить сейчас».
+      showToast(meta.lastAt ? t.backup.folderSaved : t.backup.folderConnected)
     } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') showToast(t.backup.folderError)
+      if (e instanceof Error && e.name === 'AbortError') return
+      const detail = e instanceof Error ? (e.name === 'Error' ? e.message : e.name) : String(e)
+      showToast(t.backup.folderErrorDetail(detail))
     } finally {
       setFolderWorking(false)
     }
@@ -457,7 +471,56 @@ export default function BackupScreen() {
     }
   }
 
-  const hasRecoveryPoints = !!opfsMeta || !!dailyMeta || !!preRestoreMeta || !!folderPrevMeta
+  // Размер копии: КБ до мегабайта, дальше МБ.
+  const fmtSize = (bytes: number) =>
+    bytes < 1024 * 1024
+      ? t.backup.kb((bytes / 1024).toFixed(0))
+      : t.backup.cloudMb((bytes / 1_048_576).toFixed(1))
+
+  // Единый список доступных копий для восстановления — от свежих к старым.
+  // storage: 1 — в браузере, 2 — папка, 3 — облако. action 'download' — облако
+  // (прямое восстановление невозможно из-за CORS), ведёт на Яндекс.Диск.
+  type RestoreCopy = {
+    id: string
+    storage: 1 | 2 | 3
+    label: string
+    date: Date
+    size?: number
+    action: 'restore' | 'download'
+    run: () => void | Promise<void>
+  }
+  const applyPreview = (b: BackupFile | null, errMsg: string) => {
+    if (b) setPreview(b)
+    else showToast(errMsg)
+  }
+  const restoreCopies: RestoreCopy[] = []
+  if (opfsMeta) restoreCopies.push({
+    id: 'opfs', storage: 1, label: t.backup.copyBrowser, date: opfsMeta.date, size: opfsMeta.size, action: 'restore',
+    run: async () => applyPreview(await readOPFSBackup(), t.backup.autoNotFound),
+  })
+  if (dailyMeta) restoreCopies.push({
+    id: 'daily', storage: 1, label: t.backup.copyBrowserDaily, date: dailyMeta.date, size: dailyMeta.size, action: 'restore',
+    run: async () => applyPreview(await readDailyBackup(db), t.backup.dailyNotFound),
+  })
+  if (preRestoreMeta) restoreCopies.push({
+    id: 'prerestore', storage: 1, label: t.backup.copyBrowserPreRestore, date: preRestoreMeta.date, size: preRestoreMeta.size, action: 'restore',
+    run: async () => applyPreview(await readPreRestoreSnapshot(), t.backup.autoNotFound),
+  })
+  if (folderMeta?.lastAt) restoreCopies.push({
+    id: 'folder', storage: 2, label: t.backup.copyFolder, date: folderMeta.lastAt, size: folderMeta.size, action: 'restore',
+    run: async () => applyPreview(await readFolderBackup(db), t.backup.restoreFolderNotFound),
+  })
+  if (folderPrevMeta) restoreCopies.push({
+    id: 'folderprev', storage: 2, label: t.backup.copyFolderPrev, date: folderPrevMeta.date, size: folderPrevMeta.size, action: 'restore',
+    run: async () => applyPreview(await readFolderPrevBackup(db), t.backup.folderPrevNotFound),
+  })
+  if (cloudSnapshots) for (const snap of cloudSnapshots) restoreCopies.push({
+    id: `cloud-${snap.name}`, storage: 3,
+    label: `${t.backup.copyCloud}${snap.deviceId ? ` · ${snap.fromThisDevice ? t.backup.cloudThisDevice : t.backup.cloudOtherDevice}` : ''}`,
+    date: snap.createdAt, size: snap.size, action: 'download',
+    run: () => { window.open('https://disk.yandex.ru/client/disk/Приложения/AppTochite', '_blank', 'noopener') },
+  })
+  restoreCopies.sort((a, b) => b.date.getTime() - a.date.getTime())
 
   return (
     <div className={s.screen}>
@@ -487,296 +550,139 @@ export default function BackupScreen() {
 
       <div className={s.divider} />
 
-      {/* Автобэкап: OPFS + папка + periodic sync + точки восстановления */}
+      {/* ─── РЕЗЕРВНАЯ КОПИЯ ─── */}
       <div className={s.section}>
-        <p className={s.sectionTitle}>{t.backup.autoBackupSection}</p>
+        <p className={s.sectionTitle}>{t.backup.backupSection}</p>
+        <p className={s.desc}>{t.backup.backupIntro}</p>
 
-        {/* OPFS статус */}
-        <div className={s.autoBackupRow}>
-          <span className={s.autoBackupBadge}>{t.backup.active}</span>
-          <span className={s.autoBackupMeta}>
+        {/* Уровень 1 — в браузере (всегда вкл, самая слабая защита) */}
+        <div className={s.destCard}>
+          <div className={s.destHeader}>
+            <span className={s.destTitle}>{t.backup.storageBrowserTitle}</span>
+            <ReliabilityBars n={1} />
+          </div>
+          <span className={s.destMeta}>
             {opfsMeta === undefined
               ? t.backup.loading
               : opfsMeta === null
-                ? t.backup.neverCreated
+                ? t.backup.storageBrowserAuto
                 : (<>
                     <span style={{ color: ageDot(opfsMeta.date), marginRight: 4 }}>●</span>
-                    {`${fmtDateTimeLong(locale, opfsMeta.date)} · ${t.backup.kb((opfsMeta.size / 1024).toFixed(0))}`}
+                    {`${fmtDateTimeLong(locale, opfsMeta.date)} · ${fmtSize(opfsMeta.size)}`}
                   </>)}
           </span>
+          {opfsValid === false && <p className={s.autoBackupWarn}>{t.backup.opfsCorruptWarn}</p>}
+          <p className={s.destSub}>{t.backup.storageBrowserDesc}</p>
         </div>
-        {opfsValid === false && (
-          <p className={s.autoBackupWarn}>{t.backup.opfsCorruptWarn}</p>
-        )}
-        <p className={s.desc}>{t.backup.autoBackupDesc}</p>
 
-        {/* Папка на устройстве */}
-        {!supportsFileSystemAccess() ? (
-          <p className={s.desc} style={{ color: 'var(--text-300)' }}>{t.backup.folderUnsupported}</p>
-        ) : folderMeta ? (
-          <>
-            <div className={s.autoBackupRow}>
-              <span className={s.autoBackupBadge}>{t.backup.active}</span>
-              <span className={s.autoBackupFolder}>{folderMeta.folderName}</span>
-            </div>
-            <p className={s.desc}>
-              {folderMeta.lastAt
-                ? (<><span style={{ color: ageDot(folderMeta.lastAt), marginRight: 4 }}>●</span>{t.backup.folderLastAt(fmtDateTimeLong(locale, folderMeta.lastAt))}</>)
-                : t.backup.folderNeverSaved}
-            </p>
-            <div className={s.autoBackupActions}>
-              <button className={s.primaryBtn} onClick={handleFolderSaveNow} disabled={folderWorking}>
-                {folderWorking ? t.backup.saving : t.backup.folderSaveNow}
-              </button>
-              <button className={s.secondaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
-                {t.backup.folderPick}
-              </button>
-              <button className={s.secondaryBtn} onClick={handleDisconnectFolder} disabled={folderWorking}>
-                {t.backup.folderDisconnect}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className={s.desc}>{t.backup.folderDesc}</p>
-            <button className={s.primaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
-              {folderWorking ? t.backup.saving : t.backup.folderPick}
-            </button>
-          </>
-        )}
-
-        {/* Periodic sync — только если поддерживается */}
-        {periodicStatus !== undefined && periodicStatus !== 'unsupported' && (
-          <div className={s.autoBackupRow}>
-            <span className={s.autoBackupBadge} style={{ color: periodicStatus === 'on' ? 'var(--status-done)' : 'var(--text-300)' }}>
-              {periodicStatus === 'on' ? t.backup.periodicSyncOn : t.backup.periodicSyncOff}
-            </span>
-            <span className={s.autoBackupMeta} style={{ flex: 1, marginLeft: 4 }}>{t.backup.periodicSyncSection}</span>
-            {periodicStatus === 'on' ? (
-              <button className={s.secondaryBtn} style={{ width: 'auto', padding: '6px 12px', fontSize: 13 }} onClick={async () => {
-                await disablePeriodicSync()
-                setPeriodicStatus(await getPeriodicSyncStatus())
-              }}>{t.backup.periodicSyncDisable}</button>
-            ) : (
-              <button className={s.primaryBtn} style={{ width: 'auto', padding: '6px 12px', fontSize: 13 }} onClick={async () => {
-                const result = await enablePeriodicSync()
-                if (result === 'denied') showToast(t.backup.periodicSyncDenied)
-                setPeriodicStatus(await getPeriodicSyncStatus())
-              }}>{t.backup.periodicSyncEnable}</button>
-            )}
-          </div>
-        )}
-
-        {/* Точки восстановления — collapsible */}
-        {hasRecoveryPoints && (
-          <>
-            <button className={s.collapseBtn} onClick={() => setRecoveryOpen(v => !v)}>
-              <span className={`${s.collapseChevron} ${recoveryOpen ? s.collapseChevronOpen : ''}`}>
-                <IconChevronRight />
-              </span>
-              {t.backup.recoveryPoints}
-            </button>
-            {recoveryOpen && (
-              <div className={s.collapseContent}>
-                {opfsMeta && (
-                  <>
-                    <div className={s.recoveryRow}>
-                      <span className={s.recoveryLabel}>{t.backup.autoBackupSection}</span>
-                      <span className={s.recoveryMeta}>
-                        <span style={{ color: ageDot(opfsMeta.date), marginRight: 4 }}>●</span>
-                        {fmtDateTimeLong(locale, opfsMeta.date)}
-                      </span>
-                    </div>
-                    <button className={s.secondaryBtn} onClick={async () => {
-                      const backup = await readOPFSBackup()
-                      if (!backup) { showToast(t.backup.autoNotFound); return }
-                      setPreview(backup)
-                    }}>
-                      {t.backup.restoreFromAuto}
-                    </button>
-                  </>
-                )}
-                {dailyMeta && (
-                  <>
-                    <div className={s.recoveryRow}>
-                      <span className={s.recoveryLabel}>{t.backup.perDay}</span>
-                      <span className={s.recoveryMeta}>
-                        <span style={{ color: ageDot(dailyMeta.date), marginRight: 4 }}>●</span>
-                        {t.backup.snapshotFor(fmtDateDayMonth(locale, dailyMeta.snapshotDate))}
-                      </span>
-                    </div>
-                    <button className={s.secondaryBtn} onClick={async () => {
-                      const backup = await readDailyBackup(db)
-                      if (!backup) { showToast(t.backup.dailyNotFound); return }
-                      setPreview(backup)
-                    }}>
-                      {t.backup.restoreFromDaily}
-                    </button>
-                  </>
-                )}
-                {preRestoreMeta && (
-                  <>
-                    <div className={s.recoveryRow}>
-                      <span className={s.recoveryLabel}>{t.backup.preRestoreSection}</span>
-                      <span className={s.recoveryMeta}>
-                        {fmtDateTimeLong(locale, preRestoreMeta.date)}
-                      </span>
-                    </div>
-                    <p className={s.desc}>{t.backup.preRestoreDesc}</p>
-                    <button className={s.secondaryBtn} onClick={async () => {
-                      const backup = await readPreRestoreSnapshot()
-                      if (!backup) { showToast(t.backup.autoNotFound); return }
-                      setPreview(backup)
-                    }}>
-                      {t.backup.restoreFromPreRestore}
-                    </button>
-                  </>
-                )}
-                {folderPrevMeta && (
-                  <>
-                    <div className={s.recoveryRow}>
-                      <span className={s.recoveryLabel}>{t.backup.folderPrevSection}</span>
-                      <span className={s.recoveryMeta}>
-                        {`${fmtDateTimeLong(locale, folderPrevMeta.date)} · ${t.backup.kb((folderPrevMeta.size / 1024).toFixed(0))}`}
-                      </span>
-                    </div>
-                    <p className={s.desc}>{t.backup.folderPrevDesc}</p>
-                    <button className={s.secondaryBtn} onClick={async () => {
-                      const backup = await readFolderPrevBackup(db)
-                      if (!backup) { showToast(t.backup.folderPrevNotFound); return }
-                      setPreview(backup)
-                    }}>
-                      {t.backup.restoreFromFolderPrev}
-                    </button>
-                  </>
-                )}
+        {/* Уровень 2 — папка на устройстве (где поддерживается File System Access) */}
+        {supportsFileSystemAccess() && (
+          folderMeta ? (
+            <div className={s.destCard}>
+              <div className={s.destHeader}>
+                <span className={s.destTitle}>{folderMeta.folderName}</span>
+                <ReliabilityBars n={2} />
               </div>
-            )}
-          </>
-        )}
-      </div>
-
-      <div className={s.divider} />
-
-      {/* Яндекс.Диск — только при включённом флаге */}
-      {FEATURES.cloudBackup && (
-        <>
-          <div className={s.section}>
-            <p className={s.sectionTitle}>{t.backup.cloudSection}</p>
-            <p className={s.desc}>{t.backup.cloudDesc}</p>
-
-            {cloudToken === undefined ? (
-              <p className={s.desc}>{t.backup.loading}</p>
-            ) : !cloudToken ? (
-              <button className={s.primaryBtn} onClick={handleCloudConnect}>
-                {t.backup.cloudConnect}
-              </button>
-            ) : (
-              <>
-                <div className={s.autoBackupRow}>
-                  <span className={s.autoBackupBadge} style={{ color: 'var(--status-done)' }}>
-                    {t.backup.cloudConnected}
-                  </span>
-                  <span className={s.autoBackupMeta}>
-                    {cloudLastAt
-                      ? (<><span style={{ color: ageDot(cloudLastAt), marginRight: 4 }}>●</span>{t.backup.cloudLastAt(fmtDateTimeLong(locale, cloudLastAt))}</>)
-                      : t.backup.cloudNeverSaved}
-                  </span>
-                </div>
-
-                <div className={s.autoBackupActions}>
-                  <button className={s.primaryBtn} onClick={handleCloudSaveNow} disabled={cloudWorking}>
-                    {cloudWorking ? t.backup.cloudSaving : t.backup.cloudSaveNow}
-                  </button>
-                  <button className={s.secondaryBtn} onClick={handleCloudDisconnect} disabled={cloudWorking}>
-                    {t.backup.cloudDisconnect}
-                  </button>
-                </div>
-
-                {/* Авто-бэкап тоггл */}
-                <button
-                  role="switch"
-                  aria-checked={cloudAuto}
-                  className={s.toggleRow}
-                  onClick={handleCloudAutoToggle}
-                >
-                  <div className={s.toggleInfo}>
-                    <span className={s.toggleLabel}>{t.backup.cloudAutoBackup}</span>
-                    <span className={s.toggleDesc}>{t.backup.cloudAutoBackupDesc}</span>
-                  </div>
-                  <div className={`${s.toggle} ${cloudAuto ? s.toggleOn : ''}`}>
-                    <div className={s.toggleThumb} />
-                  </div>
+              <span className={s.destMeta}>
+                {folderMeta.lastAt
+                  ? (<><span style={{ color: ageDot(folderMeta.lastAt), marginRight: 4 }}>●</span>{t.backup.folderLastAt(fmtDateTimeLong(locale, folderMeta.lastAt))}{folderMeta.size ? ` · ${fmtSize(folderMeta.size)}` : ''}</>)
+                  : t.backup.folderNeverSaved}
+              </span>
+              <p className={s.destSub}>{t.backup.storageFolderReliability}</p>
+              <div className={s.autoBackupActions}>
+                <button className={s.primaryBtn} onClick={handleFolderSaveNow} disabled={folderWorking}>
+                  {folderWorking ? t.backup.saving : t.backup.folderSaveNow}
                 </button>
-
-                {/* Список снапшотов */}
-                <p className={s.sectionTitle} style={{ marginTop: 16 }}>{t.backup.cloudSnapshots}</p>
-                {cloudSnapshotsLoading ? (
-                  <p className={s.desc}>{t.backup.cloudSnapshotsLoading}</p>
-                ) : cloudSnapshotsError ? (
-                  <p className={s.desc} style={{ color: 'var(--danger)' }}>{t.backup.cloudSnapshotsError}</p>
-                ) : !cloudSnapshots || cloudSnapshots.length === 0 ? (
-                  <p className={s.desc}>{t.backup.cloudSnapshotsEmpty}</p>
-                ) : (
-                  <>
-                    {cloudSnapshots.map(snap => (
-                      <div key={snap.name} className={s.recoveryRow}>
-                        <span className={s.recoveryLabel}>
-                          {fmtDateTimeLong(locale, snap.createdAt)}
-                          {snap.deviceId && (
-                            <span style={{ color: 'var(--text-300)', fontSize: 12, marginLeft: 6 }}>
-                              · {snap.fromThisDevice ? t.backup.cloudThisDevice : t.backup.cloudOtherDevice}
-                            </span>
-                          )}
-                        </span>
-                        <span className={s.recoveryMeta}>{t.backup.cloudMb((snap.size / 1_048_576).toFixed(1))}</span>
-                      </div>
-                    ))}
-                    <p className={s.desc} style={{ marginTop: 8 }}>{t.backup.cloudSnapshotsHint}</p>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-          <div className={s.divider} />
-        </>
-      )}
-
-      {/* Экспорт */}
-      <div className={s.section}>
-        <p className={s.sectionTitle}>{t.backup.exportSection}</p>
-        <p className={s.desc}>{t.backup.exportDesc}</p>
-        <button className={s.primaryBtn} onClick={handleExport} disabled={exporting}>
-          {exporting ? t.backup.saving : t.backup.saveBackupJson}
-        </button>
-        <button className={s.secondaryBtn} onClick={handleShare} disabled={exporting || preparingShare || !shareFile}>
-          {preparingShare ? t.backup.preparing : t.backup.shareBackup}
-        </button>
-        <p className={s.desc} style={{ fontSize: 12, marginTop: 4 }}>{t.backup.shareDesc}</p>
-
-        {/* CSV — collapsible */}
-        <button className={s.collapseBtn} onClick={() => setCsvOpen(v => !v)}>
-          <span className={`${s.collapseChevron} ${csvOpen ? s.collapseChevronOpen : ''}`}>
-            <IconChevronRight />
-          </span>
-          {t.backup.csvSection}
-        </button>
-        {csvOpen && (
-          <div className={s.collapseContent}>
-            <p className={s.desc}>{t.backup.csvDesc}</p>
-            <button className={s.secondaryBtn} onClick={handleExportCSV} disabled={preparingCsv || !csvFile}>
-              {preparingCsv ? t.backup.preparing : t.backup.downloadCsv}
-            </button>
-          </div>
+                <button className={s.secondaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
+                  {t.backup.folderChange}
+                </button>
+                <button className={s.secondaryBtn} onClick={handleDisconnectFolder} disabled={folderWorking}>
+                  {t.backup.folderDisconnect}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className={s.destCard}>
+              <div className={s.destHeader}>
+                <span className={s.destTitle}>{t.backup.destFolderTitle}</span>
+                <ReliabilityBars n={2} />
+              </div>
+              <p className={s.destSub}>{t.backup.storageFolderReliability}</p>
+              <p className={s.destMeta}>{t.backup.folderDesc}</p>
+              <button className={s.primaryBtn} onClick={handlePickFolder} disabled={folderWorking}>
+                {folderWorking ? t.backup.saving : t.backup.folderPick}
+              </button>
+            </div>
+          )
         )}
+
+        {/* Уровень 3 — облако (самая надёжная) */}
+        {FEATURES.cloudBackup && (
+          cloudToken === undefined ? (
+            <div className={s.destCard}>
+              <div className={s.destHeader}>
+                <span className={s.destTitle}>{t.backup.destCloudTitle}</span>
+                <ReliabilityBars n={3} />
+              </div>
+              <p className={s.destMeta}>{t.backup.loading}</p>
+            </div>
+          ) : !cloudToken ? (
+            <div className={s.destCard}>
+              <div className={s.destHeader}>
+                <span className={s.destTitle}>{t.backup.destCloudTitle}</span>
+                <ReliabilityBars n={3} />
+              </div>
+              <p className={s.destSub}>{t.backup.storageCloudReliability}</p>
+              <p className={s.destMeta}>{t.backup.cloudDesc}</p>
+              <button className={s.primaryBtn} onClick={handleCloudConnect}>{t.backup.cloudConnect}</button>
+            </div>
+          ) : (
+            <div className={s.destCard}>
+              <div className={s.destHeader}>
+                <span className={s.destTitle}>{t.backup.destCloudTitle}</span>
+                <ReliabilityBars n={3} />
+              </div>
+              <span className={s.destMeta}>
+                {cloudLastAt
+                  ? (<><span style={{ color: ageDot(cloudLastAt), marginRight: 4 }}>●</span>{t.backup.cloudLastAt(fmtDateTimeLong(locale, cloudLastAt))}</>)
+                  : t.backup.cloudNeverSaved}
+              </span>
+              <p className={s.destSub}>{t.backup.storageCloudReliability}</p>
+
+              <button
+                role="switch"
+                aria-checked={cloudAuto}
+                className={s.toggleFlat}
+                onClick={handleCloudAutoToggle}
+              >
+                <div className={s.toggleInfo}>
+                  <span className={s.toggleLabel}>{t.backup.cloudAutoBackup}</span>
+                  <span className={s.toggleDesc}>{t.backup.cloudAutoBackupDesc}</span>
+                </div>
+                <div className={`${s.toggle} ${cloudAuto ? s.toggleOn : ''}`}>
+                  <div className={s.toggleThumb} />
+                </div>
+              </button>
+
+              <div className={s.autoBackupActions}>
+                <button className={s.primaryBtn} onClick={handleCloudSaveNow} disabled={cloudWorking}>
+                  {cloudWorking ? t.backup.cloudSaving : t.backup.cloudSaveNow}
+                </button>
+                <button className={s.secondaryBtn} onClick={handleCloudDisconnect} disabled={cloudWorking}>
+                  {t.backup.cloudDisconnect}
+                </button>
+              </div>
+            </div>
+          )
+        )}
+
       </div>
 
       <div className={s.divider} />
 
-      {/* Восстановление из файла */}
+      {/* ─── ВОССТАНОВЛЕНИЕ ─── */}
       <div className={s.section}>
         <p className={s.sectionTitle}>{t.backup.restoreSection}</p>
-        <p className={s.desc}>{t.backup.restoreDesc}</p>
 
         {mergeStats ? (
           <div className={s.preview}>
@@ -792,7 +698,46 @@ export default function BackupScreen() {
           </div>
         ) : !preview ? (
           <>
-            <button className={s.secondaryBtn} onClick={() => fileInputRef.current?.click()}>
+            <p className={s.desc}>{t.backup.copiesIntro}</p>
+
+            {/* Единый список доступных копий — от свежих к старым */}
+            {restoreCopies.map(c => (
+              <div key={c.id} className={s.copyRow}>
+                <div className={s.copyMain}>
+                  <div className={s.copyHead}>
+                    <span className={s.copyStorage}>{c.label}</span>
+                    <ReliabilityBars n={c.storage} />
+                  </div>
+                  <span className={s.copyMeta}>
+                    <span style={{ color: ageDot(c.date), marginRight: 4 }}>●</span>
+                    {fmtDateTimeLong(locale, c.date)}{c.size ? ` · ${fmtSize(c.size)}` : ''}
+                  </span>
+                </div>
+                <button className={s.copyBtn} onClick={() => c.run()}>
+                  {c.action === 'download' ? t.backup.copyDownloadBtn : t.backup.copyRestoreBtn}
+                </button>
+              </div>
+            ))}
+
+            {/* Состояние облачного списка */}
+            {FEATURES.cloudBackup && cloudToken && cloudSnapshotsLoading && (
+              <p className={s.desc}>{t.backup.cloudSnapshotsLoading}</p>
+            )}
+            {FEATURES.cloudBackup && cloudToken && cloudSnapshotsError && (
+              <p className={s.desc} style={{ color: 'var(--danger)' }}>{t.backup.cloudSnapshotsError}</p>
+            )}
+
+            {restoreCopies.length === 0 && !cloudSnapshotsLoading && (
+              <p className={s.desc}>{t.backup.copiesEmpty}</p>
+            )}
+
+            {/* Облако восстанавливается через скачивание (CORS) */}
+            {FEATURES.cloudBackup && cloudToken && (cloudSnapshots?.length ?? 0) > 0 && (
+              <p className={s.desc} style={{ fontSize: 12 }}>{t.backup.restoreCloudSteps}</p>
+            )}
+
+            {/* Из файла — отдельный путь */}
+            <button className={s.primaryBtn} onClick={() => fileInputRef.current?.click()}>
               {t.backup.chooseFile}
             </button>
             <input
@@ -841,60 +786,106 @@ export default function BackupScreen() {
 
       <div className={s.divider} />
 
-      {/* База данных + Фото — объединены */}
+      {/* ─── ДОПОЛНИТЕЛЬНО ─── */}
       <div className={s.section}>
-        <p className={s.sectionTitle}>{t.backup.dbSection}</p>
-        {(() => {
-          const MAX_MB = 200
-          const WARN_MB = 100
-          const fillPct = storageMb != null ? Math.min((storageMb / MAX_MB) * 100, 100) : 0
-          const fillColor =
-            storageMb == null ? 'var(--bg-400)'
-            : storageMb < WARN_MB ? 'var(--status-done)'
-            : storageMb < 160 ? '#F5A623'
-            : 'var(--danger)'
-          const hint =
-            storageMb == null ? t.backup.computing
-            : storageMb < WARN_MB ? t.backup.dbNormal
-            : storageMb < 160 ? t.backup.dbIncreaseCompress
-            : t.backup.dbAlmostFull
-          return (
-            <div className={s.dbCard}>
-              <div className={s.dbHeader}>
-                <span className={s.dbLabel}>{t.backup.storageSize}</span>
-                {storageMb != null && (
-                  <span className={s.dbSize}>
-                    {t.backup.dbSizeOf(storageMb < 0.1 ? '< 0.1' : storageMb.toFixed(1))}
-                  </span>
-                )}
-              </div>
-              <div className={s.progressTrack}>
-                <div className={s.progressFill} style={{ width: `${fillPct}%`, background: fillColor }} />
-                <div className={s.progressMark} />
-              </div>
-              <div className={s.dbFooter}>
-                <span className={s.dbHint} style={{ color: fillColor === 'var(--bg-400)' ? 'var(--text-300)' : fillColor }}>
-                  {hint}
-                </span>
-                <span className={s.dbMarkLabel}>{t.backup.mb100}</span>
-              </div>
-            </div>
-          )
-        })()}
-        <button
-          role="switch"
-          aria-checked={compressed}
-          className={s.toggleRow}
-          onClick={toggleCompression}
-        >
-          <div className={s.toggleInfo}>
-            <span className={s.toggleLabel}>{t.backup.compressNewPhotos}</span>
-            <span className={s.toggleDesc}>{t.backup.compressDesc}</span>
-          </div>
-          <div className={`${s.toggle} ${compressed ? s.toggleOn : ''}`}>
-            <div className={s.toggleThumb} />
-          </div>
+        <button className={s.collapseBtn} onClick={() => setAdvancedOpen(v => !v)}>
+          <span className={`${s.collapseChevron} ${advancedOpen ? s.collapseChevronOpen : ''}`}>
+            <IconChevronRight />
+          </span>
+          {t.backup.advancedSection}
         </button>
+        {advancedOpen && (
+          <div className={s.collapseContent}>
+            {/* Размер базы данных */}
+            <p className={s.sectionTitle}>{t.backup.dbSection}</p>
+            {(() => {
+              const MAX_MB = 200
+              const WARN_MB = 100
+              const fillPct = storageMb != null ? Math.min((storageMb / MAX_MB) * 100, 100) : 0
+              const fillColor =
+                storageMb == null ? 'var(--bg-400)'
+                : storageMb < WARN_MB ? 'var(--status-done)'
+                : storageMb < 160 ? '#F5A623'
+                : 'var(--danger)'
+              const hint =
+                storageMb == null ? t.backup.computing
+                : storageMb < WARN_MB ? t.backup.dbNormal
+                : storageMb < 160 ? t.backup.dbIncreaseCompress
+                : t.backup.dbAlmostFull
+              return (
+                <div className={s.dbCard}>
+                  <div className={s.dbHeader}>
+                    <span className={s.dbLabel}>{t.backup.storageSize}</span>
+                    {storageMb != null && (
+                      <span className={s.dbSize}>
+                        {t.backup.dbSizeOf(storageMb < 0.1 ? '< 0.1' : storageMb.toFixed(1))}
+                      </span>
+                    )}
+                  </div>
+                  <div className={s.progressTrack}>
+                    <div className={s.progressFill} style={{ width: `${fillPct}%`, background: fillColor }} />
+                    <div className={s.progressMark} />
+                  </div>
+                  <div className={s.dbFooter}>
+                    <span className={s.dbHint} style={{ color: fillColor === 'var(--bg-400)' ? 'var(--text-300)' : fillColor }}>
+                      {hint}
+                    </span>
+                    <span className={s.dbMarkLabel}>{t.backup.mb100}</span>
+                  </div>
+                </div>
+              )
+            })()}
+            <button
+              role="switch"
+              aria-checked={compressed}
+              className={s.toggleRow}
+              onClick={toggleCompression}
+            >
+              <div className={s.toggleInfo}>
+                <span className={s.toggleLabel}>{t.backup.compressNewPhotos}</span>
+                <span className={s.toggleDesc}>{t.backup.compressDesc}</span>
+              </div>
+              <div className={`${s.toggle} ${compressed ? s.toggleOn : ''}`}>
+                <div className={s.toggleThumb} />
+              </div>
+            </button>
+
+            {/* Фоновый бэкап (экспериментально) — только если поддерживается */}
+            {periodicStatus !== undefined && periodicStatus !== 'unsupported' && (
+              <>
+                <p className={s.sectionTitle} style={{ marginTop: 8 }}>{t.backup.periodicSyncSection}</p>
+                <p className={s.desc}>{t.backup.periodicSyncDesc}</p>
+                {periodicStatus === 'on' ? (
+                  <button className={s.secondaryBtn} onClick={async () => {
+                    await disablePeriodicSync()
+                    setPeriodicStatus(await getPeriodicSyncStatus())
+                  }}>{t.backup.periodicSyncDisable}</button>
+                ) : (
+                  <button className={s.secondaryBtn} onClick={async () => {
+                    const result = await enablePeriodicSync()
+                    if (result === 'denied') showToast(t.backup.periodicSyncDenied)
+                    setPeriodicStatus(await getPeriodicSyncStatus())
+                  }}>{t.backup.periodicSyncEnable}</button>
+                )}
+              </>
+            )}
+
+            {/* Выгрузка файлов: поделиться + JSON-бэкап + Excel/CSV */}
+            <p className={s.sectionTitle} style={{ marginTop: 8 }}>{t.backup.exportSection}</p>
+            <p className={s.desc}>{t.backup.exportDesc}</p>
+            <button className={s.secondaryBtn} onClick={handleShare} disabled={preparingShare || !shareFile}>
+              {preparingShare ? t.backup.preparing : t.backup.shareBackup}
+            </button>
+            <p className={s.desc} style={{ fontSize: 12 }}>{t.backup.shareDesc}</p>
+            <button className={s.secondaryBtn} onClick={handleExport} disabled={exporting}>
+              {exporting ? t.backup.saving : t.backup.saveBackupJson}
+            </button>
+            <p className={s.desc} style={{ marginTop: 8 }}>{t.backup.csvDesc}</p>
+            <button className={s.secondaryBtn} onClick={handleExportCSV} disabled={preparingCsv || !csvFile}>
+              {preparingCsv ? t.backup.preparing : t.backup.downloadCsv}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={s.divider} />

@@ -171,6 +171,7 @@ export function readSentinel(): { sharpenings: number; updatedAt: string } | nul
 export interface FolderBackupMeta {
   folderName: string
   lastAt: Date | null
+  size?: number   // размер текущего файла в папке (если доступ granted)
 }
 
 export async function getFolderBackupMeta(database: AppTochiteDB): Promise<FolderBackupMeta | null> {
@@ -178,9 +179,19 @@ export async function getFolderBackupMeta(database: AppTochiteDB): Promise<Folde
   if (!entry) return null
   const handle = entry.value as FileSystemDirectoryHandle
   const lastEntry = await database.settings.get(FOLDER_LAST_AT_KEY)
+  // Размер текущего файла — только если доступ к папке уже выдан (без запроса).
+  let size: number | undefined
+  try {
+    if (await queryDirectoryPermission(handle) === 'granted') {
+      const fh = await handle.getFileHandle(FOLDER_FILENAME)
+      const file = await fh.getFile()
+      if (file.size > 0) size = file.size
+    }
+  } catch { /* нет файла/доступа — размер неизвестен */ }
   return {
     folderName: handle.name,
     lastAt: lastEntry ? new Date(lastEntry.value as string) : null,
+    size,
   }
 }
 
@@ -247,11 +258,13 @@ export async function saveFolderBackupNow(database: AppTochiteDB): Promise<'ok' 
 // Тихо регистрируем Periodic Background Sync — пользователю не нужно делать ничего лишнего.
 export async function pickAndConnectFolder(database: AppTochiteDB): Promise<FolderBackupMeta> {
   const handle = await pickDirectory()
+  // Только подключаем папку — не пишем (handle получен с доступом read).
+  // Первую запись делает «Сохранить сейчас»: там requestPermission(readwrite)
+  // в свежем жесте надёжно выдаёт доступ на запись.
   await database.settings.put({ key: FOLDER_HANDLE_KEY, value: handle })
   try { localStorage.setItem(FOLDER_NAME_LS_KEY, handle.name) } catch { /* silent */ }
-  await writeFolderFile(handle, database)
   enablePeriodicSync().catch(() => {})
-  return { folderName: handle.name, lastAt: new Date() }
+  return { folderName: handle.name, lastAt: null }
 }
 
 export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
@@ -286,6 +299,20 @@ export async function readFolderPrevBackup(database: AppTochiteDB): Promise<Back
     const handle = await getFolderHandleIfGranted(database)
     if (!handle) return null
     const fh = await handle.getFileHandle(FOLDER_FILENAME_PREV)
+    const file = await fh.getFile()
+    if (file.size === 0) return null
+    const parsed = JSON.parse(await file.text(), reviveDates)
+    return isValidBackup(parsed) ? parsed : null
+  } catch { return null }
+}
+
+// Чтение текущего файла из подключённой папки — для прямого «Восстановить из
+// папки». Только чтение (через уже granted handle), данные не трогаем.
+export async function readFolderBackup(database: AppTochiteDB): Promise<BackupFile | null> {
+  try {
+    const handle = await getFolderHandleIfGranted(database)
+    if (!handle) return null
+    const fh = await handle.getFileHandle(FOLDER_FILENAME)
     const file = await fh.getFile()
     if (file.size === 0) return null
     const parsed = JSON.parse(await file.text(), reviveDates)
