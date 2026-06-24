@@ -1,6 +1,13 @@
+// В сборке для APK (`vite build --mode capacitor`) голос и облако выключены:
+//   • голос — Web Speech API в Android WebView отсутствует, тумблер только мешал бы;
+//   • облако — Яндекс-OAuth в WebView приедет отдельным релизом (2.1.0), миграция v1
+//     идёт файлом. Vite статически подставляет import.meta.env.MODE → ветки
+//     отсекаются из cap-бандла, PWA-сборку (MODE='production') не трогает.
+const isCapacitorBuild = import.meta.env.MODE === 'capacitor'
+
 export const FEATURES = {
-  voiceInput: true, // мастер-выключатель для разработчика
-  cloudBackup: true, // Яндекс.Диск — облачный бэкап
+  voiceInput: !isCapacitorBuild, // мастер-выключатель для разработчика
+  cloudBackup: !isCapacitorBuild, // Яндекс.Диск — облачный бэкап
 }
 
 const VOICE_STORAGE_KEY = 'voice_input_enabled'
