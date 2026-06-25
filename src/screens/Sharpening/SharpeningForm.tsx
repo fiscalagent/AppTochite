@@ -79,6 +79,7 @@ type RepeatState = {
   steel?: string
   hrc?: number
   angle?: number
+  microbevelAngle?: number
   stones?: SharpeningStone[]
   price?: number
 }
@@ -95,6 +96,7 @@ function parseRepeatState(state: unknown): RepeatState | undefined {
     steel: typeof x.steel === 'string' ? x.steel : undefined,
     hrc: typeof x.hrc === 'number' ? x.hrc : undefined,
     angle: typeof x.angle === 'number' ? x.angle : undefined,
+    microbevelAngle: typeof x.microbevelAngle === 'number' ? x.microbevelAngle : undefined,
     stones: Array.isArray(x.stones) ? (x.stones as SharpeningStone[]) : undefined,
     price: typeof x.price === 'number' ? x.price : undefined,
   }
@@ -133,6 +135,7 @@ export default function SharpeningForm() {
   // Z-2 поля — на Z-1 не редактируются и нет голосовых команд (парсер отсекает по step=1).
   // Переносятся из repeat в acceptanceData при сохранении.
   const repeatAngle = repeat?.angle
+  const repeatMicrobevelAngle = repeat?.microbevelAngle
   const repeatStones: SharpeningStone[] = repeat?.stones ?? []
 
   const dictation = useDictationMode(locale)
@@ -526,6 +529,7 @@ export default function SharpeningForm() {
           ...receptionFields,
           guid: uuid(),
           angle: repeatAngle,
+          microbevelAngle: repeatMicrobevelAngle,
           stones: repeatStones.length ? repeatStones : undefined,
           status: 'accepted' as const,
         }
