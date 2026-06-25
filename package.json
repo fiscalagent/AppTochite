@@ -18,6 +18,7 @@
     "@capacitor/camera": "^8.2.0",
     "@capacitor/core": "^8.4.1",
     "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/inappbrowser": "^4.0.0",
     "@capacitor/share": "^8.0.1",
     "dexie": "^4.4.2",
     "dexie-react-hooks": "^4.4.0",

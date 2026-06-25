@@ -77,6 +77,7 @@ import { FEATURES } from '../../config/features'
 const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
 import {
   getYandexToken,
+  saveYandexToken,
   removeYandexToken,
   getCloudAutoBackup,
   setCloudAutoBackup,
@@ -455,9 +456,29 @@ export default function BackupScreen() {
 
   // ── Cloud handlers ────────────────────────────────────────────────────────
 
-  function handleCloudConnect() {
+  async function handleCloudConnect() {
     const clientId = import.meta.env.VITE_YANDEX_CLIENT_ID as string | undefined
     if (!clientId) { showToast('VITE_YANDEX_CLIENT_ID не задан'); return }
+
+    // APK: полностраничный редирект увёл бы WebView с приложения. Открываем
+    // авторизацию во встроенном браузере и перехватываем redirect (токен в #).
+    if (IS_CAPACITOR) {
+      if (cloudWorking) return
+      setCloudWorking(true)
+      try {
+        const { nativeYandexOAuth } = await import('../../utils/cloudAuthNative')
+        const token = await nativeYandexOAuth(clientId)
+        if (!token) return // отмена или ошибка — кнопка «подключить» остаётся
+        await saveYandexToken(db, token)
+        track('cloud_connected').catch(() => {})
+        await refreshCloud()
+      } finally {
+        setCloudWorking(false)
+      }
+      return
+    }
+
+    // PWA: как было — полностраничный редирект, токен ловит OAuthCallback.
     const redirectUri = `${window.location.origin}${import.meta.env.BASE_URL}oauth/yandex/callback`
     window.location.href = buildOAuthUrl(clientId, redirectUri)
   }
