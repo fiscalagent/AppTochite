@@ -83,9 +83,11 @@ function parseChangelog(ver) {
   let inTarget = false
 
   for (const line of lines) {
-    if (line.startsWith('## ')) {
+    // Заголовок версии: минор/патч идут как `## [x.y.z]` (h2), а МАЖОР —
+    // как `# [x.0.0]` (h1, один #). Секции `### feat/fix` сюда не попадают.
+    if (line.startsWith('## ') || line.startsWith('# ')) {
       if (inTarget) break
-      // строка вида: ## [1.1.0](url) (2026-05-01) или ## 1.1.0
+      // строка вида: ## [1.1.0](url) (2026-05-01) | # [2.0.0](url) (...) | ## 1.1.0
       if (line.includes(`[${ver}]`) || line.includes(` ${ver} `)) {
         inTarget = true
       }
