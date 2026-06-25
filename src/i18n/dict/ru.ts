@@ -618,6 +618,8 @@ export const ru = {
     migrationStep3: 'Откройте приложение и восстановите данные из той же копии.',
     migrationBackup: 'К резервной копии',
     migrationDownload: 'Скачать приложение',
+    nativeUpdateText: (v: string) => `Вышла новая версия ${v} — обновите приложение.`,
+    nativeUpdateCta: 'Обновить',
 
     iosInstallTitle: 'Добавьте на экран «Домой»',
     iosInstallIntro: 'Тогда журнал открывается одним касанием и работает без интернета.',

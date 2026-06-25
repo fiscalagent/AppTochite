@@ -638,6 +638,8 @@ export const en = {
     migrationStep3: 'Open the app and restore your data from that same backup.',
     migrationBackup: 'Go to backup',
     migrationDownload: 'Download the app',
+    nativeUpdateText: (v: string) => `Version ${v} is available — update the app.`,
+    nativeUpdateCta: 'Update',
 
     iosInstallTitle: 'Add to your Home Screen',
     iosInstallIntro: 'Then your journal opens with one tap and works offline.',

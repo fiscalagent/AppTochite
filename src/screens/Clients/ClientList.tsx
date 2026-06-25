@@ -13,6 +13,7 @@ import s from './ClientList.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 import InstallBanner from '../../components/InstallNudge/InstallBanner'
 import MigrationBanner from '../../components/MigrationPrompt/MigrationBanner'
+import NativeUpdateBanner from '../../components/MigrationPrompt/NativeUpdateBanner'
 
 const IconSave = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -75,7 +76,7 @@ function matchesQuery(client: Client, q: string): boolean {
 
 export default function ClientList() {
   const [query, setQuery] = useState('')
-  const { hasUpdate } = useVersionCheck()
+  const { hasUpdate, latestVersion } = useVersionCheck()
   const t = useT()
   const { showToast } = useToast()
   const { locale, setLocale } = useLocale()
@@ -223,6 +224,7 @@ export default function ClientList() {
           {t.clients.shareApp}
         </button>
       </div>
+      <NativeUpdateBanner hasUpdate={hasUpdate} latestVersion={latestVersion} />
       <MigrationBanner />
       <InstallBanner />
     </div>
