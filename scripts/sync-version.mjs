@@ -18,6 +18,11 @@ console.log(`✓ package.json → ${version}`)
 writeFileSync('src/version.ts', `export const APP_VERSION = '${version}'\n`, 'utf-8')
 console.log(`✓ src/version.ts → ${version}`)
 
+// android/app/build.gradle — versionName + versionCode для APK-сборки (Ф5).
+// versionCode = major*1_000_000 + minor*1_000 + patch (монотонно пока minor/patch < 1000).
+// Делаем ДО возможного раннего выхода ниже, чтобы версия APK синкалась всегда.
+syncAndroidVersion(version)
+
 // src/data/changelog.ts — добавляем запись если её ещё нет
 const changelogTs = readFileSync('src/data/changelog.ts', 'utf-8')
 if (changelogTs.includes(`version: '${version}'`)) {
@@ -43,6 +48,27 @@ const updated = changelogTs.replace(
 )
 writeFileSync('src/data/changelog.ts', updated, 'utf-8')
 console.log(`✓ changelog.ts → ${changes.length} записей для v${version}`)
+
+function syncAndroidVersion(ver) {
+  const path = 'android/app/build.gradle'
+  let gradle
+  try {
+    gradle = readFileSync(path, 'utf-8')
+  } catch {
+    console.log(`⚠ ${path} не найден, пропускаем versionCode`)
+    return
+  }
+  const [maj, min, pat] = ver.split('.').map(Number)
+  if ([maj, min, pat].some(n => Number.isNaN(n))) {
+    console.log(`⚠ версия "${ver}" не x.y.z, пропускаем versionCode`)
+    return
+  }
+  const versionCode = maj * 1_000_000 + min * 1_000 + pat
+  gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`)
+  gradle = gradle.replace(/versionName\s+"[^"]*"/, `versionName "${ver}"`)
+  writeFileSync(path, gradle, 'utf-8')
+  console.log(`✓ ${path} → versionName ${ver}, versionCode ${versionCode}`)
+}
 
 function parseChangelog(ver) {
   let md

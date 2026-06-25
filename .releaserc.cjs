@@ -34,7 +34,7 @@ module.exports = {
       prepareCmd: 'node scripts/sync-version.mjs ${nextRelease.version}',
     }],
     ['@semantic-release/git', {
-      assets: ['CHANGELOG.md', 'package.json', 'src/version.ts', 'src/data/changelog.ts'],
+      assets: ['CHANGELOG.md', 'package.json', 'src/version.ts', 'src/data/changelog.ts', 'android/app/build.gradle'],
       message: 'chore(release): ${nextRelease.version} [skip ci]',
     }],
     '@semantic-release/github',
