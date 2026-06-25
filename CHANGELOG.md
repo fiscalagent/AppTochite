@@ -1,3 +1,10 @@
+## [1.109.1](https://github.com/fiscalagent/AppTochite/compare/v1.109.0...v1.109.1) (2026-06-25)
+
+
+### fix
+
+* при «Повторить заточку» в новую заточку переносится микроподвод — его угол и сама отметка ([](https://github.com/fiscalagent/AppTochite/commit/40d1ef37b1489b4bb2322e022b8229c2a7312cf2))
+
 # [1.109.0](https://github.com/fiscalagent/AppTochite/compare/v1.108.1...v1.109.0) (2026-06-24)
 
 
