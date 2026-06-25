@@ -1,3 +1,10 @@
+# [2.0.0](https://github.com/fiscalagent/AppTochite/compare/v1.109.1...v2.0.0) (2026-06-25)
+
+
+### fix
+
+* тёмный экран в APK — basename роутера '/' для cap-сборки вместо '/AppTochite' ([](https://github.com/fiscalagent/AppTochite/commit/198771083a68e3912fb3aece1efe81b248ba8776))
+
 ## [1.109.1](https://github.com/fiscalagent/AppTochite/compare/v1.109.0...v1.109.1) (2026-06-25)
 
 
