@@ -12,6 +12,10 @@ const DISMISSED_KEY = 'folderPromptDismissedAt'
 const RESHOW_AFTER_MS = 90 * 24 * 60 * 60 * 1000
 const RESHOW_THRESHOLD = 10
 
+// В APK File System Access недоступен (нудж предлагал бы подключить папку через
+// неработающий showDirectoryPicker). Папочный бэкап в APK — нативный, в BackupScreen.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
+
 function isDismissed(sharpeningCount: number): boolean {
   const raw = localStorage.getItem(DISMISSED_KEY)
   if (!raw) return false
@@ -28,7 +32,7 @@ export default function FolderBackupPrompt() {
   const { showToast } = useToast()
 
   useEffect(() => {
-    if (!supportsFileSystemAccess()) return
+    if (IS_CAPACITOR || !supportsFileSystemAccess()) return
 
     async function check() {
       const [folderMeta, count] = await Promise.all([

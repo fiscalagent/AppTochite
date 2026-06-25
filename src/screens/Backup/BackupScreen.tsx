@@ -63,6 +63,10 @@ import {
 } from '../../utils/backup'
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { shareFilesNative } from '../../utils/nativeShare'
+// Только тип — статически. Сами функции грузим динамически из веток
+// `if (IS_CAPACITOR)` (см. ниже), иначе @capacitor/filesystem утечёт в PWA-бандл.
+import type { NativeFolderMeta } from '../../utils/nativeFolderBackup'
+const NATIVE_FOLDER_LABEL = 'Документы/AppTochite'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import { useLocale, fmtDate, fmtDateTimeLong } from '../../i18n'
 import { FEATURES } from '../../config/features'
@@ -154,6 +158,9 @@ export default function BackupScreen() {
   const [folderMeta, setFolderMeta] = useState<FolderBackupMeta | null | undefined>(undefined)
   const [folderWorking, setFolderWorking] = useState(false)
   const [folderPrevMeta, setFolderPrevMeta] = useState<FolderPrevMeta | null | undefined>(undefined)
+  // Нативный папочный бэкап (APK): undefined=загрузка, null=выключен, объект=включён
+  const [nativeFolderMeta, setNativeFolderMeta] = useState<NativeFolderMeta | null | undefined>(undefined)
+  const [nativeFolderWorking, setNativeFolderWorking] = useState(false)
   const [preRestoreMeta, setPreRestoreMeta] = useState<PreRestoreSnapshotMeta | null | undefined>(undefined)
   const [periodicStatus, setPeriodicStatus] = useState<'on' | 'off' | 'unsupported' | undefined>(undefined)
   const [opfsValid, setOpfsValid] = useState<boolean | undefined>(undefined)
@@ -184,6 +191,7 @@ export default function BackupScreen() {
     getFolderPrevMeta(db).then(setFolderPrevMeta)
     getPreRestoreSnapshotMeta().then(setPreRestoreMeta)
     getPeriodicSyncStatus().then(setPeriodicStatus)
+    if (IS_CAPACITOR) import('../../utils/nativeFolderBackup').then(m => m.getNativeFolderMeta(db)).then(setNativeFolderMeta)
   }, [])
 
   const refreshCloud = useCallback(async () => {
@@ -402,6 +410,49 @@ export default function BackupScreen() {
     setFolderMeta(null)
   }
 
+  // ── Native folder handlers (APK) ──────────────────────────────────────────
+
+  async function handleNativeFolderEnable() {
+    if (!IS_CAPACITOR || nativeFolderWorking) return
+    setNativeFolderWorking(true)
+    try {
+      const m = await import('../../utils/nativeFolderBackup')
+      const result = await m.enableNativeFolderBackup(db)
+      if (result === 'ok') {
+        setNativeFolderMeta(await m.getNativeFolderMeta(db))
+        showToast(t.backup.folderSaved)
+      } else {
+        showToast(t.backup.nfbError)
+      }
+    } finally {
+      setNativeFolderWorking(false)
+    }
+  }
+
+  async function handleNativeFolderSaveNow() {
+    if (!IS_CAPACITOR || nativeFolderWorking) return
+    setNativeFolderWorking(true)
+    try {
+      const m = await import('../../utils/nativeFolderBackup')
+      const result = await m.saveNativeFolderBackupNow(db)
+      if (result === 'ok') {
+        setNativeFolderMeta(await m.getNativeFolderMeta(db))
+        showToast(t.backup.folderSaved)
+      } else {
+        showToast(t.backup.nfbError)
+      }
+    } finally {
+      setNativeFolderWorking(false)
+    }
+  }
+
+  async function handleNativeFolderDisable() {
+    if (!IS_CAPACITOR) return
+    const m = await import('../../utils/nativeFolderBackup')
+    await m.disableNativeFolderBackup(db)
+    setNativeFolderMeta(null)
+  }
+
   // ── Cloud handlers ────────────────────────────────────────────────────────
 
   function handleCloudConnect() {
@@ -544,6 +595,13 @@ export default function BackupScreen() {
     id: 'folderprev', storage: 2, label: t.backup.copyFolderPrev, date: folderPrevMeta.date, size: folderPrevMeta.size, action: 'restore',
     run: async () => applyPreview(await readFolderPrevBackup(db), t.backup.folderPrevNotFound),
   })
+  if (IS_CAPACITOR && nativeFolderMeta?.lastAt) restoreCopies.push({
+    id: 'nativefolder', storage: 2, label: t.backup.copyFolder, date: nativeFolderMeta.lastAt, size: nativeFolderMeta.size, action: 'restore',
+    run: async () => {
+      const m = await import('../../utils/nativeFolderBackup')
+      applyPreview(await m.readNativeFolderBackup(), t.backup.nfbRestoreNotFound)
+    },
+  })
   if (cloudSnapshots) for (const snap of cloudSnapshots) restoreCopies.push({
     id: `cloud-${snap.name}`, storage: 3,
     label: `${t.backup.copyCloud}${snap.deviceId ? ` · ${snap.fromThisDevice ? t.backup.cloudThisDevice : t.backup.cloudOtherDevice}` : ''}`,
@@ -606,7 +664,7 @@ export default function BackupScreen() {
         </div>
 
         {/* Уровень 2 — папка на устройстве (где поддерживается File System Access) */}
-        {supportsFileSystemAccess() && (
+        {!IS_CAPACITOR && supportsFileSystemAccess() && (
           folderMeta ? (
             <div className={s.destCard}>
               <div className={s.destHeader}>
@@ -644,6 +702,44 @@ export default function BackupScreen() {
               </button>
             </div>
           )
+        )}
+
+        {/* Папка на устройстве — нативный вариант для APK */}
+        {IS_CAPACITOR && (
+          nativeFolderMeta ? (
+            <div className={s.destCard}>
+              <div className={s.destHeader}>
+                <span className={s.destTitle}>{NATIVE_FOLDER_LABEL}</span>
+                <ReliabilityBars n={2} />
+              </div>
+              <span className={s.destMeta}>
+                {nativeFolderMeta.lastAt
+                  ? (<><span style={{ color: ageDot(nativeFolderMeta.lastAt), marginRight: 4 }}>●</span>{t.backup.folderLastAt(fmtDateTimeLong(locale, nativeFolderMeta.lastAt))}{nativeFolderMeta.size ? ` · ${fmtSize(nativeFolderMeta.size)}` : ''}</>)
+                  : t.backup.folderNeverSaved}
+              </span>
+              <p className={s.destSub}>{t.backup.storageFolderReliability}</p>
+              <div className={s.autoBackupActions}>
+                <button className={s.primaryBtn} onClick={handleNativeFolderSaveNow} disabled={nativeFolderWorking}>
+                  {nativeFolderWorking ? t.backup.saving : t.backup.folderSaveNow}
+                </button>
+                <button className={s.secondaryBtn} onClick={handleNativeFolderDisable} disabled={nativeFolderWorking}>
+                  {t.backup.nfbDisable}
+                </button>
+              </div>
+            </div>
+          ) : nativeFolderMeta === null ? (
+            <div className={s.destCard}>
+              <div className={s.destHeader}>
+                <span className={s.destTitle}>{t.backup.nfbTitle}</span>
+                <ReliabilityBars n={2} />
+              </div>
+              <p className={s.destSub}>{t.backup.storageFolderReliability}</p>
+              <p className={s.destMeta}>{t.backup.nfbDesc}</p>
+              <button className={s.primaryBtn} onClick={handleNativeFolderEnable} disabled={nativeFolderWorking}>
+                {nativeFolderWorking ? t.backup.saving : t.backup.nfbEnable}
+              </button>
+            </div>
+          ) : null
         )}
 
         {/* Уровень 3 — облако (самая надёжная) */}

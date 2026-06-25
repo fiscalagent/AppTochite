@@ -11,6 +11,10 @@ const AutoBackupContext = createContext<AutoBackupContextValue>({ lastBackupTick
 
 const DEBOUNCE_MS = 2 * 60 * 1000
 
+// Папочный авто-бэкап в APK — через @capacitor/filesystem. Динамический импорт
+// под литералом MODE, чтобы PWA-сборка вырезала и ветку, и chunk плагина.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
+
 // хук-аксессор живёт рядом с провайдером; выносить в отдельный файл ради HMR не оправдано
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAutoBackup() {
@@ -32,6 +36,11 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
       await performOPFSBackup(db)
       performFolderBackup(db).catch(() => {})
       performCloudBackup(db).catch(() => {})
+      if (IS_CAPACITOR) {
+        import('../utils/nativeFolderBackup')
+          .then(m => m.performNativeFolderBackup(db))
+          .catch(() => {})
+      }
       setLastBackupTick(t => t + 1)
     } catch {
       // silently skip — OPFS is always available, failures are transient
