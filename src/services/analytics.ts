@@ -4,6 +4,11 @@ import { APP_VERSION } from '../version'
 
 const ENDPOINT = import.meta.env.VITE_ANALYTICS_URL as string | undefined
 
+// Платформа сборки: 'native' — APK (Capacitor), 'web' — PWA. Подставляется на
+// этапе сборки (import.meta.env.MODE), уходит в каждое событие → в Google Sheet
+// APK-устройства отделяются от PWA одной колонкой.
+const PLATFORM: 'native' | 'web' = import.meta.env.MODE === 'capacitor' ? 'native' : 'web'
+
 // Один id на загрузку страницы — группирует события в «сессию».
 const SESSION_ID = crypto.randomUUID()
 
@@ -81,6 +86,7 @@ export async function track(event: string, props: Record<string, unknown> = {}):
     deviceId,
     sessionId: SESSION_ID,
     ts: new Date().toISOString(),
+    platform: PLATFORM,
     ...props,
   }
 
@@ -130,6 +136,7 @@ export async function trackSharpening(sharpening: Sharpening): Promise<void> {
 
   const payload = {
     deviceId,
+    platform: PLATFORM,
     doneAt: (sharpening.doneAt ?? new Date()).toISOString(),
     knife: {
       brand: sharpening.knifeBrand,

@@ -10,6 +10,17 @@ export const FEATURES = {
   cloudBackup: !isCapacitorBuild, // Яндекс.Диск — облачный бэкап
 }
 
+// Баннер миграции PWA→APK (Ф3). Тёмный код: по умолчанию выключен, чтобы живые
+// PWA-юзеры его не видели, пока APK не готов. Коммит запуска 2.0.0 (Ф7) флипнет
+// дефолт в true. До запуска включается на устройстве для теста ключом
+// localStorage 'migration_prompt'='true'. В самой APK-сборке мигрировать некуда.
+const MIGRATION_PROMPT_DEFAULT = false
+
+export function isMigrationPromptEnabled(): boolean {
+  if (isCapacitorBuild) return false
+  return MIGRATION_PROMPT_DEFAULT || localStorage.getItem('migration_prompt') === 'true'
+}
+
 const VOICE_STORAGE_KEY = 'voice_input_enabled'
 
 // Голосовой ввод включён по умолчанию. В localStorage пишем только явное

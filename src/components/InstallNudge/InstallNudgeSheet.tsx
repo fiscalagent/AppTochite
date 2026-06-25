@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 import { isIosInstallable } from '../../utils/platform'
+import { isMigrationPromptEnabled } from '../../config/features'
 import { track } from '../../services/analytics'
 import { useT } from '../../i18n'
 import IosInstallSheet from './IosInstallSheet'
@@ -40,7 +41,9 @@ export default function InstallNudgeSheet() {
 
   // install — системный промпт (Chrome/YaBrowser); ios — инструкция (Safari).
   // Если установка недоступна вовсе — ничего не показываем.
-  const mode: 'install' | 'ios' | null = !show ? null : canInstall ? 'install' : ios ? 'ios' : null
+  // При включённой миграции PWA→APK install-нудж молчит (зовём в APK, не в PWA).
+  const mode: 'install' | 'ios' | null =
+    !show || isMigrationPromptEnabled() ? null : canInstall ? 'install' : ios ? 'ios' : null
 
   useEffect(() => {
     if (!mode) return

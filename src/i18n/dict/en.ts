@@ -619,6 +619,7 @@ export const en = {
     onboardingSubtitle: 'Read the guide — it will help you get started quickly.',
     onboardingOpen: 'Open guide',
     onboardingSkip: 'Skip',
+    onboardingRestore: 'Restore from backup',
 
     installNudgeTitle: 'Sharpening saved 👍',
     installNudgeBody: 'Add AppTochite to your home screen — your journal always at hand, one tap away, even offline.',
@@ -627,6 +628,16 @@ export const en = {
     installBannerText: 'Like the app? Launch it with one tap from your home screen, works offline.',
     installBannerClose: 'Close',
     installHowto: 'How to install',
+
+    migrationBannerText: 'The Android app is here — move your data over and use it.',
+    migrationBannerCta: 'Move over',
+    migrationTitle: 'Switch to the app',
+    migrationSubtitle: 'AppTochite is now available as an Android app. Browser data does not transfer automatically — move it in three steps.',
+    migrationStep1: 'Back up your data.',
+    migrationStep2: 'Install the Android app.',
+    migrationStep3: 'Open the app and restore your data from that same backup.',
+    migrationBackup: 'Go to backup',
+    migrationDownload: 'Download the app',
 
     iosInstallTitle: 'Add to your Home Screen',
     iosInstallIntro: 'Then your journal opens with one tap and works offline.',

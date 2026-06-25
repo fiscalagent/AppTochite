@@ -12,6 +12,7 @@ import type { Client } from '../../db/instance'
 import s from './ClientList.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 import InstallBanner from '../../components/InstallNudge/InstallBanner'
+import MigrationBanner from '../../components/MigrationPrompt/MigrationBanner'
 
 const IconSave = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -222,6 +223,7 @@ export default function ClientList() {
           {t.clients.shareApp}
         </button>
       </div>
+      <MigrationBanner />
       <InstallBanner />
     </div>
   )

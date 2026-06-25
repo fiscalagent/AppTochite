@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 import { isIosInstallable } from '../../utils/platform'
+import { isMigrationPromptEnabled } from '../../config/features'
 import { track } from '../../services/analytics'
 import { useT } from '../../i18n'
 import IosInstallSheet from './IosInstallSheet'
@@ -23,7 +24,8 @@ export default function InstallBanner() {
   const launches = Number(localStorage.getItem('launchCount') ?? 0)
   const until = localStorage.getItem(DISMISS_KEY)
   const snoozed = until ? new Date(until) > new Date() : false
-  const visible = (canInstall || ios) && launches >= MIN_LAUNCHES && !snoozed && !hidden
+  // При включённой миграции PWA→APK не зовём ставить PWA — это противоречило бы.
+  const visible = !isMigrationPromptEnabled() && (canInstall || ios) && launches >= MIN_LAUNCHES && !snoozed && !hidden
 
   useEffect(() => {
     if (visible) track('install_nudge_shown', { trigger: 'banner', platform: ios ? 'ios' : 'web' }).catch(() => {})

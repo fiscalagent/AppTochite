@@ -599,6 +599,7 @@ export const ru = {
     onboardingSubtitle: 'Прочитайте инструкцию — она поможет быстро разобраться в приложении.',
     onboardingOpen: 'Открыть инструкцию',
     onboardingSkip: 'Пропустить',
+    onboardingRestore: 'Восстановить из резервной копии',
 
     installNudgeTitle: 'Заточка записана 👍',
     installNudgeBody: 'Поставьте AppTochite на экран — журнал всегда под рукой и открывается одним касанием, даже без интернета.',
@@ -607,6 +608,16 @@ export const ru = {
     installBannerText: 'Понравилось приложение? Запускайте одним нажатием с домашнего экрана, работает офлайн.',
     installBannerClose: 'Закрыть',
     installHowto: 'Как установить',
+
+    migrationBannerText: 'Вышло приложение для Android — перенесите данные и пользуйтесь им.',
+    migrationBannerCta: 'Перенести',
+    migrationTitle: 'Переход на приложение',
+    migrationSubtitle: 'AppTochite теперь есть как приложение для Android. Данные из браузера не переносятся сами — перенесите их в три шага.',
+    migrationStep1: 'Сделайте резервную копию данных.',
+    migrationStep2: 'Установите приложение для Android.',
+    migrationStep3: 'Откройте приложение и восстановите данные из той же копии.',
+    migrationBackup: 'К резервной копии',
+    migrationDownload: 'Скачать приложение',
 
     iosInstallTitle: 'Добавьте на экран «Домой»',
     iosInstallIntro: 'Тогда журнал открывается одним касанием и работает без интернета.',

@@ -1,0 +1,36 @@
+/* Нумерованные шаги переноса. Шелл листа (overlay/sheet/title/primary/skip)
+   берётся из OnboardingSheet.module.css — здесь только список шагов. */
+.steps {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.num {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepText {
+  font-size: 15px;
+  color: var(--text-100);
+  line-height: 1.5;
+}
