@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppTochite — браузер или приложение (A4)</title>
+<style>
+  :root {
+    --accent: #4A90D9;
+    --green: #3DB87A;
+    --blue-soft: #eaf2fb;
+    --green-soft: #e8f7f0;
+    --ink: #1f2733;
+    --muted: #7a8694;
+    --line: #e7ebf0;
+    --bg: #f4f6f9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page { size: A4 landscape; margin: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .sheet {
+    width: 297mm;
+    height: 210mm;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(31, 39, 51, 0.10);
+  }
+
+  /* ---- Header ---- */
+  .head {
+    background: linear-gradient(120deg, var(--accent) 0%, var(--green) 100%);
+    color: #fff;
+    padding: 22px 34px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .head .logo { flex: none; }
+  .head .titles { flex: 1; }
+  .brand { font-size: 26px; font-weight: 800; letter-spacing: -0.4px; line-height: 1; }
+  .brand .b2 { color: rgba(255,255,255,0.78); }
+  .head h1 { font-size: 19px; font-weight: 600; margin-top: 8px; }
+  .head .sub { font-size: 13px; opacity: 0.9; margin-top: 3px; }
+
+  /* ---- Body: two columns ---- */
+  .body {
+    flex: 1;
+    display: flex;
+    gap: 26px;
+    padding: 24px 34px 22px;
+    min-height: 0;
+  }
+  .left  { flex: 1.15; display: flex; flex-direction: column; }
+  .right { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+
+  /* ---- Comparison ---- */
+  .cols {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    border-bottom: 2px solid var(--line);
+    padding-bottom: 8px;
+  }
+  .cols .spacer {}
+  .col-title { text-align: center; }
+  .col-title .emoji { font-size: 20px; }
+  .col-title .name { font-size: 14px; font-weight: 700; margin-top: 2px; }
+  .pwa .name { color: var(--accent); }
+  .apk .name { color: var(--green); }
+
+  .rows { flex: 1; display: flex; flex-direction: column; }
+  .row {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .row .label {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-right: 8px;
+  }
+  .cell {
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .yes-b { color: var(--accent); font-weight: 700; }
+  .yes-g { color: var(--green); font-weight: 700; }
+  .soft { color: var(--muted); }
+
+  /* ---- Pros ---- */
+  .pro { border-radius: 14px; padding: 14px 16px; }
+  .pro.blue { background: var(--blue-soft); }
+  .pro.green { background: var(--green-soft); }
+  .pro h3 { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+  .pro.blue h3 { color: var(--accent); }
+  .pro.green h3 { color: var(--green); }
+  .pro ul { list-style: none; }
+  .pro li {
+    font-size: 12.5px; line-height: 1.4; padding-left: 16px;
+    position: relative; margin-top: 5px;
+  }
+  .pro li::before {
+    content: ""; position: absolute; left: 2px; top: 6px;
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .pro.blue li::before { background: var(--accent); }
+  .pro.green li::before { background: var(--green); }
+
+  .note {
+    background: #fff8e9; border: 1px solid #f3e2bd; border-radius: 12px;
+    padding: 11px 14px; font-size: 12px; line-height: 1.4; color: #8a6d2f;
+  }
+  .note b { color: #6f5621; }
+
+  /* ---- Foot ---- */
+  .foot {
+    border-top: 1px solid var(--line);
+    padding: 12px 34px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--muted);
+  }
+  .foot a { color: var(--accent); text-decoration: none; font-weight: 700; }
+
+  /* Печать: убрать экранные отступы/тень, страница ровно A4 landscape (правила в конце — побеждают по порядку) */
+  @media print {
+    html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+    .sheet { box-shadow: none !important; width: 296.8mm; height: 209.4mm; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+
+    <div class="head">
+      <svg class="logo" width="64" height="38" viewBox="0 0 24 14" fill="none" aria-hidden="true">
+        <rect x="0" y="9" width="24" height="5" rx="2" fill="#fff" opacity="0.35"/>
+        <path d="M0 9 L22 2 L24 5 L2 12 Z" fill="#fff"/>
+      </svg>
+      <div class="titles">
+        <div class="brand"><span class="b1">App</span><span class="b2">Tochite</span></div>
+        <h1>Браузер или приложение?</h1>
+        <div class="sub">Две версии — обе бесплатные, выбирайте удобную</div>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <div class="left">
+        <div class="cols">
+          <div class="spacer"></div>
+          <div class="col-title pwa"><span class="emoji">🌐</span><div class="name">Браузерная</div></div>
+          <div class="col-title apk"><span class="emoji">📱</span><div class="name">Приложение</div></div>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <div class="label">Как поставить</div>
+            <div class="cell">По ссылке</div>
+            <div class="cell">Скачать APK</div>
+          </div>
+          <div class="row">
+            <div class="label">Обновления</div>
+            <div class="cell"><span class="yes-b">✓</span>Автоматически</div>
+            <div class="cell soft">Вручную</div>
+          </div>
+          <div class="row">
+            <div class="label">Без интернета</div>
+            <div class="cell"><span class="yes-b">✓</span>Да</div>
+            <div class="cell"><span class="yes-g">✓</span>Да</div>
+          </div>
+          <div class="row">
+            <div class="label">Голосовой ввод</div>
+            <div class="cell"><span class="yes-b">✓</span>Есть</div>
+            <div class="cell soft">Пока нет</div>
+          </div>
+          <div class="row">
+            <div class="label">Облако · Яндекс.Диск</div>
+            <div class="cell"><span class="yes-b">✓</span>Есть</div>
+            <div class="cell"><span class="yes-g">✓</span>Есть</div>
+          </div>
+          <div class="row">
+            <div class="label">Фото ножей · камера</div>
+            <div class="cell"><span class="yes-b">✓</span>Есть</div>
+            <div class="cell"><span class="yes-g">✓</span>Есть</div>
+          </div>
+          <div class="row">
+            <div class="label">Независимость от браузера</div>
+            <div class="cell soft">В браузере</div>
+            <div class="cell"><span class="yes-g">✓</span>Сама по себе</div>
+          </div>
+          <div class="row">
+            <div class="label">Где хранятся данные</div>
+            <div class="cell">В браузере</div>
+            <div class="cell">В приложении</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="pro blue">
+          <h3>🌐 Чем хороша браузерная</h3>
+          <ul>
+            <li>Всегда последняя версия — ничего не качать и не обновлять вручную</li>
+            <li>Работает голосовой ввод</li>
+            <li>Запускается сразу по ссылке, на любом устройстве</li>
+            <li>Данные надёжно хранятся на устройстве и не пропадают сами</li>
+          </ul>
+        </div>
+        <div class="pro green">
+          <h3>📱 Чем хорошо приложение</h3>
+          <ul>
+            <li>Живёт отдельно от браузера — приложение и данные не зависят от его настроек, обновлений и чисток</li>
+            <li>Запускается на весь экран, как обычное мобильное приложение</li>
+          </ul>
+        </div>
+        <div class="note">
+          ⚠️ <b>Перенос данных.</b> Браузерная версия и приложение хранят записи раздельно. Чтобы перенести их, сделайте резервную копию в одной версии и восстановите в другой.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="foot">
+      <span>AppTochite — журнал заточек для профессионалов</span>
+      <a href="https://apptochite.github.io" target="_blank" rel="noopener">apptochite.github.io</a>
+    </div>
+
+  </div>
+</body>
+</html>

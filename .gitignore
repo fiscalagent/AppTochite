@@ -22,6 +22,9 @@ photo-load-test-backup.json
 # Видео презентации — генерируется через presentation/generate-video.js
 presentation/*.mp4
 
+# PDF карточек сравнения — генерируются из docs/version-compare-*.html через headless Chrome
+docs/version-compare-*.pdf
+
 # Claude Code
 .claude/
 
