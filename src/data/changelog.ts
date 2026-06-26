@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.0.1',
+    date: '2026-06-26',
+    changes: [
+      'у установленного Android-приложения своя иконка с неоновой подписью «АПК» — её легко отличить от браузерной версии на экране телефона',
+    ],
+  },
+  {
     version: '2.0.0',
     date: '2026-06-25',
     changes: [

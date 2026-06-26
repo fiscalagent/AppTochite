@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/fiscalagent/AppTochite/compare/v2.0.0...v2.0.1) (2026-06-26)
+
+
+### fix
+
+* у установленного Android-приложения своя иконка с неоновой подписью «АПК» — её легко отличить от браузерной версии на экране телефона ([](https://github.com/fiscalagent/AppTochite/commit/af4c09383d3edbe48e3cb900a3d8f86726566605))
+
 # [2.0.0](https://github.com/fiscalagent/AppTochite/compare/v1.109.1...v2.0.0) (2026-06-25)
 
 
