@@ -180,6 +180,7 @@ export default function BackupScreen() {
 
   // collapsible state
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [olderCopiesOpen, setOlderCopiesOpen] = useState(false)
 
   const refreshOpfsMeta = useCallback(() => {
     getOPFSBackupMeta().then(meta => {
@@ -669,6 +670,24 @@ export default function BackupScreen() {
   })
   restoreCopies.sort((a, b) => b.date.getTime() - a.date.getTime())
 
+  const renderCopyRow = (c: RestoreCopy) => (
+    <div key={c.id} className={s.copyRow}>
+      <div className={s.copyMain}>
+        <div className={s.copyHead}>
+          <span className={s.copyStorage}>{c.label}</span>
+          <ReliabilityBars n={c.storage} />
+        </div>
+        <span className={s.copyMeta}>
+          <span style={{ color: ageDot(c.date), marginRight: 4 }}>●</span>
+          {fmtDateTimeLong(locale, c.date)}{c.size ? ` · ${fmtSize(c.size)}` : ''}
+        </span>
+      </div>
+      <button className={s.copyBtn} onClick={() => c.run()}>
+        {c.action === 'download' ? t.backup.copyDownloadBtn : t.backup.copyRestoreBtn}
+      </button>
+    </div>
+  )
+
   return (
     <div className={s.screen}>
       <div className={s.header}>
@@ -892,24 +911,20 @@ export default function BackupScreen() {
           <>
             <p className={s.desc}>{t.backup.copiesIntro}</p>
 
-            {/* Единый список доступных копий — от свежих к старым */}
-            {restoreCopies.map(c => (
-              <div key={c.id} className={s.copyRow}>
-                <div className={s.copyMain}>
-                  <div className={s.copyHead}>
-                    <span className={s.copyStorage}>{c.label}</span>
-                    <ReliabilityBars n={c.storage} />
-                  </div>
-                  <span className={s.copyMeta}>
-                    <span style={{ color: ageDot(c.date), marginRight: 4 }}>●</span>
-                    {fmtDateTimeLong(locale, c.date)}{c.size ? ` · ${fmtSize(c.size)}` : ''}
+            {/* Единый список доступных копий — от свежих к старым; 3 последних,
+                остальные под катом «Более ранние копии» */}
+            {restoreCopies.slice(0, 3).map(renderCopyRow)}
+            {restoreCopies.length > 3 && (
+              <>
+                <button className={s.collapseBtn} onClick={() => setOlderCopiesOpen(v => !v)}>
+                  <span className={`${s.collapseChevron} ${olderCopiesOpen ? s.collapseChevronOpen : ''}`}>
+                    <IconChevronRight />
                   </span>
-                </div>
-                <button className={s.copyBtn} onClick={() => c.run()}>
-                  {c.action === 'download' ? t.backup.copyDownloadBtn : t.backup.copyRestoreBtn}
+                  {t.backup.copiesOlder(restoreCopies.length - 3)}
                 </button>
-              </div>
-            ))}
+                {olderCopiesOpen && restoreCopies.slice(3).map(renderCopyRow)}
+              </>
+            )}
 
             {/* Состояние облачного списка */}
             {FEATURES.cloudBackup && cloudToken && cloudSnapshotsLoading && (

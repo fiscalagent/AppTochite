@@ -389,3 +389,15 @@
   left: 0;
   color: var(--text-400);
 }
+
+.changelogMore {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  font-family: var(--font-body);
+}

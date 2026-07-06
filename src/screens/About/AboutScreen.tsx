@@ -62,6 +62,10 @@ export default function AboutScreen() {
 
   const [showBugReport, setShowBugReport] = useState(false)
 
+  const [showAllChangelog, setShowAllChangelog] = useState(false)
+  const visibleChangelog = showAllChangelog ? CHANGELOG : CHANGELOG.slice(0, 3)
+  const hiddenChangelogCount = CHANGELOG.length - 3
+
   // Пасхалка: 7 тапов по номеру версии
   const eggTaps = useRef(0)
   const [showEgg, setShowEgg] = useState(false)
@@ -235,7 +239,7 @@ export default function AboutScreen() {
       <div className={s.section}>
         <p className={s.sectionTitle}>{t.about.whatsNewSection}</p>
         <div className={s.changelog}>
-          {CHANGELOG.map((entry) => (
+          {visibleChangelog.map((entry) => (
             <div key={entry.version} className={s.changelogEntry}>
               <div className={s.changelogHeader}>
                 <span className={s.changelogVersion}>v{entry.version}</span>
@@ -248,6 +252,16 @@ export default function AboutScreen() {
               </ul>
             </div>
           ))}
+          {hiddenChangelogCount > 0 && (
+            <button
+              className={s.changelogMore}
+              onClick={() => setShowAllChangelog(v => !v)}
+            >
+              {showAllChangelog
+                ? t.about.hideOlderVersions
+                : t.about.showOlderVersions(hiddenChangelogCount)}
+            </button>
+          )}
         </div>
       </div>
       <AppLogo />

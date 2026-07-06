@@ -180,6 +180,8 @@ export const en = {
     voiceTitle: 'Voice input',
     voiceDesc: 'Fill in fields by voice when creating a sharpening. Requires internet connection.',
     whatsNewSection: 'What\'s new',
+    showOlderVersions: (n: number) => `Show earlier versions (${n})`,
+    hideOlderVersions: 'Collapse',
     languageLabel: 'Language',
   },
 
@@ -598,6 +600,7 @@ export const en = {
     copyCloud: 'Cloud',
     copyRestoreBtn: 'Restore',
     copyDownloadBtn: 'Download',
+    copiesOlder: (n: number) => `Earlier copies (${n})`,
     // Yandex.Disk cloud backup
     cloudSection: 'Yandex.Disk',
     cloudConnect: 'Connect Yandex.Disk',

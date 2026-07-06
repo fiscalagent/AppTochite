@@ -134,6 +134,8 @@ export const ru = {
     voiceTitle: 'Голосовой ввод',
     voiceDesc: 'Заполняйте поля голосом при создании заточки. Требует подключения к сети.',
     whatsNewSection: 'Что нового',
+    showOlderVersions: (n: number) => `Показать более ранние версии (${n})`,
+    hideOlderVersions: 'Свернуть',
     languageLabel: 'Язык',
   },
 
@@ -576,6 +578,7 @@ export const ru = {
     copyCloud: 'Облако',
     copyRestoreBtn: 'Восстановить',
     copyDownloadBtn: 'Скачать',
+    copiesOlder: (n: number) => `Более ранние копии (${n})`,
     // Яндекс.Диск (облачный бэкап)
     cloudSection: 'Яндекс.Диск',
     cloudConnect: 'Подключить Яндекс.Диск',
