@@ -151,6 +151,8 @@ export const en = {
     updateAvailable: 'Update available',
     updateHintPwa: 'Close and reopen the app to install',
     updateHintBrowser: 'Press Ctrl+Shift+R to refresh',
+    updateHintApk: 'Download the file and open it from your downloads — the app will update, your data stays intact',
+    downloadApk: (v: string) => `Download v${v} (APK)`,
     whatsNewIn: (v: string) => `What's new in v${v} →`,
     checkedAt: (when: string) => `Checked: ${when}`,
     neverChecked: 'Never checked',

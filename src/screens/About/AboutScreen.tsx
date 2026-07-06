@@ -30,6 +30,12 @@ function isPwa(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches
 }
 
+// В APK веб-ассеты забандлены — обновление только установкой нового APK.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
+// Стабильная ссылка на новейший подписанный APK (тот же ассет использует лендинг).
+const APK_DOWNLOAD_URL =
+  'https://github.com/fiscalagent/AppTochite/releases/latest/download/app-release.apk'
+
 export default function AboutScreen() {
   const navigate = useNavigate()
   const { t, locale } = useLocale()
@@ -95,8 +101,22 @@ export default function AboutScreen() {
               </span>
             </div>
             <span className={s.updateHint}>
-              {isPwa() ? t.about.updateHintPwa : t.about.updateHintBrowser}
+              {IS_CAPACITOR
+                ? t.about.updateHintApk
+                : isPwa()
+                  ? t.about.updateHintPwa
+                  : t.about.updateHintBrowser}
             </span>
+            {IS_CAPACITOR && (
+              <a
+                href={APK_DOWNLOAD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={s.downloadBtn}
+              >
+                {t.about.downloadApk(latestVersion)}
+              </a>
+            )}
             {releaseUrl && (
               <a
                 href={releaseUrl}

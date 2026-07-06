@@ -105,6 +105,8 @@ export const ru = {
     updateAvailable: 'Доступно обновление',
     updateHintPwa: 'Закройте и откройте приложение для установки',
     updateHintBrowser: 'Нажмите Ctrl+Shift+R для обновления страницы',
+    updateHintApk: 'Скачайте файл и откройте его из загрузок — приложение обновится, все данные сохранятся',
+    downloadApk: (v: string) => `Скачать v${v} (APK)`,
     whatsNewIn: (v: string) => `Что нового в v${v} →`,
     checkedAt: (when: string) => `Проверено: ${when}`,
     neverChecked: 'Ещё не проверялось',
