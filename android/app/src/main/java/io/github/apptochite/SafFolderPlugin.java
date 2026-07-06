@@ -3,7 +3,10 @@ package io.github.apptochite;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.UriPermission;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Environment;
+import android.provider.DocumentsContract;
 
 import androidx.activity.result.ActivityResult;
 import androidx.documentfile.provider.DocumentFile;
@@ -110,6 +113,10 @@ public class SafFolderPlugin extends Plugin {
                 }
                 os.write(data.getBytes(StandardCharsets.UTF_8));
             }
+            // Файл создан через SAF — MediaStore о нём не знает, и часть файловых
+            // менеджеров (Samsung MyFiles и т.п.) не показывают его до следующей
+            // перезаписи. Принудительно индексируем, чтобы файл был виден сразу.
+            mediaScan(file.getUri());
             JSObject ret = new JSObject();
             ret.put("uri", file.getUri().toString());
             call.resolve(ret);
@@ -213,5 +220,34 @@ public class SafFolderPlugin extends Plugin {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /** Регистрирует SAF-файл в MediaStore, чтобы он сразу появился в файловых менеджерах. */
+    private void mediaScan(Uri fileUri) {
+        try {
+            String path = filePathFromDocumentUri(fileUri);
+            if (path != null) {
+                MediaScannerConnection.scanFile(getContext(), new String[]{ path }, null, null);
+            }
+        } catch (Exception ignored) { /* best-effort: провайдер без реального пути (Downloads/облако) */ }
+    }
+
+    /**
+     * Восстанавливает реальный путь файловой системы из document Uri.
+     * Работает для ExternalStorageProvider (внутренняя память / SD) и raw-путей;
+     * для остальных провайдеров (Downloads, облако) пути нет → null (скан пропускаем).
+     */
+    private String filePathFromDocumentUri(Uri uri) {
+        final String docId = DocumentsContract.getDocumentId(uri);
+        if (docId.startsWith("raw:")) return docId.substring(4);
+        final String[] split = docId.split(":", 2);
+        if (split.length < 2) return null;
+        final String volume = split[0];
+        final String relative = split[1];
+        if ("primary".equalsIgnoreCase(volume)) {
+            return Environment.getExternalStorageDirectory() + "/" + relative;
+        }
+        // Вторичный том (SD-карта) — путь по конвенции /storage/<volume>/...
+        return "/storage/" + volume + "/" + relative;
     }
 }
