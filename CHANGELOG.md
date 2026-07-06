@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/fiscalagent/AppTochite/compare/v2.0.3...v2.0.4) (2026-07-06)
+
+
+### fix
+
+* бэкап в папку — выбор папки больше не пропадает впустую на телефонах, выгружающих приложение во время системного диалога (Samsung, Xiaomi и др.): выбранная папка теперь запоминается и подключается при возврате в приложение, а при ошибке записи показывается её причина ([](https://github.com/fiscalagent/AppTochite/commit/62e2b936247a06d697ac4e17e4165e0ca076cfa5))
+
 ## [2.0.3](https://github.com/fiscalagent/AppTochite/compare/v2.0.2...v2.0.3) (2026-07-06)
 
 
