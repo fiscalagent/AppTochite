@@ -11,7 +11,7 @@ const AutoBackupContext = createContext<AutoBackupContextValue>({ lastBackupTick
 
 const DEBOUNCE_MS = 2 * 60 * 1000
 
-// Папочный авто-бэкап в APK — через @capacitor/filesystem. Динамический импорт
+// Папочный авто-бэкап в APK — через нативный SAF-плагин. Динамический импорт
 // под литералом MODE, чтобы PWA-сборка вырезала и ветку, и chunk плагина.
 const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
 

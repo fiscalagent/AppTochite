@@ -1,14 +1,18 @@
-// Папочный авто-бэкап для APK через @capacitor/filesystem.
+// Папочный авто-бэкап для APK через Storage Access Framework (SAF).
 //
 // В PWA папка делается на File System Access API (showDirectoryPicker), которого
-// в Android WebView нет. Здесь нативный аналог: пишем в фиксированную папку
-// Документы/AppTochite (без пикера). Политика — как у облака/веб-папки: дневной
+// в Android WebView нет. Раньше здесь был @capacitor/filesystem с фиксированной
+// папкой Документы/AppTochite — но на Android 11+ scoped storage запрещает прямую
+// запись туда, и «Сохранить» падал с «нет доступа к папке». Теперь пользователь
+// сам выбирает папку системным пикером (нативный SafFolder-плагин), а мы держим
+// persistable-доступ к её tree Uri. Политика — как у облака/веб-папки: дневной
 // гейт + сигнатура (раз в сутки и только при изменении данных). Ротация:
-// текущий → -prev. Включается под жестом (см. enable), авто-запись потом без жеста.
+// текущий → -prev. Пикер и первый бэкап под жестом, авто-запись потом без жеста.
 //
-// Плагин импортируется динамически; модуль зовётся только из веток
-// `import.meta.env.MODE === 'capacitor'` → в PWA-сборке Rollup его вырезает.
+// Плагин зовётся только из веток `import.meta.env.MODE === 'capacitor'` → в
+// PWA-сборке Rollup ветку вырезает, нативный код в бандл не течёт.
 
+import { SafFolder } from '../plugins/safFolder'
 import { db as defaultDb } from '../db/instance'
 import type { AppTochiteDB } from '../db/instance'
 import {
@@ -21,69 +25,68 @@ import {
   type BackupFile,
 } from './backup'
 
-const SUBDIR = 'AppTochite'
-const FILE = `${SUBDIR}/apptochite-auto.json`
-const FILE_PREV = `${SUBDIR}/apptochite-auto-prev.json`
+const FILE = 'apptochite-auto.json'
+const FILE_PREV = 'apptochite-auto-prev.json'
 
 const ENABLED_KEY = 'nativeFolderEnabled'
+const URI_KEY = 'nativeFolderUri'
+const NAME_KEY = 'nativeFolderName'
 const LAST_AT_KEY = 'nativeFolderLastAt'
 const LAST_SIG_KEY = 'nativeFolderLastSig'
 const CHECK_DAY_KEY = 'nativeFolderCheckDay'
 
-// Видимое имя папки для UI.
-export const NATIVE_FOLDER_LABEL = 'Документы/AppTochite'
+export type NativeFolderResult = 'ok' | 'cancelled' | 'error'
 
-async function fsApi() {
-  const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem')
-  return { Filesystem, dir: Directory.Documents, enc: Encoding.UTF8 }
+// Отмена пикера — не ошибка: плагин reject'ит с code='CANCELLED'.
+function isCancel(e: unknown): boolean {
+  const err = e as { code?: string; message?: string }
+  return err?.code === 'CANCELLED' || /cancel/i.test(String(err?.message ?? e ?? ''))
 }
 
-// Лучшее усилие запросить доступ к публичной памяти (нужно не на всех версиях
-// Android — современный путь идёт через MediaStore). Не блокируем при отказе:
-// если запись реально упрётся в права, упадёт само и вызывающий покажет ошибку.
-async function tryRequestPermission(): Promise<void> {
-  try {
-    const { Filesystem } = await import('@capacitor/filesystem')
-    const p = await Filesystem.checkPermissions()
-    if (p.publicStorage !== 'granted') await Filesystem.requestPermissions()
-  } catch { /* метод может отсутствовать/не требоваться */ }
+async function getFolderUri(database: AppTochiteDB): Promise<string | null> {
+  const u = await database.settings.get(URI_KEY)
+  return typeof u?.value === 'string' && u.value ? u.value : null
 }
 
 export async function isNativeFolderEnabled(database: AppTochiteDB = defaultDb): Promise<boolean> {
   const e = await database.settings.get(ENABLED_KEY)
-  return e?.value === true
+  if (e?.value !== true) return false
+  return (await getFolderUri(database)) !== null
 }
 
 export interface NativeFolderMeta {
   lastAt: Date | null
   size?: number
+  folderName?: string
 }
 
 export async function getNativeFolderMeta(database: AppTochiteDB = defaultDb): Promise<NativeFolderMeta | null> {
   if (!(await isNativeFolderEnabled(database))) return null
   const at = await database.settings.get(LAST_AT_KEY)
   const lastAt = at?.value ? new Date(at.value as string) : null
+  const nm = await database.settings.get(NAME_KEY)
+  const folderName = typeof nm?.value === 'string' ? nm.value : undefined
   let size: number | undefined
-  try {
-    const { Filesystem, dir } = await fsApi()
-    const stat = await Filesystem.stat({ path: FILE, directory: dir })
-    size = stat.size
-  } catch { /* файла ещё нет */ }
-  return { lastAt, size }
+  const uri = await getFolderUri(database)
+  if (uri) {
+    try {
+      size = (await SafFolder.stat({ treeUri: uri, name: FILE })).size
+    } catch { /* файла ещё нет */ }
+  }
+  return { lastAt, size, folderName }
 }
 
-async function writeBackupFile(database: AppTochiteDB, backup: BackupFile): Promise<void> {
+async function writeBackupFile(database: AppTochiteDB, backup: BackupFile, uri: string): Promise<void> {
   // Защита от перезаписи пустой базой (клиент «Я» всегда есть).
   if (!isValidBackup(backup) || backup.data.clients.length === 0) {
     throw new Error('native folder backup aborted: DB appears empty')
   }
-  const { Filesystem, dir, enc } = await fsApi()
   // Ротация: текущий файл → -prev (если есть).
   try {
-    const cur = await Filesystem.readFile({ path: FILE, directory: dir, encoding: enc })
-    await Filesystem.writeFile({ path: FILE_PREV, directory: dir, data: cur.data as string, encoding: enc, recursive: true })
+    const cur = await SafFolder.readFile({ treeUri: uri, name: FILE })
+    await SafFolder.writeFile({ treeUri: uri, name: FILE_PREV, data: cur.data })
   } catch { /* первого файла ещё нет */ }
-  await Filesystem.writeFile({ path: FILE, directory: dir, data: JSON.stringify(backup), encoding: enc, recursive: true })
+  await SafFolder.writeFile({ treeUri: uri, name: FILE, data: JSON.stringify(backup) })
   await database.settings.bulkPut([
     { key: LAST_AT_KEY, value: new Date().toISOString() },
     { key: LAST_SIG_KEY, value: dataSignature(backup.data) },
@@ -92,11 +95,24 @@ async function writeBackupFile(database: AppTochiteDB, backup: BackupFile): Prom
   await updateLastBackupAt(database)
 }
 
-// Включение под жестом: (best-effort доступ) + первый бэкап + выставить флаг.
-export async function enableNativeFolderBackup(database: AppTochiteDB = defaultDb): Promise<'ok' | 'error'> {
-  await tryRequestPermission()
+async function storeFolder(database: AppTochiteDB, uri: string, name: string): Promise<void> {
+  await database.settings.bulkPut([
+    { key: URI_KEY, value: uri },
+    { key: NAME_KEY, value: name },
+  ])
+}
+
+// Включение под жестом: системный пикер папки + первый бэкап + флаг.
+export async function enableNativeFolderBackup(database: AppTochiteDB = defaultDb): Promise<NativeFolderResult> {
+  let picked: { uri: string; name: string }
   try {
-    await writeBackupFile(database, await exportBackup(database))
+    picked = await SafFolder.pickFolder()
+  } catch (e) {
+    return isCancel(e) ? 'cancelled' : 'error'
+  }
+  try {
+    await storeFolder(database, picked.uri, picked.name)
+    await writeBackupFile(database, await exportBackup(database), picked.uri)
     await database.settings.put({ key: ENABLED_KEY, value: true })
     return 'ok'
   } catch {
@@ -105,14 +121,31 @@ export async function enableNativeFolderBackup(database: AppTochiteDB = defaultD
 }
 
 export async function disableNativeFolderBackup(database: AppTochiteDB = defaultDb): Promise<void> {
-  await database.settings.put({ key: ENABLED_KEY, value: false })
+  await database.settings.bulkPut([
+    { key: ENABLED_KEY, value: false },
+    { key: URI_KEY, value: '' },
+    { key: NAME_KEY, value: '' },
+  ])
 }
 
-// Ручное «Сохранить сейчас» — в обход дневного гейта.
-export async function saveNativeFolderBackupNow(database: AppTochiteDB = defaultDb): Promise<'ok' | 'error'> {
-  await tryRequestPermission()
+// Ручное «Сохранить сейчас» — в обход дневного гейта. Если доступ к папке
+// утрачен (папку удалили/перемонтировали SD-карту) — под тем же жестом просим
+// выбрать её заново системным пикером.
+export async function saveNativeFolderBackupNow(database: AppTochiteDB = defaultDb): Promise<NativeFolderResult> {
+  let uri = await getFolderUri(database)
+  if (!uri) return 'error'
+  const access = await SafFolder.checkAccess({ treeUri: uri }).catch(() => ({ granted: false }))
+  if (!access.granted) {
+    try {
+      const picked = await SafFolder.pickFolder()
+      uri = picked.uri
+      await storeFolder(database, picked.uri, picked.name)
+    } catch (e) {
+      return isCancel(e) ? 'cancelled' : 'error'
+    }
+  }
   try {
-    await writeBackupFile(database, await exportBackup(database))
+    await writeBackupFile(database, await exportBackup(database), uri)
     return 'ok'
   } catch {
     return 'error'
@@ -120,19 +153,22 @@ export async function saveNativeFolderBackupNow(database: AppTochiteDB = default
 }
 
 // Чтение текущего файла из папки — для «Восстановить из папки».
-export async function readNativeFolderBackup(): Promise<BackupFile | null> {
+export async function readNativeFolderBackup(database: AppTochiteDB = defaultDb): Promise<BackupFile | null> {
+  const uri = await getFolderUri(database)
+  if (!uri) return null
   try {
-    const { Filesystem, dir, enc } = await fsApi()
-    const res = await Filesystem.readFile({ path: FILE, directory: dir, encoding: enc })
-    return JSON.parse(res.data as string, reviveDates) as BackupFile
+    const res = await SafFolder.readFile({ treeUri: uri, name: FILE })
+    return JSON.parse(res.data, reviveDates) as BackupFile
   } catch {
     return null
   }
 }
 
-// Авто-бэкап (без жеста): только если включён, дневной гейт + сигнатура.
+// Авто-бэкап (без жеста): только если включён, доступ жив, дневной гейт + сигнатура.
 export async function performNativeFolderBackup(database: AppTochiteDB = defaultDb): Promise<void> {
   if (!(await isNativeFolderEnabled(database))) return
+  const uri = await getFolderUri(database)
+  if (!uri) return
 
   const today = localDayStr()
   const check = await database.settings.get(CHECK_DAY_KEY)
@@ -141,11 +177,18 @@ export async function performNativeFolderBackup(database: AppTochiteDB = default
   // Помечаем день проверенным сразу, чтобы не гонять exportBackup на каждом фокусе.
   await database.settings.put({ key: CHECK_DAY_KEY, value: today })
   try {
+    // Без жеста пикер не показать — если доступ утрачен, тихо пропускаем
+    // (пользователь восстановит через «Сохранить сейчас»).
+    const access = await SafFolder.checkAccess({ treeUri: uri })
+    if (!access.granted) {
+      await database.settings.delete(CHECK_DAY_KEY).catch(() => {})
+      return
+    }
     const backup = await exportBackup(database)
     if (!isValidBackup(backup) || backup.data.clients.length === 0) return
     const sig = await database.settings.get(LAST_SIG_KEY)
     if (dataSignature(backup.data) === sig?.value) return // ничего не изменилось
-    await writeBackupFile(database, backup)
+    await writeBackupFile(database, backup, uri)
   } catch {
     await database.settings.delete(CHECK_DAY_KEY).catch(() => {})
   }

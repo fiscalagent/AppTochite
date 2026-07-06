@@ -64,9 +64,8 @@ import {
 import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { shareFilesNative } from '../../utils/nativeShare'
 // Только тип — статически. Сами функции грузим динамически из веток
-// `if (IS_CAPACITOR)` (см. ниже), иначе @capacitor/filesystem утечёт в PWA-бандл.
+// `if (IS_CAPACITOR)` (см. ниже), иначе нативный SAF-плагин утечёт в PWA-бандл.
 import type { NativeFolderMeta } from '../../utils/nativeFolderBackup'
-const NATIVE_FOLDER_LABEL = 'Документы/AppTochite'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import { useLocale, fmtDate, fmtDateTimeLong } from '../../i18n'
 import { FEATURES } from '../../config/features'
@@ -422,9 +421,10 @@ export default function BackupScreen() {
       if (result === 'ok') {
         setNativeFolderMeta(await m.getNativeFolderMeta(db))
         showToast(t.backup.folderSaved)
-      } else {
+      } else if (result === 'error') {
         showToast(t.backup.nfbError)
       }
+      // 'cancelled' — пользователь закрыл пикер, молчим
     } finally {
       setNativeFolderWorking(false)
     }
@@ -439,9 +439,10 @@ export default function BackupScreen() {
       if (result === 'ok') {
         setNativeFolderMeta(await m.getNativeFolderMeta(db))
         showToast(t.backup.folderSaved)
-      } else {
+      } else if (result === 'error') {
         showToast(t.backup.nfbError)
       }
+      // 'cancelled' — пользователь закрыл пикер, молчим
     } finally {
       setNativeFolderWorking(false)
     }
@@ -730,7 +731,7 @@ export default function BackupScreen() {
           nativeFolderMeta ? (
             <div className={s.destCard}>
               <div className={s.destHeader}>
-                <span className={s.destTitle}>{NATIVE_FOLDER_LABEL}</span>
+                <span className={s.destTitle}>{nativeFolderMeta.folderName || t.backup.nfbTitle}</span>
                 <ReliabilityBars n={2} />
               </div>
               <span className={s.destMeta}>
@@ -742,6 +743,9 @@ export default function BackupScreen() {
               <div className={s.autoBackupActions}>
                 <button className={s.primaryBtn} onClick={handleNativeFolderSaveNow} disabled={nativeFolderWorking}>
                   {nativeFolderWorking ? t.backup.saving : t.backup.folderSaveNow}
+                </button>
+                <button className={s.secondaryBtn} onClick={handleNativeFolderEnable} disabled={nativeFolderWorking}>
+                  {t.backup.nfbChangeFolder}
                 </button>
                 <button className={s.secondaryBtn} onClick={handleNativeFolderDisable} disabled={nativeFolderWorking}>
                   {t.backup.nfbDisable}
