@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/fiscalagent/AppTochite/compare/v2.0.2...v2.0.3) (2026-07-06)
+
+
+### fix
+
+* бэкап в папку сразу виден в файловом менеджере после первого сохранения — раньше файл появлялся в списке только после второй записи, потому что Android не сообщал о новом SAF-файле медиа-индексу ([](https://github.com/fiscalagent/AppTochite/commit/42a4f81751ecb85cdfcd8e5897fb733635e9647e))
+
 ## [2.0.2](https://github.com/fiscalagent/AppTochite/compare/v2.0.1...v2.0.2) (2026-07-06)
 
 

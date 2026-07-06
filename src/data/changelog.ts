@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.0.3',
+    date: '2026-07-06',
+    changes: [
+      'бэкап в папку сразу виден в файловом менеджере после первого сохранения — раньше файл появлялся в списке только после второй записи, потому что Android не сообщал о новом SAF-файле медиа-индексу',
+    ],
+  },
+  {
     version: '2.0.2',
     date: '2026-07-06',
     changes: [
