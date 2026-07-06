@@ -9,6 +9,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  actions: write # gh workflow run apk-release.yml после релиза
 
 concurrency:
   group: pages
@@ -38,9 +39,27 @@ jobs:
         run: npm test
 
       - name: Release
+        id: semrel
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        # Релиз, созданный с GITHUB_TOKEN, не рождает событие release:published
+        # (анти-рекурсия GitHub), поэтому apk-release.yml сам не стартует.
+        # Ловим новый тег сравнением до/после и дёргаем сборку APK явно ниже —
+        # workflow_dispatch из GITHUB_TOKEN разрешён.
+        run: |
+          before=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          npx semantic-release
+          git fetch --tags --quiet
+          after=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          if [ "$after" != "$before" ]; then
+            echo "released=$after" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger APK build
+        if: steps.semrel.outputs.released
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run apk-release.yml -f tag="${{ steps.semrel.outputs.released }}"
 
       - run: npm run build
         env:

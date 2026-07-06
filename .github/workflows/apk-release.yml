@@ -1,7 +1,10 @@
 name: Build & publish release APK
 
 # Собирает ПОДПИСАННЫЙ release-APK и прикрепляет его к GitHub Release.
-# Триггер — публикация релиза (его создаёт semantic-release из main).
+# Основной триггер — workflow_dispatch из deploy.yml после semantic-release:
+# релиз, созданный с GITHUB_TOKEN, НЕ рождает событие release:published
+# (анти-рекурсия GitHub), так что триггер release ниже сработает только
+# для релиза, созданного вручную или с PAT.
 # Лендинг apptochite.github.io ссылается на новейший ассет через
 #   https://github.com/fiscalagent/AppTochite/releases/latest/download/app-release.apk
 # поэтому передеплой лендинга при каждом релизе не нужен.
