@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/fiscalagent/AppTochite/compare/v2.1.0...v2.1.1) (2026-07-06)
+
+
+### fix
+
+* подпись «АПК» на иконке приложения опущена ниже — на круглых иконках больше не срезается верхняя часть текста ([](https://github.com/fiscalagent/AppTochite/commit/0c8de52321b8871cf3706c554d3d76e741fa555e))
+
 # [2.1.0](https://github.com/fiscalagent/AppTochite/compare/v2.0.5...v2.1.0) (2026-07-06)
 
 

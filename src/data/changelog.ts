@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.1.1',
+    date: '2026-07-06',
+    changes: [
+      'подпись «АПК» на иконке приложения опущена ниже — на круглых иконках больше не срезается верхняя часть текста',
+    ],
+  },
+  {
     version: '2.1.0',
     date: '2026-07-06',
     changes: [
