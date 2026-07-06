@@ -172,6 +172,7 @@ export const ru = {
     telegramLabel: 'Telegram',
     telegramPlaceholder: '@username',
     addClientBtn: 'Добавить клиента',
+    saveError: 'Не удалось сохранить. Если данные пропадают — установите приложение на экран телефона',
     selfName: 'Я',
     // Поделиться приложением (футер C-1)
     shareApp: 'Поделиться приложением',
@@ -639,6 +640,12 @@ export const ru = {
     dataLossFolderHint: (name: string) => `Найдите файл apptochite-auto.json в папке «${name}» и восстановите через «Выбрать файл»`,
     dataLossRestore: 'Перейти к восстановлению',
     dataLossDismiss: 'Данных и правда нет, всё хорошо',
+
+    storageRiskTitle: 'Данные могут пропасть',
+    storageRiskBody: 'Приложение открыто во временном хранилище браузера — Chrome может очистить ваших клиентов и заточки. Чтобы этого не случилось, установите приложение на экран телефона. И на всякий случай сделайте резервную копию.',
+    storageRiskInstall: 'Как установить приложение',
+    storageRiskBackup: 'Сделать резервную копию',
+    storageRiskDismiss: 'Понимаю риск, позже',
 
     takePhoto: 'Сфотографировать',
     chooseFromGallery: 'Выбрать из галереи',

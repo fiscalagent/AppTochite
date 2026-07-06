@@ -4,6 +4,7 @@ import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
+import { useToast } from '../../components/Toast/ToastContext'
 import { pickAvatarFile } from '../../hooks/useCamera'
 import { softDeleteClient } from '../../utils/trash'
 import { uuid } from '../../utils/uuid'
@@ -21,6 +22,7 @@ export default function ClientForm() {
   const { id } = useParams()
   const navigate = useNavigate()
   const t = useT()
+  const { showToast } = useToast()
   const isEdit = Boolean(id)
 
   const [name, setName] = useState('')
@@ -53,29 +55,36 @@ export default function ClientForm() {
 
   async function handleSave() {
     if (!name.trim()) return
-    if (isEdit) {
-      await db.clients.update(Number(id), {
-        name: name.trim(),
-        phone: phone.trim() || undefined,
-        telegram: normalizeTelegram(telegram),
-        avatar,
-        updatedAt: new Date(),
-      })
-      navigate(-1)
-    } else {
-      const now = new Date()
-      const newId = await db.clients.add({
-        guid: uuid(),
-        name: name.trim(),
-        phone: phone.trim() || undefined,
-        telegram: normalizeTelegram(telegram),
-        avatar,
-        isSelf: false,
-        createdAt: now,
-        updatedAt: now,
-      })
-      track('client_created', { hasPhone: !!phone.trim(), hasAvatar: !!avatar }).catch(() => {})
-      navigate(`/clients/${newId}`, { replace: true })
+    try {
+      if (isEdit) {
+        await db.clients.update(Number(id), {
+          name: name.trim(),
+          phone: phone.trim() || undefined,
+          telegram: normalizeTelegram(telegram),
+          avatar,
+          updatedAt: new Date(),
+        })
+        navigate(-1)
+      } else {
+        const now = new Date()
+        const newId = await db.clients.add({
+          guid: uuid(),
+          name: name.trim(),
+          phone: phone.trim() || undefined,
+          telegram: normalizeTelegram(telegram),
+          avatar,
+          isSelf: false,
+          createdAt: now,
+          updatedAt: now,
+        })
+        track('client_created', { hasPhone: !!phone.trim(), hasAvatar: !!avatar }).catch(() => {})
+        navigate(`/clients/${newId}`, { replace: true })
+      }
+    } catch {
+      // Запись в IndexedDB отклонена (переполнена/очищается квота во вкладке
+      // браузера — типично для неустановленного PWA). Молча теряли данные —
+      // теперь явно сообщаем и подсказываем установить приложение.
+      showToast(t.clients.saveError)
     }
   }
 

@@ -214,6 +214,7 @@ export const en = {
     telegramLabel: 'Telegram',
     telegramPlaceholder: '@username',
     addClientBtn: 'Add client',
+    saveError: 'Could not save. If your data keeps disappearing, install the app to your home screen',
     selfName: 'Me',
     // Share the app (C-1 footer)
     shareApp: 'Share the app',
@@ -659,6 +660,12 @@ export const en = {
     dataLossFolderHint: (name: string) => `Find the file apptochite-auto.json in the folder "${name}" and restore it via "Choose file"`,
     dataLossRestore: 'Go to restore',
     dataLossDismiss: 'There really is no data, everything is fine',
+
+    storageRiskTitle: 'Your data may be lost',
+    storageRiskBody: 'The app is running in the browser’s temporary storage — Chrome may wipe your clients and sharpenings. To prevent this, install the app to your home screen. And make a backup just in case.',
+    storageRiskInstall: 'How to install the app',
+    storageRiskBackup: 'Make a backup',
+    storageRiskDismiss: 'I understand the risk, later',
 
     takePhoto: 'Take photo',
     chooseFromGallery: 'Choose from gallery',

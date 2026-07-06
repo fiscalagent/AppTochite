@@ -11,7 +11,9 @@ import OnboardingSheet from './components/OnboardingSheet/OnboardingSheet'
 import InstallNudgeSheet from './components/InstallNudge/InstallNudgeSheet'
 import FolderBackupPrompt from './components/FolderBackupPrompt/FolderBackupPrompt'
 import DataLossAlert from './components/DataLossAlert/DataLossAlert'
+import StorageRiskAlert from './components/StorageRiskAlert/StorageRiskAlert'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
+import { ensurePersistentStorage } from './utils/storagePersistence'
 import { flushAnalyticsQueue, track, baseContext } from './services/analytics'
 import { db } from './db/instance'
 import { purgeExpired } from './utils/trash'
@@ -53,7 +55,7 @@ export default function App() {
     localStorage.setItem('launchCount', String(Number(localStorage.getItem('launchCount') ?? 0) + 1))
     flushAnalyticsQueue()
     trackAppOpen()
-    navigator.storage?.persist?.()
+    ensurePersistentStorage()
     window.addEventListener('online', flushAnalyticsQueue)
     const onVisible = () => { if (document.visibilityState === 'visible') trackAppOpen() }
     document.addEventListener('visibilitychange', onVisible)
@@ -89,6 +91,7 @@ export default function App() {
           <ErrorBoundary name="InstallNudgeSheet"><InstallNudgeSheet /></ErrorBoundary>
         <ErrorBoundary name="FolderBackupPrompt"><FolderBackupPrompt /></ErrorBoundary>
         <ErrorBoundary name="DataLossAlert"><DataLossAlert /></ErrorBoundary>
+        <ErrorBoundary name="StorageRiskAlert"><StorageRiskAlert /></ErrorBoundary>
         </AutoBackupProvider>
       </ToastProvider>
     </LocaleProvider>
