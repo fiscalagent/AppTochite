@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.0.5',
+    date: '2026-07-06',
+    changes: [
+      'на иконке приложения неоновая подпись «АПК» перенесена в верхнюю часть — не перекрывает нож и читается лучше',
+    ],
+  },
+  {
     version: '2.0.4',
     date: '2026-07-06',
     changes: [

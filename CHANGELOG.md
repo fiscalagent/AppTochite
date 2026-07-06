@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/fiscalagent/AppTochite/compare/v2.0.4...v2.0.5) (2026-07-06)
+
+
+### fix
+
+* на иконке приложения неоновая подпись «АПК» перенесена в верхнюю часть — не перекрывает нож и читается лучше ([](https://github.com/fiscalagent/AppTochite/commit/a500a99251da53c90f28099cdd999c77eb90e0d3))
+
 ## [2.0.4](https://github.com/fiscalagent/AppTochite/compare/v2.0.3...v2.0.4) (2026-07-06)
 
 
