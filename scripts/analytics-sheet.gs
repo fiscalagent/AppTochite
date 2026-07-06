@@ -125,6 +125,124 @@ function handleEvent(data) {
   }
 }
 
+// ── Баг-репорты (event: 'bug_report') — POST text/plain от приложения ──────
+// Кнопка «Сообщить об ошибке» на экране «О программе» шлёт POST'ом JSON.
+// Репорт ложится строкой на лист BugReports; пересылка в Telegram спит, пока
+// в Script Properties не заданы TG_BOT_TOKEN и TG_CHAT_ID (см. docs/bug-report-telegram.md).
+
+const BUGS_SHEET = 'BugReports'
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents)
+    if (data.event === 'bug_report') {
+      appendBugRow(data)
+      sendToTelegram(data)
+    }
+  } catch (err) {
+    // Клиент шлёт в no-cors и ответа не видит — ошибки пишем на лист Errors
+    logError_(err, e)
+  }
+  return ContentService.createTextOutput('ok')
+}
+
+function appendBugRow(d) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID)
+  let sheet = ss.getSheetByName(BUGS_SHEET)
+  if (!sheet) {
+    sheet = ss.insertSheet(BUGS_SHEET)
+    sheet.appendRow([
+      'ts', 'deviceId', 'platform', 'displayMode', 'appVersion',
+      'contact', 'text', 'ua', 'lang', 'online',
+      'storageUsedMb', 'storageQuotaMb', 'storagePersisted',
+      'clientsCount', 'sharpeningsCount', 'lastBackupAt',
+      'cloudConnected', 'cloudAutoBackup',
+    ])
+    sheet.setFrozenRows(1)
+  }
+  sheet.appendRow([
+    d.ts, d.deviceId, d.platform, d.displayMode, d.appVersion,
+    d.contact, d.text, d.ua, d.lang, d.online,
+    d.storageUsedMb, d.storageQuotaMb, d.storagePersisted,
+    d.clientsCount, d.sharpeningsCount, d.lastBackupAt,
+    d.cloudConnected, d.cloudAutoBackup,
+  ])
+}
+
+// Заработает сама, как только в Script Properties появятся TG_BOT_TOKEN и
+// TG_CHAT_ID. Пока их нет — молча выходит (режим «только таблица»).
+function sendToTelegram(d) {
+  const props = PropertiesService.getScriptProperties()
+  const token = props.getProperty('TG_BOT_TOKEN')
+  const chatId = props.getProperty('TG_CHAT_ID')
+  if (!token || !chatId) return
+
+  const install = d.platform === 'native' ? 'APK'
+    : d.displayMode === 'standalone' ? 'PWA' : 'браузер'
+  const storage = d.storageUsedMb != null
+    ? `${d.storageUsedMb}/${d.storageQuotaMb} МБ, persist: ${d.storagePersisted ? 'да' : 'нет'}`
+    : 'н/д'
+  const backup = `${d.lastBackupAt ? d.lastBackupAt.slice(0, 10) : 'не делался'}, облако: ${d.cloudConnected ? 'да' : 'нет'}`
+
+  const lines = [
+    '🐞 Баг-репорт AppTochite',
+    `v${d.appVersion} · ${install} · ${d.lang}`,
+    `📱 ${d.ua}`,
+    d.contact ? `👤 ${d.contact}` : null,
+    `💾 ${storage} · ${d.clientsCount} кл / ${d.sharpeningsCount} зат`,
+    `🗂 бэкап: ${backup}`,
+    `id: ${d.deviceId}`,
+    '',
+    d.text,
+  ].filter(x => x !== null)
+
+  UrlFetchApp.fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({ chat_id: chatId, text: lines.join('\n') }),
+    muteHttpExceptions: true,
+  })
+}
+
+function logError_(err, e) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID)
+    const sheet = ss.getSheetByName('Errors') || ss.insertSheet('Errors')
+    sheet.appendRow([new Date(), String(err), e && e.postData ? e.postData.contents : ''])
+  } catch (ignore) {}
+}
+
+// Проверка баг-репорта из редактора Apps Script (по образцу testGet)
+function testPost() {
+  const mock = {
+    postData: {
+      contents: JSON.stringify({
+        event: 'bug_report',
+        ts: new Date().toISOString(),
+        deviceId: 'test-device-id',
+        platform: 'web',
+        displayMode: 'browser',
+        appVersion: 'test',
+        contact: '@test',
+        text: 'тестовый репорт из редактора',
+        ua: 'test-ua',
+        lang: 'ru',
+        online: true,
+        storageUsedMb: 12,
+        storageQuotaMb: 4096,
+        storagePersisted: true,
+        clientsCount: 0,
+        sharpeningsCount: 0,
+        lastBackupAt: null,
+        cloudConnected: false,
+        cloudAutoBackup: false,
+      }),
+    },
+  }
+  const result = doPost(mock)
+  Logger.log(result.getContent())
+}
+
 // Однократная починка столбца J: исправляет уже записанные даты обратно в "7/10"
 // Запустить вручную один раз из редактора Apps Script
 function fixGritMkColumn() {

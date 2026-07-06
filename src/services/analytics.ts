@@ -7,12 +7,12 @@ const ENDPOINT = import.meta.env.VITE_ANALYTICS_URL as string | undefined
 // Платформа сборки: 'native' — APK (Capacitor), 'web' — PWA. Подставляется на
 // этапе сборки (import.meta.env.MODE), уходит в каждое событие → в Google Sheet
 // APK-устройства отделяются от PWA одной колонкой.
-const PLATFORM: 'native' | 'web' = import.meta.env.MODE === 'capacitor' ? 'native' : 'web'
+export const PLATFORM: 'native' | 'web' = import.meta.env.MODE === 'capacitor' ? 'native' : 'web'
 
 // Один id на загрузку страницы — группирует события в «сессию».
 const SESSION_ID = crypto.randomUUID()
 
-async function getDeviceId(): Promise<string> {
+export async function getDeviceId(): Promise<string> {
   const existing = await db.settings.get('analyticsDeviceId')
   if (existing?.value) return existing.value as string
   const id = crypto.randomUUID()
@@ -34,8 +34,31 @@ async function sendPayload(payload: object): Promise<void> {
   await fetch(url, { mode: 'no-cors' })
 }
 
-async function enqueue(payload: object): Promise<void> {
+// POST для больших payload'ов (баг-репорты): текст пользователя не влезает в URL.
+// text/plain — единственный «простой» Content-Type, который Apps Script принимает
+// без CORS-preflight; тело — тот же JSON, что и в GET-параметре data.
+async function sendPayloadPost(payload: object): Promise<void> {
+  await fetch(ENDPOINT!, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function enqueue(payload: object): Promise<void> {
   await db.analyticsQueue.add({ payload: JSON.stringify(payload), queuedAt: new Date() })
+}
+
+export function hasAnalyticsEndpoint(): boolean {
+  return Boolean(ENDPOINT)
+}
+
+// Единая точка отправки: баг-репорты уходят POST'ом, остальное — GET'ом.
+export async function deliverPayload(payload: object): Promise<void> {
+  const isBugReport = (payload as { event?: string }).event === 'bug_report'
+  if (isBugReport) await sendPayloadPost(payload)
+  else await sendPayload(payload)
 }
 
 export async function flushAnalyticsQueue(): Promise<void> {
@@ -43,7 +66,7 @@ export async function flushAnalyticsQueue(): Promise<void> {
   const items = await db.analyticsQueue.orderBy('queuedAt').toArray()
   for (const item of items) {
     try {
-      await sendPayload(JSON.parse(item.payload))
+      await deliverPayload(JSON.parse(item.payload))
       await db.analyticsQueue.delete(item.id!)
     } catch {
       break

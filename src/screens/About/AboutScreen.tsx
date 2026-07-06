@@ -9,8 +9,10 @@ import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 import { openGuide } from '../../utils/openGuide'
 import { useLocale, fmtDateTimeLong } from '../../i18n'
+import { isBugReportAvailable } from '../../services/bugReport'
 import s from './AboutScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
+import BugReportSheet from '../../components/BugReportSheet/BugReportSheet'
 import EasterEgg from '../../components/EasterEgg/EasterEgg'
 
 const IconChevronLeft = () => (
@@ -57,6 +59,8 @@ export default function AboutScreen() {
     setVoiceEnabled(enabled)
     setVoiceOn(enabled)
   }
+
+  const [showBugReport, setShowBugReport] = useState(false)
 
   // Пасхалка: 7 тапов по номеру версии
   const eggTaps = useRef(0)
@@ -176,6 +180,13 @@ export default function AboutScreen() {
             <span className={s.linkLabel}>{t.about.telegramGroup}</span>
             <span className={s.linkArrow}><IconChevronRight /></span>
           </a>
+          {isBugReportAvailable() && (
+            <button className={s.linkItem} onClick={() => setShowBugReport(true)}>
+              <span className={s.linkIcon}>🐞</span>
+              <span className={s.linkLabel}>{t.about.bugReport}</span>
+              <span className={s.linkArrow}><IconChevronRight /></span>
+            </button>
+          )}
           <a
             href="https://apptochite.github.io/"
             target="_blank"
@@ -240,6 +251,8 @@ export default function AboutScreen() {
         </div>
       </div>
       <AppLogo />
+
+      <BugReportSheet isOpen={showBugReport} onClose={() => setShowBugReport(false)} />
 
       {showEgg && <EasterEgg onClose={() => setShowEgg(false)} />}
     </div>
