@@ -110,7 +110,8 @@ type ProtectionLevel = 'protected' | 'partial' | 'at-risk'
 function computeProtection(
   opfsMeta: OPFSBackupMeta | null | undefined,
   opfsValid: boolean | undefined,
-  folderMeta: FolderBackupMeta | null | undefined,
+  // FSA-папка (PWA) или нативная SAF-папка (APK) — для защиты они равнозначны
+  folderMeta: { lastAt: Date | null } | null | undefined,
   cloudLastAt?: Date | null,
 ): ProtectionLevel {
   if (opfsMeta === undefined) return 'partial'
@@ -228,6 +229,26 @@ export default function BackupScreen() {
   useEffect(() => {
     if (lastBackupTick > 0) refreshOpfsMeta()
   }, [lastBackupTick, refreshOpfsMeta])
+
+  // Первая загрузка в облако: токен есть, а бэкап ни разу не заливался — сразу
+  // после подключения (иначе статус жёлтый до первого авто-бэкапа, хотя облако
+  // уже подключено). Одна попытка за маунт: при ошибке не зацикливаемся,
+  // пользователь может нажать «Сохранить в облако» вручную.
+  const firstCloudUploadTried = useRef(false)
+  useEffect(() => {
+    if (!FEATURES.cloudBackup || !cloudToken || cloudLastAt !== null || firstCloudUploadTried.current) return
+    firstCloudUploadTried.current = true
+    setCloudWorking(true)
+    uploadToYandex(db, cloudToken)
+      .then(result => {
+        if (result === 'ok') {
+          track('cloud_upload', { trigger: 'connect' }).catch(() => {})
+          showToast(t.backup.cloudSaved)
+          return refreshCloud()
+        }
+      })
+      .finally(() => setCloudWorking(false))
+  }, [cloudToken, cloudLastAt, refreshCloud, showToast, t.backup.cloudSaved])
 
   // Довыполнение выбора папки, прерванного выгрузкой приложения во время
   // системного пикера (Samsung/MIUI/EMUI). Если папка подхватилась — обновляем
@@ -657,11 +678,15 @@ export default function BackupScreen() {
 
       {/* Карточка статуса защиты */}
       {(() => {
-        const level = computeProtection(opfsMeta, opfsValid, folderMeta, cloudLastAt)
+        // В APK папка подключается через нативный SAF-механизм (nativeFolderMeta),
+        // FSA-шный folderMeta там всегда null — без учёта нативной папки статус
+        // никогда не зеленел от одной папки
+        const effFolder = folderMeta ?? nativeFolderMeta
+        const level = computeProtection(opfsMeta, opfsValid, effFolder, cloudLastAt)
         const cfg = {
           protected: { color: 'var(--status-done)', label: t.backup.statusProtected, desc: t.backup.statusProtectedDesc },
-          partial:   { color: '#F5A623',            label: t.backup.statusPartial,   desc: folderMeta ? t.backup.statusPartialStale : t.backup.statusPartialNoFolder },
-          'at-risk': { color: 'var(--danger)',       label: t.backup.statusAtRisk,    desc: !opfsMeta && !folderMeta ? t.backup.statusAtRiskNoBackup : opfsValid === false && !folderMeta ? t.backup.statusAtRiskCorrupt : t.backup.statusAtRiskStale },
+          partial:   { color: '#F5A623',            label: t.backup.statusPartial,   desc: effFolder ? t.backup.statusPartialStale : t.backup.statusPartialNoFolder },
+          'at-risk': { color: 'var(--danger)',       label: t.backup.statusAtRisk,    desc: !opfsMeta && !effFolder ? t.backup.statusAtRiskNoBackup : opfsValid === false && !effFolder ? t.backup.statusAtRiskCorrupt : t.backup.statusAtRiskStale },
         }[level]
         return (
           <div className={s.statusCard} style={{ borderColor: cfg.color }}>
