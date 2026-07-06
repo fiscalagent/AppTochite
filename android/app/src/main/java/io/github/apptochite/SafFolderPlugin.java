@@ -2,6 +2,7 @@ package io.github.apptochite;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.UriPermission;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -54,30 +55,76 @@ public class SafFolderPlugin extends Plugin {
         startActivityForResult(call, intent, "pickFolderResult");
     }
 
+    // ВАЖНО: call может быть null. Пока открыт системный пикер, агрессивные
+    // прошивки (Samsung, MIUI, EMUI) выгружают приложение; Activity и WebView
+    // пересоздаются, JS-промис pickFolder исчезает — результат некому принять.
+    // Поэтому разрешение и выбранную папку фиксируем ВСЕГДА, независимо от call:
+    // JS заберёт её на старте через getPendingFolder и довыполнит включение.
     @ActivityCallback
     private void pickFolderResult(PluginCall call, ActivityResult result) {
-        if (call == null) return;
-        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
-            call.reject("cancelled", "CANCELLED");
-            return;
-        }
-        Uri treeUri = result.getData().getData();
+        Uri treeUri = (result.getResultCode() == Activity.RESULT_OK && result.getData() != null)
+            ? result.getData().getData()
+            : null;
         if (treeUri == null) {
-            call.reject("cancelled", "CANCELLED");
+            if (call != null) call.reject("cancelled", "CANCELLED");
             return;
         }
         try {
             final int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
             getContext().getContentResolver().takePersistableUriPermission(treeUri, flags);
         } catch (Exception e) {
-            call.reject("Failed to persist folder access: " + e.getMessage());
+            if (call != null) call.reject("Failed to persist folder access: " + e.getMessage());
             return;
         }
         DocumentFile dir = DocumentFile.fromTreeUri(getContext(), treeUri);
+        String name = dir != null && dir.getName() != null ? dir.getName() : "";
+        savePendingFolder(treeUri.toString(), name);
+        if (call != null) {
+            JSObject ret = new JSObject();
+            ret.put("uri", treeUri.toString());
+            ret.put("name", name);
+            call.resolve(ret);
+        }
+    }
+
+    // ── Незавершённый выбор папки (переживает смерть процесса) ───────────────
+
+    private static final String PREFS = "SafFolderPlugin";
+    private static final String PREF_PENDING_URI = "pendingUri";
+    private static final String PREF_PENDING_NAME = "pendingName";
+
+    private void savePendingFolder(String uri, String name) {
+        // commit(), не apply(): процесс могли убить сразу после возврата из пикера —
+        // синхронная запись гарантирует, что выбор доедет до диска.
+        getContext().getSharedPreferences(PREFS, Activity.MODE_PRIVATE)
+            .edit()
+            .putString(PREF_PENDING_URI, uri)
+            .putString(PREF_PENDING_NAME, name)
+            .commit();
+    }
+
+    /** Последняя выбранная в пикере папка, ещё не подтверждённая JS-стороной. Пустой объект, если нет. */
+    @PluginMethod
+    public void getPendingFolder(PluginCall call) {
+        SharedPreferences sp = getContext().getSharedPreferences(PREFS, Activity.MODE_PRIVATE);
+        String uri = sp.getString(PREF_PENDING_URI, null);
         JSObject ret = new JSObject();
-        ret.put("uri", treeUri.toString());
-        ret.put("name", dir != null && dir.getName() != null ? dir.getName() : "");
+        if (uri != null) {
+            ret.put("uri", uri);
+            ret.put("name", sp.getString(PREF_PENDING_NAME, ""));
+        }
         call.resolve(ret);
+    }
+
+    /** JS подтвердил (или отменил) подключение папки — маркер больше не нужен. */
+    @PluginMethod
+    public void clearPendingFolder(PluginCall call) {
+        getContext().getSharedPreferences(PREFS, Activity.MODE_PRIVATE)
+            .edit()
+            .remove(PREF_PENDING_URI)
+            .remove(PREF_PENDING_NAME)
+            .commit();
+        call.resolve();
     }
 
     // ── Запись / чтение / метаданные ──────────────────────────────────────────

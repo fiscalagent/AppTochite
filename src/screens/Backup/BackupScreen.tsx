@@ -229,6 +229,21 @@ export default function BackupScreen() {
     if (lastBackupTick > 0) refreshOpfsMeta()
   }, [lastBackupTick, refreshOpfsMeta])
 
+  // Довыполнение выбора папки, прерванного выгрузкой приложения во время
+  // системного пикера (Samsung/MIUI/EMUI). Если папка подхватилась — обновляем
+  // карточку и сообщаем, что бэкап записан.
+  useEffect(() => {
+    if (!IS_CAPACITOR) return
+    import('../../utils/nativeFolderBackup').then(async m => {
+      const rec = await m.reconcilePickedFolder(db).catch(() => 'none' as const)
+      if (rec === 'restored') {
+        setNativeFolderMeta(await m.getNativeFolderMeta(db))
+        showToast(t.backup.folderSaved)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- одноразовый догон на маунте
+  }, [])
+
   function toggleCompression() {
     const next = !compressed
     if (next) {
@@ -418,11 +433,12 @@ export default function BackupScreen() {
     try {
       const m = await import('../../utils/nativeFolderBackup')
       const result = await m.enableNativeFolderBackup(db)
-      if (result === 'ok') {
+      if (result.status === 'ok') {
         setNativeFolderMeta(await m.getNativeFolderMeta(db))
         showToast(t.backup.folderSaved)
-      } else if (result === 'error') {
-        showToast(t.backup.nfbError)
+      } else if (result.status === 'error') {
+        // Текст реальной ошибки — чтобы отказ не был немым (скриншот = диагноз)
+        showToast(t.backup.folderErrorDetail(result.detail))
       }
       // 'cancelled' — пользователь закрыл пикер, молчим
     } finally {
@@ -436,11 +452,11 @@ export default function BackupScreen() {
     try {
       const m = await import('../../utils/nativeFolderBackup')
       const result = await m.saveNativeFolderBackupNow(db)
-      if (result === 'ok') {
+      if (result.status === 'ok') {
         setNativeFolderMeta(await m.getNativeFolderMeta(db))
         showToast(t.backup.folderSaved)
-      } else if (result === 'error') {
-        showToast(t.backup.nfbError)
+      } else if (result.status === 'error') {
+        showToast(t.backup.folderErrorDetail(result.detail))
       }
       // 'cancelled' — пользователь закрыл пикер, молчим
     } finally {

@@ -38,7 +38,12 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
       performCloudBackup(db).catch(() => {})
       if (IS_CAPACITOR) {
         import('../utils/nativeFolderBackup')
-          .then(m => m.performNativeFolderBackup(db))
+          .then(async m => {
+            // Сначала довыполняем выбор папки, прерванный выгрузкой приложения
+            // во время системного пикера (Samsung/MIUI/EMUI убивают процесс).
+            await m.reconcilePickedFolder(db).catch(() => {})
+            await m.performNativeFolderBackup(db)
+          })
           .catch(() => {})
       }
       setLastBackupTick(t => t + 1)

@@ -15,6 +15,7 @@
 import { SafFolder } from '../plugins/safFolder'
 import { db as defaultDb } from '../db/instance'
 import type { AppTochiteDB } from '../db/instance'
+import { track } from '../services/analytics'
 import {
   exportBackup,
   isValidBackup,
@@ -35,12 +36,22 @@ const LAST_AT_KEY = 'nativeFolderLastAt'
 const LAST_SIG_KEY = 'nativeFolderLastSig'
 const CHECK_DAY_KEY = 'nativeFolderCheckDay'
 
-export type NativeFolderResult = 'ok' | 'cancelled' | 'error'
+// detail — текст реальной ошибки: показывается пользователю в тосте
+// (folderErrorDetail) и уходит в телеметрию, чтобы отказ не был немым.
+export type NativeFolderResult =
+  | { status: 'ok' }
+  | { status: 'cancelled' }
+  | { status: 'error'; detail: string }
 
 // Отмена пикера — не ошибка: плагин reject'ит с code='CANCELLED'.
 function isCancel(e: unknown): boolean {
   const err = e as { code?: string; message?: string }
   return err?.code === 'CANCELLED' || /cancel/i.test(String(err?.message ?? e ?? ''))
+}
+
+function errDetail(e: unknown): string {
+  const err = e as { message?: string }
+  return String(err?.message ?? e ?? 'unknown').slice(0, 200)
 }
 
 async function getFolderUri(database: AppTochiteDB): Promise<string | null> {
@@ -103,20 +114,36 @@ async function storeFolder(database: AppTochiteDB, uri: string, name: string): P
 }
 
 // Включение под жестом: системный пикер папки + первый бэкап + флаг.
+//
+// Телеметрия цепочки: nfb_pick_start фиксируется ДО открытия пикера,
+// nfb_pick_result — когда промис вернулся. Если у пользователя в статистике
+// start есть, а result нет — процесс убили, пока пикер был открыт (Samsung/
+// MIUI/EMUI), и выбор подхватит reconcilePickedFolder на следующем запуске.
 export async function enableNativeFolderBackup(database: AppTochiteDB = defaultDb): Promise<NativeFolderResult> {
+  track('nfb_pick_start').catch(() => {})
   let picked: { uri: string; name: string }
   try {
     picked = await SafFolder.pickFolder()
   } catch (e) {
-    return isCancel(e) ? 'cancelled' : 'error'
+    if (isCancel(e)) {
+      track('nfb_pick_result', { outcome: 'cancelled' }).catch(() => {})
+      return { status: 'cancelled' }
+    }
+    const detail = errDetail(e)
+    track('nfb_pick_result', { outcome: 'error', detail }).catch(() => {})
+    return { status: 'error', detail }
   }
   try {
     await storeFolder(database, picked.uri, picked.name)
     await writeBackupFile(database, await exportBackup(database), picked.uri)
     await database.settings.put({ key: ENABLED_KEY, value: true })
-    return 'ok'
-  } catch {
-    return 'error'
+    await SafFolder.clearPendingFolder().catch(() => {})
+    track('nfb_pick_result', { outcome: 'ok' }).catch(() => {})
+    return { status: 'ok' }
+  } catch (e) {
+    const detail = errDetail(e)
+    track('nfb_pick_result', { outcome: 'write_error', detail }).catch(() => {})
+    return { status: 'error', detail }
   }
 }
 
@@ -126,6 +153,50 @@ export async function disableNativeFolderBackup(database: AppTochiteDB = default
     { key: URI_KEY, value: '' },
     { key: NAME_KEY, value: '' },
   ])
+  // Иначе висящий pending воскресил бы папку при следующем reconcile.
+  await SafFolder.clearPendingFolder().catch(() => {})
+}
+
+// Довыполнение выбора папки, прерванного смертью процесса. Пока открыт системный
+// пикер, Samsung/MIUI/EMUI могут выгрузить приложение — WebView перезагружается,
+// промис pickFolder исчезает, и выбранная папка «повисает» только в нативных
+// SharedPreferences. Здесь подхватываем её и доводим включение до конца.
+// Идемпотентно: если pending совпадает с уже подключённой папкой — просто чистим маркер.
+export async function reconcilePickedFolder(database: AppTochiteDB = defaultDb): Promise<'restored' | 'none'> {
+  let pending: { uri?: string; name?: string }
+  try {
+    pending = await SafFolder.getPendingFolder()
+  } catch {
+    return 'none'
+  }
+  if (!pending?.uri) return 'none'
+
+  const current = await getFolderUri(database)
+  if (current === pending.uri && (await isNativeFolderEnabled(database))) {
+    await SafFolder.clearPendingFolder().catch(() => {})
+    return 'none'
+  }
+  // Папку могли удалить/доступ отозвать, пока маркер висел — не ретраить вечно.
+  const access = await SafFolder.checkAccess({ treeUri: pending.uri }).catch(() => ({ granted: false }))
+  if (!access.granted) {
+    track('nfb_reconciled', { outcome: 'no_access' }).catch(() => {})
+    await SafFolder.clearPendingFolder().catch(() => {})
+    return 'none'
+  }
+  try {
+    await storeFolder(database, pending.uri, pending.name ?? '')
+    await writeBackupFile(database, await exportBackup(database), pending.uri)
+    await database.settings.put({ key: ENABLED_KEY, value: true })
+    await SafFolder.clearPendingFolder().catch(() => {})
+    // Прямое подтверждение гипотезы «процесс убили во время пикера»: это событие
+    // возможно ТОЛЬКО если pickFolder не дожил до ответа, а выбор довыполнен здесь.
+    track('nfb_reconciled', { outcome: 'restored' }).catch(() => {})
+    return 'restored'
+  } catch (e) {
+    // Маркер не чистим — попробуем на следующем запуске.
+    track('nfb_reconciled', { outcome: 'error', detail: errDetail(e) }).catch(() => {})
+    return 'none'
+  }
 }
 
 // Ручное «Сохранить сейчас» — в обход дневного гейта. Если доступ к папке
@@ -133,7 +204,7 @@ export async function disableNativeFolderBackup(database: AppTochiteDB = default
 // выбрать её заново системным пикером.
 export async function saveNativeFolderBackupNow(database: AppTochiteDB = defaultDb): Promise<NativeFolderResult> {
   let uri = await getFolderUri(database)
-  if (!uri) return 'error'
+  if (!uri) return { status: 'error', detail: 'no folder configured' }
   const access = await SafFolder.checkAccess({ treeUri: uri }).catch(() => ({ granted: false }))
   if (!access.granted) {
     try {
@@ -141,14 +212,17 @@ export async function saveNativeFolderBackupNow(database: AppTochiteDB = default
       uri = picked.uri
       await storeFolder(database, picked.uri, picked.name)
     } catch (e) {
-      return isCancel(e) ? 'cancelled' : 'error'
+      return isCancel(e) ? { status: 'cancelled' } : { status: 'error', detail: errDetail(e) }
     }
   }
   try {
     await writeBackupFile(database, await exportBackup(database), uri)
-    return 'ok'
-  } catch {
-    return 'error'
+    await SafFolder.clearPendingFolder().catch(() => {})
+    return { status: 'ok' }
+  } catch (e) {
+    const detail = errDetail(e)
+    track('nfb_save_error', { detail }).catch(() => {})
+    return { status: 'error', detail }
   }
 }
 
@@ -189,7 +263,8 @@ export async function performNativeFolderBackup(database: AppTochiteDB = default
     const sig = await database.settings.get(LAST_SIG_KEY)
     if (dataSignature(backup.data) === sig?.value) return // ничего не изменилось
     await writeBackupFile(database, backup, uri)
-  } catch {
+  } catch (e) {
+    track('nfb_auto_error', { detail: errDetail(e) }).catch(() => {})
     await database.settings.delete(CHECK_DAY_KEY).catch(() => {})
   }
 }

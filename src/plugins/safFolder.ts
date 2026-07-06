@@ -15,6 +15,13 @@ export interface SafFolderPlugin {
   stat(opts: { treeUri: string; name: string }): Promise<{ size: number; mtime: number }>
   /** Держится ли ещё persistable-доступ к папке на запись. */
   checkAccess(opts: { treeUri: string }): Promise<{ granted: boolean }>
+  /**
+   * Папка, выбранная в пикере, но не подтверждённая JS (процесс убили, пока пикер
+   * был открыт — Samsung/MIUI/EMUI). Пустой объект, если ничего не висит.
+   */
+  getPendingFolder(): Promise<{ uri?: string; name?: string }>
+  /** Сбросить маркер незавершённого выбора (после успешного подключения или отключения). */
+  clearPendingFolder(): Promise<void>
 }
 
 export const SafFolder = registerPlugin<SafFolderPlugin>('SafFolder')
