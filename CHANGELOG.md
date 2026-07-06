@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/fiscalagent/AppTochite/compare/v2.0.5...v2.1.0) (2026-07-06)
+
+
+### feat
+
+* обновление приложения в APK-версии — при выходе новой версии на экране «О программе» появляется кнопка «Скачать (APK)»: файл качается в браузере, открываете его из загрузок — приложение обновляется, все данные сохраняются ([](https://github.com/fiscalagent/AppTochite/commit/0807b72e1188a40dba4c48d5704c2054b9427086))
+
 ## [2.0.5](https://github.com/fiscalagent/AppTochite/compare/v2.0.4...v2.0.5) (2026-07-06)
 
 
