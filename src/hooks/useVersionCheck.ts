@@ -5,10 +5,19 @@ const LS_KEY = 'versionCheck_v1'
 const GITHUB_OWNER = 'fiscalagent'
 const GITHUB_REPO = 'AppTochite'
 
+// APK прикрепляется к релизу отдельным воркфлоу через несколько минут после
+// публикации тега. В этом окне обновление «есть», но скачать нечего (404),
+// поэтому в APK-сборке hasUpdate требует наличия ассета, а перепроверка в
+// этом состоянии ускоряется до получаса.
+const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
+const APK_ASSET_NAME = 'app-release.apk'
+const APK_PENDING_RECHECK_MS = 30 * 60 * 1000
+
 interface VersionCache {
   checkedAt: string
   latestVersion: string
   releaseUrl: string
+  apkUrl: string // прямая ссылка на ассет релиза; '' — APK ещё не прикреплён
 }
 
 function parseVer(v: string): [number, number, number] {
@@ -46,10 +55,13 @@ export function useVersionCheck() {
       )
       if (!res.ok) return
       const data = await res.json()
+      const assets = (data.assets ?? []) as { name?: string; browser_download_url?: string }[]
+      const apkAsset = assets.find(a => a.name === APK_ASSET_NAME)
       const next: VersionCache = {
         checkedAt: new Date().toISOString(),
         latestVersion: (data.tag_name as string)?.replace(/^v/, '') ?? APP_VERSION,
         releaseUrl: (data.html_url as string) ?? '',
+        apkUrl: apkAsset?.browser_download_url ?? '',
       }
       localStorage.setItem(LS_KEY, JSON.stringify(next))
       setCache(next)
@@ -69,15 +81,26 @@ export function useVersionCheck() {
     }
     const lastDate = new Date(cached.checkedAt).toDateString()
     const today = new Date().toDateString()
-    if (lastDate !== today) check()
+    if (lastDate !== today) {
+      check()
+      return
+    }
+    // Релиз уже виден, но APK ещё собирается — не ждём до завтра
+    const apkPending = isNewer(cached.latestVersion, APP_VERSION) && !cached.apkUrl
+    if (apkPending && Date.now() - new Date(cached.checkedAt).getTime() > APK_PENDING_RECHECK_MS) {
+      check()
+    }
   }, [check])
 
-  const hasUpdate = cache ? isNewer(cache.latestVersion, APP_VERSION) : false
+  const tagIsNewer = cache ? isNewer(cache.latestVersion, APP_VERSION) : false
+  // В APK-сборке обновление «доступно» только когда файл реально можно скачать
+  const hasUpdate = IS_CAPACITOR ? tagIsNewer && !!cache?.apkUrl : tagIsNewer
 
   return {
     currentVersion: APP_VERSION,
     latestVersion: cache?.latestVersion ?? null,
     releaseUrl: cache?.releaseUrl ?? '',
+    apkUrl: cache?.apkUrl ?? '',
     hasUpdate,
     checking,
     checkNow: check,

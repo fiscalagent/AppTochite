@@ -32,14 +32,11 @@ function isPwa(): boolean {
 
 // В APK веб-ассеты забандлены — обновление только установкой нового APK.
 const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
-// Стабильная ссылка на новейший подписанный APK (тот же ассет использует лендинг).
-const APK_DOWNLOAD_URL =
-  'https://github.com/fiscalagent/AppTochite/releases/latest/download/app-release.apk'
 
 export default function AboutScreen() {
   const navigate = useNavigate()
   const { t, locale } = useLocale()
-  const { currentVersion, latestVersion, releaseUrl, hasUpdate, checking, checkNow, lastChecked } = useVersionCheck()
+  const { currentVersion, latestVersion, releaseUrl, apkUrl, hasUpdate, checking, checkNow, lastChecked } = useVersionCheck()
 
   const analyticsOptOut = useLiveQuery(() => db.settings.get('analyticsOptOut'), [])
   const analyticsOn = !analyticsOptOut?.value
@@ -107,9 +104,9 @@ export default function AboutScreen() {
                   ? t.about.updateHintPwa
                   : t.about.updateHintBrowser}
             </span>
-            {IS_CAPACITOR && (
+            {IS_CAPACITOR && apkUrl && (
               <a
-                href={APK_DOWNLOAD_URL}
+                href={apkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={s.downloadBtn}

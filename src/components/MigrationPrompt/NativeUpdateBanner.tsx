@@ -8,15 +8,17 @@ import s from '../InstallNudge/InstallBanner.module.css'
 // обновление прилетает через service worker → баннер не нужен и DCE убирает его
 // (компонент и динамический import @capacitor/browser живут только под IS_CAPACITOR).
 const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
-const APK_DOWNLOAD_URL = 'https://github.com/fiscalagent/AppTochite/releases/latest/download/app-release.apk'
+// Запасная ссылка на случай пустого apkUrl (hasUpdate в APK-сборке гарантирует ассет)
+const APK_FALLBACK_URL = 'https://github.com/fiscalagent/AppTochite/releases/latest/download/app-release.apk'
 const DISMISS_KEY = 'nativeUpdateDismissed'
 
 interface Props {
   hasUpdate: boolean
   latestVersion: string | null
+  apkUrl: string
 }
 
-export default function NativeUpdateBanner({ hasUpdate, latestVersion }: Props) {
+export default function NativeUpdateBanner({ hasUpdate, latestVersion, apkUrl }: Props) {
   const t = useT()
   // Храним версию, для которой плашку закрыли: новый релиз снова покажет.
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY))
@@ -33,7 +35,7 @@ export default function NativeUpdateBanner({ hasUpdate, latestVersion }: Props) 
     track('native_update_click', { version: latestVersion }).catch(() => {})
     if (IS_CAPACITOR) {
       const { Browser } = await import('@capacitor/browser')
-      await Browser.open({ url: APK_DOWNLOAD_URL })
+      await Browser.open({ url: apkUrl || APK_FALLBACK_URL })
     }
   }
 

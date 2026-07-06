@@ -76,7 +76,7 @@ function matchesQuery(client: Client, q: string): boolean {
 
 export default function ClientList() {
   const [query, setQuery] = useState('')
-  const { hasUpdate, latestVersion } = useVersionCheck()
+  const { hasUpdate, latestVersion, apkUrl } = useVersionCheck()
   const t = useT()
   const { showToast } = useToast()
   const { locale, setLocale } = useLocale()
@@ -224,7 +224,7 @@ export default function ClientList() {
           {t.clients.shareApp}
         </button>
       </div>
-      <NativeUpdateBanner hasUpdate={hasUpdate} latestVersion={latestVersion} />
+      <NativeUpdateBanner hasUpdate={hasUpdate} latestVersion={latestVersion} apkUrl={apkUrl} />
       <MigrationBanner />
       <InstallBanner />
     </div>
