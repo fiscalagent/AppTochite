@@ -26,6 +26,7 @@ import { track } from '../../services/analytics'
 import { useToast } from '../../components/Toast/ToastContext'
 import { PHOTO_COMPRESS_KEY } from '../../hooks/useCamera'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
+import { VERSION_LABEL } from '../../version'
 import {
   isValidBackup,
   exportBackup,
@@ -143,7 +144,7 @@ export default function BackupScreen() {
   const { showToast } = useToast()
   const { t, locale } = useLocale()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { currentVersion, hasUpdate } = useVersionCheck()
+  const { hasUpdate } = useVersionCheck()
 
   const [preview, setPreview] = useState<BackupFile | null>(null)
   const [restoring, setRestoring] = useState(false)
@@ -1115,7 +1116,7 @@ export default function BackupScreen() {
         <Link to="/about" className={s.aboutRow}>
           <div className={s.aboutLeft}>
             <span className={s.aboutLabel}>{t.backup.aboutLabel}</span>
-            <span className={s.aboutVersion}>v{currentVersion}</span>
+            <span className={s.aboutVersion}>v{VERSION_LABEL}</span>
           </div>
           <div className={s.aboutRight}>
             {hasUpdate && <span className={s.updateDot} />}

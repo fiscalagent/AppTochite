@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
+import { VERSION_LABEL } from '../../version'
 import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
@@ -100,7 +101,7 @@ export default function AboutScreen() {
         <div className={s.versionBlock}>
           <div className={s.versionRow}>
             <span className={s.appName}>AppTochite</span>
-            <span className={s.versionBadge} onClick={tapVersion}>v{currentVersion}</span>
+            <span className={s.versionBadge} onClick={tapVersion}>v{VERSION_LABEL}</span>
           </div>
           <p className={s.appDesc}>{t.about.appDesc}</p>
         </div>
