@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/fiscalagent/AppTochite/compare/v2.4.0...v2.4.1) (2026-07-10)
+
+
+### fix
+
+* в APK-версии номер сборки помечается литерой «A» — на экране «О программе» и бэкапе видно, установлено приложение (2.4.0A) или открыто как PWA/в браузере (2.4.0) ([](https://github.com/fiscalagent/AppTochite/commit/f61c79f3a982e0f0d76dce29fe0ea557c8f1a26b))
+
 # [2.4.0](https://github.com/fiscalagent/AppTochite/compare/v2.3.0...v2.4.0) (2026-07-10)
 
 

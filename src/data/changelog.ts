@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4.1',
+    date: '2026-07-10',
+    changes: [
+      'в APK-версии номер сборки помечается литерой «A» — на экране «О программе» и бэкапе видно, установлено приложение (2.4.0A) или открыто как PWA/в браузере (2.4.0)',
+    ],
+  },
+  {
     version: '2.4.0',
     date: '2026-07-10',
     changes: [
