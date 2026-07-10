@@ -14,8 +14,20 @@ pkg.version = version
 writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
 console.log(`✓ package.json → ${version}`)
 
-// src/version.ts
-writeFileSync('src/version.ts', `export const APP_VERSION = '${version}'\n`, 'utf-8')
+// src/version.ts — полный шаблон: APP_VERSION (чистый semver для сравнения с
+// релизом) + VERSION_LABEL (с суффиксом «A» в APK-сборке). Файл перезаписывается
+// целиком, поэтому VERSION_LABEL держим здесь, иначе релиз затирал бы его.
+writeFileSync(
+  'src/version.ts',
+  `export const APP_VERSION = '${version}'\n\n` +
+    `// Версия для отображения. APK-сборка (Capacitor) получает суффикс «A», PWA — нет,\n` +
+    `// чтобы на экране «О программе» / бэкапа было видно, какая сборка запущена.\n` +
+    `// APP_VERSION остаётся чистым semver — его сравнивает useVersionCheck с GitHub-релизом,\n` +
+    `// литера в числе сломала бы parseVer (Number('0A') === NaN).\n` +
+    `export const VERSION_LABEL =\n` +
+    `  APP_VERSION + (import.meta.env.MODE === 'capacitor' ? 'A' : '')\n`,
+  'utf-8',
+)
 console.log(`✓ src/version.ts → ${version}`)
 
 // android/app/build.gradle — versionName + versionCode для APK-сборки (Ф5).
