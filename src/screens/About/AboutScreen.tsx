@@ -6,6 +6,7 @@ import { CHANGELOG } from '../../data/changelog'
 import { setAnalyticsEnabled } from '../../services/analytics'
 import { db } from '../../db/instance'
 import { FEATURES, isVoiceEnabled, setVoiceEnabled } from '../../config/features'
+import { FONT_SCALES, readStoredFontScale, writeStoredFontScale, type FontScale } from '../../config/fontScale'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 import { openGuide } from '../../utils/openGuide'
 import { useLocale, fmtDateTimeLong } from '../../i18n'
@@ -58,6 +59,13 @@ export default function AboutScreen() {
   function handleVoiceToggle(enabled: boolean) {
     setVoiceEnabled(enabled)
     setVoiceOn(enabled)
+  }
+
+  const [fontScale, setFontScale] = useState<FontScale>(() => readStoredFontScale())
+
+  function handleFontScale(scale: FontScale) {
+    writeStoredFontScale(scale)
+    setFontScale(scale)
   }
 
   const [showBugReport, setShowBugReport] = useState(false)
@@ -231,6 +239,27 @@ export default function AboutScreen() {
               </label>
             </div>
           )}
+          <div className={s.scaleItem}>
+            <div className={s.scaleLabel}>
+              <div className={s.scaleLabelTitle}>{t.about.fontScaleTitle}</div>
+              <div className={s.scaleLabelDesc}>{t.about.fontScaleDesc}</div>
+            </div>
+            <div className={s.scaleOptions} role="radiogroup" aria-label={t.about.fontScaleTitle}>
+              {FONT_SCALES.map((scale, i) => (
+                <button
+                  key={scale}
+                  type="button"
+                  role="radio"
+                  aria-checked={fontScale === scale}
+                  className={fontScale === scale ? `${s.scaleOption} ${s.scaleOptionActive}` : s.scaleOption}
+                  onClick={() => handleFontScale(scale)}
+                >
+                  <span className={s.scaleGlyph} style={{ fontSize: 14 + i * 4 }}>А</span>
+                  <span className={s.scaleCaption}>{t.about.fontScaleLabels[scale]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

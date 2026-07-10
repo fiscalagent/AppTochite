@@ -16,6 +16,14 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* Масштаб интерфейса (настройка «Размер шрифта» в «О программе»).
+   Значение переменной ставит applyFontScale() из config/fontScale.ts.
+   zoom на body масштабирует и основной UI (#root), и оверлеи-порталы,
+   которые монтируются в body. */
+body {
+  zoom: var(--ui-scale, 1);
+}
+
 #root {
   height: 100%;
   display: flex;

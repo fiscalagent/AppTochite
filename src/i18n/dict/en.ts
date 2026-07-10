@@ -179,6 +179,12 @@ export const en = {
     analyticsDesc: 'Stones and knives without personal data — helps improve the reference',
     voiceTitle: 'Voice input',
     voiceDesc: 'Fill in fields by voice when creating a sharpening. Requires internet connection.',
+    fontScaleTitle: 'Font size',
+    fontScaleDesc: 'Scales the whole interface — if the text feels too small.',
+    fontScaleLabels: {
+      normal: 'Normal',
+      large: 'Large',
+    },
     whatsNewSection: 'What\'s new',
     showOlderVersions: (n: number) => `Show earlier versions (${n})`,
     hideOlderVersions: 'Collapse',

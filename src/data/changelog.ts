@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4.0',
+    date: '2026-07-10',
+    changes: [
+      'добавлено масштабирование размера текста x 1.25',
+    ],
+  },
+  {
     version: '2.3.0',
     date: '2026-07-06',
     changes: [

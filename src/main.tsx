@@ -6,7 +6,12 @@ import App from './App'
 import { seedDatabase } from './db/seed'
 import { maybeCreatePreMigrationSnapshot } from './db/preMigrationSnapshot'
 import { track } from './services/analytics'
+import { applyFontScale, readStoredFontScale } from './config/fontScale'
 import './utils/installPrompt' // side-effect: слушатели beforeinstallprompt/appinstalled
+
+// Масштаб интерфейса — синхронно до первого рендера, чтобы UI не «прыгал»
+// с обычного размера на крупный после загрузки.
+applyFontScale(readStoredFontScale())
 
 // When a new Service Worker takes control (new app version deployed),
 // reload immediately so the new JS bundle and Dexie migrations run cleanly.

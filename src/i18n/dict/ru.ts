@@ -133,6 +133,12 @@ export const ru = {
     analyticsDesc: 'Камни и ножи без личных данных — помогает улучшить справочник',
     voiceTitle: 'Голосовой ввод',
     voiceDesc: 'Заполняйте поля голосом при создании заточки. Требует подключения к сети.',
+    fontScaleTitle: 'Размер шрифта',
+    fontScaleDesc: 'Масштаб всего интерфейса — если текст мелковат.',
+    fontScaleLabels: {
+      normal: 'Обычный',
+      large: 'Крупный',
+    },
     whatsNewSection: 'Что нового',
     showOlderVersions: (n: number) => `Показать более ранние версии (${n})`,
     hideOlderVersions: 'Свернуть',
