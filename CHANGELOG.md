@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/fiscalagent/AppTochite/compare/v2.3.0...v2.4.0) (2026-07-10)
+
+
+### feat
+
+* добавлено масштабирование размера текста x 1.25 ([](https://github.com/fiscalagent/AppTochite/commit/5fb1d1aa5174ee3c7944895a0e6d228bac5ac911))
+
 # [2.3.0](https://github.com/fiscalagent/AppTochite/compare/v2.2.0...v2.3.0) (2026-07-06)
 
 
