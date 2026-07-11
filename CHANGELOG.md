@@ -1,3 +1,12 @@
+## [2.4.9](https://github.com/fiscalagent/AppTochite/compare/v2.4.8...v2.4.9) (2026-07-11)
+
+
+### fix
+
+* авто-бэкап после приёмки/готово не подвешивает интерфейс и не парсит JSON дважды ([](https://github.com/fiscalagent/AppTochite/commit/b34c8fb0a5eddec123ff91a54b5840f288b3ac64))
+* история заточек и карточка клиента грузят только текущую страницу, а не всю таблицу с фото ([](https://github.com/fiscalagent/AppTochite/commit/d5493e98186c59c7a38371a9d73e219ff8a674e9))
+* приёмка заточки не читает справочник ножей дважды при показе подсказок ([](https://github.com/fiscalagent/AppTochite/commit/ca47ab007abd6dce3a364e62dc1945bee17b8df3))
+
 ## [2.4.8](https://github.com/fiscalagent/AppTochite/compare/v2.4.7...v2.4.8) (2026-07-11)
 
 
