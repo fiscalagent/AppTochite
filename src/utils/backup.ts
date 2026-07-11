@@ -754,11 +754,11 @@ function stoneNatKey(s: Stone): string {
   return `${lcKey(s.brand)}|${grit}`
 }
 
-function steelNatKey(s: Steel): string {
+export function steelNatKey(s: { name?: unknown }): string {
   return normSteel(String(s.name ?? ''))
 }
 
-function knifeNatKey(k: Knife): string {
+export function knifeNatKey(k: { brand?: unknown; steel?: unknown }): string {
   return `${lcKey(k.brand)}|${lcKey(k.steel)}`
 }
 

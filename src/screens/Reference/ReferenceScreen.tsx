@@ -10,8 +10,13 @@ import { buildCSV } from '../../utils/backup'
 import { track } from '../../services/analytics'
 import { normSteel } from '../../utils/steelMatch'
 import { readSpreadsheet, detectColumns, extractRows, prepareImport, type ColumnMapping, type SkipReason, type PreparedKnife } from '../../utils/knifeImport'
+import {
+  steelRowsFromGrid, knifeRowsFromGrid, buildSteelsCSV, buildKnivesCSV, diffSteels, diffKnives,
+  type RefSyncDiff, type ParsedSteelRow, type ParsedKnifeRow,
+} from '../../utils/refSync'
 import { startBlur } from '../../utils/modalBlur'
 import { enumLabel, useT, useLocale, ru } from '../../i18n'
+import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import s from './ReferenceScreen.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 
@@ -109,6 +114,96 @@ function SelectionBar({
         </>
       )}
     </div>
+  )
+}
+
+// ─── Синхронизация справочника (сталь/ножи): превью add/update/delete ────────
+
+function RefSyncPreviewDialog<E extends { id?: number }, R>({
+  diff,
+  renderAdd,
+  renderExisting,
+  renderUpdate,
+  onCancel,
+  onConfirm,
+}: {
+  diff: RefSyncDiff<E, R>
+  renderAdd: (r: R) => string
+  renderExisting: (e: E) => string
+  renderUpdate: (before: E, patch: Partial<E>) => string
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  const t = useT()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const total = diff.toAdd.length + diff.toUpdate.length + diff.toDelete.length
+
+  useEffect(() => startBlur(), [])
+
+  function handleApply() {
+    if (diff.toDelete.length > 0) { setConfirmDelete(true); return }
+    onConfirm()
+  }
+
+  return createPortal(
+    <div className={s.dialogOverlay} onClick={onCancel}>
+      <div className={s.dialog} onClick={e => e.stopPropagation()}>
+        <span className={s.addTitle}>{t.reference.syncPreviewTitle}</span>
+        <div className={s.importStats}>
+          <span>{t.reference.willAdd} <strong>{diff.toAdd.length}</strong></span>
+          <span>{t.reference.willUpdate(diff.toUpdate.length)}</span>
+          {diff.toDelete.length > 0 && (
+            <span className={s.importSkipped} style={{ color: 'var(--danger)' }}>
+              {t.reference.willDelete(diff.toDelete.length)}
+            </span>
+          )}
+        </div>
+        {total === 0 && <p className={s.importSkipped}>{t.reference.nothingToSync}</p>}
+        {diff.toAdd.length > 0 && (
+          <div className={s.importPreviewList}>
+            {diff.toAdd.slice(0, 5).map((r, i) => (
+              <div key={i} className={s.importPreviewItem}>
+                <span className={s.importPreviewName}>{renderAdd(r)}</span>
+              </div>
+            ))}
+            {diff.toAdd.length > 5 && <div className={s.importPreviewMore}>{t.reference.andMore(diff.toAdd.length - 5)}</div>}
+          </div>
+        )}
+        {diff.toUpdate.length > 0 && (
+          <div className={s.importPreviewList}>
+            {diff.toUpdate.slice(0, 5).map((u, i) => (
+              <div key={i} className={s.importPreviewItem}>
+                <span className={s.importPreviewName}>{renderUpdate(u.before, u.patch)}</span>
+              </div>
+            ))}
+            {diff.toUpdate.length > 5 && <div className={s.importPreviewMore}>{t.reference.andMore(diff.toUpdate.length - 5)}</div>}
+          </div>
+        )}
+        {diff.toDelete.length > 0 && (
+          <div className={s.importPreviewList}>
+            {diff.toDelete.slice(0, 5).map(e => (
+              <div key={e.id} className={s.importPreviewItem}>
+                <span className={s.importPreviewName}>{renderExisting(e)}</span>
+              </div>
+            ))}
+            {diff.toDelete.length > 5 && <div className={s.importPreviewMore}>{t.reference.andMore(diff.toDelete.length - 5)}</div>}
+          </div>
+        )}
+        <div className={s.addRow}>
+          <button className={s.addBtn} onClick={handleApply} disabled={total === 0}>{t.reference.applySync(total)}</button>
+          <button className={s.addBtn} style={{ background: 'var(--bg-400)', color: 'var(--text-200)' }} onClick={onCancel}>{t.common.cancel}</button>
+        </div>
+      </div>
+      <ConfirmModal
+        isOpen={confirmDelete}
+        title={t.reference.syncConfirmTitle(diff.toDelete.length)}
+        message={t.reference.syncConfirmText}
+        confirmLabel={t.reference.syncConfirmBtn}
+        onConfirm={() => { setConfirmDelete(false); onConfirm() }}
+        onCancel={() => setConfirmDelete(false)}
+      />
+    </div>,
+    document.body
   )
 }
 
@@ -387,8 +482,18 @@ interface ParsedStoneRow {
   coolant?: StoneCoolant
 }
 
+function downloadCSV(csv: string, filename: string) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function downloadStonesCSV(stones: Stone[]) {
-  const csv = buildCSV([
+  downloadCSV(buildCSV([
     ['Название', 'мкм', 'FEPA', 'JIS', 'ГОСТ', 'тип', 'СОЖ'],
     ...stones.map(st => [
       st.brand,
@@ -399,14 +504,15 @@ function downloadStonesCSV(stones: Stone[]) {
       st.type    ? enumLabel(ru.enums.stoneType, st.type) : null,
       st.coolant ? enumLabel(ru.enums.coolant, st.coolant) : null,
     ]),
-  ])
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'stones.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+  ]), 'stones.csv')
+}
+
+function downloadSteelsCSV(steels: Steel[]) {
+  downloadCSV(buildSteelsCSV(steels), 'steels.csv')
+}
+
+function downloadKnivesCSV(knives: Knife[]) {
+  downloadCSV(buildKnivesCSV(knives), 'knives.csv')
 }
 
 function parseStonesCSV(text: string): ParsedStoneRow[] {
@@ -992,15 +1098,18 @@ function StonesTab({ search }: { search: string }) {
 
 function SteelsTab({ search }: { search: string }) {
   const t = useT()
+  const { showToast } = useToast()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [hrc, setHrc] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [syncDiff, setSyncDiff] = useState<RefSyncDiff<Steel, ParsedSteelRow> | null>(null)
+  const syncFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open && syncDiff === null) return
     return startBlur()
-  }, [open])
+  }, [open, syncDiff])
 
   const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), [])
 
@@ -1034,12 +1143,72 @@ function SteelsTab({ search }: { search: string }) {
     setName(''); setHrc(''); setOpen(false)
   }
 
+  async function handleSyncFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    try {
+      const grid = await readSpreadsheet(file)
+      const rows = steelRowsFromGrid(grid)
+      if (grid.length === 0 || rows.length === 0) {
+        showToast(t.reference.fileEmpty)
+        return
+      }
+      setSyncDiff(diffSteels(steels ?? [], rows))
+    } catch {
+      showToast(t.reference.fileReadError)
+    }
+  }
+
+  async function applySync() {
+    if (!syncDiff) return
+    const now = new Date()
+    await db.transaction('rw', db.steels, async () => {
+      if (syncDiff.toAdd.length > 0) {
+        await db.steels.bulkAdd(syncDiff.toAdd.map(row => ({
+          name: row.name,
+          hrc: row.hrc,
+          isCustom: true,
+          updatedAt: now,
+        })))
+      }
+      for (const u of syncDiff.toUpdate) {
+        await db.steels.update(u.id, { ...u.patch, isCustom: true, updatedAt: now })
+      }
+      if (syncDiff.toDelete.length > 0) {
+        await db.steels.bulkDelete(syncDiff.toDelete.map(st => st.id!))
+      }
+    })
+    track('reference_sync', {
+      table: 'steels',
+      added: syncDiff.toAdd.length,
+      updated: syncDiff.toUpdate.length,
+      deleted: syncDiff.toDelete.length,
+    }).catch(() => {})
+    showToast(t.reference.syncDone(syncDiff.toAdd.length, syncDiff.toUpdate.length, syncDiff.toDelete.length))
+    setSyncDiff(null)
+  }
+
   return (
     <>
+      <input
+        ref={syncFileInputRef}
+        type="file"
+        accept=".xlsx,.csv"
+        style={{ display: 'none' }}
+        onChange={handleSyncFileSelect}
+      />
       {!open && selected.size === 0 && (
-        <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
-          {t.reference.addSteel}
-        </button>
+        <>
+          <button className={s.addTogglePrimary} onClick={() => setOpen(true)}>
+            {t.reference.addSteel}
+          </button>
+          <div className={s.csvActions}>
+            <button className={s.csvBtn} onClick={() => downloadSteelsCSV(steels ?? [])}>{t.reference.exportCsv}</button>
+            <button className={s.csvBtn} onClick={() => syncFileInputRef.current?.click()}>{t.reference.syncCsv}</button>
+          </div>
+          <p className={s.importHint}>{t.reference.syncHint}</p>
+        </>
       )}
       {open && createPortal(
         <div className={s.dialogOverlay} onClick={() => setOpen(false)}>
@@ -1098,6 +1267,17 @@ function SteelsTab({ search }: { search: string }) {
           count={selected.size}
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
+        />
+      )}
+
+      {syncDiff && (
+        <RefSyncPreviewDialog
+          diff={syncDiff}
+          renderAdd={row => row.hrc ? `${row.name} — ${row.hrc} HRC` : row.name}
+          renderExisting={st => st.hrc ? `${st.name} — ${st.hrc} HRC` : st.name}
+          renderUpdate={(before, patch) => `${before.name}: ${before.hrc ?? '—'} → ${patch.hrc ?? '—'} HRC`}
+          onCancel={() => setSyncDiff(null)}
+          onConfirm={applySync}
         />
       )}
     </>
@@ -1326,14 +1506,16 @@ function KnivesTab({ search }: { search: string }) {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editBrand, setEditBrand] = useState('')
   const [editSteel, setEditSteel] = useState('')
+  const [syncDiff, setSyncDiff] = useState<RefSyncDiff<Knife, ParsedKnifeRow> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const syncFileInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
   const t = useT()
 
   useEffect(() => {
-    if (!open && editingId === null) return
+    if (!open && editingId === null && syncDiff === null) return
     return startBlur()
-  }, [open, editingId])
+  }, [open, editingId, syncDiff])
 
   const knives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
   const steels = useLiveQuery(() => db.steels.orderBy('name').toArray(), []) ?? []
@@ -1410,6 +1592,53 @@ function KnivesTab({ search }: { search: string }) {
     setBrand(''); setKnifeSteel(''); setOpen(false)
   }
 
+  async function handleSyncFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    try {
+      const grid = await readSpreadsheet(file)
+      const rows = knifeRowsFromGrid(grid)
+      if (grid.length === 0 || rows.length === 0) {
+        showToast(t.reference.fileEmpty)
+        return
+      }
+      setSyncDiff(diffKnives(knives ?? [], rows))
+    } catch {
+      showToast(t.reference.fileReadError)
+    }
+  }
+
+  async function applySync() {
+    if (!syncDiff) return
+    const now = new Date()
+    await db.transaction('rw', db.knives, async () => {
+      if (syncDiff.toAdd.length > 0) {
+        await db.knives.bulkAdd(syncDiff.toAdd.map(row => ({
+          brand: row.brand,
+          steel: row.steel,
+          country: row.country,
+          isCustom: true,
+          updatedAt: now,
+        })))
+      }
+      for (const u of syncDiff.toUpdate) {
+        await db.knives.update(u.id, { ...u.patch, isCustom: true, updatedAt: now })
+      }
+      if (syncDiff.toDelete.length > 0) {
+        await db.knives.bulkDelete(syncDiff.toDelete.map(k => k.id!))
+      }
+    })
+    track('reference_sync', {
+      table: 'knives',
+      added: syncDiff.toAdd.length,
+      updated: syncDiff.toUpdate.length,
+      deleted: syncDiff.toDelete.length,
+    }).catch(() => {})
+    showToast(t.reference.syncDone(syncDiff.toAdd.length, syncDiff.toUpdate.length, syncDiff.toDelete.length))
+    setSyncDiff(null)
+  }
+
   return (
     <>
       <input
@@ -1418,6 +1647,13 @@ function KnivesTab({ search }: { search: string }) {
         accept=".xlsx,.csv"
         style={{ display: 'none' }}
         onChange={handleFileSelect}
+      />
+      <input
+        ref={syncFileInputRef}
+        type="file"
+        accept=".xlsx,.csv"
+        style={{ display: 'none' }}
+        onChange={handleSyncFileSelect}
       />
       {!open && selected.size === 0 && editingId === null && (
         <>
@@ -1428,6 +1664,11 @@ function KnivesTab({ search }: { search: string }) {
             <button className={s.csvBtn} onClick={() => fileInputRef.current?.click()}>{t.reference.loadFromFile}</button>
           </div>
           <p className={s.importHint}>{t.reference.knivesImportHint}</p>
+          <div className={s.csvActions}>
+            <button className={s.csvBtn} onClick={() => downloadKnivesCSV(knives ?? [])}>{t.reference.exportCsv}</button>
+            <button className={s.csvBtn} onClick={() => syncFileInputRef.current?.click()}>{t.reference.syncCsv}</button>
+          </div>
+          <p className={s.importHint}>{t.reference.syncHintKnives}</p>
         </>
       )}
       {importGrid && knives && (
@@ -1523,6 +1764,17 @@ function KnivesTab({ search }: { search: string }) {
           onCancel={() => setSelected(new Set())}
           onDelete={deleteSelected}
           onEdit={startEdit}
+        />
+      )}
+
+      {syncDiff && (
+        <RefSyncPreviewDialog
+          diff={syncDiff}
+          renderAdd={row => [row.brand, row.country, row.steel].filter(Boolean).join(' · ')}
+          renderExisting={k => [k.brand, k.country, k.steel].filter(Boolean).join(' · ')}
+          renderUpdate={(before, patch) => `${before.brand}: ${before.country ?? '—'} → ${patch.country ?? '—'}`}
+          onCancel={() => setSyncDiff(null)}
+          onConfirm={applySync}
         />
       )}
     </>
