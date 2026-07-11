@@ -138,13 +138,14 @@ function ageDot(date: Date | null | undefined): string {
   return 'var(--danger)'
 }
 
-function skipReasonLabel(t: Dict, reason: SkipReason): string {
+// unchanged рендерится отдельно (спокойная формулировка, не «ошибка») —
+// сюда попадают только реальные причины, по которым файл не записался.
+function skipReasonLabel(t: Dict, reason: Exclude<SkipReason, 'unchanged'>): string {
   switch (reason) {
-    case 'no_access':  return t.backup.nfbSkipNoAccess
-    case 'no_uri':      return t.backup.nfbSkipNoUri
-    case 'disabled':    return t.backup.nfbSkipDisabled
-    case 'empty':        return t.backup.nfbSkipEmpty
-    case 'unchanged':    return t.backup.nfbSkipUnchanged
+    case 'no_access': return t.backup.nfbSkipNoAccess
+    case 'no_uri':     return t.backup.nfbSkipNoUri
+    case 'disabled':   return t.backup.nfbSkipDisabled
+    case 'empty':       return t.backup.nfbSkipEmpty
   }
 }
 
@@ -820,12 +821,17 @@ export default function BackupScreen() {
               </span>
               <p className={s.destSub}>{t.backup.storageFolderReliability}</p>
               {/* Диагностика: почему последняя ФОНОВАЯ попытка не записала файл.
-                  unchanged — штатно (нечего сохранять), остальное — тревожно.
+                  unchanged — штатно (нечего сохранять), отдельная спокойная
+                  строка, а не «пропущена» — это не ошибка. Остальное — тревожно.
                   Видно на экране даже если у пользователя выключена аналитика. */}
               {nativeSkip && (
-                <p className={nativeSkip.reason === 'unchanged' ? s.destMeta : s.autoBackupWarn}>
-                  {t.backup.nfbSkipLine(fmtDate(locale, nativeSkip.day), skipReasonLabel(t, nativeSkip.reason))}
-                </p>
+                nativeSkip.reason === 'unchanged' ? (
+                  <p className={s.destMeta}>{t.backup.nfbSkipUpToDate(fmtDate(locale, nativeSkip.day))}</p>
+                ) : (
+                  <p className={s.autoBackupWarn}>
+                    {t.backup.nfbSkipLine(fmtDate(locale, nativeSkip.day), skipReasonLabel(t, nativeSkip.reason))}
+                  </p>
+                )
               )}
               <div className={s.autoBackupActions}>
                 <button className={s.primaryBtn} onClick={handleNativeFolderSaveNow} disabled={nativeFolderWorking}>

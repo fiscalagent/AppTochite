@@ -510,13 +510,15 @@ export const en = {
     nfbRestoreNotFound: 'No backup found in the folder',
     nfbError: 'Failed to write to the folder. Folder access may be missing.',
     // Auto-backup diagnostics — why the last background attempt didn't write a file
-    // (shown on screen even if the user has analytics disabled)
+    // (shown on screen even if the user has analytics disabled).
+    // unchanged gets its own calm wording — it's not an error, just nothing new
+    // to save, and shouldn't read like a real failure.
+    nfbSkipUpToDate: (when: string) => `Up to date as of ${when} — no new data to save`,
     nfbSkipNoAccess: 'no access to the folder',
     nfbSkipNoUri: 'folder not connected',
-    nfbSkipDisabled: 'disabled',
+    nfbSkipDisabled: 'auto-backup disabled',
     nfbSkipEmpty: 'database is empty',
-    nfbSkipUnchanged: 'data has not changed',
-    nfbSkipLine: (when: string, reason: string) => `Last check (${when}): skipped — ${reason}`,
+    nfbSkipLine: (when: string, reason: string) => `Failed to save (${when}): ${reason}`,
     folderEmptyDb: 'The database is empty — add at least one client or sharpening first.',
     folderNeedWrite: 'No write access. When choosing the folder, click "Edit files", not "View only".',
     folderConnected: 'Folder connected. Tap "Save now" to write the backup.',

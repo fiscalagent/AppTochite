@@ -5,6 +5,7 @@ import { ru } from '../i18n/dict'
 import { queryDirectoryPermission, requestDirectoryPermission, pickDirectory } from './fileSystemAccess'
 import { normSteel } from './steelMatch'
 import { uuid } from './uuid'
+import { track } from '../services/analytics'
 
 function normalizeStoneFromBackup(raw: Stone): Stone {
   if (raw.gritSource != null) return raw
@@ -510,32 +511,58 @@ export async function disablePeriodicSync(): Promise<void> {
 
 // ─── OPFS backup ─────────────────────────────────────────────────────────────
 
+function errDetail(e: unknown): string {
+  const err = e as { message?: string }
+  return String(err?.message ?? e ?? 'unknown').slice(0, 200)
+}
+
+// OPFS (Origin Private File System) — фича самого WebView, а не наша реализация.
+// В PWA (Chrome/десктоп) она давно и стабильно доступна, но в Android WebView
+// APK-сборки поддержка зависит от версии системного WebView на конкретном
+// устройстве — и мы никогда это не проверяли: сбой (в т.ч. сам метод
+// navigator.storage.getDirectory отсутствует) молча глотался в AutoBackupContext.
+// Телеметрия здесь — единственный способ узнать, реально ли этот уровень
+// защиты работает у APK-пользователей.
 export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
-  const root = await navigator.storage.getDirectory()
-
-  await rotateDailyIfNeeded(root, database)
-
-  const backup = await exportBackup(database)
-
-  if (!isValidBackup(backup) || backup.data.clients.length === 0) {
-    throw new Error('OPFS backup aborted: DB appears empty')
+  if (!navigator.storage?.getDirectory) {
+    track('opfs_unsupported').catch(() => {})
+    throw new Error('OPFS unsupported: navigator.storage.getDirectory is missing')
   }
 
-  const json = JSON.stringify(backup)
-  const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
-  const writable = await fileHandle.createWritable()
-  await writable.write(json)
-  await writable.close()
+  try {
+    const root = await navigator.storage.getDirectory()
 
-  const ok = await verifyAutoBackup(root, backup)
-  if (!ok) {
-    try { await root.removeEntry(OPFS_FILENAME) } catch { /* ignore */ }
-    throw new Error('OPFS backup integrity check failed')
+    await rotateDailyIfNeeded(root, database)
+
+    const backup = await exportBackup(database)
+
+    if (!isValidBackup(backup) || backup.data.clients.length === 0) {
+      // Пустая база (например, новый пользователь до первой заточки) — не сбой
+      // OPFS, поэтому не шлём как ошибку.
+      throw new Error('OPFS backup aborted: DB appears empty')
+    }
+
+    const json = JSON.stringify(backup)
+    const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
+    const writable = await fileHandle.createWritable()
+    await writable.write(json)
+    await writable.close()
+
+    const ok = await verifyAutoBackup(root, backup)
+    if (!ok) {
+      try { await root.removeEntry(OPFS_FILENAME) } catch { /* ignore */ }
+      throw new Error('OPFS backup integrity check failed')
+    }
+
+    await database.settings.put({ key: LAST_AUTO_DATE_KEY, value: ymd(new Date()) })
+    await updateLastBackupAt(database)
+    writeSentinel(database).catch(() => {})
+  } catch (e) {
+    if (!(e instanceof Error) || !e.message.includes('DB appears empty')) {
+      track('opfs_backup_error', { detail: errDetail(e) }).catch(() => {})
+    }
+    throw e
   }
-
-  await database.settings.put({ key: LAST_AUTO_DATE_KEY, value: ymd(new Date()) })
-  await updateLastBackupAt(database)
-  writeSentinel(database).catch(() => {})
 }
 
 export interface OPFSBackupMeta {
