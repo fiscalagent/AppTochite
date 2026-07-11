@@ -1,3 +1,10 @@
+## [2.4.6](https://github.com/fiscalagent/AppTochite/compare/v2.4.5...v2.4.6) (2026-07-11)
+
+
+### fix
+
+* экран бэкапа и авто-бэкап не грузят главный поток лишними полными чтениями БД ([](https://github.com/fiscalagent/AppTochite/commit/e31f4e5b625db5c6affcf4037b5cda3d16f1b03f))
+
 ## [2.4.5](https://github.com/fiscalagent/AppTochite/compare/v2.4.4...v2.4.5) (2026-07-11)
 
 

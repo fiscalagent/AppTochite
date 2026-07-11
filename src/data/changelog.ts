@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4.6',
+    date: '2026-07-11',
+    changes: [
+      'экран бэкапа и авто-бэкап не грузят главный поток лишними полными чтениями БД',
+    ],
+  },
+  {
     version: '2.4.5',
     date: '2026-07-11',
     changes: [
