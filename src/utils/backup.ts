@@ -86,6 +86,7 @@ export function dataSignature(data: BackupFile['data']): string {
 }
 
 const OPFS_FILENAME = 'apptochite-auto.json'
+const OPFS_LAST_SIG_KEY = 'autoBackupOpfsLastSig' // сигнатура данных последней записи в OPFS
 const DAILY_PREFIX = 'apptochite-daily-'
 const DAILY_FILENAME_KEY = 'dailyBackupFilename'
 const LAST_AUTO_DATE_KEY = 'lastAutoBackupDate'
@@ -542,16 +543,28 @@ export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
       throw new Error('OPFS backup aborted: DB appears empty')
     }
 
-    const json = JSON.stringify(backup)
-    const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
-    const writable = await fileHandle.createWritable()
-    await writable.write(json)
-    await writable.close()
+    // В отличие от папки/облака, раньше здесь не было проверки на изменения —
+    // JSON.stringify + запись файла гонялись на каждом debounce-окне (~2 мин)
+    // даже когда данные не менялись. При большой базе (много фото) это заметно
+    // грузило главный поток без всякой пользы. LAST_AUTO_DATE_KEY и lastBackupAt
+    // всё равно обновляются ниже безусловно — rotateDailyIfNeeded зависит от даты
+    // «последнего прогона», а не от факта записи файла.
+    const signature = dataSignature(backup.data)
+    const sigEntry = await database.settings.get(OPFS_LAST_SIG_KEY)
+    if (signature !== sigEntry?.value) {
+      const json = JSON.stringify(backup)
+      const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
+      const writable = await fileHandle.createWritable()
+      await writable.write(json)
+      await writable.close()
 
-    const ok = await verifyAutoBackup(root, backup)
-    if (!ok) {
-      try { await root.removeEntry(OPFS_FILENAME) } catch { /* ignore */ }
-      throw new Error('OPFS backup integrity check failed')
+      const ok = await verifyAutoBackup(root, backup)
+      if (!ok) {
+        try { await root.removeEntry(OPFS_FILENAME) } catch { /* ignore */ }
+        throw new Error('OPFS backup integrity check failed')
+      }
+
+      await database.settings.put({ key: OPFS_LAST_SIG_KEY, value: signature })
     }
 
     await database.settings.put({ key: LAST_AUTO_DATE_KEY, value: ymd(new Date()) })
@@ -669,20 +682,36 @@ export function buildCSV(rows: (string | number | null | undefined)[][]): string
   return '﻿' + rows.map(r => r.map(escape).join(';')).join('\r\n')
 }
 
-export async function exportBackup(database: AppTochiteDB): Promise<BackupFile> {
-  const [clients, sharpenings, stones, steels, knives, meta] = await Promise.all([
-    database.clients.toArray(),
-    database.sharpenings.toArray(),
-    database.stones.toArray(),
-    database.steels.toArray(),
-    database.knives.toArray(),
-    database.meta.toArray(),
-  ])
-  return {
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    data: { clients, sharpenings, stones, steels, knives, meta },
-  }
+// exportBackup читает sharpenings целиком, включая все фото «до/после» в base64 —
+// дорогая операция при большой базе. AutoBackupContext (OPFS/папка/облако) и экран
+// бэкапа (shareFile, CSV, кнопка «Сохранить») могут запросить её почти одновременно
+// (например, при возврате приложения в фокус) — без дедупликации это N параллельных
+// полных чтений одних и тех же таблиц, которые забивают главный поток и «подвешивают» UI.
+// Конкурентные вызовы для одной и той же БД переиспользуют один и тот же промис.
+let inFlightExport: { db: AppTochiteDB; promise: Promise<BackupFile> } | null = null
+
+export function exportBackup(database: AppTochiteDB): Promise<BackupFile> {
+  if (inFlightExport && inFlightExport.db === database) return inFlightExport.promise
+  const promise = (async () => {
+    const [clients, sharpenings, stones, steels, knives, meta] = await Promise.all([
+      database.clients.toArray(),
+      database.sharpenings.toArray(),
+      database.stones.toArray(),
+      database.steels.toArray(),
+      database.knives.toArray(),
+      database.meta.toArray(),
+    ])
+    return {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      data: { clients, sharpenings, stones, steels, knives, meta },
+    }
+  })()
+  inFlightExport = { db: database, promise }
+  promise.finally(() => {
+    if (inFlightExport?.promise === promise) inFlightExport = null
+  })
+  return promise
 }
 
 export interface MergeStats {

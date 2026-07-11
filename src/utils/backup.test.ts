@@ -849,6 +849,9 @@ describe('daily backup rotation', () => {
       return w
     }
 
+    // Данные должны реально измениться — иначе сигнатура совпадёт с прошлой
+    // записью и performOPFSBackup пропустит запись файла целиком (см. гейт выше).
+    await db.clients.add({ name: 'Второй', isSelf: false, createdAt: new Date() })
     await expect(performOPFSBackup(db)).rejects.toThrow(/integrity/)
     expect(root.files.has('apptochite-auto.json')).toBe(false)
     const after = (await db.settings.get('lastBackupAt'))!.value as string

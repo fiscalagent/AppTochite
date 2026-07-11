@@ -322,12 +322,16 @@ export default function BackupScreen() {
 
   // Web Share API на Chrome Android требует transient activation — share()
   // должен вызываться сразу после клика, без долгих await между ними. Иначе
-  // получаем NotAllowedError. Поэтому файл готовим заранее, при входе на экран,
-  // и в клике только вызываем share().
+  // получаем NotAllowedError. Поэтому файл готовим заранее, но не раньше, чем
+  // пользователь реально может нажать кнопку — обе кнопки (share и CSV) лежат
+  // в свёрнутой секции «Дополнительно», так что готовим только после её открытия,
+  // а не безусловно на маунте экрана (был лишний exportBackup + full-scan на
+  // каждый заход в бэкап, даже если юзер туда просто заглянул).
   const [shareFile, setShareFile] = useState<File | null>(null)
   const [preparingShare, setPreparingShare] = useState(true)
 
   useEffect(() => {
+    if (!advancedOpen) return
     let cancelled = false
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreparingShare(true)
@@ -345,16 +349,18 @@ export default function BackupScreen() {
       .catch(() => {})
       .finally(() => { if (!cancelled) setPreparingShare(false) })
     return () => { cancelled = true }
-  }, [lastBackupTick])
+  }, [lastBackupTick, advancedOpen])
 
   // CSV готовим заранее — share() требует вызова сразу в обработчике клика
-  // (transient user activation истекает после первого await)
+  // (transient user activation истекает после первого await). Тоже только
+  // после открытия «Дополнительно» — см. комментарий выше про shareFile.
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [preparingCsv, setPreparingCsv] = useState(true)
 
   useEffect(() => {
+    if (!advancedOpen) return
     let cancelled = false
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- эффект пересобирает CSV при изменении данных (lastBackupTick)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- эффект пересобирает CSV при изменении данных (lastBackupTick) или открытии секции
     setPreparingCsv(true)
     Promise.all([db.clients.toArray(), db.sharpenings.orderBy('receivedAt').toArray()])
       .then(([allClients, allSharpenings]) => {
@@ -373,7 +379,7 @@ export default function BackupScreen() {
       .catch(() => {})
       .finally(() => { if (!cancelled) setPreparingCsv(false) })
     return () => { cancelled = true }
-  }, [lastBackupTick])
+  }, [lastBackupTick, advancedOpen])
 
   function handleShare() {
     if (!shareFile) return
