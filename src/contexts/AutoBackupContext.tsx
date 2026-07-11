@@ -33,7 +33,9 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
     inFlightRef.current = true
     lastRunAtRef.current = now
     try {
-      await performOPFSBackup(db)
+      // .catch: сбой OPFS (в APK-WebView он может быть недоступен) не должен
+      // обрывать остальные пути — иначе папочный/облачный бэкап не выполнится.
+      await performOPFSBackup(db).catch(() => {})
       performFolderBackup(db).catch(() => {})
       performCloudBackup(db).catch(() => {})
       if (IS_CAPACITOR) {

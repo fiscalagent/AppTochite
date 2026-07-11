@@ -34,7 +34,23 @@ const URI_KEY = 'nativeFolderUri'
 const NAME_KEY = 'nativeFolderName'
 const LAST_AT_KEY = 'nativeFolderLastAt'
 const LAST_SIG_KEY = 'nativeFolderLastSig'
-const CHECK_DAY_KEY = 'nativeFolderCheckDay'
+const SKIP_MARK_KEY = 'nativeFolderSkipMark'
+
+// Авто-бэкап тихо выходит на нескольких условиях (не включён, дневной гейт, нет
+// доступа, данные не менялись) — и раньше эти пропуски были немыми: с устройства
+// пользователя не приходило ничего, что объяснило бы, почему авто не пишет, а
+// ручной работает. Здесь делаем причину видимой в телеметрии. Дедуп по дню держит
+// объём в узде: одна причина — одно событие в сутки на устройство (иначе частые
+// day_gate/unchanged флудили бы лист на каждом фокусе).
+type SkipReason = 'disabled' | 'no_uri' | 'no_access' | 'empty' | 'unchanged'
+
+async function trackSkip(database: AppTochiteDB, reason: SkipReason): Promise<void> {
+  const mark = `${localDayStr()}:${reason}`
+  const prev = await database.settings.get(SKIP_MARK_KEY)
+  if (prev?.value === mark) return
+  await database.settings.put({ key: SKIP_MARK_KEY, value: mark })
+  track('nfb_auto_skip', { reason }).catch(() => {})
+}
 
 // detail — текст реальной ошибки: показывается пользователю в тосте
 // (folderErrorDetail) и уходит в телеметрию, чтобы отказ не был немым.
@@ -101,7 +117,6 @@ async function writeBackupFile(database: AppTochiteDB, backup: BackupFile, uri: 
   await database.settings.bulkPut([
     { key: LAST_AT_KEY, value: new Date().toISOString() },
     { key: LAST_SIG_KEY, value: dataSignature(backup.data) },
-    { key: CHECK_DAY_KEY, value: localDayStr() },
   ])
   await updateLastBackupAt(database)
 }
@@ -238,33 +253,39 @@ export async function readNativeFolderBackup(database: AppTochiteDB = defaultDb)
   }
 }
 
-// Авто-бэкап (без жеста): только если включён, доступ жив, дневной гейт + сигнатура.
+// Авто-бэкап (без жеста): только если включён, доступ жив и данные изменились.
+//
+// Гейт на запись — СИГНАТУРА данных, а не календарный день. Раньше был дневной
+// гейт (раз в сутки), но он терял правки того же дня: если первая проверка дня
+// прошла на неизменных данных, добавленное позже до завтра в папку не попадало
+// («добавил сегодня — авто не сохранило»). Дневной гейт заводили ради экономии
+// тяжёлого exportBackup, но экономии не было: exportBackup всё равно выполняется
+// на каждом фокусе в performOPFSBackup. Поэтому пишем при любом изменении данных;
+// сигнатура (count+maxUpdatedAt+idSum) не даёт переписывать одно и то же.
 export async function performNativeFolderBackup(database: AppTochiteDB = defaultDb): Promise<void> {
-  if (!(await isNativeFolderEnabled(database))) return
+  // isNativeFolderEnabled разложен на два условия, чтобы отличить в телеметрии
+  // «выключено» от «включено, но папка потеряна».
+  const enabled = await database.settings.get(ENABLED_KEY)
+  if (enabled?.value !== true) return trackSkip(database, 'disabled')
   const uri = await getFolderUri(database)
-  if (!uri) return
+  if (!uri) return trackSkip(database, 'no_uri')
 
-  const today = localDayStr()
-  const check = await database.settings.get(CHECK_DAY_KEY)
-  if (check?.value === today) return
-
-  // Помечаем день проверенным сразу, чтобы не гонять exportBackup на каждом фокусе.
-  await database.settings.put({ key: CHECK_DAY_KEY, value: today })
   try {
     // Без жеста пикер не показать — если доступ утрачен, тихо пропускаем
     // (пользователь восстановит через «Сохранить сейчас»).
     const access = await SafFolder.checkAccess({ treeUri: uri })
-    if (!access.granted) {
-      await database.settings.delete(CHECK_DAY_KEY).catch(() => {})
-      return
-    }
+    if (!access.granted) return trackSkip(database, 'no_access')
+
     const backup = await exportBackup(database)
-    if (!isValidBackup(backup) || backup.data.clients.length === 0) return
+    if (!isValidBackup(backup) || backup.data.clients.length === 0) {
+      return trackSkip(database, 'empty')
+    }
     const sig = await database.settings.get(LAST_SIG_KEY)
-    if (dataSignature(backup.data) === sig?.value) return // ничего не изменилось
+    if (dataSignature(backup.data) === sig?.value) {
+      return trackSkip(database, 'unchanged') // ничего не изменилось
+    }
     await writeBackupFile(database, backup, uri)
   } catch (e) {
     track('nfb_auto_error', { detail: errDetail(e) }).catch(() => {})
-    await database.settings.delete(CHECK_DAY_KEY).catch(() => {})
   }
 }
