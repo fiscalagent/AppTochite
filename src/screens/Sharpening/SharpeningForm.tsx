@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import Dexie from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -421,39 +421,48 @@ export default function SharpeningForm() {
   }
 
   const clients = useLiveQuery(() => db.clients.orderBy('name').toArray().then(arr => arr.filter(c => !c.deletedAt)), [])
-  const knifeSuggestions = useLiveQuery(async () => {
-    const items = await db.knives.orderBy('brand').toArray()
-    const allBrands = [...new Set(items.map(k => k.brand))]
-    if (clientId) {
-      // Частота брендов по клиенту — через compound-индекс [clientId+knifeBrand]
-      // ключами (.keys()), без десериализации записей заточек (там base64-фото).
-      // Индекс не знает про deletedAt, поэтому мягко удалённые (обычно единицы)
-      // вычитаем отдельным дешёвым запросом.
-      const pairs = await db.sharpenings
-        .where('[clientId+knifeBrand]')
-        .between([clientId, Dexie.minKey], [clientId, Dexie.maxKey])
-        .keys() as unknown as [number, string][]
-      const freq = new Map<string, number>()
-      for (const [, brand] of pairs) freq.set(brand, (freq.get(brand) ?? 0) + 1)
-      if (freq.size > 0) {
-        const deleted = await db.sharpenings.where('deletedAt').above(new Date(0))
-          .and(sh => sh.clientId === clientId).toArray()
-        for (const sh of deleted) freq.set(sh.knifeBrand, (freq.get(sh.knifeBrand) ?? 0) - 1)
-      }
-      const prior = [...freq.entries()].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([brand]) => brand)
+  // Единый запрос к db.knives — раньше он читался дважды (здесь и в
+  // knifeSuggestions ниже) на каждое изменение таблицы. Полные записи нужны для
+  // автоподстановки стали при выборе ножа (applyKnife); отсюда же выводим
+  // алфавитный список брендов для подсказок.
+  const allKnives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), []) ?? []
+  // Частота брендов по клиенту — через compound-индекс [clientId+knifeBrand]
+  // ключами (.keys()), без десериализации записей заточек (там base64-фото).
+  // Индекс не знает про deletedAt, поэтому мягко удалённые (обычно единицы)
+  // вычитаем отдельным дешёвым запросом.
+  const clientKnifeFrequency = useLiveQuery(async () => {
+    if (!clientId) return null
+    const pairs = await db.sharpenings
+      .where('[clientId+knifeBrand]')
+      .between([clientId, Dexie.minKey], [clientId, Dexie.maxKey])
+      .keys() as unknown as [number, string][]
+    const freq = new Map<string, number>()
+    for (const [, brand] of pairs) freq.set(brand, (freq.get(brand) ?? 0) + 1)
+    if (freq.size > 0) {
+      const deleted = await db.sharpenings.where('deletedAt').above(new Date(0))
+        .and(sh => sh.clientId === clientId).toArray()
+      for (const sh of deleted) freq.set(sh.knifeBrand, (freq.get(sh.knifeBrand) ?? 0) - 1)
+    }
+    return freq
+  }, [clientId])
+  const knifeSuggestions = useMemo(() => {
+    const allBrands = [...new Set(allKnives.map(k => k.brand))]
+    if (clientKnifeFrequency) {
+      const prior = [...clientKnifeFrequency.entries()]
+        .filter(([, n]) => n > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([brand]) => brand)
       if (prior.length > 0) {
         const seen = new Set(prior)
         return [...prior, ...allBrands.filter(b => !seen.has(b))]
       }
     }
     return allBrands
-  }, [clientId]) ?? []
+  }, [allKnives, clientKnifeFrequency])
   const steelSuggestions = useLiveQuery(async () => {
     const items = await db.steels.orderBy('name').toArray()
     return [...new Set(items.map(st => st.name))]
   }, []) ?? []
-  // Полные записи ножей нужны для автоподстановки стали при выборе ножа.
-  const allKnives = useLiveQuery(() => db.knives.toArray(), []) ?? []
 
   useEffect(() => {
     if (!id) return
