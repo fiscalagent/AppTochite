@@ -18,6 +18,7 @@ import { isVoiceEnabled } from '../../config/features'
 import { uuid } from '../../utils/uuid'
 import { track } from '../../services/analytics'
 import { useLocale, enumLabel, fmtCurrencySymbol, ru } from '../../i18n'
+import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import s from './SharpeningForm.module.css'
 
 
@@ -109,6 +110,7 @@ export default function SharpeningForm() {
   const location = useLocation()
   const { showToast, setRaisedMode } = useToast()
   const { t, locale } = useLocale()
+  const { requestBackup } = useAutoBackup()
   const { openCamera, openGallery } = useCamera()
   const isEdit = Boolean(id)
 
@@ -569,6 +571,9 @@ export default function SharpeningForm() {
           hasSteel: !!steel.trim(),
           voice: !!opts.voiceTriggered,
         }).catch(() => {})
+        // Немедленный бэкап (обходит дебаунс) — новая приёмка такой же
+        // естественный чекпоинт, как «готово» в SharpeningDetail.
+        requestBackup()
         if (opts.voiceTriggered) showToast(t.sharpening.voice.acceptedVoice)
         // fromAcceptance: на Z-2 «назад» (верхняя и аппаратная) ведёт обратно на Z-1 этой заточки
         navigate(`/sharpenings/${savedId}`, { replace: true, state: { fromAcceptance: true } })

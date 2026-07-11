@@ -6,7 +6,8 @@ import { db, type SharpeningStone, type Stone, type GritSource, MK_VALUES, stone
 import { trackSharpening, track } from '../../services/analytics'
 import { getCanInstall } from '../../utils/installPrompt'
 import { isIosInstallable } from '../../utils/platform'
-import { performFolderBackup, writeSentinel } from '../../utils/backup'
+import { writeSentinel } from '../../utils/backup'
+import { useAutoBackup } from '../../contexts/AutoBackupContext'
 import { getAltGrits, fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useCamera } from '../../hooks/useCamera'
@@ -117,6 +118,7 @@ export default function SharpeningDetail() {
   const location = useLocation()
   const sharpeningId = Number(id)
   const { showToast, setRaisedMode } = useToast()
+  const { requestBackup } = useAutoBackup()
   const { t, locale } = useLocale()
   const { openCamera, openGallery } = useCamera()
 
@@ -598,7 +600,10 @@ export default function SharpeningDetail() {
         hasAngle: !!angle,
         hasPhotosAfter: photosAfter.length > 0,
       }).catch(() => {})
-      performFolderBackup(db).catch(() => {})
+      // Немедленный бэкап (обходит дебаунс) — «готово» естественный чекпоинт:
+      // данные точно изменились, а pagehide на закрытии не гарантирует запись
+      // папочного/native-бэкапа до выгрузки страницы.
+      requestBackup()
       writeSentinel(db).catch(() => {})
       // Момент ценности: только что записали заточку → предлагаем поставить PWA.
       // Один раз за всё время; для Android/Ya — системный промпт, для iOS — инструкция.

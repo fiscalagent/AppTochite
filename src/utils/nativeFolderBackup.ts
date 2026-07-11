@@ -36,13 +36,14 @@ const LAST_AT_KEY = 'nativeFolderLastAt'
 const LAST_SIG_KEY = 'nativeFolderLastSig'
 const SKIP_MARK_KEY = 'nativeFolderSkipMark'
 
-// Авто-бэкап тихо выходит на нескольких условиях (не включён, дневной гейт, нет
-// доступа, данные не менялись) — и раньше эти пропуски были немыми: с устройства
+// Авто-бэкап тихо выходит на нескольких условиях (не включён, нет доступа,
+// данные не менялись) — и раньше эти пропуски были немыми: с устройства
 // пользователя не приходило ничего, что объяснило бы, почему авто не пишет, а
-// ручной работает. Здесь делаем причину видимой в телеметрии. Дедуп по дню держит
-// объём в узде: одна причина — одно событие в сутки на устройство (иначе частые
-// day_gate/unchanged флудили бы лист на каждом фокусе).
-type SkipReason = 'disabled' | 'no_uri' | 'no_access' | 'empty' | 'unchanged'
+// ручной работает. Здесь делаем причину видимой и в телеметрии, и на экране
+// «Бэкап» (getLastAutoSkip — на случай если у пользователя выключена
+// аналитика). Дедуп по дню держит объём в узде: одна причина — одна запись
+// в сутки на устройство (иначе unchanged флудил бы на каждом фокусе).
+export type SkipReason = 'disabled' | 'no_uri' | 'no_access' | 'empty' | 'unchanged'
 
 async function trackSkip(database: AppTochiteDB, reason: SkipReason): Promise<void> {
   const mark = `${localDayStr()}:${reason}`
@@ -50,6 +51,17 @@ async function trackSkip(database: AppTochiteDB, reason: SkipReason): Promise<vo
   if (prev?.value === mark) return
   await database.settings.put({ key: SKIP_MARK_KEY, value: mark })
   track('nfb_auto_skip', { reason }).catch(() => {})
+}
+
+// Последняя причина пропуска авто-бэкапа — для диагностической строки на
+// экране «Бэкап» (BackupScreen). null, если авто ещё ни разу не пропускал
+// (либо всегда писал успешно).
+export async function getLastAutoSkip(database: AppTochiteDB = defaultDb): Promise<{ reason: SkipReason; day: string } | null> {
+  const mark = await database.settings.get(SKIP_MARK_KEY)
+  if (typeof mark?.value !== 'string') return null
+  const [day, reason] = mark.value.split(':')
+  if (!day || !reason) return null
+  return { day, reason: reason as SkipReason }
 }
 
 // detail — текст реальной ошибки: показывается пользователю в тосте
@@ -118,6 +130,7 @@ async function writeBackupFile(database: AppTochiteDB, backup: BackupFile, uri: 
     { key: LAST_AT_KEY, value: new Date().toISOString() },
     { key: LAST_SIG_KEY, value: dataSignature(backup.data) },
   ])
+  await database.settings.delete(SKIP_MARK_KEY).catch(() => {})
   await updateLastBackupAt(database)
 }
 

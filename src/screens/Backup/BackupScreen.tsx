@@ -66,9 +66,9 @@ import { supportsFileSystemAccess } from '../../utils/fileSystemAccess'
 import { shareFilesNative } from '../../utils/nativeShare'
 // Только тип — статически. Сами функции грузим динамически из веток
 // `if (IS_CAPACITOR)` (см. ниже), иначе нативный SAF-плагин утечёт в PWA-бандл.
-import type { NativeFolderMeta } from '../../utils/nativeFolderBackup'
+import type { NativeFolderMeta, SkipReason } from '../../utils/nativeFolderBackup'
 import { useAutoBackup } from '../../contexts/AutoBackupContext'
-import { useLocale, fmtDate, fmtDateTimeLong } from '../../i18n'
+import { useLocale, fmtDate, fmtDateTimeLong, type Dict } from '../../i18n'
 import { FEATURES } from '../../config/features'
 
 // В APK <a download> и navigator.share(files) не работают — выгрузку бэкапа гоним
@@ -138,6 +138,16 @@ function ageDot(date: Date | null | undefined): string {
   return 'var(--danger)'
 }
 
+function skipReasonLabel(t: Dict, reason: SkipReason): string {
+  switch (reason) {
+    case 'no_access':  return t.backup.nfbSkipNoAccess
+    case 'no_uri':      return t.backup.nfbSkipNoUri
+    case 'disabled':    return t.backup.nfbSkipDisabled
+    case 'empty':        return t.backup.nfbSkipEmpty
+    case 'unchanged':    return t.backup.nfbSkipUnchanged
+  }
+}
+
 
 export default function BackupScreen() {
   const navigate = useNavigate()
@@ -163,6 +173,9 @@ export default function BackupScreen() {
   // Нативный папочный бэкап (APK): undefined=загрузка, null=выключен, объект=включён
   const [nativeFolderMeta, setNativeFolderMeta] = useState<NativeFolderMeta | null | undefined>(undefined)
   const [nativeFolderWorking, setNativeFolderWorking] = useState(false)
+  // Причина последнего пропуска авто-бэкапа — диагностика на случай, если у
+  // пользователя выключена аналитика и телеметрия nfb_auto_skip не долетает.
+  const [nativeSkip, setNativeSkip] = useState<{ reason: SkipReason; day: string } | null>(null)
   const [preRestoreMeta, setPreRestoreMeta] = useState<PreRestoreSnapshotMeta | null | undefined>(undefined)
   const [periodicStatus, setPeriodicStatus] = useState<'on' | 'off' | 'unsupported' | undefined>(undefined)
   const [opfsValid, setOpfsValid] = useState<boolean | undefined>(undefined)
@@ -194,7 +207,12 @@ export default function BackupScreen() {
     getFolderPrevMeta(db).then(setFolderPrevMeta)
     getPreRestoreSnapshotMeta().then(setPreRestoreMeta)
     getPeriodicSyncStatus().then(setPeriodicStatus)
-    if (IS_CAPACITOR) import('../../utils/nativeFolderBackup').then(m => m.getNativeFolderMeta(db)).then(setNativeFolderMeta)
+    if (IS_CAPACITOR) {
+      import('../../utils/nativeFolderBackup').then(m => {
+        m.getNativeFolderMeta(db).then(setNativeFolderMeta)
+        m.getLastAutoSkip(db).then(setNativeSkip)
+      })
+    }
   }, [])
 
   const refreshCloud = useCallback(async () => {
@@ -801,6 +819,14 @@ export default function BackupScreen() {
                   : t.backup.folderNeverSaved}
               </span>
               <p className={s.destSub}>{t.backup.storageFolderReliability}</p>
+              {/* Диагностика: почему последняя ФОНОВАЯ попытка не записала файл.
+                  unchanged — штатно (нечего сохранять), остальное — тревожно.
+                  Видно на экране даже если у пользователя выключена аналитика. */}
+              {nativeSkip && (
+                <p className={nativeSkip.reason === 'unchanged' ? s.destMeta : s.autoBackupWarn}>
+                  {t.backup.nfbSkipLine(fmtDate(locale, nativeSkip.day), skipReasonLabel(t, nativeSkip.reason))}
+                </p>
+              )}
               <div className={s.autoBackupActions}>
                 <button className={s.primaryBtn} onClick={handleNativeFolderSaveNow} disabled={nativeFolderWorking}>
                   {nativeFolderWorking ? t.backup.saving : t.backup.folderSaveNow}

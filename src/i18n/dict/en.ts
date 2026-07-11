@@ -502,13 +502,21 @@ export const en = {
     folderError: 'Failed to write to folder',
     // Native folder auto-backup in the APK (user picks the folder via the SAF picker)
     nfbTitle: 'Backup to a folder on device',
-    nfbDesc: 'Pick a folder — a daily auto-copy will be saved there. Visible in Files and easy to move to another device.',
+    nfbDesc: 'Pick a folder — an auto-copy will be saved there whenever data changes. Visible in Files and easy to move to another device.',
     nfbEnable: 'Pick a folder…',
     nfbChangeFolder: 'Change folder…',
     nfbDisable: 'Disable',
     nfbRestore: 'Restore from folder',
     nfbRestoreNotFound: 'No backup found in the folder',
     nfbError: 'Failed to write to the folder. Folder access may be missing.',
+    // Auto-backup diagnostics — why the last background attempt didn't write a file
+    // (shown on screen even if the user has analytics disabled)
+    nfbSkipNoAccess: 'no access to the folder',
+    nfbSkipNoUri: 'folder not connected',
+    nfbSkipDisabled: 'disabled',
+    nfbSkipEmpty: 'database is empty',
+    nfbSkipUnchanged: 'data has not changed',
+    nfbSkipLine: (when: string, reason: string) => `Last check (${when}): skipped — ${reason}`,
     folderEmptyDb: 'The database is empty — add at least one client or sharpening first.',
     folderNeedWrite: 'No write access. When choosing the folder, click "Edit files", not "View only".',
     folderConnected: 'Folder connected. Tap "Save now" to write the backup.',
