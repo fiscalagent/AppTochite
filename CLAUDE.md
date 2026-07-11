@@ -42,7 +42,7 @@ src/
   config/
     features.ts          # Feature flags: voiceInput (мастер-выключатель); isVoiceEnabled() читает localStorage
 
-  i18n/                  # Слой мультиязычности (см. docs/i18n-plan.md). Фаза 1: ru остаётся
+  i18n/                  # Слой мультиязычности (см. docs/i18n-plan.md). ru — канонический источник формы, en.ts переведён полностью (Фаза 2 завершена)
     locale.ts            # Тип Locale, чтение/запись языка в localStorage (вне бэкапа), <html lang>
     plural.ts            # Универсальный plural() на Intl.PluralRules (ru + en)
     format.ts            # fmtDate/fmtDateTime/fmtMoney/fmtNumber на Intl
@@ -229,8 +229,11 @@ src/
 - enum-подписи (тип камня, СОЖ, status, condition, country) — через `enumLabel(t.enums.X, value)`;
   **дропдауны пишут в БД канонический ключ, а не подпись**
 - Даты/деньги — через `fmtDate`/`fmtMoney` по локали (не `toLocaleDateString('ru')`)
-- Словарь-эталон — `src/i18n/dict/ru.ts`; английский (`en.ts`) добавится в Фазе 2, TS заставит
-  заполнить все ключи
+- Словарь-эталон — `src/i18n/dict/ru.ts`; английский `src/i18n/dict/en.ts` **уже существует**
+  (Фаза 2 завершена, см. `docs/i18n-plan.md`) и обязан содержать те же ключи — `Dict = Widened<typeof ru>`
+  в `dict/index.ts` требует от `en` структурного соответствия. **Любой новый ключ в `ru.ts` нужно сразу
+  дублировать в `en.ts`**, иначе `npm run build` (`tsc -b`) упадёт на несовпадении типов — `tsc --noEmit -p .`
+  без `-b` это НЕ ловит, т.к. корневой `tsconfig.json` solution-style (`references`, без файлов)
 - Решения по форме: `status` — везде строчными (`принят`/`готов`); тип камня/СОЖ — везде строчными;
   валюта en — USD ($), ru — RUB (₽). Подробности — в плане
 
