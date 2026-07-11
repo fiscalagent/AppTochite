@@ -251,6 +251,7 @@ export const en = {
     empty: 'No sharpenings yet',
     doneTotal: (n: number) => `${n} sharpened`,
     loadMore: (n: number, rest: number) => `${n} more of ${rest}`,
+    loadMoreShort: (n: number) => `${n} more`,
   },
 
   sharpening: {

@@ -147,7 +147,7 @@ export interface AnalyticsQueueItem {
 
 // Текущая максимальная версия схемы. БАМПИТЬ при добавлении новой `this.version(N)`
 // в конструкторе ниже, иначе preMigrationSnapshot не сработает на новой миграции.
-export const CURRENT_SCHEMA_VERSION = 10
+export const CURRENT_SCHEMA_VERSION = 11
 
 export class AppTochiteDB extends Dexie {
   clients!: Table<Client>
@@ -271,6 +271,15 @@ export class AppTochiteDB extends Dexie {
     // индексы из уже существующих полей.
     this.version(10).stores({
       sharpenings: '++id, clientId, status, receivedAt, deletedAt, guid, [clientId+status], [clientId+knifeBrand]',
+    })
+    // v11: составные индексы [status+receivedAt] и [clientId+receivedAt] — дают
+    // Dexie возможность делать .offset()/.limit() в хронологическом порядке
+    // без чтения фото записей, которые не попадут на текущую страницу
+    // (HistoryFeed, ClientCard). Раньше эти экраны читали sharpenings.toArray()
+    // целиком (все photosBefore/photosAfter) и резали уже загруженный массив в
+    // памяти. Чисто аддитивно, апгрейд-функция не нужна.
+    this.version(11).stores({
+      sharpenings: '++id, clientId, status, receivedAt, deletedAt, guid, [clientId+status], [clientId+knifeBrand], [status+receivedAt], [clientId+receivedAt]',
     })
   }
 }

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../../db/instance'
+import Dexie from 'dexie'
+import { db, type Sharpening } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
@@ -45,16 +46,71 @@ export default function ClientCard() {
   // ?? null: get() для отсутствующей записи отдаёт undefined — неотличимо от
   // «ещё грузится». null явно означает «записи нет» и включает ветку not-found.
   const client = useLiveQuery(async () => (await db.clients.get(clientId)) ?? null, [clientId])
-  const sharpenings = useLiveQuery(
-    () => db.sharpenings.where('clientId').equals(clientId).reverse().sortBy('receivedAt').then(arr =>
-      arr.filter(sh => !sh.deletedAt).map(sh => ({
-        ...sh,
-        photosBefore: sh.photosBefore?.slice(0, 1),
-        photosAfter: sh.photosAfter?.slice(0, 1),
-      }))
-    ),
-    [clientId]
-  )
+
+  const truncate = (sh: Sharpening): Sharpening => ({
+    ...sh,
+    photosBefore: sh.photosBefore?.slice(0, 1),
+    photosAfter: sh.photosAfter?.slice(0, 1),
+  })
+
+  // Бренды ножей клиента — для чипов фильтра. Ключи составного индекса
+  // [clientId+knifeBrand], без разворачивания записей (в т.ч. фото). Индекс не
+  // знает про deletedAt, поэтому мягко удалённые (TTL корзины 3 дня) вычитаем
+  // отдельным дешёвым запросом — тот же приём, что и в SharpeningForm.
+  const knifeBrands = useLiveQuery(async () => {
+    const pairs = await db.sharpenings
+      .where('[clientId+knifeBrand]')
+      .between([clientId, Dexie.minKey], [clientId, Dexie.maxKey])
+      .keys() as unknown as [number, string][]
+    const counts = new Map<string, number>()
+    for (const [, brand] of pairs) counts.set(brand, (counts.get(brand) ?? 0) + 1)
+    if (counts.size > 0) {
+      const deleted = await db.sharpenings.where('deletedAt').above(new Date(0))
+        .and(sh => sh.clientId === clientId).toArray()
+      for (const sh of deleted) counts.set(sh.knifeBrand, (counts.get(sh.knifeBrand) ?? 0) - 1)
+    }
+    return [...counts.entries()].filter(([, n]) => n > 0).map(([b]) => b).sort()
+  }, [clientId])
+
+  // Точное количество заточек (для пагинации) — считается индексом, без чтения
+  // самих записей.
+  const totalCount = useLiveQuery(async () => {
+    if (knifeFilter) {
+      const cnt = await db.sharpenings.where('[clientId+knifeBrand]').equals([clientId, knifeFilter]).count()
+      const deletedCnt = await db.sharpenings.where('deletedAt').above(new Date(0))
+        .and(sh => sh.clientId === clientId && sh.knifeBrand === knifeFilter).count()
+      return cnt - deletedCnt
+    }
+    const cnt = await db.sharpenings.where('clientId').equals(clientId).count()
+    const deletedCnt = await db.sharpenings.where('deletedAt').above(new Date(0))
+      .and(sh => sh.clientId === clientId).count()
+    return cnt - deletedCnt
+  }, [clientId, knifeFilter])
+
+  // Раньше здесь читалась ВСЯ история заточек клиента целиком (полные
+  // photosBefore/photosAfter, обрезанные до одного фото уже ПОСЛЕ чтения), а
+  // пагинация резала уже загруженный в память массив. Для «Я» с историей за
+  // годы это читало и разворачивало тысячи фото при каждом заходе на карточку.
+  // Теперь читаем ровно PAGE_SIZE записей на текущую страницу.
+  const pageItems = useLiveQuery(async () => {
+    if (knifeFilter) {
+      const ids = await db.sharpenings
+        .where('[clientId+knifeBrand]').equals([clientId, knifeFilter])
+        .primaryKeys()
+      const records = await db.sharpenings.bulkGet(ids as number[])
+      const alive = records.filter((r): r is Sharpening => !!r && !r.deletedAt)
+      alive.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
+      return alive.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(truncate)
+    }
+    const rows = await db.sharpenings
+      .where('[clientId+receivedAt]')
+      .between([clientId, Dexie.minKey], [clientId, Dexie.maxKey])
+      .reverse()
+      .offset(page * PAGE_SIZE)
+      .limit(PAGE_SIZE)
+      .toArray()
+    return rows.filter(sh => !sh.deletedAt).map(truncate)
+  }, [clientId, knifeFilter, page])
 
   async function handleDelete() {
     await softDeleteClient(db, clientId)
@@ -126,7 +182,7 @@ export default function ClientCard() {
       </div>
 
       {(() => {
-        const knives = [...new Set((sharpenings ?? []).map(sh => sh.knifeBrand))].sort()
+        const knives = knifeBrands ?? []
         if (knives.length < 2) return null
         return (
           <div className={s.knifeFilters}>
@@ -150,18 +206,14 @@ export default function ClientCard() {
       })()}
 
       {(() => {
-        const filtered = knifeFilter
-          ? (sharpenings ?? []).filter(sh => sh.knifeBrand === knifeFilter)
-          : (sharpenings ?? [])
-        const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-        const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+        const totalPages = Math.ceil((totalCount ?? 0) / PAGE_SIZE)
 
         return (
           <div className={s.sharpeningList}>
-            {filtered.length === 0 && (
+            {totalCount === 0 && (
               <p className={s.empty}>{t.clients.noSharpenings}</p>
             )}
-            {pageItems.map(sh => (
+            {(pageItems ?? []).map(sh => (
               <Link key={sh.id} to={`/sharpenings/${sh.id}`} className={s.sharpeningRow}>
                 <div className={s.sharpeningInfo}>
                   <div className={s.knifeName}>{sh.knifeBrand}</div>
