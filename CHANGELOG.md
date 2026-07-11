@@ -1,3 +1,10 @@
+## [2.4.8](https://github.com/fiscalagent/AppTochite/compare/v2.4.7...v2.4.8) (2026-07-11)
+
+
+### fix
+
+* список клиентов и подсказки ножа на приёмке не тянут все фото заточек ([](https://github.com/fiscalagent/AppTochite/commit/840a5ecc487f7beeb63ef1099931bab1ba420e70))
+
 ## [2.4.7](https://github.com/fiscalagent/AppTochite/compare/v2.4.6...v2.4.7) (2026-07-11)
 
 ## [2.4.6](https://github.com/fiscalagent/AppTochite/compare/v2.4.5...v2.4.6) (2026-07-11)
