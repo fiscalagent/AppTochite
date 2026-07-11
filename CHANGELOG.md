@@ -1,3 +1,10 @@
+## [2.4.4](https://github.com/fiscalagent/AppTochite/compare/v2.4.3...v2.4.4) (2026-07-11)
+
+
+### fix
+
+* авто-бэкап в папку на APK пишет сразу при завершении/приёмке заточки, не дожидаясь закрытия приложения ([](https://github.com/fiscalagent/AppTochite/commit/0484c13416ae02871be5baee2514b14331def7d4))
+
 ## [2.4.3](https://github.com/fiscalagent/AppTochite/compare/v2.4.2...v2.4.3) (2026-07-11)
 
 

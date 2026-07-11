@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4.4',
+    date: '2026-07-11',
+    changes: [
+      'авто-бэкап в папку на APK пишет сразу при завершении/приёмке заточки, не дожидаясь закрытия приложения',
+    ],
+  },
+  {
     version: '2.4.3',
     date: '2026-07-11',
     changes: [
