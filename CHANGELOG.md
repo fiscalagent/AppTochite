@@ -1,3 +1,10 @@
+## [2.4.5](https://github.com/fiscalagent/AppTochite/compare/v2.4.4...v2.4.5) (2026-07-11)
+
+
+### fix
+
+* телеметрия на сбой OPFS в APK + текст диагностики не пугает «данные не менялись» ([](https://github.com/fiscalagent/AppTochite/commit/907db339f0f5da2d2c45065796b8b0fe26df902c))
+
 ## [2.4.4](https://github.com/fiscalagent/AppTochite/compare/v2.4.3...v2.4.4) (2026-07-11)
 
 

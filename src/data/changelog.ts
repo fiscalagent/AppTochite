@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4.5',
+    date: '2026-07-11',
+    changes: [
+      'телеметрия на сбой OPFS в APK + текст диагностики не пугает «данные не менялись»',
+    ],
+  },
+  {
     version: '2.4.4',
     date: '2026-07-11',
     changes: [
