@@ -692,7 +692,7 @@ let inFlightExport: { db: AppTochiteDB; promise: Promise<BackupFile> } | null = 
 
 export function exportBackup(database: AppTochiteDB): Promise<BackupFile> {
   if (inFlightExport && inFlightExport.db === database) return inFlightExport.promise
-  const promise = (async () => {
+  const promise = (async (): Promise<BackupFile> => {
     const [clients, sharpenings, stones, steels, knives, meta] = await Promise.all([
       database.clients.toArray(),
       database.sharpenings.toArray(),
