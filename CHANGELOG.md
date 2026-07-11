@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/fiscalagent/AppTochite/compare/v2.4.9...v2.5.0) (2026-07-11)
+
+
+### feat
+
+* справочники стали и ножей — экспорт в CSV, правка в Excel, синхронизация удаляет то, чего нет в файле ([](https://github.com/fiscalagent/AppTochite/commit/aee96abcaa049f4ca162e9a2510b70e379a54d0a))
+
 ## [2.4.9](https://github.com/fiscalagent/AppTochite/compare/v2.4.8...v2.4.9) (2026-07-11)
 
 

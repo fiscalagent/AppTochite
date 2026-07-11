@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.5.0',
+    date: '2026-07-11',
+    changes: [
+      'справочники стали и ножей — экспорт в CSV, правка в Excel, синхронизация удаляет то, чего нет в файле',
+    ],
+  },
+  {
     version: '2.4.9',
     date: '2026-07-11',
     changes: [
