@@ -12,6 +12,21 @@ const AutoBackupContext = createContext<AutoBackupContextValue>({ lastBackupTick
 
 const DEBOUNCE_MS = 2 * 60 * 1000
 
+// requestBackup() вызывается синхронно сразу после «Принять в заточку» и
+// «Готово» — в этот момент экран как раз переходит на следующий (навигация,
+// коммит React). Сам бэкап внутри делает синхронный JSON.stringify всей базы
+// (включая все фото) — тяжёлая блокирующая операция, которая при иммедиатном
+// запуске конкурирует за главный поток ровно с этим переходом. requestIdleCallback
+// откладывает её до момента, когда браузер свободен (переход уже отрисован), не
+// теряя сам бэкап: если TIMEOUT_MS истечёт раньше простоя, коллбэк всё равно
+// выполнится. requestIdleCallback нет в части WebView/Safari — тогда просто
+// setTimeout(0), что уже выносит работу из текущего тика синхронного кода.
+function runWhenIdle(fn: () => void): void {
+  const w = window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }
+  if (typeof w.requestIdleCallback === 'function') w.requestIdleCallback(fn, { timeout: 2000 })
+  else window.setTimeout(fn, 0)
+}
+
 // Папочный авто-бэкап в APK — через нативный SAF-плагин. Динамический импорт
 // под литералом MODE, чтобы PWA-сборка вырезала и ветку, и chunk плагина.
 const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
@@ -99,7 +114,7 @@ export function AutoBackupProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   return (
-    <AutoBackupContext.Provider value={{ lastBackupTick, requestBackup: () => { runBackup(true) } }}>
+    <AutoBackupContext.Provider value={{ lastBackupTick, requestBackup: () => runWhenIdle(() => runBackup(true)) }}>
       {children}
     </AutoBackupContext.Provider>
   )

@@ -146,22 +146,21 @@ async function rotateDailyIfNeeded(
   await setDailyFilename(database, newName)
 }
 
+// Раньше здесь был file.text() + JSON.parse всего файла заново — та же по
+// стоимости работа, что и сама запись (JSON.stringify), просто чтобы
+// убедиться, что запись не оборвалась. Реалистичный сбой — обрыв/усечение
+// записи (не хватило места, процесс убит на середине), а не побитовая порча
+// при неизменной длине, поэтому дешёвого сравнения байтового размера
+// достаточно: writable.write(json) кодирует ту же UTF-8 строку, что мы уже
+// отдаём сюда, и итоговый размер файла должен совпасть с её размером в байтах.
 async function verifyAutoBackup(
   root: FileSystemDirectoryHandle,
-  expected: BackupFile,
+  expectedJson: string,
 ): Promise<boolean> {
   try {
     const handle = await root.getFileHandle(OPFS_FILENAME)
     const file = await handle.getFile()
-    const parsed = JSON.parse(await file.text(), reviveDates)
-    if (!isValidBackup(parsed)) return false
-    const e = expected.data
-    const p = parsed.data
-    return p.clients.length === e.clients.length
-      && p.sharpenings.length === e.sharpenings.length
-      && p.stones.length === e.stones.length
-      && p.steels.length === e.steels.length
-      && p.knives.length === e.knives.length
+    return file.size === new Blob([expectedJson]).size
   } catch {
     return false
   }
@@ -558,7 +557,7 @@ export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
       await writable.write(json)
       await writable.close()
 
-      const ok = await verifyAutoBackup(root, backup)
+      const ok = await verifyAutoBackup(root, json)
       if (!ok) {
         try { await root.removeEntry(OPFS_FILENAME) } catch { /* ignore */ }
         throw new Error('OPFS backup integrity check failed')

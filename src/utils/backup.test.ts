@@ -38,7 +38,11 @@ class MockFileHandle {
     return w
   }
   async getFile() {
-    return { text: async () => this._content, size: this._content.length, lastModified: Date.now() } as unknown as File
+    // Байтовый (UTF-8) размер, а не длина JS-строки — как у реального File System
+    // Access/OPFS API, где write() кодирует строку в UTF-8 перед записью на диск.
+    // verifyAutoBackup сверяет именно это, а Кириллица в контенте (имена, комментарии)
+    // делает разницу между .length и байтовым размером не косметической.
+    return { text: async () => this._content, size: new TextEncoder().encode(this._content).length, lastModified: Date.now() } as unknown as File
   }
   get lastContent() { return this._content }
 }

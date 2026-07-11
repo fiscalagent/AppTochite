@@ -23,7 +23,9 @@ class MockFileHandle {
     return w
   }
   async getFile() {
-    return { text: async () => this._content, size: this._content.length, lastModified: Date.now() } as unknown as File
+    // Байтовый (UTF-8) размер, а не длина JS-строки — как у реального File System
+    // Access/OPFS API.
+    return { text: async () => this._content, size: new TextEncoder().encode(this._content).length, lastModified: Date.now() } as unknown as File
   }
   get content() { return this._content }
 }
