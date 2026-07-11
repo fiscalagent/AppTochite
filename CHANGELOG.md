@@ -1,3 +1,10 @@
+## [2.4.3](https://github.com/fiscalagent/AppTochite/compare/v2.4.2...v2.4.3) (2026-07-11)
+
+
+### fix
+
+* авто-бэкап в папку на APK сохраняет правки того же дня, а не раз в сутки ([](https://github.com/fiscalagent/AppTochite/commit/4f8093abfab2202cfdb5930cfe75f15c6bc8fddc))
+
 ## [2.4.2](https://github.com/fiscalagent/AppTochite/compare/v2.4.1...v2.4.2) (2026-07-10)
 
 ## [2.4.1](https://github.com/fiscalagent/AppTochite/compare/v2.4.0...v2.4.1) (2026-07-10)

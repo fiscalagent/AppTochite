@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.4.3',
+    date: '2026-07-11',
+    changes: [
+      'авто-бэкап в папку на APK сохраняет правки того же дня, а не раз в сутки',
+    ],
+  },
+  {
     version: '2.4.2',
     date: '2026-07-10',
     changes: [
