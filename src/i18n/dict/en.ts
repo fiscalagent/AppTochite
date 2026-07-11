@@ -441,6 +441,19 @@ export const en = {
     skippedN: (n: number) => `rows skipped: ${n}`,
     skipEmptyName: 'empty name',
     skipDuplicate: 'already in reference',
+    syncCsv: '⬆ Sync',
+    syncHint: 'Full sync: anything missing from the uploaded file will be deleted from the reference.',
+    syncHintKnives: 'Separate from the import above: full sync of your own file — anything missing from it will be deleted.',
+    syncPreviewTitle: 'Reference sync',
+    willUpdate: (n: number) => `Will be updated: ${n}`,
+    willDelete: (n: number) => `Will be deleted: ${n}`,
+    nothingToSync: 'The file matches the reference — nothing to change',
+    applySync: (n: number) => (n > 0 ? `Apply (${n})` : 'Apply'),
+    syncConfirmTitle: (n: number) => `Delete ${n}?`,
+    syncConfirmText: 'Records missing from the file will be permanently deleted from the reference.',
+    syncConfirmBtn: 'Delete and sync',
+    syncDone: (added: number, updated: number, deleted: number) =>
+      `Added: ${added}, updated: ${updated}, deleted: ${deleted}`,
   },
 
   backup: {
