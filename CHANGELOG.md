@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/fiscalagent/AppTochite/compare/v2.5.0...v2.5.1) (2026-07-11)
+
+
+### fix
+
+* билд падал без английских переводов новых ключей синхронизации справочников ([](https://github.com/fiscalagent/AppTochite/commit/a9f251db1237394bcd44652426d49203df3d29be))
+
 # [2.5.0](https://github.com/fiscalagent/AppTochite/compare/v2.4.9...v2.5.0) (2026-07-11)
 
 
