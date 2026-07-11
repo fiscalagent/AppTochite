@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
+import Dexie from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type SharpeningStone } from '../../db/instance'
 import { fromFepa, fromJis, fromMk, fromMicrons } from '../../data/gritTable'
@@ -424,13 +425,23 @@ export default function SharpeningForm() {
     const items = await db.knives.orderBy('brand').toArray()
     const allBrands = [...new Set(items.map(k => k.brand))]
     if (clientId) {
-      const clientSharpenings = (await db.sharpenings.where('clientId').equals(clientId).toArray()).filter(s => !s.deletedAt)
-      if (clientSharpenings.length > 0) {
-        const freq = new Map<string, number>()
-        for (const sh of clientSharpenings) {
-          freq.set(sh.knifeBrand, (freq.get(sh.knifeBrand) ?? 0) + 1)
-        }
-        const prior = [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([brand]) => brand)
+      // Частота брендов по клиенту — через compound-индекс [clientId+knifeBrand]
+      // ключами (.keys()), без десериализации записей заточек (там base64-фото).
+      // Индекс не знает про deletedAt, поэтому мягко удалённые (обычно единицы)
+      // вычитаем отдельным дешёвым запросом.
+      const pairs = await db.sharpenings
+        .where('[clientId+knifeBrand]')
+        .between([clientId, Dexie.minKey], [clientId, Dexie.maxKey])
+        .keys() as unknown as [number, string][]
+      const freq = new Map<string, number>()
+      for (const [, brand] of pairs) freq.set(brand, (freq.get(brand) ?? 0) + 1)
+      if (freq.size > 0) {
+        const deleted = await db.sharpenings.where('deletedAt').above(new Date(0))
+          .and(sh => sh.clientId === clientId).toArray()
+        for (const sh of deleted) freq.set(sh.knifeBrand, (freq.get(sh.knifeBrand) ?? 0) - 1)
+      }
+      const prior = [...freq.entries()].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([brand]) => brand)
+      if (prior.length > 0) {
         const seen = new Set(prior)
         return [...prior, ...allBrands.filter(b => !seen.has(b))]
       }

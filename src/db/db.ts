@@ -147,7 +147,7 @@ export interface AnalyticsQueueItem {
 
 // Текущая максимальная версия схемы. БАМПИТЬ при добавлении новой `this.version(N)`
 // в конструкторе ниже, иначе preMigrationSnapshot не сработает на новой миграции.
-export const CURRENT_SCHEMA_VERSION = 9
+export const CURRENT_SCHEMA_VERSION = 10
 
 export class AppTochiteDB extends Dexie {
   clients!: Table<Client>
@@ -262,6 +262,15 @@ export class AppTochiteDB extends Dexie {
       await tx.table('sharpenings').toCollection().modify((s: Sharpening) => {
         if (!s.guid) s.guid = uuid()
       })
+    })
+    // v10: составные индексы для дешёвых key-only подсчётов, не тянущих фото.
+    // [clientId+status] — счётчики в списке клиентов (ClientList): .keys() отдаёт
+    // пары [clientId, status] без десериализации всей записи (фото в т.ч.).
+    // [clientId+knifeBrand] — частота брендов ножей для подсказок на Z-1
+    // (SharpeningForm). Чисто аддитивно, апгрейд-функция не нужна — Dexie строит
+    // индексы из уже существующих полей.
+    this.version(10).stores({
+      sharpenings: '++id, clientId, status, receivedAt, deletedAt, guid, [clientId+status], [clientId+knifeBrand]',
     })
   }
 }

@@ -8,7 +8,7 @@ import { useVersionCheck } from '../../hooks/useVersionCheck'
 import { track } from '../../services/analytics'
 import { useT, useLocale } from '../../i18n'
 import type { Locale } from '../../i18n/locale'
-import type { Client } from '../../db/instance'
+import type { Client, SharpeningStatus } from '../../db/instance'
 import s from './ClientList.module.css'
 import AppLogo from '../../components/AppLogo/AppLogo'
 import InstallBanner from '../../components/InstallNudge/InstallBanner'
@@ -102,21 +102,28 @@ export default function ClientList() {
   }
   const otherLocale: Locale = locale === 'ru' ? 'en' : 'ru'
   const rows = useLiveQuery<ClientRow[]>(async () => {
-    const [allClients, sharpenings] = await Promise.all([
+    // Счётчики по клиенту берём через compound-индекс [clientId+status] ключами
+    // (.keys(), без десериализации значений) — иначе пришлось бы гонять
+    // sharpenings.toArray() целиком, включая все фото «до/после» в base64,
+    // только чтобы посчитать три циферки. Индекс не знает про deletedAt, поэтому
+    // мягко удалённые (обычно единицы — TTL корзины 3 дня) вычитаем отдельно.
+    const [allClients, statusKeys, deletedSharpenings] = await Promise.all([
       db.clients.orderBy('name').toArray(),
-      db.sharpenings.toArray(),
+      db.sharpenings.orderBy('[clientId+status]').keys() as unknown as Promise<[number, SharpeningStatus][]>,
+      db.sharpenings.where('deletedAt').above(new Date(0)).toArray(),
     ])
     const clients = allClients.filter(c => !c.deletedAt)
-    const allSharpenings = sharpenings.filter(s => !s.deletedAt)
 
     const counts = new Map<number, { count: number; accepted: number; done: number }>()
-    for (const sh of allSharpenings) {
-      const c = counts.get(sh.clientId) ?? { count: 0, accepted: 0, done: 0 }
-      c.count++
-      if (sh.status === 'accepted') c.accepted++
-      else if (sh.status === 'done') c.done++
-      counts.set(sh.clientId, c)
+    const bump = (clientId: number, status: SharpeningStatus, delta: number) => {
+      const c = counts.get(clientId) ?? { count: 0, accepted: 0, done: 0 }
+      c.count += delta
+      if (status === 'accepted') c.accepted += delta
+      else if (status === 'done') c.done += delta
+      counts.set(clientId, c)
     }
+    for (const [clientId, status] of statusKeys) bump(clientId, status, 1)
+    for (const sh of deletedSharpenings) bump(sh.clientId, sh.status, -1)
 
     // «Я» — всегда первый
     const sorted = [
