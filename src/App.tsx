@@ -13,6 +13,7 @@ import FolderBackupPrompt from './components/FolderBackupPrompt/FolderBackupProm
 import DataLossAlert from './components/DataLossAlert/DataLossAlert'
 import StorageRiskAlert from './components/StorageRiskAlert/StorageRiskAlert'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
+import { useHardwareBackButton } from './hooks/useHardwareBackButton'
 import { ensurePersistentStorage } from './utils/storagePersistence'
 import { flushAnalyticsQueue, track, baseContext } from './services/analytics'
 import { db } from './db/instance'
@@ -50,6 +51,8 @@ async function runPurgeIfDue() {
 }
 
 export default function App() {
+  useHardwareBackButton()
+
   useEffect(() => {
     // Счётчик запусков (вне бэкапа) — для баннера установки «для возвращающихся».
     localStorage.setItem('launchCount', String(Number(localStorage.getItem('launchCount') ?? 0) + 1))
