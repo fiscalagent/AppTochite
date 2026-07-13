@@ -1,3 +1,10 @@
+## [2.5.2](https://github.com/fiscalagent/AppTochite/compare/v2.5.1...v2.5.2) (2026-07-13)
+
+
+### fix
+
+* аппаратная кнопка «назад» в APK закрывала приложение вместо навигации назад по экранам ([](https://github.com/fiscalagent/AppTochite/commit/48bf766dac710707cf68edbc05152bddf8168dd9))
+
 ## [2.5.1](https://github.com/fiscalagent/AppTochite/compare/v2.5.0...v2.5.1) (2026-07-11)
 
 

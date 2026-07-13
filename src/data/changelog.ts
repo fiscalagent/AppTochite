@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.5.2',
+    date: '2026-07-13',
+    changes: [
+      'аппаратная кнопка «назад» в APK закрывала приложение вместо навигации назад по экранам',
+    ],
+  },
+  {
     version: '2.5.1',
     date: '2026-07-11',
     changes: [
