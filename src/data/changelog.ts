@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.5.4',
+    date: '2026-07-15',
+    changes: [
+      'та же подмена старого фото при повторной отправке — теперь и в PWA-ветке navigator.share, не только в APK',
+    ],
+  },
+  {
     version: '2.5.3',
     date: '2026-07-15',
     changes: [

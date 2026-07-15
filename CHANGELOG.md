@@ -1,3 +1,10 @@
+## [2.5.4](https://github.com/fiscalagent/AppTochite/compare/v2.5.3...v2.5.4) (2026-07-15)
+
+
+### fix
+
+* та же подмена старого фото при повторной отправке — теперь и в PWA-ветке navigator.share, не только в APK ([](https://github.com/fiscalagent/AppTochite/commit/a1049bca3e8c90cd31399caa8deb68acb25abde6))
+
 ## [2.5.3](https://github.com/fiscalagent/AppTochite/compare/v2.5.2...v2.5.3) (2026-07-15)
 
 
