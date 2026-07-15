@@ -24,18 +24,27 @@ async function blobToBase64(blob: Blob): Promise<string> {
 
 // Стейджит файлы в cache и вызывает системное «Поделиться». Бросает при отмене
 // пользователем — вызывающий код ловит так же, как web-cancel.
+//
+// Каждый вызов пишет в свою уникальную подпапку кэша (а не по голому file.name):
+// иначе повторный шаринг переиспользует тот же content:// URI, и принимающие
+// приложения (Telegram/VK/Max кэшируют вложения по URI) показывают/досылают
+// старые байты — вплоть до того, что отложенная отправка одного отчёта позже
+// прочитает файл, уже перезаписанный следующим отчётом.
 export async function shareFilesNative(
   files: File[],
   opts: { title?: string; text?: string } = {},
 ): Promise<void> {
   const { Filesystem, Directory } = await import('@capacitor/filesystem')
   const { Share } = await import('@capacitor/share')
+  const { uuid } = await import('./uuid')
 
+  const dir = `share-${uuid()}`
   const uris: string[] = []
   for (const file of files) {
     const data = await blobToBase64(file)
-    await Filesystem.writeFile({ path: file.name, data, directory: Directory.Cache })
-    const { uri } = await Filesystem.getUri({ path: file.name, directory: Directory.Cache })
+    const path = `${dir}/${file.name}`
+    await Filesystem.writeFile({ path, data, directory: Directory.Cache, recursive: true })
+    const { uri } = await Filesystem.getUri({ path, directory: Directory.Cache })
     uris.push(uri)
   }
 
