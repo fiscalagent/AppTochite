@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { startBlur } from '../../utils/modalBlur'
 import { track } from '../../services/analytics'
 import { shareFilesNative } from '../../utils/nativeShare'
+import { uuid } from '../../utils/uuid'
 import { useT } from '../../i18n'
 import s from './PhotoShareSheet.module.css'
 
@@ -90,8 +91,15 @@ export default function PhotoShareSheet({ photos, onClose }: Props) {
         await shareFilesNative(files)
         track('photo_shared', { method: 'share', count: files.length }).catch(() => {})
       } else if (navigator.share && navigator.canShare?.({ files })) {
-        await navigator.share({ files })
-        track('photo_shared', { method: 'share', count: files.length }).catch(() => {})
+        // Уникальное имя на каждый вызов: браузер стейджит Blob во временный файл,
+        // чтобы получить content:// URI для Android Sharesheet, и при одинаковом
+        // имени между вызовами получатель (Telegram/VK/Max) может получить старое
+        // содержимое вместо нового — тот же класс бага, что был в nativeShare.ts.
+        const webShareFiles = blobs.map(
+          (b, j) => new File([b], `photo-${j + 1}-${uuid()}.jpg`, { type: 'image/jpeg' })
+        )
+        await navigator.share({ files: webShareFiles })
+        track('photo_shared', { method: 'share', count: webShareFiles.length }).catch(() => {})
       } else {
         for (const file of files) {
           const url = URL.createObjectURL(file)
