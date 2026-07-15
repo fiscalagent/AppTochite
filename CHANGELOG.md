@@ -1,3 +1,10 @@
+## [2.5.3](https://github.com/fiscalagent/AppTochite/compare/v2.5.2...v2.5.3) (2026-07-15)
+
+
+### fix
+
+* повторная отправка фотоотчёта/фото в Telegram/VK/Max показывала старое фото из предыдущей отправки ([](https://github.com/fiscalagent/AppTochite/commit/b330f0f5c669dd43f70559835ae8392ea5c738e0))
+
 ## [2.5.2](https://github.com/fiscalagent/AppTochite/compare/v2.5.1...v2.5.2) (2026-07-13)
 
 

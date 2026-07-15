@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.5.3',
+    date: '2026-07-15',
+    changes: [
+      'повторная отправка фотоотчёта/фото в Telegram/VK/Max показывала старое фото из предыдущей отправки',
+    ],
+  },
+  {
     version: '2.5.2',
     date: '2026-07-13',
     changes: [
