@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.6.0',
+    date: '2026-07-17',
+    changes: [
+      'у клиента «Я» появилась цифровая визитка — фото, услуги, контакты и QR-код для сохранения контакта, отправляется картинкой в любой мессенджер',
+    ],
+  },
+  {
     version: '2.5.4',
     date: '2026-07-15',
     changes: [

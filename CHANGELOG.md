@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/fiscalagent/AppTochite/compare/v2.5.4...v2.6.0) (2026-07-17)
+
+
+### feat
+
+* у клиента «Я» появилась цифровая визитка — фото, услуги, контакты и QR-код для сохранения контакта, отправляется картинкой в любой мессенджер ([](https://github.com/fiscalagent/AppTochite/commit/abe12d9a7dcf9f5b7c89dd91de19c4699eeec8a1))
+
 ## [2.5.4](https://github.com/fiscalagent/AppTochite/compare/v2.5.3...v2.5.4) (2026-07-15)
 
 
