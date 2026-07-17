@@ -231,7 +231,7 @@ function Drum({ values, selectedIdx, onSelect }: {
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const settling = useRef(false)
-  const timer = useRef<number | undefined>(undefined)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const selectedIdxRef = useRef(selectedIdx)
   selectedIdxRef.current = selectedIdx // eslint-disable-line react-hooks/refs
   const valuesRef = useRef(values)
