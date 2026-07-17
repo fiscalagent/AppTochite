@@ -18,6 +18,13 @@ import s from './BusinessCardScreen.module.css'
 // В APK navigator.share файлов нет — шарим нативно (см. nativeShare.ts).
 const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
 
+// На десктопе navigator.share с файлами реализован ненадёжно: в зависимости от
+// системы диалог может быть пустым или промис вовсе не разрешается (кнопка
+// «Поделиться» зависает навсегда без какой-либо обратной связи). На телефонах/
+// планшетах, где это и нужно чаще всего, API работает предсказуемо — поэтому
+// пробуем его только там, а на десктопе сразу отдаём файл на скачивание.
+const IS_LIKELY_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
 const IconChevronLeft = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="15 18 9 12 15 6"/>
@@ -254,7 +261,7 @@ export default function BusinessCardScreen() {
       if (IS_CAPACITOR) {
         await shareFilesNative([file])
         track('business_card_shared', { method: 'share' }).catch(() => {})
-      } else if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      } else if (IS_LIKELY_MOBILE && navigator.share && navigator.canShare?.({ files: [file] })) {
         // Уникальное имя на каждый вызов — иначе повторный шаринг может показать
         // получателю старое содержимое по тому же content:// URI (см. nativeShare.ts).
         const webShareFile = new File([blob], `business-card-${uuid()}.png`, { type: 'image/png' })
