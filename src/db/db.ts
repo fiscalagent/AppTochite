@@ -27,6 +27,11 @@ export interface Client {
   updatedAt?: Date
   deletedAt?: Date
   deletedBatchId?: string
+  // Поля цифровой визитки — заполняются только у self-клиента («Я»). Неиндексируемые,
+  // миграция схемы Dexie не нужна (тот же приём, что у Sharpening.microbevelAngle).
+  company?: string
+  specialization?: string
+  services?: string
 }
 
 export interface SharpeningStone {

@@ -126,7 +126,11 @@ export default function ClientCard() {
       <div className={s.header}>
         <button className={s.backBtn} onClick={() => navigate(-1)}><IconChevronLeft /></button>
         <span className={s.headerTitle}>{(client.isSelf ? t.clients.selfName : client.name).toUpperCase()}</span>
-        {!client.isSelf && (
+        {client.isSelf ? (
+          <Link to="/business-card">
+            <button className={s.editBtn}>{t.clients.businessCardLink}</button>
+          </Link>
+        ) : (
           <Link to={`/clients/${clientId}/edit`}>
             <button className={s.editBtn}>{t.clients.edit}</button>
           </Link>

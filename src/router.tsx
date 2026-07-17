@@ -3,6 +3,7 @@ import Layout from './components/Layout/Layout'
 import ClientList from './screens/Clients/ClientList'
 import ClientCard from './screens/Clients/ClientCard'
 import ClientForm from './screens/Clients/ClientForm'
+import BusinessCardScreen from './screens/BusinessCard/BusinessCardScreen'
 import HistoryFeed from './screens/History/HistoryFeed'
 import SharpeningForm from './screens/Sharpening/SharpeningForm'
 import SharpeningDetail from './screens/Sharpening/SharpeningDetail'
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
       { path: '/clients/new',             element: <ClientForm /> },
       { path: '/clients/:id',             element: <ClientCard /> },
       { path: '/clients/:id/edit',        element: <ClientForm /> },
+      { path: '/business-card',           element: <BusinessCardScreen /> },
       { path: '/history',                 element: <HistoryFeed /> },
       { path: '/sharpenings/new',         element: <SharpeningForm /> },
       { path: '/sharpenings/:id',         element: <SharpeningDetail /> },
