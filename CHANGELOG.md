@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/fiscalagent/AppTochite/compare/v2.6.0...v2.6.1) (2026-07-17)
+
+
+### fix
+
+* билд ломался из-за конфликта типов таймера, всплывшего после добавления QR-кода в визитку ([](https://github.com/fiscalagent/AppTochite/commit/819fa5703e82311c98a17d2fe873c0aafff73eb2))
+
 # [2.6.0](https://github.com/fiscalagent/AppTochite/compare/v2.5.4...v2.6.0) (2026-07-17)
 
 

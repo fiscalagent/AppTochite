@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.6.1',
+    date: '2026-07-17',
+    changes: [
+      'билд ломался из-за конфликта типов таймера, всплывшего после добавления QR-кода в визитку',
+    ],
+  },
+  {
     version: '2.6.0',
     date: '2026-07-17',
     changes: [
