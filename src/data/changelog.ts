@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.6.2',
+    date: '2026-07-17',
+    changes: [
+      'кнопка «Поделиться» на визитке зависала на десктопе — теперь картинка сразу скачивается, окно «Поделиться» осталось только на телефонах',
+    ],
+  },
+  {
     version: '2.6.1',
     date: '2026-07-17',
     changes: [

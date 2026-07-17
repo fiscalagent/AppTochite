@@ -1,3 +1,10 @@
+## [2.6.2](https://github.com/fiscalagent/AppTochite/compare/v2.6.1...v2.6.2) (2026-07-17)
+
+
+### fix
+
+* кнопка «Поделиться» на визитке зависала на десктопе — теперь картинка сразу скачивается, окно «Поделиться» осталось только на телефонах ([](https://github.com/fiscalagent/AppTochite/commit/51d091c39217c9e8b676cbbaf24f1ca30beed478))
+
 ## [2.6.1](https://github.com/fiscalagent/AppTochite/compare/v2.6.0...v2.6.1) (2026-07-17)
 
 
