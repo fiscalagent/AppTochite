@@ -425,7 +425,8 @@ export default function SharpeningForm() {
   // knifeSuggestions ниже) на каждое изменение таблицы. Полные записи нужны для
   // автоподстановки стали при выборе ножа (applyKnife); отсюда же выводим
   // алфавитный список брендов для подсказок.
-  const allKnives = useLiveQuery(() => db.knives.orderBy('brand').toArray(), []) ?? []
+  const allKnivesRaw = useLiveQuery(() => db.knives.orderBy('brand').toArray(), [])
+  const allKnives = useMemo(() => allKnivesRaw ?? [], [allKnivesRaw])
   // Частота брендов по клиенту — через compound-индекс [clientId+knifeBrand]
   // ключами (.keys()), без десериализации записей заточек (там base64-фото).
   // Индекс не знает про deletedAt, поэтому мягко удалённые (обычно единицы)
