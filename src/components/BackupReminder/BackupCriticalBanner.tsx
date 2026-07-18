@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { useT } from '../../i18n'
+import { router } from '../../router'
 import s from './BackupCriticalBanner.module.css'
 
 interface Props {
@@ -7,10 +9,14 @@ interface Props {
 
 export default function BackupCriticalBanner({ daysSince }: Props) {
   const t = useT()
-  // BackupReminder монтируется снаружи RouterProvider, поэтому useNavigate/useLocation недоступны.
-  // location.pathname читаем напрямую и сравниваем без basename.
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
-  if (pathname.endsWith('/backup')) return null
+  // BackupReminder монтируется снаружи RouterProvider, поэтому useNavigate/useLocation
+  // недоступны. Подписываемся на сам router (а не на window.location.pathname разово) —
+  // SPA-переход (Link/navigate) не меняет window.location синхронно с рендером этого
+  // дерева и не порождает popstate, поэтому статичное чтение pathname не замечало
+  // переход на /backup: баннер оставался поверх экрана бэкапа до полной перезагрузки.
+  const [pathname, setPathname] = useState(() => router.state.location.pathname)
+  useEffect(() => router.subscribe(state => setPathname(state.location.pathname)), [])
+  if (pathname === '/backup') return null
 
   const text = daysSince === null
     ? t.components.backupNeverDone
