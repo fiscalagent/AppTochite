@@ -1,7 +1,7 @@
 # AppTochite — Технический стек
 
-**Версия:** 0.5 · Май 2026  
-**Тип:** PWA · Mobile-first · Android (90%)
+**Версия:** 0.6 · Июль 2026  
+**Тип:** PWA (GitHub Pages) + off-store APK (Capacitor) · Mobile-first · Android (90%)
 
 ---
 
@@ -9,15 +9,20 @@
 
 | Слой | Технология | Версия |
 |---|---|---|
-| Фреймворк | React | 18+ |
-| Сборщик | Vite | 5+ |
-| Язык | TypeScript | 5+ |
+| Фреймворк | React | 19+ |
+| Сборщик | Vite | 8+ |
+| Язык | TypeScript | 6+ |
 | Стилизация | CSS Modules | — |
-| Навигация | React Router | 6+ |
-| Хранилище | Dexie.js (IndexedDB) | 3+ |
-| Офлайн / SW | Workbox (`vite-plugin-pwa`) | 0.17+ |
-| Камера | Web Camera API | нативный браузерный API |
-| Деплой | GitHub Pages (CI через GitHub Actions, Node 24) | — |
+| Навигация | React Router | 7+ |
+| Хранилище | Dexie.js (IndexedDB) | 4+ |
+| Офлайн / SW | Workbox (`vite-plugin-pwa`) | 1+ |
+| Нативная обёртка | Capacitor (Android APK, off-store) | 8+ |
+| QR-код | `qrcode` (цифровая визитка) | 1.5+ |
+| Импорт таблиц | `read-excel-file` (xlsx/csv справочников) | 9+ |
+| Камера | Web Camera API (PWA) / `@capacitor/camera` (APK) | — |
+| Деплой | PWA: GitHub Pages (CI через GitHub Actions, Node 24). APK: GitHub Release, сборка вручную (`npm run build:cap`) | — |
+
+Два билд-режима из одной кодовой базы: `vite build` (PWA, PWA-манифест + Workbox) и `vite build --mode capacitor` (APK, `base: './'`, без Service Worker, `cap sync android`). Ветки различаются по `import.meta.env.MODE === 'capacitor'`; Rollup вырезает из каждого бандла код чужой ветки (динамические импорты Capacitor-плагинов не попадают в PWA, Workbox-настройка не попадает в APK).
 
 ---
 
@@ -36,71 +41,53 @@ IndexedDB API низкоуровневый и многословный. Dexie д
 
 ## Структура проекта
 
+Полное дерево `src/` с однострочным описанием каждого файла — в `CLAUDE.md` («Структура файлов»), там оно поддерживается в актуальном состоянии при каждом изменении кода. Здесь — верхнеуровневая карта:
+
 ```
 apptochite/
 ├── public/
 │   ├── manifest.json
-│   ├── guide.html            ← печатная инструкция для пользователей
+│   ├── guide.html / guide_en.html ← инструкция для пользователей (открывается из приложения)
 │   ├── cleaner.html          ← страница сброса данных (только dev)
 │   └── icons/
+├── android/                  ← нативный Android-проект (Capacitor), под APK-сборку
+├── docs/                     ← документация проекта + guide.html/guide_en.html «копии для печати»
+├── presentation/             ← промо-материалы (лендинг-видео, one-pager)
 ├── src/
 │   ├── main.tsx
-│   ├── version.ts            ← APP_VERSION — единый источник версии
-│   ├── styles/
-│   │   ├── tokens.css        ← все CSS custom properties
-│   │   └── reset.css
-│   ├── db/
-│   │   ├── db.ts             ← Dexie-схема, TypeScript-типы, утилиты
-│   │   ├── instance.ts       ← экземпляр AppTochiteDB
-│   │   └── seed.ts           ← предзаполненные справочники
-│   ├── data/
-│   │   └── changelog.ts      ← записи ченджлога для экрана «О программе»
-│   ├── components/
-│   │   ├── Autocomplete/
-│   │   ├── Avatar/
-│   │   ├── BackupReminder/
-│   │   ├── BottomNav/
-│   │   ├── ClientCard/
-│   │   ├── ConfirmModal/
-│   │   ├── Layout/
-│   │   ├── PhotoLightbox/
-│   │   ├── PhotoReport/      ← canvas-отчёт заточки + шаринг
-│   │   ├── PhotoSourceSheet/
-│   │   ├── SharpeningRow/
-│   │   ├── StatusPill/
-│   │   ├── StorageWarning/
-│   │   └── Toast/
-│   ├── screens/
-│   │   ├── About/            ← A-1
-│   │   ├── Backup/           ← BK-1
-│   │   ├── Clients/          ← C-1, C-2, C-3
-│   │   ├── History/          ← H-1
-│   │   ├── Reference/        ← S-1/2/3
-│   │   └── Sharpening/       ← Z-1, Z-2
-│   ├── hooks/
-│   │   ├── useCamera.ts
-│   │   └── useVersionCheck.ts
-│   └── utils/
-│       ├── backup.ts
-│       └── backup.test.ts
-├── docs/                     ← документация проекта
+│   ├── router.tsx            ← все маршруты (createBrowserRouter)
+│   ├── version.ts            ← APP_VERSION — единый источник версии (генерируется релизом)
+│   ├── styles/                ← tokens.css (design tokens), reset.css
+│   ├── config/                 ← feature flags (voiceInput, cloudBackup), масштаб текста
+│   ├── contexts/                ← AutoBackupContext — единая точка автобэкапа
+│   ├── plugins/                  ← обёртки нативных Capacitor-плагинов (SAF-папка)
+│   ├── i18n/                      ← слой мультиязычности ru/en (см. docs/i18n-plan.md)
+│   ├── db/                        ← Dexie-схема (v11), типы, seed, preMigrationSnapshot
+│   ├── data/                       ← changelog.ts, gritTable.ts
+│   ├── services/                    ← analytics.ts, bugReport.ts
+│   ├── components/                   ← переиспользуемые UI-компоненты (30+)
+│   ├── screens/                       ← About, Backup, BusinessCard, Clients, Games, History, Reference, Sharpening, Trash
+│   ├── hooks/                          ← useCamera, useDictationMode, useVoiceInput, useInstallPrompt, …
+│   └── utils/                           ← backup/cloudBackup/refSync/voiceMatch/voiceCommand/trash/vcard + тесты
 ├── vite.config.ts
+├── capacitor.config.ts       ← appId io.github.apptochite, androidScheme https
 ├── tsconfig.json
 └── package.json
 ```
 
 ---
 
-## Схема БД (Dexie, текущая версия v8)
+## Схема БД (Dexie, текущая версия v11)
 
 Таблицы: `clients`, `sharpenings`, `stones`, `steels`, `knives`, `meta`, `settings`, `analyticsQueue`.
-`updatedAt` есть у всех сущностей (last-write-wins для merge-бэкапа). `settings` и `analyticsQueue` — device-specific, **не входят в JSON-бэкап**.
+`updatedAt` есть у всех сущностей (last-write-wins для merge-бэкапа). `settings` и `analyticsQueue` — device-specific, **не входят в JSON-бэкап**. `guid` — кросс-устройственная идентичность `clients`/`sharpenings` (merge сопоставляет по нему, не по автоинкрементному `id`).
 
 ```ts
 // src/db/db.ts
 
 export interface Client {
   id?: number
+  guid?: string          // кросс-устройственная идентичность (v9); id — автоинкремент, свой на каждом устройстве
   name: string
   phone?: string
   telegram?: string
@@ -110,6 +97,11 @@ export interface Client {
   updatedAt?: Date
   deletedAt?: Date      // soft-delete: запись в корзине (TTL 3 дня)
   deletedBatchId?: string // группа для восстановления (клиент + его заточки)
+  // Цифровая визитка — заполняются только у self-клиента «Я». Неиндексируемые,
+  // добавлены без бампа схемы (тот же приём, что у Sharpening.microbevelAngle).
+  company?: string
+  specialization?: string
+  services?: string
 }
 
 export type SharpeningStatus = 'accepted' | 'done'
@@ -121,6 +113,7 @@ export interface SharpeningStone {
 
 export interface Sharpening {
   id?: number
+  guid?: string          // см. Client.guid
   clientId: number
   knifeBrand: string
   steel?: string
@@ -128,6 +121,7 @@ export interface Sharpening {
   condition?: string[]  // тип работы: заточка / правка РК / ремонт
   receivedAt: Date
   angle?: number
+  microbevelAngle?: number // микроподвод (МП); наличие значения = есть МП. Добавлено без бампа схемы
   stones?: SharpeningStone[]  // embedded JSON, не отдельная таблица
   comment?: string
   price?: number
@@ -200,7 +194,7 @@ export interface AnalyticsQueueItem { // офлайн-буфер аналити�
   queuedAt: Date
 }
 
-// Версии схемы (CURRENT_SCHEMA_VERSION = 8):
+// Версии схемы (CURRENT_SCHEMA_VERSION = 11):
 // v1 — initial: clients, sharpenings, stones, steels, knives
 // v2 — grit index on stones
 // v3 — meta table (seedVersion)
@@ -209,11 +203,21 @@ export interface AnalyticsQueueItem { // офлайн-буфер аналити�
 // v6 — analyticsQueue (офлайн-буфер аналитики)
 // v7 — четыре явные шкалы гритности (grit/gritUnit → конвертация через GRIT_TABLE)
 // v8 — soft-delete (deletedAt/deletedBatchId) для clients и sharpenings — корзина, TTL 3 дня
+// v9 — guid у clients/sharpenings — кросс-устройственная идентичность для merge
+// v10 — составные индексы [clientId+status], [clientId+knifeBrand] (дешёвые key-only подсчёты)
+// v11 — составные индексы [status+receivedAt], [clientId+receivedAt] (постраничная загрузка без фото)
 ```
 
 ---
 
 ## Changelog
+
+**v0.6 (июль 2026)** — синхронизация со схемой БД v11 (приложение v2.6.1):
+- Схема БД: v8 → v11 (`guid` для кросс-устройственного merge, составные индексы под постраничную загрузку без фото); `Client` и `Sharpening` получили поля без бампа схемы (`company`/`specialization`/`services`, `microbevelAngle`)
+- Стек: React 18 → 19, Vite 5 → 8, TypeScript 5 → 6, React Router 6 → 7, Dexie 3 → 4, vite-plugin-pwa 0.17 → 1
+- Второй билд-таргет: off-store APK через Capacitor (`android/`, `capacitor.config.ts`, `vite build --mode capacitor`) — PWA остаётся основным, APK собирается из той же кодовой базы
+- Новые сквозные слои: `contexts/AutoBackupContext` (единая точка автобэкапа), `services/` (analytics, bugReport), `plugins/safFolder` (нативный SAF для APK)
+- Крупные фичи с прошлой сверки: голосовая диктовка (итерация 2), полная мультиязычность ru/en (UI, справочники, голос, ченджлог, инструкция), корзина (soft-delete), автоснимок перед миграцией схемы, папочный и облачный (Яндекс.Диск) автобэкап с эскалацией напоминаний, синхронизация справочников «Стали»/«Ножи» через CSV, игры-тренажёры, цифровая визитка
 
 **v0.5 (май 2026)** — синхронизация со схемой БД v8 (приложение v1.75):
 - Схема БД: v3 → v8 (settings, analyticsQueue, `updatedAt` у всех сущностей, четыре явные шкалы гритности, soft-delete/корзина)

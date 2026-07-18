@@ -3,7 +3,7 @@
 ## Что это за проект
 
 **AppTochite** — мобильное PWA-приложение для профессиональных заточников ножей.  
-Версия: **2.4.8** · Платформа: Android (90%), интерфейс полностью на **русском языке**.
+Версия: **2.6.1** · Платформа: Android (90%) · PWA (GitHub Pages) и off-store APK (Capacitor) · интерфейс на **русском и английском** (см. i18n ниже).
 
 Два сегмента пользователей через единый интерфейс:
 - Заточник как малый бизнес — клиенты, выручка, статусы
@@ -17,13 +17,15 @@
 
 | Слой | Технология |
 |---|---|
-| Фреймворк | React 18 + TypeScript |
-| Роутинг | React Router v6 (`createBrowserRouter`) |
+| Фреймворк | React 19 + TypeScript |
+| Роутинг | React Router v7 (`createBrowserRouter`) |
 | БД | Dexie.js (IndexedDB, локально на устройстве) |
 | Стили | CSS Modules + design tokens (`tokens.css`) |
 | Сборка | Vite |
-| Платформа | PWA (Workbox) |
-| Деплой | GitHub Pages (CI: GitHub Actions, Node 24) |
+| Платформа | PWA (Workbox) + off-store APK (Capacitor, `vite build --mode capacitor` → `cap sync android`) |
+| Деплой | PWA: GitHub Pages (CI: GitHub Actions, Node 24). APK: GitHub Release (ручная сборка/публикация) |
+
+`import.meta.env.MODE === 'capacitor'` (обычно алиас `IS_CAPACITOR`) — главный переключатель веток PWA/APK по всему коду; Rollup вырезает неиспользуемую ветку и её динамические импорты из соответствующего бандла (DCE), поэтому PWA не тянет Capacitor-плагины и наоборот.
 
 ---
 
@@ -40,21 +42,37 @@ src/
     tokens.css           # CSS-переменные (цвета, отступы, типографика)
 
   config/
-    features.ts          # Feature flags: voiceInput (мастер-выключатель); isVoiceEnabled() читает localStorage
+    features.ts          # FEATURES: voiceInput (выкл. в APK-сборке), cloudBackup; isVoiceEnabled()/setVoiceEnabled() читают/пишут localStorage; isMigrationPromptEnabled() — баннер PWA→APK
+    fontScale.ts         # Масштаб интерфейса (device-specific, localStorage, вне бэкапа) — CSS zoom на <body>
 
-  i18n/                  # Слой мультиязычности (см. docs/i18n-plan.md). ru — канонический источник формы, en.ts переведён полностью (Фаза 2 завершена)
+  contexts/
+    AutoBackupContext.tsx # Единая точка автобэкапа: дебаунс + requestBackup(), веером пишет во все включённые слоты (OPFS, папка, облако)
+
+  plugins/
+    safFolder.ts          # Обёртка нативного Capacitor-плагина SafFolder (Android SAF) — папочный автобэкап в APK; регистрируется только в cap-ветке
+
+  i18n/                  # Слой мультиязычности (см. docs/i18n-plan.md). ru — канонический источник формы, en.ts переведён полностью (Фазы 0–4 завершены: UI, справочники, голос, ченджлог, guide_en.html)
     locale.ts            # Тип Locale, чтение/запись языка в localStorage (вне бэкапа), <html lang>
-    plural.ts            # Универсальный plural() на Intl.PluralRules (ru + en)
+    plural.ts            # Универсальный plural() на Intl.PluralRules (ru + en); plural.test.ts
     format.ts            # fmtDate/fmtDateTime/fmtMoney/fmtNumber на Intl
+    enums.test.ts        # Тест структурного соответствия ru/en для всех enum-карт словаря
     dict/ru.ts           # Русский словарь — источник истины формы; Dict = typeof ru
-    dict/index.ts        # Карта dicts по локали (пока только ru)
+    dict/en.ts           # Английский словарь — обязан содержать те же ключи (см. «Мультиязычность» ниже)
+    dict/index.ts        # Карта dicts по локали
     LocaleProvider.tsx   # Провайдер + хуки useLocale/useT + тотальный enumLabel
     index.ts             # Barrel — единая точка импорта
 
   db/
-    db.ts                # Dexie-схема (v8) и все TypeScript-типы
+    db.ts                # Dexie-схема (v11) и все TypeScript-типы
+    instance.ts          # Экземпляр AppTochiteDB + реэкспорт типов
     seed.ts              # Предзаполненные справочники (101 камень, 219 сталей, 890 ножей)
     seed.test.ts         # Тесты seed-миграций (Vitest)
+    preMigrationSnapshot.ts # Автоснимок данных перед апгрейдом схемы — страховка от битой миграции; preMigrationSnapshot.test.ts
+    schemaIndexes.test.ts   # Тест: CURRENT_SCHEMA_VERSION совпадает с последней this.version(N) в конструкторе
+
+  services/
+    analytics.ts         # track()/trackOnce() — события в Google Sheet через Apps Script; офлайн-буфер (analyticsQueue); analytics.test.ts
+    bugReport.ts         # collectDiagnostics/buildBugReportPayload/sendBugReport — «Сообщить об ошибке» в «О программе», очередь на офлайне; bugReport.test.ts
 
   components/            # Переиспользуемые UI-компоненты
     AppLogo/             # Двуцветная эмблема AppTochite (SVG)
@@ -63,67 +81,97 @@ src/
     BackupReminder/      # Напоминание о бэкапе с эскалацией: info (≥7д) / warn (≥14д или ≥10 новых записей) / critical (≥30д и ≥5 заточек — постоянная плашка над BottomNav)
     BottomNav/           # Нижняя навигация + FAB
     BrowserWarning/      # Предупреждение при открытии в Telegram и других встроенных браузерах
-    ClientCard/          # Переиспользуемая строка клиента (используется в C-1)
+    BugReportSheet/      # Форма «Сообщить об ошибке»: текст + контакт + превью диагностики, работает офлайн (очередь)
     ConfirmModal/        # Модалка подтверждения удаления (M-1)
+    DataLossAlert/       # Плашка «данные пропали» — sentinel (снимок счётчиков) не совпал с пустой БД, ведёт на восстановление
     DictationButton/     # Кнопка-тумблер диктовочного режима в шапке формы заточки
     DictationCandidates/ # Нумерованный список кандидатов для fuzzy-выбора голосом
     DictationIndicator/  # Индикатор «Слышу: ...» с последней распознанной фразой
+    EasterEgg/           # Пасхалка: 7 тапов по номеру версии в «О программе» — анимация раскола вордмарка
+    ErrorBoundary/       # Локальная граница ошибок для некритичных виджетов — падает только сам виджет, не всё приложение
+    FolderBackupPrompt/  # Нудж подключить папочный автобэкап (File System Access), реshow через 90 дней при ≥10 заточках
+    InstallNudge/        # Приглашения установить PWA: InstallBanner, InstallNudgeSheet, IosInstallSheet (ручная установка через Safari «Поделиться»)
     Layout/              # Обёртка экрана (шапка + контент)
     MicButton/           # Кнопка голосового ввода (активна/слушает/недоступна)
+    MigrationPrompt/     # Миграция PWA→APK: MigrationBanner (за флагом isMigrationPromptEnabled), MigrationSheet (шаги), NativeUpdateBanner (новый APK-релиз, только в cap-сборке)
     OnboardingSheet/     # Welcome-экран при первом запуске
     PhotoLightbox/       # Просмотр фото на весь экран
     PhotoReport/         # Генерация фото-отчёта заточки (canvas + Web Share API)
     PhotoShare/          # Шаринг фото «до/после» с вотермарком @AppTochite
     PhotoSourceSheet/    # Bottom sheet выбора источника фото (камера / галерея)
-    SharpeningRow/       # Переиспользуемая строка заточки (используется в C-2 и H-1)
     StatusPill/          # Бейдж статуса заточки
+    StorageRiskAlert/    # Детектор вытесняемого хранилища (не WebAPK) — ведёт на установку или бэкап; не показывается в APK
     StorageWarning/      # Предупреждение о заполнении хранилища
     Toast/               # Всплывающие уведомления (ToastContext)
 
   hooks/
-    useCamera.ts         # Хук для съёмки/выбора фото
-    useDictationMode.ts  # Диктовочный режим: непрерывный SR с авто-перезапуском, парсинг команд, счётчик ошибок
-    useTwoPhaseVoice.ts  # Двухфазный голосовой ввод: распознавание → список совпадений → довыбор
-    useVersionCheck.ts   # Проверка обновлений через GitHub API
-    useVoiceInput.ts     # Базовый хук Web Speech API (isAvailable, isListening, start, stop)
+    useCamera.ts             # Хук для съёмки/выбора фото
+    useDictationMode.ts      # Диктовочный режим: непрерывный SR с авто-перезапуском, парсинг команд, счётчик ошибок
+    useHardwareBackButton.ts # APK: подписка на аппаратную кнопку «назад» → SPA-навигация вместо закрытия приложения
+    useInstallPrompt.ts      # Реактивная обёртка над utils/installPrompt (canInstall + promptInstall)
+    useTwoPhaseVoice.ts      # Двухфазный голосовой ввод: распознавание → список совпадений → довыбор
+    useVersionCheck.ts       # Проверка обновлений через GitHub API (PWA) / GitHub Releases APK-ассет (cap)
+    useVoiceInput.ts         # Базовый хук Web Speech API (isAvailable, isListening, start, stop)
 
   data/
-    changelog.ts         # Записи ченджлога для экрана «О программе»
+    changelog.ts         # Записи ченджлога для экрана «О программе» (ru + changesEn)
+    gritTable.ts          # Таблица соответствий гритности FEPA/JIS/ГОСТ/микроны, конвертеры from*()
 
   utils/
-    backup.ts            # Экспорт/импорт JSON, mergeBackup, buildCSV
-    backup.test.ts       # Тесты backup-утилит (Vitest)
-    fileSystemAccess.ts  # Утилиты File System Access API для автобэкапа в папку
-    modalBlur.ts         # Утилита блюра фона (#root) при открытых диалогах
-    voiceCommand.ts      # Парсер команд диктовочного режима (Command, FieldKey, CommandContext)
-    voiceCommand.test.ts # Тесты парсера команд (Vitest, 67 кейсов)
-    voiceMatch.ts        # Fuzzy-матчинг для голосового ввода (транслитерация + bigram)
-    voiceMatch.test.ts   # Тесты voiceMatch (Vitest)
-    steelMatch.ts        # Матчинг марок стали при импорте: normSteel (визуальная свёртка х→x, а не фонетическая h) + exact/fuzzy/none. 95x18→95Х18, Д2→D2
-    steelMatch.test.ts   # Тесты steelMatch (Vitest)
-    knifeImport.ts       # Импорт ножей из xlsx/csv: readSpreadsheet (read-excel-file через динамический импорт), parseCsv, detectColumns, prepareImport
-    knifeImport.test.ts  # Тесты импорта ножей (Vitest)
-    refSync.ts           # Полная синхронизация справочников «Стали»/«Ножи» (экспорт CSV → правка в Excel → импорт с реальным add/update/delete по natural key steelNatKey/knifeNatKey из backup.ts). Камни не участвуют — их CSV-импорт остаётся только аддитивным
-    refSync.test.ts      # Тесты refSync (Vitest)
-    trash.ts             # Soft-delete клиентов/заточек, корзина (batchId, TTL 3 дня), restoreBatch/purgeBatch/purgeExpired
-    trash.test.ts        # Тесты корзины (Vitest)
+    backup.ts             # Экспорт/импорт JSON, mergeBackup, buildCSV, OPFS/папочный автобэкап, sentinel, steelNatKey/knifeNatKey
+    backup.test.ts        # Тесты backup-утилит (Vitest)
+    cloudAuthNative.ts    # Нативный Яндекс-OAuth для APK через @capacitor/inappbrowser (перехват redirect во встроенном WebView)
+    cloudBackup.ts        # Облачный бэкап через Яндекс.Диск REST API: токен, дневной гейт, сигнатура данных, снимки по устройствам; cloudBackup.test.ts
+    fileSystemAccess.ts   # Утилиты File System Access API для автобэкапа в папку (PWA)
+    installPrompt.ts      # Тонкий слой над beforeinstallprompt (PWA-установка); слушатели вешаются при импорте из main.tsx
+    knifeImport.ts        # Импорт ножей из xlsx/csv: readSpreadsheet (read-excel-file через динамический импорт), parseCsv, detectColumns, prepareImport
+    knifeImport.test.ts   # Тесты импорта ножей (Vitest)
+    mergeCrossDevice.test.ts # Тесты кросс-девайсного merge по guid (backup.ts)
+    modalBlur.ts          # Утилита блюра фона (#root) при открытых диалогах
+    nativeFolderBackup.ts # Папочный автобэкап в APK через Storage Access Framework (нативный пикер + persistable tree Uri)
+    nativeShare.ts        # Нативный шаринг файлов в APK (@capacitor/share + @capacitor/filesystem, cache-подпапка с уникальным именем на каждый вызов — иначе принимающие приложения кэшируют старые байты по тому же content:// URI)
+    openGuide.ts          # Открытие guide.html/guide_en.html: новая вкладка (PWA) или @capacitor/browser Custom Tab (APK)
+    platform.ts           # Платформенные проверки установки PWA (isStandalone и т.п., включая iOS-специфику)
+    refSync.ts            # Полная синхронизация справочников «Стали»/«Ножи» (экспорт CSV → правка в Excel → импорт с реальным add/update/delete по natural key steelNatKey/knifeNatKey из backup.ts). Камни не участвуют — их CSV-импорт остаётся только аддитивным
+    refSync.test.ts       # Тесты refSync (Vitest)
+    steelMatch.ts         # Матчинг марок стали при импорте: normSteel (визуальная свёртка х→x, а не фонетическая h) + exact/fuzzy/none. 95x18→95Х18, Д2→D2
+    steelMatch.test.ts    # Тесты steelMatch (Vitest)
+    storagePersistence.ts # navigator.storage.persist() + детектор вытесняемого хранилища (сигнал «WebAPK установлен некорректно»)
+    trash.ts              # Soft-delete клиентов/заточек, корзина (batchId, TTL 3 дня), restoreBatch/purgeBatch/purgeExpired
+    trash.test.ts         # Тесты корзины (Vitest)
+    uuid.ts                # Генератор uuid с фолбэком для сред без crypto.randomUUID (guid записей, batchId корзины, имена файлов при шаринге)
+    vcard.ts               # buildVCard(client) — vCard 3.0 для QR-кода цифровой визитки; vcard.test.ts
+    voiceCommand.ts       # Парсер команд диктовочного режима (Command, FieldKey, CommandContext), ru + en
+    voiceCommand.test.ts  # Тесты парсера команд (Vitest)
+    voiceMatch.ts         # Fuzzy-матчинг для голосового ввода (транслитерация + bigram), ru + en
+    voiceMatch.test.ts    # Тесты voiceMatch (Vitest)
 
   screens/
     About/
-      AboutScreen.tsx     # A-1 — «О программе»: версия, проверка обновлений, ченджлог, настройки (голос, аналитика)
+      AboutScreen.tsx     # A-1 — «О программе»: версия, проверка обновлений, ченджлог, настройки (голос, аналитика, язык, масштаб текста), «Сообщить об ошибке», пасхалка
     Backup/
-      BackupScreen.tsx    # BK-1 — бэкап и восстановление; автобэкап через File System Access API
+      BackupScreen.tsx    # BK-1 — бэкап и восстановление: лесенка надёжности (браузер OPFS → папка → облако Яндекс.Диск), единый список копий для восстановления
+      OAuthCallback.tsx   # Обработка редиректа Яндекс OAuth (PWA-ветка): токен из #fragment, мягкий редирект на / без активного flow
+    BusinessCard/
+      BusinessCardScreen.tsx # Цифровая визитка self-клиента «Я»: фото, компания/специализация/услуги/контакты, canvas-рендер карточки с QR (vCard), шаринг картинкой
     Clients/
       ClientList.tsx      # C-1 — список клиентов
       ClientCard.tsx      # C-2 — карточка клиента
       ClientForm.tsx      # C-3 — добавить/редактировать клиента
+    Games/                # Игры-тренажёры (ссылка из ReferenceScreen); чистая логика вынесена из React-компонентов для юнит-тестов
+      GamesHub.tsx           # Хаб игр, список строится из registry.ts
+      registry.ts            # Реестр игр: id/path/title/subtitle/ready — единственное место, где добавлять новую игру
+      ProgressionGame.tsx    # «Расставь камни» — тренажёр зернистости: drag&drop сортировка набора камней по микронам
+      progressionLogic.ts    # Чистая логика: pickRound/isSolved/scaleVariety; progressionLogic.test.ts
+      AngleGame.tsx          # «Верный угол» — тренажёр глазомера: угадать угол заточки на сторону по SVG-клину, хард-режим с наклоном фигуры
+      angleLogic.ts          # Чистая логика: rndAngle/verdictOf/tiltForRound/wedgeAngles; angleLogic.test.ts
     History/
       HistoryFeed.tsx     # H-1 — лента заточек
-    Sharpening/
-      SharpeningForm.tsx  # Z-1 — приёмка (клиент, нож, сталь, HRC, требуется, цена, фото «До»); диктовочный режим
-      SharpeningDetail.tsx# Z-2 — экран заточки: инлайн-редактирование (угол, камни, комментарий, фото «После»), статус, удаление в корзину
     Reference/
       ReferenceScreen.tsx # S-1/2/3 — справочники (Камни / Стали / Ножи). Ножи: импорт из xlsx/csv с распознаванием стали (KnifeImportPreview), инлайн-редактирование ножа/камня по выделению. Стали и Ножи: отдельная пара «Экспорт CSV»/«Синхронизировать» (RefSyncPreviewDialog) — полная синхронизация с реальным удалением записей, которых нет в загруженном файле; отличается от аддитивного CSV-импорта камней
+    Sharpening/
+      SharpeningForm.tsx  # Z-1 — приёмка (клиент, нож, сталь, HRC, требуется, цена, фото «До»); диктовочный режим
+      SharpeningDetail.tsx# Z-2 — экран заточки: инлайн-редактирование (угол, микроподвод, камни, комментарий, фото «После»), статус, удаление в корзину
     Trash/
       TrashScreen.tsx     # Корзина — список soft-deleted записей, восстановление batch'а, удаление навсегда
 ```
@@ -134,7 +182,7 @@ src/
 
 Таблицы: `clients`, `sharpenings`, `stones`, `steels`, `knives`, `meta`, `settings`, `analyticsQueue`
 
-Схема версионирована (текущая **v9**). Новые изменения добавлять через `this.version(N)`.
+Схема версионирована (текущая **v11**, `CURRENT_SCHEMA_VERSION` в `db.ts`). Новые изменения добавлять через `this.version(N)` **и** бампать `CURRENT_SCHEMA_VERSION` — иначе `preMigrationSnapshot` не сработает на новой миграции (проверяется `schemaIndexes.test.ts`).
 
 **История версий схемы:**
 - v1: начальная схема (clients, sharpenings, stones, steels, knives)
@@ -146,6 +194,10 @@ src/
 - v7: четыре шкалы гритности (`gritFepa`, `gritJis`, `gritMicrons`, `gritMk`) хранятся явно; старые `grit`/`gritUnit` конвертируются через `GRIT_TABLE`
 - v8: soft-delete для `clients` и `sharpenings` — 3 дня в корзине (`deletedAt`, `deletedBatchId`), индекс `deletedAt` для быстрого purge и листинга
 - v9: `guid` у `clients`/`sharpenings` — кросс-устройственная идентичность записи. `id` — автоинкремент, у каждого устройства свой, поэтому merge чужого бэкапа сопоставляет по `guid`. Существующим записям guid присвоен миграцией; новые получают его при создании (`uuid()` из `utils/uuid.ts`)
+- v10: составные индексы `[clientId+status]` (счётчики в C-1 без чтения фото) и `[clientId+knifeBrand]` (частота брендов ножей для подсказок в Z-1); чисто аддитивно, апгрейд-функция не нужна
+- v11: составные индексы `[status+receivedAt]` и `[clientId+receivedAt]` — дают Dexie `.offset()/.limit()` в хронологическом порядке без чтения фото записей, которые не попадут на текущую страницу (HistoryFeed, ClientCard); чисто аддитивно
+
+Поля, добавленные без бампа схемы (неиндексируемые, миграция Dexie не нужна): `Sharpening.microbevelAngle?: number` (микроподвод — второй, более тупой угол кромки) и `Client.company/specialization/services?: string` (цифровая визитка, заполняются только у self-клиента «Я»).
 
 **Ключевые особенности схемы:**
 - `clients.isSelf = true` — нулевой клиент «Я», создаётся при первом запуске, не удаляется
@@ -172,14 +224,19 @@ src/
 | `/clients/:id` | C-2 Карточка клиента |
 | `/clients/new` | C-3 Добавить клиента |
 | `/clients/:id/edit` | C-3 Редактировать клиента |
+| `/business-card` | Цифровая визитка self-клиента «Я» |
 | `/history` | H-1 Лента заточек |
 | `/sharpenings/new?clientId=X` | Z-1 Приёмка (clientId предзаполняет клиента и скрывает поле). После «Принять в заточку» → Z-2 |
-| `/sharpenings/:id` | Z-2 Экран заточки — инлайн-редактирование (угол, камни, комментарий, фото «После»), смена статуса |
+| `/sharpenings/:id` | Z-2 Экран заточки — инлайн-редактирование (угол, микроподвод, камни, комментарий, фото «После»), смена статуса |
 | `/sharpenings/:id/edit` | Z-1 Редактирование приёмки |
 | `/reference/:tab` | S-1/2/3 Справочники (tab: stones/steels/knives) |
 | `/backup` | BK-1 Бэкап и восстановление данных |
+| `/oauth/yandex/callback` | Обработка редиректа Яндекс OAuth (PWA-ветка облачного бэкапа) |
 | `/about` | A-1 «О программе» (версия, обновления, ченджлог, настройки) |
 | `/trash` | Корзина — soft-deleted клиенты и заточки (восстановление / удаление навсегда) |
+| `/games`, `/games/progression`, `/games/angle` | Хаб игр-тренажёров и сами игры (см. `screens/Games/registry.ts`) |
+
+PWA живёт на GitHub Pages под `/AppTochite/`, APK (cap-сборка) — на `https://localhost/`; `basename` роутера переключается по `import.meta.env.MODE === 'capacitor'`.
 
 ---
 
@@ -197,6 +254,10 @@ src/
 - Диктовочный режим — на обоих экранах заточки: Z-1 (приёмка) диктует свои поля (`клиент`, `нож`, `сталь`, `твёрдость`, `требуется`, `цена`), Z-2 (заточка) — свои (`камень`, `угол`, `примечание`/`комментарий`). Strict-грамматика: каждая команда начинается с префикса поля. Команда чужого экрана игнорируется (тост-подсказка). Подробности и список команд — `docs/voice-input-plan.md`
 - Один SpeechRecognition в каждый момент: при включении диктовки точечные mic-кнопки гасятся, и наоборот — две сессии конкурируют за микрофон
 - Аналитика — opt-out: включена по умолчанию, пользователь может отключить в «О программе»
+- Цифровая визитка (`/business-card`) — только для self-клиента «Я»; поля `company`/`specialization`/`services` не показываются и не редактируются для обычных клиентов
+- Игры-тренажёры (`/games/*`) — самостоятельный, изолированный от основного сценария модуль (обучение глазомеру/зернистости); не пишут и не читают `clients`/`sharpenings`, рекорд хранится в `localStorage` (вне бэкапа, как язык интерфейса)
+- Облачный бэкап (Яндекс.Диск) — opt-in по факту действия пользователя (подключение токена), не по флагу: `FEATURES.cloudBackup` включает саму возможность у всех, а не заводит бэкап автоматически. Льётся не чаще раза в сутки и только при изменении данных (сигнатура `count+maxUpdatedAt`) — не спамить API при каждом открытии приложения
+- Баннер миграции PWA→APK (`MigrationBanner`) показывается только при `isMigrationPromptEnabled()` (вкл. с релиза 2.0.0) и никогда в самой APK-сборке — мигрировать там уже некуда
 
 ---
 
@@ -230,7 +291,7 @@ src/
   **дропдауны пишут в БД канонический ключ, а не подпись**
 - Даты/деньги — через `fmtDate`/`fmtMoney` по локали (не `toLocaleDateString('ru')`)
 - Словарь-эталон — `src/i18n/dict/ru.ts`; английский `src/i18n/dict/en.ts` **уже существует**
-  (Фаза 2 завершена, см. `docs/i18n-plan.md`) и обязан содержать те же ключи — `Dict = Widened<typeof ru>`
+  (Фазы 0–4 завершены — UI, справочники, голос на двух языках, ченджлог и `guide_en.html`; см. `docs/i18n-plan.md`) и обязан содержать те же ключи — `Dict = Widened<typeof ru>`
   в `dict/index.ts` требует от `en` структурного соответствия. **Любой новый ключ в `ru.ts` нужно сразу
   дублировать в `en.ts`**, иначе `npm run build` (`tsc -b`) упадёт на несовпадении типов — `tsc --noEmit -p .`
   без `-b` это НЕ ловит, т.к. корневой `tsconfig.json` solution-style (`references`, без файлов)
@@ -243,10 +304,9 @@ src/
 
 - Статистика по камням (fullscan sharpenings — учесть при проектировании)
 - Финансовая аналитика — выручка за период, средний чек
-- Drag-to-reorder камней в форме заточки
-- Голосовая диктовка микроподвода (МП) на Z-2 — команда `микроподвод <число>` (см. `docs/voice-input-plan.md`)
+- Drag-to-reorder камней в форме заточки (вне игры «Расставь камни» — там drag&drop уже есть, но это тренажёр, а не рабочая форма)
+- Голосовая диктовка микроподвода (МП) на Z-2 — команда `микроподвод <число>` (см. `docs/voice-input-plan.md`); само поле `microbevelAngle` и ползунок уже реализованы, не хватает только голосовой команды
 - Распознавание ножа по фото (Claude API)
-- Облачная синхронизация
 - Push-уведомления клиенту
 - Суммарная выручка в карточке клиента C-2
 - Вынос фото заточек (`photosBefore`/`photosAfter`) в отдельную таблицу по `sharpeningId` — IndexedDB не умеет читать «часть» записи, поэтому любой списковый запрос по `sharpenings` (история, карточка клиента, heatmap камней) читает и разворачивает все фото, даже когда они не нужны для отображения. Актуально, если объём фото у активных пользователей продолжит расти — тогда сегодняшняя постраничная загрузка (см. `[status+receivedAt]`/`[clientId+receivedAt]` в схеме) перестанет быть достаточной. Важно: полный экспорт бэкапа всё равно обязан прочитать все фото — разделение таблиц не снижает стоимость бэкапа, только снимает нагрузку с обычного просмотра
