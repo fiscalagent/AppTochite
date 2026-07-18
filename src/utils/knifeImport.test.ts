@@ -90,11 +90,21 @@ describe('prepareImport', () => {
     expect(skipped).toEqual([{ rowIndex: 3, name: '', reason: 'empty-name' }])
   })
 
-  it('дубликат против существующих ножей — skipped', () => {
+  it('дубликат против существующих ножей — тот же бренд и та же сталь → skipped', () => {
     const raws = [{ rowIndex: 1, name: ' финка ', steel: 'D2' }]
-    const { knives, skipped } = prepareImport(raws, [knife('Финка')], REF)
+    const { knives, skipped } = prepareImport(raws, [{ ...knife('Финка'), steel: 'D2' }], REF)
     expect(knives).toEqual([])
     expect(skipped[0].reason).toBe('duplicate')
+  })
+
+  it('тот же бренд, но другая сталь — не дубликат, а отдельный вариант ножа', () => {
+    // Natural key ножа — бренд+сталь (knifeNatKey в backup.ts), как и везде в
+    // приложении (merge бэкапов, синхронизация справочника). Дедуп только по
+    // бренду молча пропускал бы легитимный вариант с другой сталью.
+    const raws = [{ rowIndex: 1, name: 'Финка', steel: 'D2' }]
+    const { knives, skipped } = prepareImport(raws, [{ ...knife('Финка'), steel: '95Х18' }], REF)
+    expect(skipped).toEqual([])
+    expect(knives).toHaveLength(1)
   })
 
   it('дубликат внутри файла — второе вхождение skipped', () => {

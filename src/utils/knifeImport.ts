@@ -171,9 +171,18 @@ export interface PreparedImport {
   skipped: SkippedRow[]
 }
 
+// Ключ дедупликации — бренд+сталь, как и natural key ножа везде в приложении
+// (knifeNatKey в backup.ts, используется в мерже бэкапов и в полной
+// синхронизации справочника refSync.ts). Дедуп только по бренду считал бы
+// «Opinel No.8» с разной сталью одним и тем же ножом и молча пропускал бы
+// легитимный вариант при импорте.
+function knifeImportKey(brand: string, steel: string | undefined): string {
+  return `${normKnifeName(brand)}|${normKnifeName(steel ?? '')}`
+}
+
 // Чистая функция: валидирует строки, дедуплицирует ножи (против БД и внутри
-// файла) по нормализованному имени, для каждой стали считает совпадение со
-// справочником. Ничего не пишет — результат идёт в экран превью.
+// файла) по нормализованному имени+стали, для каждой стали считает совпадение
+// со справочником. Ничего не пишет — результат идёт в экран превью.
 export function prepareImport(
   raws: RawRow[],
   existingKnives: Knife[],
@@ -181,14 +190,14 @@ export function prepareImport(
 ): PreparedImport {
   const knives: PreparedKnife[] = []
   const skipped: SkippedRow[] = []
-  const seen = new Set(existingKnives.map(k => normKnifeName(k.brand)))
+  const seen = new Set(existingKnives.map(k => knifeImportKey(k.brand, k.steel)))
 
   for (const raw of raws) {
     if (!raw.name) {
       skipped.push({ rowIndex: raw.rowIndex, name: '', reason: 'empty-name' })
       continue
     }
-    const key = normKnifeName(raw.name)
+    const key = knifeImportKey(raw.name, raw.steel)
     if (seen.has(key)) {
       skipped.push({ rowIndex: raw.rowIndex, name: raw.name, reason: 'duplicate' })
       continue
