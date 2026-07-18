@@ -302,6 +302,24 @@ describe('Числа словами', () => {
     })
   })
 
+  it('цена две тысячи → 2000 (не 1002)', () => {
+    expect(parseCommand('цена две тысячи', ctx({ step: 1 }))).toEqual({
+      kind: 'field', field: 'price', value: '2000',
+    })
+  })
+
+  it('цена три тысячи пятьсот → 3500', () => {
+    expect(parseCommand('цена три тысячи пятьсот', ctx({ step: 1 }))).toEqual({
+      kind: 'field', field: 'price', value: '3500',
+    })
+  })
+
+  it('цена тысяча → 1000 (без числа перед «тысяча»)', () => {
+    expect(parseCommand('цена тысяча', ctx({ step: 1 }))).toEqual({
+      kind: 'field', field: 'price', value: '1000',
+    })
+  })
+
   it('угол с нераспознанным словом → unknown', () => {
     expect(parseCommand('угол хрен', ctx({ step: 2 }))).toEqual({ kind: 'unknown' })
   })
@@ -401,6 +419,12 @@ describe('EN: field commands (step=1)', () => {
   })
   it('price twenty → field:price 20', () => {
     expect(parseCommand('price twenty', en(), 'en')).toEqual({ kind: 'field', field: 'price', value: '20' })
+  })
+  it('price three hundred → field:price 300 (не 103)', () => {
+    expect(parseCommand('price three hundred', en(), 'en')).toEqual({ kind: 'field', field: 'price', value: '300' })
+  })
+  it('price one thousand two hundred → field:price 1200', () => {
+    expect(parseCommand('price one thousand two hundred', en(), 'en')).toEqual({ kind: 'field', field: 'price', value: '1200' })
   })
 })
 

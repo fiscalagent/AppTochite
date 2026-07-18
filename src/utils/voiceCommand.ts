@@ -181,22 +181,33 @@ function isFieldAllowedAtStep(field: FieldKey, step: 1 | 2): boolean {
   return (step === 1 ? STEP1_FIELDS : STEP2_FIELDS).has(field)
 }
 
+// Составные числительные: «сто»/«hundred» и «тысяча»/«thousand» — множители,
+// а не слагаемые. «две тысячи» = 2×1000, а не 2+1000 (было бы 1002).
+// «three hundred» = 3×100, а не 3+100 (было бы 103, актуально для EN — в RU
+// сотни свои слова: двести/триста/…/девятьсот, уже плоские записи в таблице).
 function parseNumber(text: string, numberWords: Record<string, number>): number | null {
   const t = text.trim().toLowerCase()
   if (!t) return null
   if (/^\d+$/.test(t)) return parseInt(t, 10)
   const parts = t.split(/\s+/)
-  let sum = 0
+  let total = 0
+  let current = 0
   for (const p of parts) {
     if (/^\d+$/.test(p)) {
-      sum += parseInt(p, 10)
+      current += parseInt(p, 10)
     } else if (p in numberWords) {
-      sum += numberWords[p]
+      const v = numberWords[p]
+      if (v === 100 || v === 1000) {
+        current = (current || 1) * v
+        if (v === 1000) { total += current; current = 0 }
+      } else {
+        current += v
+      }
     } else {
       return null
     }
   }
-  return sum
+  return total + current
 }
 
 function isPickHint(
