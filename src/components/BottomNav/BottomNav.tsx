@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useT } from '../../i18n'
 import s from './BottomNav.module.css'
 
@@ -36,7 +36,14 @@ const IconPlus = () => (
 
 export default function BottomNav() {
   const navigate = useNavigate()
+  const location = useLocation()
   const t = useT()
+  // NavLink to="/reference/stones" без `end` подсвечивал бы вкладку только на
+  // самом /reference/stones — /reference/steels и /reference/knives не префикс
+  // "stones" по сегментам пути, поэтому isActive был бы false на них. Все три
+  // вкладки справочника — это один маршрут /reference/:tab, подсвечиваем по
+  // префиксу пути вручную, не полагаясь на встроенное сопоставление NavLink.
+  const referenceActive = location.pathname.startsWith('/reference')
 
   return (
     <nav className={s.nav}>
@@ -57,7 +64,7 @@ export default function BottomNav() {
         <span className={s.tabLabel}>{t.nav.history}</span>
       </NavLink>
 
-      <NavLink to="/reference/stones" replace className={({ isActive }) => `${s.tab} ${isActive ? s.active : ''}`}>
+      <NavLink to="/reference/stones" replace className={`${s.tab} ${referenceActive ? s.active : ''}`}>
         <span className={s.tabIcon}><IconReference /></span>
         <span className={s.tabLabel}>{t.nav.reference}</span>
       </NavLink>
