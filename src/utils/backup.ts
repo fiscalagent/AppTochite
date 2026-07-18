@@ -174,7 +174,6 @@ async function verifyAutoBackup(
 const FOLDER_HANDLE_KEY = 'autoBackupFolderHandle'
 const FOLDER_LAST_AT_KEY = 'autoBackupFolderLastAt'
 const FOLDER_LAST_SIG_KEY = 'autoBackupFolderLastSig'        // сигнатура данных последней записи
-const FOLDER_LAST_CHECK_DAY_KEY = 'autoBackupFolderCheckDay' // день последней авто-проверки (YYYY-MM-DD)
 const FOLDER_FILENAME = 'apptochite-auto.json'
 const FOLDER_FILENAME_PREV = 'apptochite-auto-prev.json'
 const FOLDER_NAME_LS_KEY = 'bk_folderName'
@@ -256,46 +255,35 @@ async function writeFolderFile(handle: FileSystemDirectoryHandle, database: AppT
   await database.settings.bulkPut([
     { key: FOLDER_LAST_AT_KEY, value: new Date().toISOString() },
     { key: FOLDER_LAST_SIG_KEY, value: dataSignature(backup.data) },
-    { key: FOLDER_LAST_CHECK_DAY_KEY, value: localDayStr() },
   ])
   await updateLastBackupAt(database)
   writeSentinel(database).catch(() => {})
 }
 
 // Авто-бэкап в папку (без жеста). Та же политика, что у облака
-// (см. performCloudBackup): не чаще раза в сутки и только при изменении данных.
-//  1) Дневной гейт — тяжёлый exportBackup максимум раз в календарный день,
-//     а не на каждом возврате приложения в фокус.
-//  2) Сигнатура — если данные не менялись с прошлой записи, не трогаем файл.
-// Ручная запись («Сохранить сейчас») гейт обходит.
+// (см. performCloudBackup) — гейт на запись СИГНАТУРА данных, а не календарный
+// день. Раньше был дневной гейт (раз в сутки), но он терял правки того же дня:
+// если первая проверка дня прошла на неизменных данных, добавленное позже до
+// завтра в папку не попадало («добавил сегодня — авто не сохранило»); тот же
+// баг был найден и исправлен для папочного авто-бэкапа в APK, см.
+// `performNativeFolderBackup` в nativeFolderBackup.ts. Дневной гейт заводили
+// ради экономии тяжёлого exportBackup, но экономии не было: exportBackup всё
+// равно выполняется на каждом фокусе в performOPFSBackup. Поэтому пишем при
+// любом изменении данных; сигнатура не даёт переписывать одно и то же.
+// Ручная запись («Сохранить сейчас») сигнатуру не проверяет — пишет всегда.
 export async function performFolderBackup(database: AppTochiteDB): Promise<void> {
   const entry = await database.settings.get(FOLDER_HANDLE_KEY)
   if (!entry) return
   const handle = entry.value as FileSystemDirectoryHandle
   if (await queryDirectoryPermission(handle) !== 'granted') return
 
-  const today = localDayStr()
-  const checkEntry = await database.settings.get(FOLDER_LAST_CHECK_DAY_KEY)
-  if (checkEntry?.value === today) return
+  const backup = await exportBackup(database)
+  if (!isValidBackup(backup) || backup.data.clients.length === 0) return
 
-  // Помечаем день проверенным сразу — чтобы при отсутствии изменений не гонять
-  // exportBackup повторно на каждом фокусе в течение дня. При сбое гейт снимаем.
-  await database.settings.put({ key: FOLDER_LAST_CHECK_DAY_KEY, value: today })
-  const clearDayGate = () =>
-    database.settings.delete(FOLDER_LAST_CHECK_DAY_KEY).catch(() => {})
+  const sigEntry = await database.settings.get(FOLDER_LAST_SIG_KEY)
+  if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
 
-  try {
-    const backup = await exportBackup(database)
-    if (!isValidBackup(backup) || backup.data.clients.length === 0) return
-
-    const sigEntry = await database.settings.get(FOLDER_LAST_SIG_KEY)
-    if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
-
-    await writeFolderFile(handle, database, backup)
-  } catch (err) {
-    await clearDayGate()
-    throw err
-  }
+  await writeFolderFile(handle, database, backup)
 }
 
 // Вызывается по кнопке (есть жест) — может показать диалог разрешения.
@@ -333,8 +321,7 @@ export async function disconnectFolder(database: AppTochiteDB): Promise<void> {
   await database.settings.bulkDelete([
     FOLDER_HANDLE_KEY,
     FOLDER_LAST_AT_KEY,
-    FOLDER_LAST_SIG_KEY,        // иначе при переподключении гейт/сигнатура были бы устаревшими
-    FOLDER_LAST_CHECK_DAY_KEY,
+    FOLDER_LAST_SIG_KEY,        // иначе при переподключении сигнатура была бы устаревшей
   ])
   try { localStorage.removeItem(FOLDER_NAME_LS_KEY) } catch { /* silent */ }
 }

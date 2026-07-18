@@ -1,6 +1,7 @@
 import type { AppTochiteDB } from '../db/instance'
 import { exportBackup, dataSignature, localDayStr, type BackupFile } from './backup'
 import { track } from '../services/analytics'
+import { uuid } from './uuid'
 
 // ─── Константы ───────────────────────────────────────────────────────────────
 
@@ -8,7 +9,6 @@ const YANDEX_TOKEN_KEY = 'yandexToken'
 const YANDEX_AUTO_KEY = 'yandexAutoBackup'
 const YANDEX_LAST_AT_KEY = 'yandexLastBackupAt'
 const YANDEX_LAST_SIG_KEY = 'yandexLastBackupSig'      // сигнатура данных последней успешной заливки
-const YANDEX_LAST_CHECK_DAY_KEY = 'yandexLastCheckDay' // день последней авто-проверки (YYYY-MM-DD)
 const CLOUD_DEVICE_ID_KEY = 'cloudDeviceId'            // стабильный id устройства для имён снапшотов
 
 const APP_FOLDER = 'app:/'           // Яндекс.Диск: папка приложения (Приложения/<имя>)
@@ -34,7 +34,6 @@ export async function removeYandexToken(database: AppTochiteDB): Promise<void> {
     YANDEX_LAST_AT_KEY,
     YANDEX_AUTO_KEY,        // иначе авто-бэкап молча оживёт при переподключении
     YANDEX_LAST_SIG_KEY,
-    YANDEX_LAST_CHECK_DAY_KEY,
   ])
 }
 
@@ -62,7 +61,7 @@ export async function getCloudLastAt(database: AppTochiteDB): Promise<Date | nul
 async function getCloudDeviceId(database: AppTochiteDB): Promise<string> {
   const entry = await database.settings.get(CLOUD_DEVICE_ID_KEY)
   if (entry?.value) return entry.value as string
-  const id = crypto.randomUUID().slice(0, 8)
+  const id = uuid().slice(0, 8)
   await database.settings.put({ key: CLOUD_DEVICE_ID_KEY, value: id })
   return id
 }
@@ -175,12 +174,11 @@ async function putBackup(token: string, backup: BackupFile, deviceId: string): P
   return 'ok'
 }
 
-// Фиксируем успешную заливку: время, сигнатуру данных, день проверки. Затем ротация.
+// Фиксируем успешную заливку: время и сигнатуру данных. Затем ротация.
 async function recordUploadSuccess(database: AppTochiteDB, backup: BackupFile, token: string, deviceId: string): Promise<void> {
   await database.settings.bulkPut([
     { key: YANDEX_LAST_AT_KEY, value: new Date().toISOString() },
     { key: YANDEX_LAST_SIG_KEY, value: dataSignature(backup.data) },
-    { key: YANDEX_LAST_CHECK_DAY_KEY, value: localDayStr() },
   ])
   await rotateSnapshots(token, deviceId).catch(() => {})
 }
@@ -224,13 +222,15 @@ async function rotateSnapshots(token: string, deviceId: string): Promise<void> {
 // Вызывается из AutoBackupContext параллельно с performFolderBackup.
 // Тихо завершается если токена нет или авто-бэкап отключён.
 //
-// Политика: не чаще одного снапшота в сутки и только если данные изменились.
-//  1) Дневной гейт (дёшево, без скана): если сегодня уже проверяли — выходим.
-//     Поэтому тяжёлый exportBackup срабатывает максимум раз в календарный день,
-//     а не на каждом возврате приложения в фокус.
-//  2) Проверка изменений: сравниваем сигнатуру с последней успешной заливкой —
-//     если ничего не поменялось, не плодим идентичный снапшот.
-
+// Гейт на заливку — СИГНАТУРА данных, а не календарный день. Раньше был
+// дневной гейт (раз в сутки), но он терял правки того же дня: если первая
+// проверка дня прошла на неизменных данных, добавленное позже до завтра в
+// облако не попадало («добавил сегодня — авто не сохранило»); тот же баг был
+// найден и исправлен для папочного авто-бэкапа в APK, см.
+// `performNativeFolderBackup` в nativeFolderBackup.ts. Дневной гейт заводили
+// ради экономии тяжёлого exportBackup, но экономии не было: exportBackup всё
+// равно выполняется на каждом фокусе в performOPFSBackup. Поэтому заливаем при
+// любом изменении данных; сигнатура не даёт заливать одно и то же повторно.
 export async function performCloudBackup(database: AppTochiteDB): Promise<void> {
   const [token, autoEnabled] = await Promise.all([
     getYandexToken(database),
@@ -238,38 +238,18 @@ export async function performCloudBackup(database: AppTochiteDB): Promise<void> 
   ])
   if (!token || !autoEnabled) return
 
-  const today = localDayStr()
-  const checkEntry = await database.settings.get(YANDEX_LAST_CHECK_DAY_KEY)
-  if (checkEntry?.value === today) return
+  const backup = await exportBackup(database)
+  if (!backup.data.clients.length) return
 
-  // Помечаем день проверенным сразу — чтобы при отсутствии изменений не гонять
-  // exportBackup повторно на каждом фокусе в течение дня. При сбое заливки гейт
-  // снимается ниже, иначе временная ошибка сети стоила бы целого дня бэкапа.
-  await database.settings.put({ key: YANDEX_LAST_CHECK_DAY_KEY, value: today })
+  const sigEntry = await database.settings.get(YANDEX_LAST_SIG_KEY)
+  if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
 
-  const clearDayGate = () =>
-    database.settings.delete(YANDEX_LAST_CHECK_DAY_KEY).catch(() => {})
+  const deviceId = await getCloudDeviceId(database)
+  const result = await putBackup(token, backup, deviceId)
+  if (result !== 'ok') return
 
-  try {
-    const backup = await exportBackup(database)
-    if (!backup.data.clients.length) return
-
-    const sigEntry = await database.settings.get(YANDEX_LAST_SIG_KEY)
-    if (dataSignature(backup.data) === sigEntry?.value) return // ничего не изменилось
-
-    const deviceId = await getCloudDeviceId(database)
-    const result = await putBackup(token, backup, deviceId)
-    if (result !== 'ok') {
-      await clearDayGate()
-      return
-    }
-
-    await recordUploadSuccess(database, backup, token, deviceId)
-    track('cloud_upload', { trigger: 'auto' }).catch(() => {})
-  } catch (err) {
-    await clearDayGate()
-    throw err
-  }
+  await recordUploadSuccess(database, backup, token, deviceId)
+  track('cloud_upload', { trigger: 'auto' }).catch(() => {})
 }
 
 // ─── OAuth helpers ────────────────────────────────────────────────────────────
@@ -277,7 +257,7 @@ export async function performCloudBackup(database: AppTochiteDB): Promise<void> 
 const OAUTH_STATE_KEY = 'yandexOAuthState'
 
 export function buildOAuthUrl(clientId: string, redirectUri: string): string {
-  const state = crypto.randomUUID()
+  const state = uuid()
   sessionStorage.setItem(OAUTH_STATE_KEY, state)
   const params = new URLSearchParams({
     response_type: 'token',

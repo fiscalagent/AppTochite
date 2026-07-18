@@ -40,7 +40,10 @@ function countUploadAttempts(fetchSpy: ReturnType<typeof vi.fn>): number {
   return fetchSpy.mock.calls.filter(([input]) => String(input).includes('/resources/upload')).length
 }
 
-describe('performCloudBackup — дневной гейт', () => {
+// Гейт на заливку — сигнатура данных, а не календарный день (день-гейт терял
+// правки того же дня, см. комментарий над performCloudBackup в cloudBackup.ts).
+// Поэтому все сценарии ниже — про изменение/неизменность данных, а не про дни.
+describe('performCloudBackup — гейт по сигнатуре данных', () => {
   let db: AppTochiteDB
 
   beforeEach(async () => {
@@ -57,7 +60,7 @@ describe('performCloudBackup — дневной гейт', () => {
     vi.unstubAllGlobals()
   })
 
-  it('после успешной заливки второй вызов в тот же день не дёргает API', async () => {
+  it('после успешной заливки повторный вызов без изменений данных не дёргает API', async () => {
     const fetchSpy = installFetchMock(() => 'ok')
 
     await performCloudBackup(db)
@@ -65,10 +68,22 @@ describe('performCloudBackup — дневной гейт', () => {
     expect(await getCloudLastAt(db)).toBeInstanceOf(Date)
 
     await performCloudBackup(db)
-    expect(countUploadAttempts(fetchSpy)).toBe(1) // гейт сработал
+    expect(countUploadAttempts(fetchSpy)).toBe(1) // сигнатура не изменилась
   })
 
-  it('HTTP-ошибка заливки не съедает день — следующий вызов ретраит', async () => {
+  it('изменение данных того же дня всё равно заливается — без дневного гейта', async () => {
+    const fetchSpy = installFetchMock(() => 'ok')
+
+    await performCloudBackup(db)
+    expect(countUploadAttempts(fetchSpy)).toBe(1)
+
+    // данные изменились в тот же день — раньше дневной гейт это пропускал
+    await db.sharpenings.add({ clientId: 1, knifeBrand: 'X', receivedAt: new Date(), status: 'accepted', updatedAt: new Date() })
+    await performCloudBackup(db)
+    expect(countUploadAttempts(fetchSpy)).toBe(2)
+  })
+
+  it('HTTP-ошибка заливки не блокирует следующий вызов — он ретраит', async () => {
     let mode: FetchMode = 'http-error'
     const fetchSpy = installFetchMock(() => mode)
 
@@ -78,11 +93,11 @@ describe('performCloudBackup — дневной гейт', () => {
 
     mode = 'ok'
     await performCloudBackup(db)
-    expect(countUploadAttempts(fetchSpy)).toBe(2) // ретрай в тот же день
+    expect(countUploadAttempts(fetchSpy)).toBe(2) // сигнатура не была записана — ретраит
     expect(await getCloudLastAt(db)).toBeInstanceOf(Date)
   })
 
-  it('сетевое исключение не съедает день — следующий вызов ретраит', async () => {
+  it('сетевое исключение не блокирует следующий вызов — он ретраит', async () => {
     let mode: FetchMode = 'network-error'
     const fetchSpy = installFetchMock(() => mode)
 
@@ -93,23 +108,5 @@ describe('performCloudBackup — дневной гейт', () => {
     await performCloudBackup(db)
     expect(countUploadAttempts(fetchSpy)).toBe(2)
     expect(await getCloudLastAt(db)).toBeInstanceOf(Date)
-  })
-
-  it('без изменений данных повторный день не заливает снапшот заново', async () => {
-    const fetchSpy = installFetchMock(() => 'ok')
-
-    await performCloudBackup(db)
-    expect(countUploadAttempts(fetchSpy)).toBe(1)
-
-    // имитируем «наступил новый день»: сбрасываем дневной гейт, сигнатура остаётся
-    await db.settings.delete('yandexLastCheckDay')
-    await performCloudBackup(db)
-    expect(countUploadAttempts(fetchSpy)).toBe(1) // данные не менялись — заливки нет
-
-    // данные изменились → заливка происходит
-    await db.settings.delete('yandexLastCheckDay')
-    await db.sharpenings.add({ clientId: 1, knifeBrand: 'X', receivedAt: new Date(), status: 'accepted', updatedAt: new Date() })
-    await performCloudBackup(db)
-    expect(countUploadAttempts(fetchSpy)).toBe(2)
   })
 })
