@@ -1,3 +1,20 @@
+## [2.6.3](https://github.com/fiscalagent/AppTochite/compare/v2.6.2...v2.6.3) (2026-07-18)
+
+
+### fix
+
+* аналитика могла уронить всё приложение белым экраном на старых Android WebView — crypto.randomUUID() вызывался без фолбэка на верхнем уровне модуля ([](https://github.com/fiscalagent/AppTochite/commit/e3b577989989face56868fc6022b1b47054caae1))
+* быстрое удаление двух фото «до» подряд на экране заточки могло отменить одно из удалений ([](https://github.com/fiscalagent/AppTochite/commit/9a51d199f91765667c514551a8f0e4cf7f6e0626))
+* вкладка «Справочники» в нижней навигации не подсвечивалась на подвкладках Стали и Ножи ([](https://github.com/fiscalagent/AppTochite/commit/74bf5786f5d653bcbc5b15d4b300ee371b245e6c))
+* голосовой ввод чисел с «тысяча»/«hundred» считал сложением, а не умножением — «две тысячи» превращались в 1002 вместо 2000 ([](https://github.com/fiscalagent/AppTochite/commit/1872969b6bc1a396badc382f849edab012230ebb))
+* дневной гейт папочного и облачного авто-бэкапа терял правки, внесённые после первой проверки дня — теперь гейт только по сигнатуре данных, как уже было исправлено для APK ([](https://github.com/fiscalagent/AppTochite/commit/0891b38e2a65f7260e93c60e4ca05fb87d432ccc))
+* импорт ножей из файла считал дубликатом любой нож с тем же брендом, даже с другой сталью — терял легитимные варианты вроде разных сталей одной модели ([](https://github.com/fiscalagent/AppTochite/commit/622f904decb0fe5272d010b980df280419204b6d))
+* кнопка «Ещё» в ленте истории могла пропасть раньше, чем реально подгружены все заточки, из-за мягко удалённых записей в корзине ([](https://github.com/fiscalagent/AppTochite/commit/e46fe5300a3187a8e93953c58ca8cb50fc237695))
+* критический баннер бэкапа не исчезал при переходе на экран бэкапа внутри приложения без перезагрузки страницы ([](https://github.com/fiscalagent/AppTochite/commit/546523115cc0936ef5595be79acfb8bbab6910bf))
+* напоминание о бэкапе, закрытое на низком уровне, не показывалось повторно при эскалации до warn/critical в той же сессии ([](https://github.com/fiscalagent/AppTochite/commit/1a0e9d0cbe2f96bd3e8e695bd1e8fb4167191ca2))
+* пагинация в карточке клиента теряла заточки, если в окне страницы попадали мягко удалённые записи из корзины ([](https://github.com/fiscalagent/AppTochite/commit/0e9871ce2a98929df21e66f135e413d89edb28e1))
+* реимпорт CSV камней ломался на точке с запятой внутри названия — экспорт всегда кавычит поля, а импорт их не распознавал ([](https://github.com/fiscalagent/AppTochite/commit/57a25b56a2ff06f99f2f1acf7bf026e5866dad71))
+
 ## [2.6.2](https://github.com/fiscalagent/AppTochite/compare/v2.6.1...v2.6.2) (2026-07-17)
 
 
