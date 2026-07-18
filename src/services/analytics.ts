@@ -1,6 +1,7 @@
 import { db, stoneDisplayName } from '../db/instance'
 import type { Sharpening } from '../db/db'
 import { APP_VERSION } from '../version'
+import { uuid } from '../utils/uuid'
 
 const ENDPOINT = import.meta.env.VITE_ANALYTICS_URL as string | undefined
 
@@ -10,12 +11,16 @@ const ENDPOINT = import.meta.env.VITE_ANALYTICS_URL as string | undefined
 export const PLATFORM: 'native' | 'web' = import.meta.env.MODE === 'capacitor' ? 'native' : 'web'
 
 // Один id на загрузку страницы — группирует события в «сессию».
-const SESSION_ID = crypto.randomUUID()
+// uuid() из utils/uuid.ts, а не голый crypto.randomUUID() — на старых Android
+// WebView его нет, а это модуль верхнего уровня: main.tsx импортирует track()
+// статически, поэтому исключение здесь при инициализации роняет весь бандл
+// (белый экран) ещё до рендера React, а не только аналитику.
+const SESSION_ID = uuid()
 
 export async function getDeviceId(): Promise<string> {
   const existing = await db.settings.get('analyticsDeviceId')
   if (existing?.value) return existing.value as string
-  const id = crypto.randomUUID()
+  const id = uuid()
   await db.settings.put({ key: 'analyticsDeviceId', value: id })
   return id
 }
