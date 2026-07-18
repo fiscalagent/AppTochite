@@ -618,11 +618,16 @@ export default function SharpeningDetail() {
     }
   }
 
+  // where(':id').equals(...).modify() вместо update(sharpeningId, {...}) —
+  // модификатор читает и пишет запись в одной транзакции. update() с массивом,
+  // посчитанным от render-time `sh`, терял одно из двух удалений при быстром
+  // тапе на два разных фото подряд (второй вызов стартовал раньше, чем React
+  // успевал перерендерить `sh` после первого db-обновления).
   async function handleRemovePhotoBefore(index: number) {
-    const updated = (sh?.photosBefore ?? []).filter((_, i) => i !== index)
-    await db.sharpenings.update(sharpeningId, {
-      photosBefore: updated.length ? updated : undefined,
-      updatedAt: new Date(),
+    await db.sharpenings.where(':id').equals(sharpeningId).modify(s => {
+      const updated = (s.photosBefore ?? []).filter((_, i) => i !== index)
+      s.photosBefore = updated.length ? updated : undefined
+      s.updatedAt = new Date()
     })
   }
 
