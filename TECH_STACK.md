@@ -212,7 +212,7 @@ export interface AnalyticsQueueItem { // офлайн-буфер аналити�
 
 ## Changelog
 
-**v0.6 (июль 2026)** — синхронизация со схемой БД v11 (приложение v2.6.1):
+**v0.6 (июль 2026)** — синхронизация со схемой БД v11 (приложение v2.6.2):
 - Схема БД: v8 → v11 (`guid` для кросс-устройственного merge, составные индексы под постраничную загрузку без фото); `Client` и `Sharpening` получили поля без бампа схемы (`company`/`specialization`/`services`, `microbevelAngle`)
 - Стек: React 18 → 19, Vite 5 → 8, TypeScript 5 → 6, React Router 6 → 7, Dexie 3 → 4, vite-plugin-pwa 0.17 → 1
 - Второй билд-таргет: off-store APK через Capacitor (`android/`, `capacitor.config.ts`, `vite build --mode capacitor`) — PWA остаётся основным, APK собирается из той же кодовой базы
