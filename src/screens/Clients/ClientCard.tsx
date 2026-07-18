@@ -102,14 +102,19 @@ export default function ClientCard() {
       alive.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
       return alive.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(truncate)
     }
+    // .filter() ДО .offset()/.limit() — иначе offset/limit режут по сырому
+    // индексу (включая мягко удалённые записи), а totalCount выше считает
+    // только живые: страницы расходились со счётчиком, и часть заточек,
+    // отстоящих дальше мягко удалённых, переставала быть доступной постранично.
     const rows = await db.sharpenings
       .where('[clientId+receivedAt]')
       .between([clientId, Dexie.minKey], [clientId, Dexie.maxKey])
       .reverse()
+      .filter(sh => !sh.deletedAt)
       .offset(page * PAGE_SIZE)
       .limit(PAGE_SIZE)
       .toArray()
-    return rows.filter(sh => !sh.deletedAt).map(truncate)
+    return rows.map(truncate)
   }, [clientId, knifeFilter, page])
 
   async function handleDelete() {
