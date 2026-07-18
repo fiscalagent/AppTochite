@@ -44,7 +44,13 @@ function levelRank(l: BackupLevel): number {
 }
 
 export default function BackupReminder() {
-  const [dismissed, setDismissed] = useState(false)
+  // Уровень, на котором закрыли/отложили в этой сессии — не голый boolean:
+  // иначе после закрытия на info-уровне эскалация до warn/critical в той же
+  // сессии (state обновляется реактивно через useLiveQuery) не могла пробить
+  // одноразовый dismissed=true и напоминание пропадало до следующего запуска,
+  // хотя логика ниже (снуз + levelRank) для персистентного снуза именно это
+  // умеет — эскалация должна перекрывать более старый закрытый уровень.
+  const [dismissedAtLevel, setDismissedAtLevel] = useState<BackupLevel | null>(null)
 
   // firstLaunchAt проставляем в обычном эффекте, а не внутри liveQuery:
   // запись в read-only контексте liveQuery кидает ReadOnlyError и на чистой
@@ -65,7 +71,7 @@ export default function BackupReminder() {
     return <BackupCriticalBanner daysSince={state.daysSince} />
   }
 
-  if (dismissed) return null
+  if (dismissedAtLevel && levelRank(state.level) <= levelRank(dismissedAtLevel)) return null
 
   const snooze = readSnooze()
   if (snooze && snooze.until > new Date() && levelRank(state.level) <= levelRank(snooze.atLevel)) {
@@ -79,12 +85,12 @@ export default function BackupReminder() {
     downloadBlob(blob, `apptochite-${dateStr}.json`)
     await updateLastBackupAt(db)
     localStorage.removeItem(SNOOZE_KEY)
-    setDismissed(true)
+    setDismissedAtLevel(state!.level as BackupLevel)
   }
 
   function handleSnooze() {
     writeSnooze(state!.level as BackupLevel)
-    setDismissed(true)
+    setDismissedAtLevel(state!.level as BackupLevel)
   }
 
   return (
