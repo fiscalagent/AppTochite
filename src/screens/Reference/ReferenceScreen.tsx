@@ -9,7 +9,7 @@ import { getGritDisplay, getGritSortValue, GRIT_TABLE, fromFepa, fromJis, fromMk
 import { buildCSV } from '../../utils/backup'
 import { track } from '../../services/analytics'
 import { normSteel } from '../../utils/steelMatch'
-import { readSpreadsheet, detectColumns, extractRows, prepareImport, type ColumnMapping, type SkipReason, type PreparedKnife } from '../../utils/knifeImport'
+import { readSpreadsheet, detectColumns, extractRows, prepareImport, parseCsv, type ColumnMapping, type SkipReason, type PreparedKnife } from '../../utils/knifeImport'
 import {
   steelRowsFromGrid, knifeRowsFromGrid, buildSteelsCSV, buildKnivesCSV, diffSteels, diffKnives,
   type RefSyncDiff, type ParsedSteelRow, type ParsedKnifeRow,
@@ -516,14 +516,14 @@ function downloadKnivesCSV(knives: Knife[]) {
 }
 
 function parseStonesCSV(text: string): ParsedStoneRow[] {
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
-  if (lines.length < 2) return []
+  // parseCsv (knifeImport.ts) — квотоосознанный построчный парсер, а не наивный
+  // split(sep). buildCSV (backup.ts) всегда оборачивает поля в кавычки, поэтому
+  // название камня с «;» или переносом строки внутри кавычек не резалось бы
+  // случайно посередине, а колонки правее не сдвигались бы при реимпорте.
+  const rows = parseCsv(text)
+  if (rows.length < 2) return []
 
-  const firstLine = lines[0].charCodeAt(0) === 0xFEFF ? lines[0].slice(1) : lines[0]
-  const sep = firstLine.includes(';') ? ';' : ','
-  const unquoteHeader = (h: string) => { const t = h.trim(); return (t.startsWith('"') && t.endsWith('"') ? t.slice(1, -1) : t).toLowerCase() }
-  const headers = firstLine.split(sep).map(unquoteHeader)
-
+  const headers = rows[0].map(h => h.trim().toLowerCase())
   const col = (...names: string[]) => headers.findIndex(h => names.includes(h))
   const cNazv    = col('название')
   const cMkm     = col('мкм', 'µm')
@@ -535,16 +535,10 @@ function parseStonesCSV(text: string): ParsedStoneRow[] {
 
   if (cNazv === -1) return []
 
-  const unquote = (v: string) => {
-    const t = v.trim()
-    if (t.startsWith('"') && t.endsWith('"')) return t.slice(1, -1).replace(/""/g, '"')
-    return t
-  }
-
   const result: ParsedStoneRow[] = []
-  for (let i = 1; i < lines.length; i++) {
-    const cells = lines[i].split(sep)
-    const get = (c: number) => (c >= 0 ? unquote(cells[c] ?? '') : '')
+  for (let i = 1; i < rows.length; i++) {
+    const cells = rows[i]
+    const get = (c: number) => (c >= 0 ? (cells[c] ?? '').trim() : '')
 
     const brand = get(cNazv)
     if (!brand) continue
