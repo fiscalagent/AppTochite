@@ -106,13 +106,17 @@ export default function HistoryFeed() {
     const clientMap = Object.fromEntries(clients.map(c => [c.id!, c.name])) as Record<number, string>
 
     if (!isSearching) {
+      // .filter() ДО .limit() — иначе limit режет по сырому индексу (включая
+      // мягко удалённые записи), а indexedTotal (и hasMore/restCount от него)
+      // считает только живые: при накопленных в корзине заточках кнопка «Ещё»
+      // могла пропасть раньше, чем реально подгружены все живые записи.
       const coll = filter === 'all'
         ? db.sharpenings.orderBy('receivedAt').reverse()
         : db.sharpenings.where('[status+receivedAt]')
             .between([filter, Dexie.minKey], [filter, Dexie.maxKey])
             .reverse()
-      const page = await coll.limit(visibleCount).toArray()
-      return page.filter(sh => !sh.deletedAt).map(sh => toRow(sh, clientMap))
+      const page = await coll.filter(sh => !sh.deletedAt).limit(visibleCount).toArray()
+      return page.map(sh => toRow(sh, clientMap))
     }
 
     const rows: Row[] = []
