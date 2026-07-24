@@ -7,6 +7,7 @@ import Avatar from '../../components/Avatar/Avatar'
 import StatusPill from '../../components/StatusPill/StatusPill'
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
+import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import { useToast } from '../../components/Toast/ToastContext'
 import { pickAvatarFile } from '../../hooks/useCamera'
 import { softDeleteClient } from '../../utils/trash'
@@ -38,6 +39,7 @@ export default function ClientCard() {
 
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [avatarSheetOpen, setAvatarSheetOpen] = useState(false)
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
   const [knifeFilter, setKnifeFilter] = useState<string | null>(null)
   const [page, setPage] = useState(0)
 
@@ -144,8 +146,15 @@ export default function ClientCard() {
 
       <div className={s.profile}>
         {client.isSelf ? (
-          <button className={s.avatarBtn} onClick={() => setAvatarSheetOpen(true)}>
+          <button
+            className={s.avatarBtn}
+            onClick={() => client.avatar ? setLightboxPhoto(client.avatar) : setAvatarSheetOpen(true)}
+          >
             <Avatar name={t.clients.selfName} size={48} isSelf photo={client.avatar} initials={t.clients.selfName} />
+          </button>
+        ) : client.avatar ? (
+          <button className={s.avatarBtn} onClick={() => setLightboxPhoto(client.avatar!)}>
+            <Avatar name={client.name} size={48} photo={client.avatar} />
           </button>
         ) : (
           <Avatar name={client.name} size={48} photo={client.avatar} />
@@ -279,6 +288,10 @@ export default function ClientCard() {
           onGallery={() => pickAvatarFile(false, b64 => db.clients.update(clientId, { avatar: b64, updatedAt: new Date() }))}
           onClose={() => setAvatarSheetOpen(false)}
         />
+      )}
+
+      {lightboxPhoto && (
+        <PhotoLightbox photos={[lightboxPhoto]} onClose={() => setLightboxPhoto(null)} />
       )}
     </div>
   )

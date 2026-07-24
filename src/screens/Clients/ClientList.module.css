@@ -141,6 +141,12 @@
   border-color: var(--border-200);
 }
 
+.avatarBtn {
+  display: flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
 .info {
   flex: 1;
   min-width: 0;

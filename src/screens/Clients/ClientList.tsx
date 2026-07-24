@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../db/instance'
 import Avatar from '../../components/Avatar/Avatar'
+import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import { useToast } from '../../components/Toast/ToastContext'
 import { useVersionCheck } from '../../hooks/useVersionCheck'
 import { track } from '../../services/analytics'
@@ -76,6 +77,7 @@ function matchesQuery(client: Client, q: string): boolean {
 
 export default function ClientList() {
   const [query, setQuery] = useState('')
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
   const { hasUpdate, latestVersion, apkUrl } = useVersionCheck()
   const t = useT()
   const { showToast } = useToast()
@@ -180,7 +182,16 @@ export default function ClientList() {
         )}
         {visible.map(({ client, count, acceptedCount, doneCount }) => (
           <Link key={client.id} to={`/clients/${client.id}`} className={s.card}>
-            <Avatar name={client.isSelf ? t.clients.selfName : client.name} size={40} isSelf={client.isSelf} photo={client.avatar} initials={client.isSelf ? t.clients.selfName : undefined} />
+            {client.avatar ? (
+              <span
+                className={s.avatarBtn}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setLightboxPhoto(client.avatar!) }}
+              >
+                <Avatar name={client.isSelf ? t.clients.selfName : client.name} size={40} isSelf={client.isSelf} photo={client.avatar} initials={client.isSelf ? t.clients.selfName : undefined} />
+              </span>
+            ) : (
+              <Avatar name={client.isSelf ? t.clients.selfName : client.name} size={40} isSelf={client.isSelf} photo={client.avatar} initials={client.isSelf ? t.clients.selfName : undefined} />
+            )}
             <div className={s.info}>
               <div className={s.name}>{client.isSelf ? t.clients.selfName : client.name}</div>
               {client.phone && (
@@ -234,6 +245,10 @@ export default function ClientList() {
       <NativeUpdateBanner hasUpdate={hasUpdate} latestVersion={latestVersion} apkUrl={apkUrl} />
       <MigrationBanner />
       <InstallBanner />
+
+      {lightboxPhoto && (
+        <PhotoLightbox photos={[lightboxPhoto]} onClose={() => setLightboxPhoto(null)} />
+      )}
     </div>
   )
 }

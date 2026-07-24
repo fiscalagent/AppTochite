@@ -10,6 +10,7 @@ import { uuid } from '../../utils/uuid'
 import { track } from '../../services/analytics'
 import { useToast } from '../../components/Toast/ToastContext'
 import Avatar from '../../components/Avatar/Avatar'
+import PhotoLightbox from '../../components/PhotoLightbox/PhotoLightbox'
 import PhotoSourceSheet from '../../components/PhotoSourceSheet/PhotoSourceSheet'
 import { pickAvatarFile } from '../../hooks/useCamera'
 import { useT } from '../../i18n'
@@ -217,6 +218,7 @@ export default function BusinessCardScreen() {
   const [client, setClient] = useState<Client | null>(null)
   const hydrated = useRef(false)
   const [avatarSheetOpen, setAvatarSheetOpen] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const [sharing, setSharing] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -293,8 +295,13 @@ export default function BusinessCardScreen() {
       <p className={s.qrHint}>{t.businessCard.qrHint}</p>
 
       <div className={s.avatarSection}>
-        <button className={s.avatarBtn} onClick={() => setAvatarSheetOpen(true)}>
+        <button
+          className={s.avatarImgBtn}
+          onClick={() => client.avatar ? setLightboxOpen(true) : setAvatarSheetOpen(true)}
+        >
           <Avatar name={client.name || '?'} size={72} photo={client.avatar} />
+        </button>
+        <button className={s.avatarHintBtn} onClick={() => setAvatarSheetOpen(true)}>
           <span className={s.avatarHint}>{client.avatar ? t.businessCard.changePhoto : t.businessCard.addPhoto}</span>
         </button>
         {client.avatar && (
@@ -370,6 +377,10 @@ export default function BusinessCardScreen() {
           onGallery={() => pickAvatarFile(false, b64 => updateField('avatar', b64))}
           onClose={() => setAvatarSheetOpen(false)}
         />
+      )}
+
+      {lightboxOpen && client.avatar && (
+        <PhotoLightbox photos={[client.avatar]} onClose={() => setLightboxOpen(false)} />
       )}
     </div>
   )
