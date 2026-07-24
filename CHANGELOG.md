@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/fiscalagent/AppTochite/compare/v2.6.3...v2.7.0) (2026-07-24)
+
+
+### feat
+
+* увеличение фото профиля клиента по клику — на карточке клиента, в списке клиентов и на цифровой визитке ([](https://github.com/fiscalagent/AppTochite/commit/9468c5ccf8c47a57d8074b758e01f16269b88116))
+
 ## [2.6.3](https://github.com/fiscalagent/AppTochite/compare/v2.6.2...v2.6.3) (2026-07-18)
 
 

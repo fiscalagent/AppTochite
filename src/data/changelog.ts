@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.7.0',
+    date: '2026-07-24',
+    changes: [
+      'увеличение фото профиля клиента по клику — на карточке клиента, в списке клиентов и на цифровой визитке',
+    ],
+  },
+  {
     version: '2.6.3',
     date: '2026-07-18',
     changes: [
