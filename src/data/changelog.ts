@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.8.0',
+    date: '2026-08-29',
+    changes: [
+      'множественный выбор фото из галереи для фото «До» и «После» заточки',
+    ],
+  },
+  {
     version: '2.7.0',
     date: '2026-07-24',
     changes: [

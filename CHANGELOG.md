@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/fiscalagent/AppTochite/compare/v2.7.0...v2.8.0) (2026-08-29)
+
+
+### feat
+
+* множественный выбор фото из галереи для фото «До» и «После» заточки ([](https://github.com/fiscalagent/AppTochite/commit/22aa8fb070c34ac5517c2f102c8dca2ca4e7281b))
+
 # [2.7.0](https://github.com/fiscalagent/AppTochite/compare/v2.6.3...v2.7.0) (2026-07-24)
 
 
