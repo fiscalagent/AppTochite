@@ -386,6 +386,8 @@ export const ru = {
     selectMk: 'Выбрать мк',
     coolantPlaceholder: 'СОЖ',
     selectTypePlaceholder: 'выберите тип абразива',
+    filterTypeAll: 'Все типы',
+    filterCoolantAll: 'Любой СОЖ',
     micronsHint: 'мкм, напр. 115',
     gritHint: (u: string) => `${u}, напр. 1000`,
     unitNative: 'Своя',

@@ -255,6 +255,17 @@
   margin-bottom: var(--space-3);
 }
 
+.filterRow {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.filterRow select {
+  flex: 1;
+  min-width: 0;
+}
+
 .displayUnitBtn {
   flex: 1;
   padding: 6px 4px;

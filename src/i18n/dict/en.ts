@@ -420,6 +420,8 @@ export const en = {
     selectMk: 'Select µm',
     coolantPlaceholder: 'Coolant',
     selectTypePlaceholder: 'select abrasive type',
+    filterTypeAll: 'All types',
+    filterCoolantAll: 'Any coolant',
     micronsHint: 'µm, e.g. 115',
     gritHint: (u: string) => `${u}, e.g. 1000`,
     unitNative: 'Own',

@@ -607,6 +607,8 @@ function StonesTab({ search }: { search: string }) {
   const [gritMk, setGritMk] = useState('')
   const [type, setType] = useState<Stone['type'] | ''>('')
   const [coolant, setCoolant] = useState<StoneCoolant | ''>('')
+  const [filterType, setFilterType] = useState<Stone['type'] | ''>('')
+  const [filterCoolant, setFilterCoolant] = useState<StoneCoolant | ''>('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editBrand, setEditBrand] = useState('')
@@ -630,6 +632,14 @@ function StonesTab({ search }: { search: string }) {
   )
 
   const allFiltered = stones?.filter(st => {
+    if (filterType && st.type !== filterType) return false
+    if (filterCoolant) {
+      const matchesCoolant =
+        filterCoolant === 'water' ? (st.coolant === 'water' || st.coolant === 'both' || st.coolant === 'dry') :
+        filterCoolant === 'oil'   ? (st.coolant === 'oil'   || st.coolant === 'both' || st.coolant === 'dry') :
+        st.coolant === filterCoolant
+      if (!matchesCoolant) return false
+    }
     if (search.startsWith('*')) {
       const q = search.slice(1).toLowerCase().trim()
       if (!q) return true
@@ -954,6 +964,21 @@ function StonesTab({ search }: { search: string }) {
         </div>,
         document.body
       )}
+
+      <div className={s.filterRow}>
+        <select className={s.select} value={filterType} onChange={e => setFilterType(e.target.value as Stone['type'] | '')}>
+          <option value="">{t.reference.filterTypeAll}</option>
+          {Object.entries(t.enums.stoneType).map(([val, label]) => (
+            <option key={val} value={val}>{label}</option>
+          ))}
+        </select>
+        <select className={s.select} value={filterCoolant} onChange={e => setFilterCoolant(e.target.value as StoneCoolant | '')}>
+          <option value="">{t.reference.filterCoolantAll}</option>
+          {Object.entries(t.enums.coolant).map(([val, label]) => (
+            <option key={val} value={val}>{label}</option>
+          ))}
+        </select>
+      </div>
 
       <div className={s.displayUnitRow}>
         {([
