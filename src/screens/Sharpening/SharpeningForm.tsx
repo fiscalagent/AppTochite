@@ -778,7 +778,11 @@ export default function SharpeningForm() {
       {pickerOpen && (
         <PhotoSourceSheet
           onCamera={() => openCamera(b64 => { setPhotosBefore(prev => [...prev, b64]); track('photo_added', { phase: 'before', source: 'camera' }).catch(() => {}) })}
-          onGallery={() => openGallery(b64 => { setPhotosBefore(prev => [...prev, b64]); track('photo_added', { phase: 'before', source: 'gallery' }).catch(() => {}) })}
+          onGallery={() => openGallery(
+            b64 => { setPhotosBefore(prev => [...prev, b64]); track('photo_added', { phase: 'before', source: 'gallery' }).catch(() => {}) },
+            PHOTO_LIMIT - photosBefore.length,
+            () => showToast(t.sharpening.photoLimit)
+          )}
           onClose={() => setPickerOpen(false)}
         />
       )}

@@ -80,11 +80,16 @@ function processFile(file: File, onDone: (b64: string) => void) {
     })
 }
 
-function pickFile(capture: boolean, onDone: (b64: string) => void) {
+function pickFile(
+  capture: boolean,
+  onDone: (b64: string) => void,
+  options?: { multiple?: boolean; limit?: number; onExceeded?: () => void }
+) {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
   if (capture) input.setAttribute('capture', 'environment')
+  if (options?.multiple) input.multiple = true
   input.style.display = 'none'
   // Must be in DOM for Android WebView to deliver the camera result without crashing.
   document.body.appendChild(input)
@@ -92,9 +97,12 @@ function pickFile(capture: boolean, onDone: (b64: string) => void) {
     if (document.body.contains(input)) document.body.removeChild(input)
   }
   input.onchange = () => {
-    const file = input.files?.[0]
+    const picked = input.files ? Array.from(input.files) : []
     cleanup()
-    if (file) processFile(file, onDone)
+    const { limit, onExceeded } = options ?? {}
+    const files = limit != null ? picked.slice(0, limit) : picked
+    if (limit != null && picked.length > limit) onExceeded?.()
+    files.forEach(file => processFile(file, onDone))
   }
   // Clean up if the user cancels without selecting a file.
   input.addEventListener('cancel', cleanup)
@@ -108,11 +116,11 @@ function pickFile(capture: boolean, onDone: (b64: string) => void) {
 // растёт. Результат прогоняется через тот же processFile → сжатие идентично web.
 const IS_CAPACITOR = import.meta.env.MODE === 'capacitor'
 
-async function nativeGetPhoto(source: 'camera' | 'gallery', onDone: (b64: string) => void) {
+async function nativeTakePhoto(onDone: (b64: string) => void) {
   try {
     const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
     const photo = await Camera.getPhoto({
-      source: source === 'camera' ? CameraSource.Camera : CameraSource.Photos,
+      source: CameraSource.Camera,
       resultType: CameraResultType.DataUrl,
       quality: 90,
       allowEditing: false,
@@ -127,15 +135,36 @@ async function nativeGetPhoto(source: 'camera' | 'gallery', onDone: (b64: string
   }
 }
 
+// Camera.pickImages — деприкейтед в @capacitor/camera 8.1+ в пользу chooseFromGallery,
+// но остаётся рабочим и остаётся единственным путём получить сразу несколько фото за один
+// системный пикер (Android Photo Picker/iOS PHPicker) без миграции камеры на новый API.
+async function nativePickGalleryPhotos(onDone: (b64: string) => void, limit: number, onExceeded?: () => void) {
+  try {
+    const { Camera } = await import('@capacitor/camera')
+    const { photos } = await Camera.pickImages({ quality: 90, correctOrientation: true, limit })
+    const cap = Math.max(0, limit)
+    const picked = photos.slice(0, cap)
+    if (photos.length > cap) onExceeded?.()
+    for (const photo of picked) {
+      if (!photo.webPath) continue
+      const blob = await (await fetch(photo.webPath)).blob()
+      const file = new File([blob], 'photo.jpg', { type: blob.type || 'image/jpeg' })
+      processFile(file, onDone)
+    }
+  } catch {
+    // Отмена пользователем — тихо игнорируем.
+  }
+}
+
 export function useCamera() {
   function openCamera(onDone: (b64: string) => void) {
-    if (IS_CAPACITOR) return void nativeGetPhoto('camera', onDone)
+    if (IS_CAPACITOR) return void nativeTakePhoto(onDone)
     pickFile(true, onDone)
   }
 
-  function openGallery(onDone: (b64: string) => void) {
-    if (IS_CAPACITOR) return void nativeGetPhoto('gallery', onDone)
-    pickFile(false, onDone)
+  function openGallery(onDone: (b64: string) => void, limit: number, onExceeded?: () => void) {
+    if (IS_CAPACITOR) return void nativePickGalleryPhotos(onDone, limit, onExceeded)
+    pickFile(false, onDone, { multiple: true, limit, onExceeded })
   }
 
   return { openCamera, openGallery }

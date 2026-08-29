@@ -1015,7 +1015,11 @@ export default function SharpeningDetail() {
       {pickerOpen && (
         <PhotoSourceSheet
           onCamera={() => openCamera(b64 => { setPhotosAfter(prev => [...prev, b64]); track('photo_added', { phase: 'after', source: 'camera' }).catch(() => {}) })}
-          onGallery={() => openGallery(b64 => { setPhotosAfter(prev => [...prev, b64]); track('photo_added', { phase: 'after', source: 'gallery' }).catch(() => {}) })}
+          onGallery={() => openGallery(
+            b64 => { setPhotosAfter(prev => [...prev, b64]); track('photo_added', { phase: 'after', source: 'gallery' }).catch(() => {}) },
+            PHOTO_LIMIT - photosAfter.length,
+            () => showToast(t.sharpening.photoLimit)
+          )}
           onClose={() => setPickerOpen(false)}
         />
       )}
