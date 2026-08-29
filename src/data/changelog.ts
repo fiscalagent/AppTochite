@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.10.0',
+    date: '2026-08-29',
+    changes: [
+      'множественный выбор в фильтрах камней по типу абразива и СОЖ',
+    ],
+  },
+  {
     version: '2.9.0',
     date: '2026-08-29',
     changes: [

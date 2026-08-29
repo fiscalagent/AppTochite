@@ -1,3 +1,10 @@
+# [2.10.0](https://github.com/fiscalagent/AppTochite/compare/v2.9.0...v2.10.0) (2026-08-29)
+
+
+### feat
+
+* множественный выбор в фильтрах камней по типу абразива и СОЖ ([](https://github.com/fiscalagent/AppTochite/commit/2cbbe0ab3f086831b3f99321827fd30499d0bb4e))
+
 # [2.9.0](https://github.com/fiscalagent/AppTochite/compare/v2.8.0...v2.9.0) (2026-08-29)
 
 
