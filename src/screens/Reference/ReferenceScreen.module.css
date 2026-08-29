@@ -255,15 +255,34 @@
   margin-bottom: var(--space-3);
 }
 
-.filterRow {
+.filterChipsRow {
   display: flex;
-  gap: var(--space-2);
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: var(--space-2);
+}
+
+.filterChipsRow:last-of-type {
   margin-bottom: var(--space-3);
 }
 
-.filterRow select {
-  flex: 1;
-  min-width: 0;
+.filterChip {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  color: var(--text-300);
+  background: var(--bg-300);
+  border: 1.5px solid var(--border-100);
+  border-radius: var(--radius-full);
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterChipActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .displayUnitBtn {

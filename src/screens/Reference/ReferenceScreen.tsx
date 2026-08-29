@@ -607,8 +607,8 @@ function StonesTab({ search }: { search: string }) {
   const [gritMk, setGritMk] = useState('')
   const [type, setType] = useState<Stone['type'] | ''>('')
   const [coolant, setCoolant] = useState<StoneCoolant | ''>('')
-  const [filterType, setFilterType] = useState<Stone['type'] | ''>('')
-  const [filterCoolant, setFilterCoolant] = useState<StoneCoolant | ''>('')
+  const [filterTypes, setFilterTypes] = useState<Set<Stone['type']>>(new Set())
+  const [filterCoolants, setFilterCoolants] = useState<Set<StoneCoolant>>(new Set())
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editBrand, setEditBrand] = useState('')
@@ -632,13 +632,14 @@ function StonesTab({ search }: { search: string }) {
   )
 
   const allFiltered = stones?.filter(st => {
-    if (filterType && st.type !== filterType) return false
-    if (filterCoolant) {
-      const matchesCoolant =
-        filterCoolant === 'water' ? (st.coolant === 'water' || st.coolant === 'both' || st.coolant === 'dry') :
-        filterCoolant === 'oil'   ? (st.coolant === 'oil'   || st.coolant === 'both' || st.coolant === 'dry') :
-        st.coolant === filterCoolant
-      if (!matchesCoolant) return false
+    if (filterTypes.size > 0 && (st.type == null || !filterTypes.has(st.type))) return false
+    if (filterCoolants.size > 0) {
+      const matchesAny = [...filterCoolants].some(f =>
+        f === 'water' ? (st.coolant === 'water' || st.coolant === 'both' || st.coolant === 'dry') :
+        f === 'oil'   ? (st.coolant === 'oil'   || st.coolant === 'both' || st.coolant === 'dry') :
+        st.coolant === f
+      )
+      if (!matchesAny) return false
     }
     if (search.startsWith('*')) {
       const q = search.slice(1).toLowerCase().trim()
@@ -675,6 +676,22 @@ function StonesTab({ search }: { search: string }) {
     setSelected(prev => {
       const next = new Set(prev)
       if (next.has(id)) { next.delete(id) } else { next.add(id) }
+      return next
+    })
+  }
+
+  function toggleFilterType(v: Stone['type']) {
+    setFilterTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(v)) { next.delete(v) } else { next.add(v) }
+      return next
+    })
+  }
+
+  function toggleFilterCoolant(v: StoneCoolant) {
+    setFilterCoolants(prev => {
+      const next = new Set(prev)
+      if (next.has(v)) { next.delete(v) } else { next.add(v) }
       return next
     })
   }
@@ -965,19 +982,39 @@ function StonesTab({ search }: { search: string }) {
         document.body
       )}
 
-      <div className={s.filterRow}>
-        <select className={s.select} value={filterType} onChange={e => setFilterType(e.target.value as Stone['type'] | '')}>
-          <option value="">{t.reference.filterTypeAll}</option>
-          {Object.entries(t.enums.stoneType).map(([val, label]) => (
-            <option key={val} value={val}>{label}</option>
-          ))}
-        </select>
-        <select className={s.select} value={filterCoolant} onChange={e => setFilterCoolant(e.target.value as StoneCoolant | '')}>
-          <option value="">{t.reference.filterCoolantAll}</option>
-          {Object.entries(t.enums.coolant).map(([val, label]) => (
-            <option key={val} value={val}>{label}</option>
-          ))}
-        </select>
+      <div className={s.filterChipsRow}>
+        <button
+          className={`${s.filterChip} ${filterTypes.size === 0 ? s.filterChipActive : ''}`}
+          onClick={() => setFilterTypes(new Set())}
+        >
+          {t.reference.filterTypeAll}
+        </button>
+        {Object.entries(t.enums.stoneType).map(([val, label]) => (
+          <button
+            key={val}
+            className={`${s.filterChip} ${filterTypes.has(val as Stone['type']) ? s.filterChipActive : ''}`}
+            onClick={() => toggleFilterType(val as Stone['type'])}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className={s.filterChipsRow}>
+        <button
+          className={`${s.filterChip} ${filterCoolants.size === 0 ? s.filterChipActive : ''}`}
+          onClick={() => setFilterCoolants(new Set())}
+        >
+          {t.reference.filterCoolantAll}
+        </button>
+        {Object.entries(t.enums.coolant).map(([val, label]) => (
+          <button
+            key={val}
+            className={`${s.filterChip} ${filterCoolants.has(val as StoneCoolant) ? s.filterChipActive : ''}`}
+            onClick={() => toggleFilterCoolant(val as StoneCoolant)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className={s.displayUnitRow}>
