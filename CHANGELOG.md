@@ -1,3 +1,10 @@
+## [2.11.1](https://github.com/fiscalagent/AppTochite/compare/v2.11.0...v2.11.1) (2026-10-22)
+
+
+### fix
+
+* встроенная галочка «с фото» в кнопку повторной заточки ([](https://github.com/fiscalagent/AppTochite/commit/7743fac956014a463d99e36cf4b7216b5bf8dd12))
+
 # [2.11.0](https://github.com/fiscalagent/AppTochite/compare/v2.10.0...v2.11.0) (2026-10-22)
 
 
