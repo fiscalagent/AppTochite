@@ -303,6 +303,7 @@ export const ru = {
     markDone: 'Готово',
     sharePhoto: 'Поделиться фото',
     repeat: 'Повторить заточку',
+    repeatCarryPhotos: 'Перенести с фото',
     deleteSharpening: 'Удалить заточку',
     deleteTitle: 'Удалить эту заточку?',
     deleteMessage: 'Заточка попадёт в корзину и будет удалена навсегда через 3 дня.',

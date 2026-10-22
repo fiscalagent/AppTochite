@@ -152,6 +152,7 @@ export default function SharpeningDetail() {
   const [photoShareOpen, setPhotoShareOpen] = useState(false)
   const [shareMenuOpen, setShareMenuOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [carryPhotos, setCarryPhotos] = useState(false)
 
   // Editable sharpening fields
   const [angle, setAngle] = useState('')
@@ -985,9 +986,28 @@ export default function SharpeningDetail() {
         </button>
       )}
 
+      {((sh.photosBefore?.length ?? 0) > 0 || photosAfter.length > 0) && (
+        <label className={s.repeatPhotosToggle}>
+          <input
+            type="checkbox"
+            checked={carryPhotos}
+            onChange={e => setCarryPhotos(e.target.checked)}
+          />
+          {t.sharpening.repeatCarryPhotos}
+        </label>
+      )}
+
       <button
         className={s.repeatBtn}
-        onClick={() => navigate('/sharpenings/new', { state: { repeat: sh } })}
+        onClick={() => navigate('/sharpenings/new', {
+          state: {
+            repeat: {
+              ...sh,
+              photosBefore: carryPhotos ? sh.photosBefore : undefined,
+              photosAfter: carryPhotos ? photosAfter : undefined,
+            },
+          },
+        })}
       >
         {t.sharpening.repeat}
       </button>

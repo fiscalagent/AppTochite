@@ -84,6 +84,8 @@ type RepeatState = {
   microbevelAngle?: number
   stones?: SharpeningStone[]
   price?: number
+  photosBefore?: string[]
+  photosAfter?: string[]
 }
 
 function parseRepeatState(state: unknown): RepeatState | undefined {
@@ -101,6 +103,8 @@ function parseRepeatState(state: unknown): RepeatState | undefined {
     microbevelAngle: typeof x.microbevelAngle === 'number' ? x.microbevelAngle : undefined,
     stones: Array.isArray(x.stones) ? (x.stones as SharpeningStone[]) : undefined,
     price: typeof x.price === 'number' ? x.price : undefined,
+    photosBefore: Array.isArray(x.photosBefore) ? (x.photosBefore as string[]) : undefined,
+    photosAfter: Array.isArray(x.photosAfter) ? (x.photosAfter as string[]) : undefined,
   }
 }
 
@@ -132,7 +136,7 @@ export default function SharpeningForm() {
   const [hrc, setHrc] = useState(repeat?.hrc != null ? String(repeat.hrc) : '')
   const [condition, setCondition] = useState<string[]>([])
   const [receivedAt, setReceivedAt] = useState(todayStr())
-  const [photosBefore, setPhotosBefore] = useState<string[]>([])
+  const [photosBefore, setPhotosBefore] = useState<string[]>(repeat?.photosBefore ?? [])
   const [price, setPrice] = useState(repeat?.price != null ? String(repeat.price) : '')
 
   // Z-2 поля — на Z-1 не редактируются и нет голосовых команд (парсер отсекает по step=1).
@@ -140,6 +144,7 @@ export default function SharpeningForm() {
   const repeatAngle = repeat?.angle
   const repeatMicrobevelAngle = repeat?.microbevelAngle
   const repeatStones: SharpeningStone[] = repeat?.stones ?? []
+  const repeatPhotosAfter = repeat?.photosAfter ?? []
 
   const dictation = useDictationMode(locale)
 
@@ -554,6 +559,7 @@ export default function SharpeningForm() {
           angle: repeatAngle,
           microbevelAngle: repeatMicrobevelAngle,
           stones: repeatStones.length ? repeatStones : undefined,
+          photosAfter: repeatPhotosAfter.length ? repeatPhotosAfter : undefined,
           status: 'accepted' as const,
         }
         const savedId = await db.transaction('rw', [db.knives, db.steels, db.stones, db.sharpenings], async () => {

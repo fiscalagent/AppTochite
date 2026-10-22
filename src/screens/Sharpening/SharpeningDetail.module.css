@@ -648,6 +648,22 @@
   opacity: 0.5;
 }
 
+.repeatPhotosToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  color: var(--text-200);
+  cursor: pointer;
+}
+
+.repeatPhotosToggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
 .repeatBtn {
   background: transparent;
   color: var(--accent);

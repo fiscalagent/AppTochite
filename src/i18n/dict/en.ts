@@ -339,6 +339,7 @@ export const en = {
     markDone: 'Mark done',
     sharePhoto: 'Share photo',
     repeat: 'Repeat sharpening',
+    repeatCarryPhotos: 'Carry over photos',
     deleteSharpening: 'Delete sharpening',
     deleteTitle: 'Delete this sharpening?',
     deleteMessage: 'Sharpening will be moved to trash and permanently deleted in 3 days.',
