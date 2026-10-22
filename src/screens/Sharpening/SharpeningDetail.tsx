@@ -652,6 +652,19 @@ export default function SharpeningDetail() {
   ]
   const hasPhotos = (sh.photosBefore?.length ?? 0) > 0 || photosAfter.length > 0
 
+  function goRepeat() {
+    if (!sh) return
+    navigate('/sharpenings/new', {
+      state: {
+        repeat: {
+          ...sh,
+          photosBefore: carryPhotos ? sh.photosBefore : undefined,
+          photosAfter: carryPhotos ? photosAfter : undefined,
+        },
+      },
+    })
+  }
+
   return (
     <div className={s.screen}>
       {/* Header */}
@@ -986,31 +999,27 @@ export default function SharpeningDetail() {
         </button>
       )}
 
-      {((sh.photosBefore?.length ?? 0) > 0 || photosAfter.length > 0) && (
-        <label className={s.repeatPhotosToggle}>
-          <input
-            type="checkbox"
-            checked={carryPhotos}
-            onChange={e => setCarryPhotos(e.target.checked)}
-          />
-          {t.sharpening.repeatCarryPhotos}
-        </label>
-      )}
-
-      <button
+      <div
         className={s.repeatBtn}
-        onClick={() => navigate('/sharpenings/new', {
-          state: {
-            repeat: {
-              ...sh,
-              photosBefore: carryPhotos ? sh.photosBefore : undefined,
-              photosAfter: carryPhotos ? photosAfter : undefined,
-            },
-          },
-        })}
+        role="button"
+        tabIndex={0}
+        onClick={goRepeat}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goRepeat() }
+        }}
       >
-        {t.sharpening.repeat}
-      </button>
+        <span>{t.sharpening.repeat}</span>
+        {hasPhotos && (
+          <label className={s.repeatPhotosInline} onClick={e => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={carryPhotos}
+              onChange={e => setCarryPhotos(e.target.checked)}
+            />
+            {t.sharpening.repeatCarryPhotos}
+          </label>
+        )}
+      </div>
 
       <button className={s.deleteBtn} onClick={() => setConfirmOpen(true)}>
         {t.sharpening.deleteSharpening}

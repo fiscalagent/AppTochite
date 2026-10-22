@@ -648,22 +648,6 @@
   opacity: 0.5;
 }
 
-.repeatPhotosToggle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 14px;
-  color: var(--text-200);
-  cursor: pointer;
-}
-
-.repeatPhotosToggle input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
-  flex-shrink: 0;
-}
-
 .repeatBtn {
   background: transparent;
   color: var(--accent);
@@ -673,8 +657,29 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--accent);
   width: 100%;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  cursor: pointer;
   transition: background 0.15s;
+}
+
+.repeatPhotosInline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.repeatPhotosInline input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
 }
 
 .repeatBtn:active {
