@@ -1,3 +1,10 @@
+# [2.11.0](https://github.com/fiscalagent/AppTochite/compare/v2.10.0...v2.11.0) (2026-10-22)
+
+
+### feat
+
+* перенос фото «До»/«После» в повторную заточку по галочке ([](https://github.com/fiscalagent/AppTochite/commit/0dd16b91a2de8059b8880c484a4220d98bd509a2))
+
 # [2.10.0](https://github.com/fiscalagent/AppTochite/compare/v2.9.0...v2.10.0) (2026-08-29)
 
 
