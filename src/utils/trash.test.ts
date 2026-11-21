@@ -115,6 +115,29 @@ describe('restoreBatch', () => {
     const sh = await db.sharpenings.get(shId)
     expect(sh!.deletedAt).toBeInstanceOf(Date)
   })
+
+  it('оставляет отдельно удалённую заточку в корзине после окончательного удаления клиента', async () => {
+    const clientId = await db.clients.add({ name: 'X', isSelf: false, createdAt: new Date() })
+    const shId = await db.sharpenings.add({ clientId, knifeBrand: 'Mora', receivedAt: new Date(), status: 'accepted' })
+    const sharpeningBatch = await softDeleteSharpening(db, shId)
+    const clientBatch = await softDeleteClient(db, clientId)
+    expect(await restoreBatch(db, sharpeningBatch)).toEqual({ blocked: 1 })
+
+    await purgeBatch(db, clientBatch)
+    expect(await restoreBatch(db, sharpeningBatch)).toEqual({ blocked: 1 })
+    expect(await db.clients.get(clientId)).toBeUndefined()
+    expect(await db.sharpenings.get(shId)).toMatchObject({ deletedBatchId: sharpeningBatch, deletedAt: expect.any(Date) })
+  })
+
+  it('восстанавливает клиента и его заточку вместе', async () => {
+    const clientId = await db.clients.add({ name: 'X', isSelf: false, createdAt: new Date() })
+    const shId = await db.sharpenings.add({ clientId, knifeBrand: 'Mora', receivedAt: new Date(), status: 'accepted' })
+    const batch = await softDeleteClient(db, clientId)
+
+    expect(await restoreBatch(db, batch)).toEqual({ blocked: 0 })
+    expect((await db.clients.get(clientId))?.deletedAt).toBeUndefined()
+    expect((await db.sharpenings.get(shId))?.deletedAt).toBeUndefined()
+  })
 })
 
 describe('purgeExpired', () => {

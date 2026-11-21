@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
 const IconChevronLeft = () => (
@@ -29,6 +29,7 @@ import { useVersionCheck } from '../../hooks/useVersionCheck'
 import { VERSION_LABEL } from '../../version'
 import {
   isValidBackup,
+  getUnlinkedSharpenings,
   exportBackup,
   restoreBackup,
   mergeBackup,
@@ -158,6 +159,9 @@ export default function BackupScreen() {
   const { hasUpdate } = useVersionCheck()
 
   const [preview, setPreview] = useState<BackupFile | null>(null)
+  const [omitUnlinked, setOmitUnlinked] = useState(false)
+  const unlinked = useMemo(() => preview ? getUnlinkedSharpenings(preview) : [], [preview])
+  const canApplyPreview = unlinked !== null && (unlinked.length === 0 || omitUnlinked)
   const [restoring, setRestoring] = useState(false)
   const [merging, setMerging] = useState(false)
   const [mergeStats, setMergeStats] = useState<MergeStats | null>(null)
@@ -590,20 +594,30 @@ export default function BackupScreen() {
     }
     try {
       const parsed = JSON.parse(await file.text(), reviveDates)
-      if (!isValidBackup(parsed)) { showToast(t.backup.invalidFormat); return }
-      setPreview(parsed)
+      applyPreview(parsed, t.backup.invalidFormat)
     } catch {
       showToast(t.backup.fileReadError)
     }
   }
 
+  function selectedBackup(): BackupFile | null {
+    if (!preview || !unlinked || !canApplyPreview) return null
+    if (unlinked.length === 0) return preview
+    const excluded = new Set(unlinked)
+    return {
+      ...preview,
+      data: { ...preview.data, sharpenings: preview.data.sharpenings.filter(sh => !excluded.has(sh)) },
+    }
+  }
+
   async function handleRestore() {
-    if (!preview) return
+    const backup = selectedBackup()
+    if (!backup) return
     setConfirmReplace(false)
     setRestoring(true)
     try {
       await createPreRestoreSnapshot(db)
-      await restoreBackup(db, preview)
+      await restoreBackup(db, backup)
       track('backup_restore', { mode: 'replace' }).catch(() => {})
       showToast(t.backup.restored)
       navigate('/')
@@ -623,11 +637,12 @@ export default function BackupScreen() {
   }
 
   async function handleMerge() {
-    if (!preview) return
+    const backup = selectedBackup()
+    if (!backup) return
     setMerging(true)
     try {
       await createPreRestoreSnapshot(db)
-      const stats = await mergeBackup(db, preview)
+      const stats = await mergeBackup(db, backup)
       track('backup_restore', { mode: 'merge' }).catch(() => {})
       setMergeStats(stats)
       setPreview(null)
@@ -656,9 +671,14 @@ export default function BackupScreen() {
     action: 'restore' | 'download'
     run: () => void | Promise<void>
   }
-  const applyPreview = (b: BackupFile | null, errMsg: string) => {
-    if (b) setPreview(b)
-    else showToast(errMsg)
+  function applyPreview(backup: unknown, errMsg: string) {
+    setOmitUnlinked(false)
+    if (isValidBackup(backup) && getUnlinkedSharpenings(backup) !== null) {
+      setPreview(backup)
+    } else {
+      setPreview(null)
+      showToast(errMsg)
+    }
   }
   const restoreCopies: RestoreCopy[] = []
   if (opfsMeta) restoreCopies.push({
@@ -1012,11 +1032,25 @@ export default function BackupScreen() {
             <div className={s.warningDanger}>
               <strong>{t.backup.replaceStrong}</strong>{t.backup.replaceWarningText}
             </div>
+            {unlinked && unlinked.length > 0 && (
+              <div className={s.warningDanger}>
+                <details>
+                  <summary>{t.backup.unlinkedSummary(unlinked.length)}</summary>
+                  <ul>{unlinked.map((sh, index) => (
+                    <li key={`${sh.id}-${index}`}>{t.backup.unlinkedEntry(sh.knifeBrand, sh.clientId)}</li>
+                  ))}</ul>
+                </details>
+                <label>
+                  <input type="checkbox" checked={omitUnlinked} onChange={e => setOmitUnlinked(e.target.checked)} />
+                  {' '}{t.backup.omitUnlinked}
+                </label>
+              </div>
+            )}
             <div className={s.previewActions}>
-              <button className={s.primaryBtn} onClick={handleMerge} disabled={merging || restoring}>
+              <button className={s.primaryBtn} onClick={handleMerge} disabled={merging || restoring || !canApplyPreview}>
                 {merging ? t.backup.merging : t.backup.merge}
               </button>
-              <button className={s.dangerBtn} onClick={() => setConfirmReplace(true)} disabled={restoring || merging}>
+              <button className={s.dangerBtn} onClick={() => setConfirmReplace(true)} disabled={restoring || merging || !canApplyPreview}>
                 {restoring ? t.backup.restoring : t.backup.replaceAll}
               </button>
               <button className={s.secondaryBtn} onClick={() => {
@@ -1166,7 +1200,7 @@ export default function BackupScreen() {
       <ConfirmModal
         isOpen={confirmReplace}
         title={t.backup.replaceConfirmTitle}
-        message={t.backup.replaceConfirmText}
+        message={unlinked?.length ? t.backup.replacePartialConfirmText : t.backup.replaceConfirmText}
         confirmLabel={t.backup.replaceAll}
         onConfirm={handleRestore}
         onCancel={() => setConfirmReplace(false)}

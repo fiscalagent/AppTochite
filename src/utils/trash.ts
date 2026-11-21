@@ -28,21 +28,28 @@ export async function softDeleteSharpening(database: AppTochiteDB, sharpeningId:
   return batchId
 }
 
-export async function restoreBatch(database: AppTochiteDB, batchId: string): Promise<void> {
+export async function restoreBatch(database: AppTochiteDB, batchId: string): Promise<{ blocked: number }> {
   const now = new Date()
-  await database.transaction('rw', [database.clients, database.sharpenings], async () => {
+  return database.transaction('rw', [database.clients, database.sharpenings], async () => {
     const clients = await database.clients.where('deletedAt').above(new Date(0)).toArray()
     for (const c of clients) {
       if (c.deletedBatchId === batchId && c.id != null) {
         await database.clients.update(c.id, { deletedAt: undefined, deletedBatchId: undefined, updatedAt: now })
       }
     }
+    let blocked = 0
     const sharpenings = await database.sharpenings.where('deletedAt').above(new Date(0)).toArray()
     for (const s of sharpenings) {
       if (s.deletedBatchId === batchId && s.id != null) {
+        const client = await database.clients.get(s.clientId)
+        if (!client || client.deletedAt) {
+          blocked++
+          continue
+        }
         await database.sharpenings.update(s.id, { deletedAt: undefined, deletedBatchId: undefined, updatedAt: now })
       }
     }
+    return { blocked }
   })
 }
 
