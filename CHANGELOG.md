@@ -1,3 +1,10 @@
+## [2.11.3](https://github.com/fiscalagent/AppTochite/compare/v2.11.2...v2.11.3) (2026-11-21)
+
+
+### fix
+
+* make backup export and restore safer ([](https://github.com/fiscalagent/AppTochite/commit/7c50b0e8fdbb6675545d0c6b4679f39d3dacb6a5))
+
 ## [2.11.2](https://github.com/fiscalagent/AppTochite/compare/v2.11.1...v2.11.2) (2026-11-21)
 
 

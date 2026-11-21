@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.11.3',
+    date: '2026-11-21',
+    changes: [
+      'make backup export and restore safer',
+    ],
+  },
+  {
     version: '2.11.2',
     date: '2026-11-21',
     changes: [
