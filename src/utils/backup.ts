@@ -87,6 +87,8 @@ export function dataSignature(data: BackupFile['data']): string {
 
 const OPFS_FILENAME = 'apptochite-auto.json'
 const OPFS_LAST_SIG_KEY = 'autoBackupOpfsLastSig' // сигнатура данных последней записи в OPFS
+const OPFS_LAST_SIZE_KEY = 'autoBackupOpfsLastSize'
+const OPFS_LAST_MODIFIED_KEY = 'autoBackupOpfsLastModified'
 const DAILY_PREFIX = 'apptochite-daily-'
 const DAILY_FILENAME_KEY = 'dailyBackupFilename'
 const LAST_AUTO_DATE_KEY = 'lastAutoBackupDate'
@@ -156,13 +158,27 @@ async function rotateDailyIfNeeded(
 async function verifyAutoBackup(
   root: FileSystemDirectoryHandle,
   expectedJson: string,
-): Promise<boolean> {
+): Promise<{ size: number; lastModified: number } | null> {
   try {
     const handle = await root.getFileHandle(OPFS_FILENAME)
     const file = await handle.getFile()
-    return file.size === new Blob([expectedJson]).size
+    if (file.size !== new Blob([expectedJson]).size) return null
+    return { size: file.size, lastModified: file.lastModified }
   } catch {
-    return false
+    return null
+  }
+}
+
+async function getAutoBackupFileStamp(
+  root: FileSystemDirectoryHandle,
+): Promise<{ size: number; lastModified: number } | null> {
+  try {
+    const handle = await root.getFileHandle(OPFS_FILENAME)
+    const file = await handle.getFile()
+    if (file.size === 0) return null
+    return { size: file.size, lastModified: file.lastModified }
+  } catch {
+    return null
   }
 }
 
@@ -537,20 +553,65 @@ export async function performOPFSBackup(database: AppTochiteDB): Promise<void> {
     // «последнего прогона», а не от факта записи файла.
     const signature = dataSignature(backup.data)
     const sigEntry = await database.settings.get(OPFS_LAST_SIG_KEY)
-    if (signature !== sigEntry?.value) {
+    let existingFileIsValid = false
+    if (signature === sigEntry?.value) {
+      const [sizeEntry, modifiedEntry] = await Promise.all([
+        database.settings.get(OPFS_LAST_SIZE_KEY),
+        database.settings.get(OPFS_LAST_MODIFIED_KEY),
+      ])
+      const expectedSize = sizeEntry?.value
+      const expectedModified = modifiedEntry?.value
+
+      if (typeof expectedSize === 'number' && typeof expectedModified === 'number') {
+        const stamp = await getAutoBackupFileStamp(root)
+        existingFileIsValid =
+          stamp?.size === expectedSize && stamp.lastModified === expectedModified
+      } else {
+        // Однократная совместимость с бэкапами, созданными до сохранения stamp.
+        // После чтения stamp запоминается, чтобы следующие проверки не разбирали
+        // весь JSON (включая фотографии) на каждом запуске авто-бэкапа.
+        const existingBackup = await readOPFSBackup()
+        if (existingBackup) {
+          try {
+            existingFileIsValid = dataSignature(existingBackup.data) === signature
+          } catch {
+            // Повреждённая внутренняя структура не должна блокировать пересоздание.
+          }
+        }
+        if (existingFileIsValid) {
+          const stamp = await getAutoBackupFileStamp(root)
+          if (stamp) {
+            await database.settings.bulkPut([
+              { key: OPFS_LAST_SIZE_KEY, value: stamp.size },
+              { key: OPFS_LAST_MODIFIED_KEY, value: stamp.lastModified },
+            ])
+          } else {
+            existingFileIsValid = false
+          }
+        }
+      }
+    }
+
+    // Сохранённая сигнатура в IndexedDB не доказывает, что файл OPFS всё ещё
+    // существует и содержит этот бэкап: файл мог быть удалён или повреждён.
+    if (!existingFileIsValid) {
       const json = JSON.stringify(backup)
       const fileHandle = await root.getFileHandle(OPFS_FILENAME, { create: true })
       const writable = await fileHandle.createWritable()
       await writable.write(json)
       await writable.close()
 
-      const ok = await verifyAutoBackup(root, json)
-      if (!ok) {
+      const stamp = await verifyAutoBackup(root, json)
+      if (!stamp) {
         try { await root.removeEntry(OPFS_FILENAME) } catch { /* ignore */ }
         throw new Error('OPFS backup integrity check failed')
       }
 
-      await database.settings.put({ key: OPFS_LAST_SIG_KEY, value: signature })
+      await database.settings.bulkPut([
+        { key: OPFS_LAST_SIG_KEY, value: signature },
+        { key: OPFS_LAST_SIZE_KEY, value: stamp.size },
+        { key: OPFS_LAST_MODIFIED_KEY, value: stamp.lastModified },
+      ])
     }
 
     await database.settings.put({ key: LAST_AUTO_DATE_KEY, value: ymd(new Date()) })

@@ -29,12 +29,17 @@ class MockWritable {
 class MockFileHandle {
   writables: MockWritable[] = []
   private _content = ''
+  private _lastModified = 0
   async createWritable() {
     const w = new MockWritable()
     this.writables.push(w)
     // simulate close committing content
     const origClose = w.close.bind(w)
-    w.close = async () => { await origClose(); this._content = w.content }
+    w.close = async () => {
+      await origClose()
+      this._content = w.content
+      this._lastModified = Date.now()
+    }
     return w
   }
   async getFile() {
@@ -42,7 +47,7 @@ class MockFileHandle {
     // Access/OPFS API, где write() кодирует строку в UTF-8 перед записью на диск.
     // verifyAutoBackup сверяет именно это, а Кириллица в контенте (имена, комментарии)
     // делает разницу между .length и байтовым размером не косметической.
-    return { text: async () => this._content, size: new TextEncoder().encode(this._content).length, lastModified: Date.now() } as unknown as File
+    return { text: async () => this._content, size: new TextEncoder().encode(this._content).length, lastModified: this._lastModified } as unknown as File
   }
   get lastContent() { return this._content }
 }
@@ -730,6 +735,49 @@ describe('performOPFSBackup', () => {
     const entry = await db.settings.get('lastBackupAt')
     expect(entry).toBeDefined()
     expect(new Date(entry!.value as string).getTime()).toBeGreaterThanOrEqual(before)
+  })
+
+  it('пересоздаёт файл, если он отсутствует при совпадающей сигнатуре', async () => {
+    const root = mockOPFS()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
+    await performOPFSBackup(db)
+    root.files.delete('apptochite-auto.json')
+
+    await performOPFSBackup(db)
+
+    const handle = root.files.get('apptochite-auto.json')
+    expect(handle).toBeDefined()
+    expect(isValidBackup(JSON.parse(handle!.lastContent))).toBe(true)
+  })
+
+  it('перезаписывает повреждённый файл при совпадающей сигнатуре', async () => {
+    const root = mockOPFS()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
+    await performOPFSBackup(db)
+
+    const handle = root.files.get('apptochite-auto.json')!
+    const writable = await handle.createWritable()
+    await writable.write('{invalid json')
+    await writable.close()
+
+    await performOPFSBackup(db)
+
+    expect(isValidBackup(JSON.parse(handle.lastContent))).toBe(true)
+    expect(await readOPFSBackup()).not.toBeNull()
+  })
+
+  it('не перезаписывает корректный файл, если данные не изменились', async () => {
+    const root = mockOPFS()
+    await db.clients.add({ name: 'Я', isSelf: true, createdAt: new Date() })
+    await performOPFSBackup(db)
+    const handle = root.files.get('apptochite-auto.json')!
+    const writeCount = handle.writables.length
+    const savedContent = handle.lastContent
+
+    await performOPFSBackup(db)
+
+    expect(handle.writables).toHaveLength(writeCount)
+    expect(handle.lastContent).toBe(savedContent)
   })
 
   it('бэкап восстанавливается корректно', async () => {
