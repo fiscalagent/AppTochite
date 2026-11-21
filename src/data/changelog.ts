@@ -7,6 +7,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.11.2',
+    date: '2026-11-21',
+    changes: [
+      'recover missing OPFS auto backup',
+    ],
+  },
+  {
     version: '2.11.1',
     date: '2026-10-22',
     changes: [

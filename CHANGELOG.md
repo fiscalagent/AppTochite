@@ -1,3 +1,10 @@
+## [2.11.2](https://github.com/fiscalagent/AppTochite/compare/v2.11.1...v2.11.2) (2026-11-21)
+
+
+### fix
+
+* recover missing OPFS auto backup ([](https://github.com/fiscalagent/AppTochite/commit/b13b3f3b91224add5cb3d1e34e0669b87b8f7599))
+
 ## [2.11.1](https://github.com/fiscalagent/AppTochite/compare/v2.11.0...v2.11.1) (2026-10-22)
 
 
