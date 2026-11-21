@@ -47,8 +47,8 @@ export default function TrashScreen() {
   const [confirmPurge, setConfirmPurge] = useState<TrashGroup | null>(null)
 
   async function handleRestore(g: TrashGroup) {
-    await restoreBatch(db, g.batchId)
-    showToast(t.trash.restored)
+    const { blocked } = await restoreBatch(db, g.batchId)
+    showToast(blocked ? t.trash.restoreBlocked(blocked) : t.trash.restored)
   }
 
   async function handlePurge(g: TrashGroup) {

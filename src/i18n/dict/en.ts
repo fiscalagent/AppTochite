@@ -128,6 +128,7 @@ export const en = {
   },
 
   trash: {
+    restoreBlocked: (n: number) => `Sharpenings left in Trash: ${n}. Restore the client first if they are still in Trash.`,
     title: 'TRASH',
     hint: 'Deleted records are kept for 3 days, then permanently removed.',
     empty: 'Trash is empty',
@@ -615,6 +616,9 @@ export const en = {
     mergeStrong: 'Merge',
     mergeWarningText: ' — adds new records from the file and updates those that are newer in the file. Data on device is not lost.',
     replaceStrong: 'Replace all',
+    unlinkedSummary: (n: number) => `Sharpenings with no client in this backup: ${n}`,
+    unlinkedEntry: (knife: string, clientId: number) => `${knife} — client #${clientId}`,
+    omitUnlinked: 'Continue without these sharpenings. They will remain in the original backup.',
     replaceWarningText: ' — deletes all current data and replaces it with data from the file.',
     merging: 'Merging…',
     merge: 'Merge',
@@ -622,6 +626,7 @@ export const en = {
     replaceAll: 'Replace all',
     replaceConfirmTitle: 'Replace all data?',
     replaceConfirmText: 'The current data on this device will be completely replaced with the contents of the file. This action cannot be undone. A snapshot of the current state will be saved under "Recovery points".',
+    replacePartialConfirmText: 'Your current data will be replaced with the backup records except for the listed sharpenings with no client. This action cannot be undone.',
     recoveryPoints: 'Recovery points',
     // New screen structure
     backupSection: 'Backup',

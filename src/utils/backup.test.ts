@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import Dexie from 'dexie'
 import {
   isValidBackup,
+  hasValidBackupClientLinks,
   buildCSV,
   reviveDates,
   exportBackup,
@@ -16,6 +18,8 @@ import {
 } from './backup'
 import { AppTochiteDB } from '../db/db'
 import { fromJis } from '../data/gritTable'
+
+vi.mock('../services/analytics', () => ({ track: async () => {} }))
 
 // ─── OPFS mock ───────────────────────────────────────────────────────────────
 
@@ -296,6 +300,115 @@ describe('exportBackup + restoreBackup', () => {
     await db.delete()
   })
 
+  it('exports a consistent snapshot while a related write is queued', async () => {
+    const createdAt = new Date()
+    const clientId = await db.clients.add({ name: 'Before', isSelf: false, createdAt })
+    const readClients = db.clients.toArray.bind(db.clients)
+    const readSharpenings = db.sharpenings.toArray.bind(db.sharpenings)
+    let writer: Promise<unknown> | undefined
+    let readTransaction: typeof Dexie.currentTransaction | undefined = undefined
+    const clientsRead = vi.spyOn(db.clients, 'toArray').mockImplementationOnce(() => {
+      readTransaction = Dexie.currentTransaction
+      writer = db.transaction('rw!', [db.clients, db.sharpenings], async () => {
+        await db.clients.update(clientId, { name: 'After' })
+        await db.sharpenings.add({ clientId, knifeBrand: 'Mora', receivedAt: createdAt, status: 'accepted' })
+      })
+      return readClients()
+    })
+    const sharpeningsRead = vi.spyOn(db.sharpenings, 'toArray').mockImplementationOnce(() => {
+      expect(Dexie.currentTransaction).toBe(readTransaction)
+      return readSharpenings()
+    })
+    try {
+      const backup = await exportBackup(db)
+      await writer
+      expect(readTransaction).toBeTruthy()
+      expect(backup.data.clients[0].name).toBe('Before')
+      expect(backup.data.sharpenings).toEqual([])
+      const next = await exportBackup(db)
+      expect(next.data.clients[0].name).toBe('After')
+      expect(next.data.sharpenings).toHaveLength(1)
+    } finally {
+      clientsRead.mockRestore()
+      sharpeningsRead.mockRestore()
+      await writer
+    }
+  })
+
+  it('shares an export error and allows a fresh attempt', async () => {
+    const failure = new Error('read failed')
+    const read = vi.spyOn(db.clients, 'toArray').mockImplementationOnce(() => { throw failure })
+    try {
+      const first = exportBackup(db)
+      expect(exportBackup(db)).toBe(first)
+      await expect(first).rejects.toBe(failure)
+      await expect(exportBackup(db)).resolves.toMatchObject({ version: 2, data: { clients: [] } })
+    } finally {
+      read.mockRestore()
+    }
+  })
+
+  it('rejects an active sharpening with a missing client before replacement', async () => {
+    const createdAt = new Date()
+    await db.clients.add({ name: 'Original', isSelf: false, createdAt })
+    const backup = makeValidBackup({
+      sharpenings: [{ clientId: 99, knifeBrand: 'Mora', receivedAt: createdAt, status: 'accepted' }],
+    })
+    expect(hasValidBackupClientLinks(backup)).toBe(false)
+    await expect(restoreBackup(db, backup)).rejects.toThrow('Invalid backup client links')
+    expect(await db.clients.toArray()).toMatchObject([{ name: 'Original' }])
+  })
+
+  it('rejects an unlinked active sharpening during merge even if its client ID exists locally', async () => {
+    const createdAt = new Date()
+    await db.clients.add({ id: 42, name: 'Unrelated local client', isSelf: false, createdAt })
+    const backup = makeValidBackup({
+      clients: [{ id: 7, name: 'Imported', isSelf: false, createdAt }],
+      sharpenings: [{ id: 5, clientId: 42, knifeBrand: 'Mora', receivedAt: createdAt, status: 'accepted' }],
+    })
+    await expect(mergeBackup(db, backup)).rejects.toThrow('Invalid backup client links')
+    expect(await db.clients.get(7)).toBeUndefined()
+    expect(await db.sharpenings.count()).toBe(0)
+  })
+
+  it('only applies an unlinked deletion to a matching sharpening GUID and keeps its local client', async () => {
+    const createdAt = new Date('2026-01-01')
+    const deletedAt = new Date('2026-02-01')
+    await db.clients.bulkAdd([
+      { id: 2, name: 'Actual client', isSelf: false, createdAt },
+      { id: 42, name: 'Unrelated local client', isSelf: false, createdAt },
+    ])
+    await db.sharpenings.add({ id: 8, guid: 'same-sharpening', clientId: 2, knifeBrand: 'Mora', receivedAt: createdAt, status: 'accepted' })
+    const tombstone = { clientId: 42, knifeBrand: 'Mora', receivedAt: createdAt, status: 'accepted' as const, deletedAt, updatedAt: deletedAt }
+    const backup = makeValidBackup({ sharpenings: [
+      { ...tombstone, id: 5, guid: 'same-sharpening' },
+      { ...tombstone, id: 6, guid: 'unknown-sharpening' },
+      { ...tombstone, id: 8 },
+    ] })
+
+    expect(await mergeBackup(db, backup)).toMatchObject({ added: 0, updated: 1, skipped: 2 })
+    expect(await db.sharpenings.toArray()).toMatchObject([{ id: 8, clientId: 2, deletedAt }])
+  })
+
+  it('restores legacy links without GUIDs and retains deleted sharpenings from purged clients', async () => {
+    const createdAt = new Date()
+    const backup = makeValidBackup({
+      clients: [{ id: 7, name: 'Legacy', isSelf: false, createdAt }],
+      sharpenings: [
+        { clientId: 7, knifeBrand: 'Mora', receivedAt: createdAt, status: 'accepted' },
+        { clientId: 99, knifeBrand: 'Deleted', receivedAt: createdAt, status: 'accepted', deletedAt: createdAt },
+      ],
+    })
+    delete backup.data.meta
+    expect(hasValidBackupClientLinks(backup)).toBe(true)
+    await restoreBackup(db, backup)
+    expect(await db.clients.get(7)).toMatchObject({ guid: expect.any(String) })
+    expect(await db.sharpenings.toArray()).toMatchObject([
+      { clientId: 7, guid: expect.any(String) },
+      { clientId: 99, deletedAt: createdAt },
+    ])
+  })
+
   it('экспортирует пустую БД с правильной структурой', async () => {
     const backup = await exportBackup(db)
     expect(backup.version).toBe(2)
@@ -375,14 +488,14 @@ describe('exportBackup + restoreBackup', () => {
   it('восстановление в транзакции: при ошибке данные не затираются', async () => {
     await db.clients.add({ name: 'Оригинал', isSelf: false, createdAt: new Date() })
 
-    // Бэкап с заведомо некорректной заточкой (нарушение схемы через приведение типа)
+    // Повреждённая запись справочника вызывает ошибку внутри транзакции.
     const badBackup: BackupFile = {
       version: 1,
       exportedAt: new Date().toISOString(),
       data: {
         clients: [{ name: 'Новый', isSelf: false, createdAt: new Date() }],
-        sharpenings: [null as never], // вызовет ошибку при bulkPut
-        stones: [],
+        sharpenings: [],
+        stones: [null as never],
         steels: [],
         knives: [],
         meta: [],
@@ -531,6 +644,8 @@ describe('mergeBackup', () => {
   })
 
   it('заточка в корзине: свежий файл без deletedAt НЕ воскрешает запись', async () => {
+    const client = { id: 10, name: 'Клиент', isSelf: false, createdAt: new Date('2026-05-01') }
+    await db.clients.add(client)
     await db.sharpenings.add({
       id: 1, clientId: 10, knifeBrand: 'Victorinox',
       receivedAt: new Date('2026-05-01'), status: 'done',
@@ -539,6 +654,7 @@ describe('mergeBackup', () => {
       deletedBatchId: 'b-A',
     })
     const backup = makeValidBackup({
+      clients: [client],
       sharpenings: [{
         id: 1, clientId: 10, knifeBrand: 'Victorinox PRO',
         receivedAt: new Date('2026-05-01'), status: 'done',
@@ -547,7 +663,7 @@ describe('mergeBackup', () => {
     })
     const stats = await mergeBackup(db, backup)
     expect(stats.updated).toBe(0)
-    expect(stats.skipped).toBe(1)
+    expect(stats.skipped).toBe(2)
     const sh = await db.sharpenings.get(1)
     expect(sh!.knifeBrand).toBe('Victorinox')
     expect(sh!.deletedAt).toBeDefined()

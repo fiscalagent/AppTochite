@@ -723,6 +723,21 @@ export function isValidBackup(obj: unknown): obj is BackupFile {
   )
 }
 
+export function getUnlinkedSharpenings(backup: BackupFile): Sharpening[] | null {
+  const clientIds = new Set(backup.data.clients.map(client => client?.id))
+  const unlinked: Sharpening[] = []
+  for (const sharpening of backup.data.sharpenings) {
+    if (!sharpening || !Number.isSafeInteger(sharpening.clientId)) return null
+    // A purged client can leave a deleted sharpening from a different trash batch.
+    if (!sharpening.deletedAt && !clientIds.has(sharpening.clientId)) unlinked.push(sharpening)
+  }
+  return unlinked
+}
+
+export function hasValidBackupClientLinks(backup: BackupFile): boolean {
+  return getUnlinkedSharpenings(backup)?.length === 0
+}
+
 export function buildCSV(rows: (string | number | null | undefined)[][]): string {
   const escape = (v: string | number | null | undefined) =>
     `"${String(v ?? '').replace(/"/g, '""')}"`
@@ -739,7 +754,8 @@ let inFlightExport: { db: AppTochiteDB; promise: Promise<BackupFile> } | null = 
 
 export function exportBackup(database: AppTochiteDB): Promise<BackupFile> {
   if (inFlightExport && inFlightExport.db === database) return inFlightExport.promise
-  const promise = (async (): Promise<BackupFile> => {
+  const tables = [database.clients, database.sharpenings, database.stones, database.steels, database.knives, database.meta]
+  const promise = database.transaction('r', tables, async (): Promise<BackupFile> => {
     const [clients, sharpenings, stones, steels, knives, meta] = await Promise.all([
       database.clients.toArray(),
       database.sharpenings.toArray(),
@@ -753,11 +769,10 @@ export function exportBackup(database: AppTochiteDB): Promise<BackupFile> {
       exportedAt: new Date().toISOString(),
       data: { clients, sharpenings, stones, steels, knives, meta },
     }
-  })()
-  inFlightExport = { db: database, promise }
-  promise.finally(() => {
+  }).finally(() => {
     if (inFlightExport?.promise === promise) inFlightExport = null
   })
+  inFlightExport = { db: database, promise }
   return promise
 }
 
@@ -857,6 +872,7 @@ async function mergeRefTable<T extends { id?: number; updatedAt?: Date }>(
 // Коллизия id (запись другого устройства с занятым id) разрешается вставкой под
 // новым автоинкрементным id; clientId заточек ремапится через clientIdMap.
 export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): Promise<MergeStats> {
+  if (!hasValidBackupClientLinks(backup)) throw new Error('Invalid backup client links')
   const stats: MergeStats = { added: 0, updated: 0, skipped: 0 }
 
   await database.transaction(
@@ -864,12 +880,12 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
     [database.clients, database.sharpenings, database.stones, database.steels, database.knives, database.meta],
     async () => {
       // ── Клиенты ────────────────────────────────────────────────────────────
-      // fileId → deviceId для записей, сменивших id (нужно заточкам ниже).
+      // fileId → deviceId для всех клиентов из файла (нужно заточкам ниже).
       const clientIdMap = new Map<number, number>()
       const localSelf = await database.clients.filter(c => c.isSelf).first()
 
       for (const fileClient of backup.data.clients) {
-        if (!fileClient.id) continue
+        if (fileClient.id == null) continue
 
         let device: Client | undefined
         if (fileClient.isSelf) {
@@ -883,7 +899,7 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
         }
 
         if (device?.id != null) {
-          if (device.id !== fileClient.id) clientIdMap.set(fileClient.id, device.id)
+          clientIdMap.set(fileClient.id, device.id)
           if (shouldTakeFileSoftDeletable(device, fileClient)) {
             await database.clients.put({
               ...fileClient,
@@ -902,6 +918,7 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
             clientIdMap.set(fileClient.id, newId)
           } else {
             await database.clients.put(record)
+            clientIdMap.set(fileClient.id, fileClient.id)
           }
           stats.added++
         }
@@ -910,15 +927,21 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
       // ── Заточки ────────────────────────────────────────────────────────────
       for (const fileSh of backup.data.sharpenings) {
         if (!fileSh.id) continue
-        const clientId = clientIdMap.get(fileSh.clientId) ?? fileSh.clientId
-        const candidate: Sharpening = { ...fileSh, clientId }
-
+        const mappedClientId = clientIdMap.get(fileSh.clientId)
         let device: Sharpening | undefined
         if (fileSh.guid) {
           device = await database.sharpenings.where('guid').equals(fileSh.guid).first()
-        } else {
+        } else if (mappedClientId != null) {
           device = await database.sharpenings.get(fileSh.id)
         }
+
+        // Unlinked tombstones can update a known sharpening by GUID only.
+        const clientId = mappedClientId ?? device?.clientId
+        if (clientId == null) {
+          stats.skipped++
+          continue
+        }
+        const candidate: Sharpening = { ...fileSh, clientId }
 
         if (device?.id != null) {
           if (shouldTakeFileSoftDeletable(device, candidate)) {
@@ -961,6 +984,7 @@ export async function mergeBackup(database: AppTochiteDB, backup: BackupFile): P
 }
 
 export async function restoreBackup(database: AppTochiteDB, backup: BackupFile): Promise<void> {
+  if (!hasValidBackupClientLinks(backup)) throw new Error('Invalid backup client links')
   await database.transaction(
     'rw',
     [database.clients, database.sharpenings, database.stones, database.steels, database.knives, database.meta],
